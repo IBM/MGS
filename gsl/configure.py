@@ -1590,7 +1590,7 @@ CUDA_NVCC_FLAGS := --compiler-options -fPIC -std=c++14 -Xcompiler -Wno-deprecate
             retStr += " " + PROFILING_FLAGS
 
         if self.options.debug == USE:
-            retStr += " -g -G"
+            retStr += " -g -G -Xcompiler -rdynamic"
             # to add '-pg' run with --profile
         else:
             if self.options.optimization == "O":

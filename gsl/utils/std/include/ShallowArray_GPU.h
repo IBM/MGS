@@ -6,6 +6,25 @@
 
 #include <cxxabi.h>
 
+template <class T>
+T * new_memory(size_t size=1)
+{
+   T* ptr; //void *ptr;
+   int len = size* sizeof(T);
+   gpuErrorCheck(cudaGetLastError());
+   gpuErrorCheck(cudaMallocManaged(&ptr, len));
+   for (auto ii=0; ii<size; ii++)
+      ptr[ii].____set_mem(Array_Flat<int>::MemLocation::UNIFIED_MEM);
+   gpuErrorCheck(cudaDeviceSynchronize());
+   return ptr;
+}
+template <class T>
+void delete_memory(T*& ptr)
+{
+   gpuErrorCheck(cudaDeviceSynchronize());
+   gpuErrorCheck(cudaFree(ptr));         
+}
+
 inline std::string get_realname(const std::type_info& ti)
 {
   char   *realname;

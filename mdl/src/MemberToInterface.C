@@ -464,8 +464,11 @@ void MemberToInterface::setupProxyAccessorMethods(Class& instance) const
 	    }
 	    else{
 	       if (it->getDataType()->isShared()) {
+		  /* (Oct-20-2019) IMPORTANT: only support exporting a pointer via SHARED data only */
 		  method->setFunctionBody(
-			TAB + "return &" 
+			(!it->getNeedsAmpersand() ? TAB + "assert(" + name + ");\n" : "")
+			+ TAB + "return " 
+			+ (it->getNeedsAmpersand() ? "&" : "") 
 			+ name + ";\n");
 	       }
 	       else{
@@ -514,8 +517,11 @@ void MemberToInterface::setupProxyAccessorMethods(Class& instance) const
 	    }
 	    else{
 	       if (it->getDataType()->isShared()) {
+		  /* IMPORTANT: only support exporting a pointer via SHARED data only */
 		  method->setFunctionBody(
-			TAB + "return &" 
+			(!it->getNeedsAmpersand() ? TAB + "assert(" + name + ");\n" : "")
+			+ TAB + "return " 
+			+ (it->getNeedsAmpersand() ? "&" : "") 
 			+ name + ";\n");
 	       }
 	       else{

@@ -59,6 +59,7 @@ void check(T result, char const *const func, const char *const file,
     exit(EXIT_FAILURE);
   }
 }
+
 class Managed
 {
   public:

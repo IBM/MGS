@@ -365,6 +365,7 @@ void SharedCCBase::generateSharedMembers(bool use_classType,
    instance->addHeader("<memory>");
    instance->addHeader("<sstream>");
    instance->addExtraSourceHeader("\"SyntaxErrorException.h\"");
+   instance->addExtraSourceHeader("\"rndm.h\"");
    instance->addClass("NDPairList");
 
    addExtraOptionalServiceHeaders(instance);
