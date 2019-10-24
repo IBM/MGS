@@ -1,13 +1,17 @@
 # 
 # HPC Base image
 # Contents:
+#   Ubuntu 18.04
 #   CUDA version 10.0
 #   FFTW version 3.3.8
 #   GNU compilers (upstream)
 #   HDF5 version 1.10.4
-#   Mellanox OFED version 3.4-1.0.0.0
+#   Mellanox OFED version 4.7-1.0.0.1
 #   OpenMPI version 3.1.2
 #   Python 2 and 3 (upstream)
+#   vim
+#   cgdb 0.7.1 (cgdb-cuda)
+#   diffutil 3.7
 # 
 
 FROM nvidia/cuda-ppc64le:10.0-devel-ubuntu18.04 AS devel-base
@@ -28,7 +32,7 @@ RUN apt-get update -y && \
         gfortran && \
     rm -rf /var/lib/apt/lists/*
 
-# Mellanox OFED version 3.4-1.0.0.0
+# Mellanox OFED 
 RUN apt-get update -y && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         libnl-3-200 \
