@@ -10,7 +10,7 @@
 #   Python 2 and 3 (upstream)
 # 
 
-FROM nvidia/cuda:10.0-devel-ubuntu16.04 AS devel-base
+FROM nvidia/cuda-ppc64le:10.0-devel-ubuntu18.04 AS devel-base
 
 LABEL maintainer="tmhoangt@us.ibm.com"
 # Python
@@ -36,10 +36,11 @@ RUN apt-get update -y && \
         libnuma1 \
         wget && \
     rm -rf /var/lib/apt/lists/*
-RUN mkdir -p /var/tmp && wget -q -nc --no-check-certificate -P /var/tmp http://content.mellanox.com/ofed/MLNX_OFED-3.4-1.0.0.0/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64.tgz && \
-    mkdir -p /var/tmp && tar -x -f /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64.tgz -C /var/tmp -z && \
-    dpkg --install /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibverbs1_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibverbs-dev_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/ibverbs-utils_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibmad_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibmad-devel_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibumad_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibumad-devel_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libmlx4-1_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libmlx4-dev_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libmlx5-1_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libmlx5-dev_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/librdmacm-dev_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/librdmacm1_*_amd64.deb && \
-    rm -rf /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64.tgz /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64
+RUN MLNX_FOLDER=MLNX_OFED-4.7-1.0.0.1 && MLNX_FILE=MLNX_OFED_LINUX-4.7-1.0.0.1-ubuntu18.04-ppc64le && mkdir -p /var/tmp && wget -q -nc --no-check-certificate -P /var/tmp http://content.mellanox.com/ofed/${MLNX_FOLDER}/${MLNX_FILE}.tgz && \
+    mkdir -p /var/tmp && tar -x -f /var/tmp/${MLNX_FILE}.tgz -C /var/tmp -z && \
+    MLNX_SUBPATH=DEBS/MLNX_LIBS && \
+    dpkg --install /var/tmp/${MLNX_FILE}/${MLNX_SUBPATH}/libibverbs1_*_ppc64el.deb /var/tmp/${MLNX_FILE}/${MLNX_SUBPATH}/libibverbs-dev_*_ppc64el.deb /var/tmp/${MLNX_FILE}/${MLNX_SUBPATH}/ibverbs-utils_*_ppc64el.deb /var/tmp/${MLNX_FILE}/${MLNX_SUBPATH}/libibmad_*_ppc64el.deb /var/tmp/${MLNX_FILE}/${MLNX_SUBPATH}/libibmad-devel_*_ppc64el.deb /var/tmp/${MLNX_FILE}/${MLNX_SUBPATH}/libibumad_*_ppc64el.deb /var/tmp/${MLNX_FILE}/${MLNX_SUBPATH}/libibumad-devel_*_ppc64el.deb /var/tmp/${MLNX_FILE}/${MLNX_SUBPATH}/libmlx4-1_*_ppc64el.deb /var/tmp/${MLNX_FILE}/${MLNX_SUBPATH}/libmlx4-dev_*_ppc64el.deb /var/tmp/${MLNX_FILE}/${MLNX_SUBPATH}/libmlx5-1_*_ppc64el.deb /var/tmp/${MLNX_FILE}/${MLNX_SUBPATH}/libmlx5-dev_*_ppc64el.deb /var/tmp/${MLNX_FILE}/${MLNX_SUBPATH}/librdmacm-dev_*_ppc64el.deb /var/tmp/${MLNX_FILE}/${MLNX_SUBPATH}/librdmacm1_*_ppc64el.deb && \
+    rm -rf /var/tmp/${MLNX_FILE}.tgz /var/tmp/${MLNX_FILE}
 
 # OpenMPI version 3.1.2
 RUN apt-get update -y && \
@@ -155,9 +156,15 @@ WORKDIR /home/packages
 RUN /bin/bash -c "source  ./get_bison.sh"
 RUN /bin/bash -c "source  ./get_flex.sh"
 
-RUN gpg --keyserver ha.pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4
-RUN curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/1.4/gosu-$(dpkg --print-architecture)" \
-    && curl -o /usr/local/bin/gosu.asc -SL "https://github.com/tianon/gosu/releases/download/1.4/gosu-$(dpkg --print-architecture).asc" \
+# RUN gpg --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4
+RUN for server in ha.pool.sks-keyservers.net \
+              hkp://p80.pool.sks-keyservers.net:80 \
+              keyserver.ubuntu.com \
+              hkp://keyserver.ubuntu.com:80 \
+              pgp.mit.edu; do \
+    gpg --keyserver "$server" --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 && break || echo "Trying new server..."; done
+RUN curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/1.7/gosu-$(dpkg --print-architecture)" \
+    && curl -o /usr/local/bin/gosu.asc -SL "https://github.com/tianon/gosu/releases/download/1.7/gosu-$(dpkg --print-architecture).asc" \
     && gpg --verify /usr/local/bin/gosu.asc \
     && rm /usr/local/bin/gosu.asc \
     && chmod +x /usr/local/bin/gosu
@@ -232,7 +239,7 @@ RUN apt-get update -y --fix-missing && \
         nmap \
         vim && \
     rm -rf /var/lib/apt/lists/*
-#RUN INSTALLER=cuda-repo-${UBUNTU_VERSION}_${CUDA}_amd64.deb && \
+#RUN INSTALLER=cuda-repo-${UBUNTU_VERSION}_${CUDA}_ppc64el.deb && \
     #wget http://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/${INSTALLER}
           #sudo dpkg -i ${INSTALLER}
           #wget https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/7fa2af80.pub
@@ -311,10 +318,11 @@ libnl-route-3-200 \
 libnuma1 \
 wget && \
 rm -rf /var/lib/apt/lists/*
-RUN mkdir -p /var/tmp && wget -q -nc --no-check-certificate -P /var/tmp http://content.mellanox.com/ofed/MLNX_OFED-3.4-1.0.0.0/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64.tgz && \
-mkdir -p /var/tmp && tar -x -f /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64.tgz -C /var/tmp -z && \
-dpkg --install /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibverbs1_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibverbs-dev_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/ibverbs-utils_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibmad_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibmad-devel_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibumad_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibumad-devel_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libmlx4-1_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libmlx4-dev_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libmlx5-1_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libmlx5-dev_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/librdmacm-dev_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/librdmacm1_*_amd64.deb && \
-rm -rf /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64.tgz /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64
+RUN MLNX_FOLDER=MLNX_OFED-4.7-1.0.0.1 && MLNX_FILE=MLNX_OFED_LINUX-4.7-1.0.0.1-ubuntu18.04-ppc64le && mkdir -p /var/tmp && wget -q -nc --no-check-certificate -P /var/tmp http://content.mellanox.com/ofed/${MLNX_FOLDER}/${MLNX_FILE}.tgz && \
+    mkdir -p /var/tmp && tar -x -f /var/tmp/${MLNX_FILE}.tgz -C /var/tmp -z && \
+    MLNX_SUBPATH=DEBS/MLNX_LIBS && \
+    dpkg --install /var/tmp/${MLNX_FILE}/${MLNX_SUBPATH}/libibverbs1_*_ppc64el.deb /var/tmp/${MLNX_FILE}/${MLNX_SUBPATH}/libibverbs-dev_*_ppc64el.deb /var/tmp/${MLNX_FILE}/${MLNX_SUBPATH}/ibverbs-utils_*_ppc64el.deb /var/tmp/${MLNX_FILE}/${MLNX_SUBPATH}/libibmad_*_ppc64el.deb /var/tmp/${MLNX_FILE}/${MLNX_SUBPATH}/libibmad-devel_*_ppc64el.deb /var/tmp/${MLNX_FILE}/${MLNX_SUBPATH}/libibumad_*_ppc64el.deb /var/tmp/${MLNX_FILE}/${MLNX_SUBPATH}/libibumad-devel_*_ppc64el.deb /var/tmp/${MLNX_FILE}/${MLNX_SUBPATH}/libmlx4-1_*_ppc64el.deb /var/tmp/${MLNX_FILE}/${MLNX_SUBPATH}/libmlx4-dev_*_ppc64el.deb /var/tmp/${MLNX_FILE}/${MLNX_SUBPATH}/libmlx5-1_*_ppc64el.deb /var/tmp/${MLNX_FILE}/${MLNX_SUBPATH}/libmlx5-dev_*_ppc64el.deb /var/tmp/${MLNX_FILE}/${MLNX_SUBPATH}/librdmacm-dev_*_ppc64el.deb /var/tmp/${MLNX_FILE}/${MLNX_SUBPATH}/librdmacm1_*_ppc64el.deb && \
+    rm -rf /var/tmp/${MLNX_FILE}.tgz /var/tmp/${MLNX_FILE}
 
 # OpenMPI
 RUN apt-get update -y && \
