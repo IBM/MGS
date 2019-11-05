@@ -54,9 +54,23 @@ sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit
 sudo systemctl restart docker
 ```
 
-## Step 3
+## Step 3 
+
+### Step 3.a [build the image - only once]
+On x86-64 machine:
 ```console
 docker build --target devel-base -t mgs_baseimage  -f Dockerfile.build .
+```
+
+On ppc64le (e.g. Power8 or Power9 IBM) machine:
+```console
+docker build --target devel-base -t mgs_baseimage  -f Dockerfile.build_ppc64le .
+```
+
+### Step 3.b [launch the container]
+The option `--gpus all` is only available from Docker 19.03:
+
+```console
 docker run --gpus all -it  --name=mgs_dev --mount src="$(pwd)",target=/home/mgs,type=bind -e LOCAL_USER_ID=`id -u $USER`  mgs_baseimage /bin/bash
 
 
