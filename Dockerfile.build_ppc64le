@@ -241,7 +241,9 @@ RUN apt-get update -y --fix-missing && \
     apt-get update -y &&  \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         nmap \
-        vim && \
+        vim=2:8.0.1453-1ubuntu1.1  \
+        vim-runtime=2:8.0.1453-1ubuntu1.1  \
+        vim-common=2:8.0.1453-1ubuntu1.1 && \
     rm -rf /var/lib/apt/lists/*
 #RUN INSTALLER=cuda-repo-${UBUNTU_VERSION}_${CUDA}_ppc64el.deb && \
     #wget http://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/${INSTALLER}
