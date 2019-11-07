@@ -100,8 +100,14 @@ Some common commands to work with docker
 # list images
 docker image ls
 
-# list containers (i.e. each is an instance of a particular image) - container's ID is on first column
+# list containers (i.e. each is an instance of a particular image) - container's ID is on first column and container's name is on NAMES column
 docker container ls
+
+# list stopped containers
+docker ps -a
+
+# remove a docker container (as shown in NAMES field)
+docker rm <container-name> 
 
 # within a container, switch to host with <Ctrl>-p-q 
 
