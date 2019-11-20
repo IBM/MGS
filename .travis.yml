@@ -166,7 +166,7 @@ jobs:
           #- docker login -e=$DOCKER_EMAIL -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
         #- echo "Docker Hub credentials are working"
           #- docker build -t build-springxd-base .
-      script:
+      before_script:
         - echo "$BUILD_SYSTEM"
         - source set_env
         - source set_env
@@ -193,6 +193,10 @@ jobs:
       <<: *shared
       before_install:
         - export BUILD_SYSTEM=--as-NTS
+      script:
+        - cd nti/examples; ../bin/neuroGen -par NULL "startX0-2.txt" NULL 
+        - diff ParamsOut.txt ParamsOut.txt_ref
+        - diff startX0-2_0.swc startX0-2_0.swc_ref
     - stage: NTS-NVU 
       <<: *shared
       before_install:
