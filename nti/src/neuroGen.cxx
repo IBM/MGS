@@ -40,7 +40,6 @@
 #include <sstream>
 #include <algorithm>
 #include <float.h>
-#define DBG
 
 //#define DBG
 
