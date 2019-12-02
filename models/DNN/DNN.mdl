@@ -18,12 +18,16 @@
 #include "./DNNTools.mdl"
 
 Node DNNode Implements ForwardProducer, BackwardProducer {
+//{{{
    double output;
    double gradient;
    EdgeSetInput [] inputs;
    double* weightedGradient;
    bool ready;
    
+   //Shared {
+   //  InitPhase initializeShared(); //to printout debug purpose
+   //}
    InitPhase initialize();
    RuntimePhase update(output, gradient);
 
@@ -45,9 +49,11 @@ Node DNNode Implements ForwardProducer, BackwardProducer {
    Connection Pre Node (PSet.identifier=="gradient") Expects BackwardProducer {
       BackwardProducer.backward >> weightedGradient;
    }
+//}}}
 }
 
 Node DNEdgeSet Implements ForwardArrayProducer, BackwardProducer {
+//{{{
    double [] weights;
    double [] deltaWeights;
    double [] deltaWeightsSquared;
@@ -71,10 +77,12 @@ Node DNEdgeSet Implements ForwardArrayProducer, BackwardProducer {
    bool rmsprop;
 
    Shared {
-     double eta;
+     double eta; //learn rate
      double alpha;
      double beta;
+     int max_num_layers; //TRICK: we use this as maximum size for pre-allocating 'echoes' data
      string [] optimization;
+     InitPhase initializeShared(); //to setup the size for echoes[]
    }
 
    InitPhase initialize();
@@ -99,43 +107,55 @@ Node DNEdgeSet Implements ForwardArrayProducer, BackwardProducer {
    Connection Pre Node (PSet.identifier=="gradient") Expects BackwardProducer {
       BackwardProducer.backward >> gradients;
    }
-
+//}}}
 }
 
 
-Node SupervisorNode Implements BackwardProducer, ForwardArrayProducer {
+/* The supervisor does two jobs
+  1. keeps feeding the input to the first layer [which is done by the first supervisor node as the input is at the SHARED data 'x']
 
+  2. compute the gradient for the last layer's DNNode
+-> as this gradient is NOT available until the 'compute' of the data passing through all layers and get to this last layer's DNNode
+  which takes 'N' steps - with N is the depth of the DNN
+  the supervisor needs to buffers the expected label into a N-side array 'labels'
+*/
+Node SupervisorNode Implements BackwardProducer, ForwardArrayProducer {
+//{{{
   double primaryGradient;
-  double* [] predictions;
-  double [] logits;
+  double* [] logits;
+  double [] predictions; //the softmax
   double sumOfSquaredError;
   unsigned wins;
   bool ready;
 
   Shared {
-    string transferFunctionName;
-    unsigned [] labels;
-    unsigned labelIndex;
+    //{{{
+    string transferFunctionName; //the transfer function to be used by ALL nodes
+    unsigned [] labels; //buffers the expected output until it can compute the gradients for the associated input 
+    unsigned labelIndex; //the index to the label being processed in the above array '[] labels'
     unsigned numberOfInputs;
     unsigned numberOfLabels;
-    double [] x;
+    double []* x;
     bool shready;
 
     string dataLocation;
     bool test;
     bool refreshErrors;
-    unsigned trainingEpoch;
-    unsigned trainingEpochs;
-    unsigned imageIndex;
+    unsigned trainingEpoch; //current epoch index
+    unsigned trainingEpochs; //total epochs
+    unsigned imageIndex; //current index in 0...numImages
+      //However, the real image to be processed is 
+      //the one with index _shuffledDeck(imageIndex);
 
     InitPhase initializeShared;
     RuntimePhase updateShared;
+    //}}}
   }
 
    InitPhase initialize();
    RuntimePhase update(primaryGradient);
 
-   ForwardArrayProducer.forwardArray << &Shared.x;
+   ForwardArrayProducer.forwardArray << Shared.x;
    BackwardProducer.backward << &primaryGradient;
 
    InAttrPSet {
@@ -143,8 +163,9 @@ Node SupervisorNode Implements BackwardProducer, ForwardArrayProducer {
    }
 
    Connection Pre Node (PSet.identifier=="input") Expects ForwardProducer {
-      ForwardProducer.forward >> predictions;
+      ForwardProducer.forward >> logits;
    }
+//}}}
 }
 
 

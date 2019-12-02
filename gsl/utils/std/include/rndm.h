@@ -252,6 +252,7 @@ class Managed
 #endif
 #else
 #define CUDA_CALLABLE
+#define __df__
 #endif
 
 inline double drandom(RNG_ns& rangen)
@@ -372,18 +373,25 @@ CUDA_CALLABLE T tanh(T x)
   return 2/(1+exp(-2*x))-1; 
 }
 
-//referenced from https://github.com/eyalroz/libgiddy/blob/master/src/cuda/on_device/builtins.cuh
-#define __df__ __device__ __forceinline__
 
-template <typename T> __df__ T minimum(T x, T y);
-template <> __df__ int                 minimum<int               >(int x, int y)                               { return (int)fmin((double)x,(double)y);    }
-template <> __df__ size_t              minimum<size_t            >(size_t x, size_t y)                         { return (size_t)fmin((double)x,(double)y);    }
-//template <> __df__ unsigned int        minimum<unsigned          >(unsigned int x, unsigned int y)             { return umin(x,y);   }
-//template <> __df__ long                minimum<long              >(long x, long y)                             { return llmin(x,y);  }
-//template <> __df__ unsigned long       minimum<unsigned long     >(unsigned long x, unsigned long y)           { return ullmin(x,y); }
-//template <> __df__ long long           minimum< long long        >(long long x, long long y)                   { return llmin(x,y);  }
-//template <> __df__ unsigned long long  minimum<unsigned long long>(unsigned long long x, unsigned long long y) { return ullmin(x,y); }
-template <> __df__ float               minimum<float             >(float x, float y)                           { return fminf(x,y);  }
-template <> __df__ double              minimum<double            >(double x, double y)                         { return fmin(x,y);   }
+//here, the iterator needs to be dereferenced to get the value
+static bool dereference_compare(double* a, double* b)
+{
+    return (*a) < (*b);
+}
+template<class ForwardIt, class Compare>
+ForwardIt max_element_dereference(ForwardIt first, ForwardIt last, Compare comp)
+{
+    if (first == last) return last;
+
+    ForwardIt largest = first;
+    ++first;
+    for (; first != last; ++first) {
+        if (comp(*largest, *first)) {
+            largest = first;
+        }
+    }
+    return largest;
+}
 
 #endif

@@ -289,6 +289,8 @@ class Simulation : public Publishable {
     return (_state == _STOP);
   };
 
+  SysTimer& getTimer() { return _simTimer;};
+
   // Simulation driving functions
   bool start();
   void pause();

@@ -11,6 +11,9 @@
 #include "Array_GPU_unique_ptr.h"
 #else
 //class GranuleMapper;
+#if defined(__CUDA_ARCH__)
+#include "builtins.cuh"
+#endif
 
 #define MINIMAL_SIZE_ARR 12
 // use BLOCK_INCREMENTAL  (which can be 4, 8 or 16)
@@ -272,9 +275,10 @@ class Array_Flat //: public Managed
     CUDA_CALLABLE void destructContents();
     /* make the data reference to some external data 
      * NOTE: the memory management is not taken cared by this container */
-    void changeRef(T* target, int size)
+    void changeRef(T* target, int size, bool delete_current_data=true)
     {
-      destructContents(); //delete old data
+      if (delete_current_data)
+	destructContents(); //delete old data
       if (target == nullptr)
 	assert(0);
       _data = target;

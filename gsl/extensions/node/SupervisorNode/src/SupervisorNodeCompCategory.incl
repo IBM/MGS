@@ -1,0 +1,183 @@
+#if  defined(HAVE_GPU)
+void CG_SupervisorNodeCompCategory::CG_host_initialize(NodePartitionItem* arg, CG_SupervisorNodeWorkUnitInstance* wu) 
+{
+   std::cerr << get_realname(typeid(this)) << ":" << __func__ << ": This should be run on CPU. Please change the mapping in GSL\n";
+   assert(0);
+}
+#endif
+
+#if  defined(HAVE_GPU)
+void CG_SupervisorNodeCompCategory::CG_host_update(NodePartitionItem* arg, CG_SupervisorNodeWorkUnitInstance* wu) 
+{
+   int THREADS_PER_BLOCK= 256;
+   int BLOCKS= ceil((float)_nodes.size() / THREADS_PER_BLOCK);
+   SupervisorNode_kernel_update<<< BLOCKS, THREADS_PER_BLOCK >>> (
+      um_primaryGradient.getDataRef()
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_logits.getDataRef()
+      #endif
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_predictions.getDataRef()
+      #endif
+      , udef_um_globalIdx.getDataRef()
+      , um_sumOfSquaredError.getDataRef()
+      , um_wins.getDataRef()
+      , um_ready.getDataRef()
+      , _nodes.size()
+      , getSharedMembers().refreshErrors
+      , getSharedMembers().test
+      , getSharedMembers().labelIndex
+      , getSharedMembers().labels.getDataRef()
+   );
+   gpuErrorCheck( cudaPeekAtLastError() );
+}
+#endif
+
+//void SupervisorNodeCompCategory::host_initializeShared(RNG& rng)
+//{
+//#ifdef HAVE_GPU
+//  /* add for GPU */
+//  um_globalIdx.increaseSizeTo(_nodes.size());
+//  /* must be pre-allocated to work on GPU */
+//  int ii = 0;
+//  for (auto iter=_nodes.begin(); iter != _nodes.end(); iter++, ii++)
+//    um_globalIdx[ii] = iter->getGlobalIndex();
+//#endif
+//  dataset = mnist::read_dataset<std::vector, std::vector, uint8_t, uint8_t>
+//    (std::string(SHD.dataLocation.c_str()));
+//  std::cerr<<"mnist_reader loaded "<<dataset.training_images.size()<<" training images."<<std::endl;
+//  std::cerr<<"mnist_reader loaded "<<dataset.test_images.size()<<" test images."
+//	   <<std::endl<<std::endl;
+//
+//#ifdef HAVE_GPU
+//  {///GPU-specific
+//    allocated_gpu = true;
+//    size_t size = (dataset.training_images.size() + dataset.test_images.size())*IMG_SIZE*sizeof(double);
+//    cudaMallocManaged(&d_buffer, size);
+//    for (int ii=0; ii < dataset.training_images.size(); ii++)
+//    {
+//      int idx = ii*IMG_SIZE;
+//      for (int jj=0; jj < IMG_SIZE; jj++)
+//      {
+//	d_buffer[idx+jj]=double(dataset.training_images[ii][jj])/255.0;
+//      }
+//    }
+//    int offset = dataset.training_images.size()*IMG_SIZE;
+//    for (int ii=0; ii < dataset.test_images.size(); ii++)
+//    {
+//      int idx = ii*IMG_SIZE;
+//      for (int jj=0; jj < IMG_SIZE; jj++)
+//      {
+//	d_buffer[offset + idx+jj]=double(dataset.test_images[ii][jj])/255.0;
+//      }
+//    }
+//    cudaMallocManaged(&training_images, (dataset.training_images.size())* sizeof(double*));
+//    cudaMallocManaged(&test_images, (dataset.test_images.size())* sizeof(double*));
+//    for (int ii=0; ii < dataset.training_images.size(); ii++)
+//      training_images[ii] = d_buffer+(ii*IMG_SIZE);
+//    for (int ii=0; ii < dataset.test_images.size(); ii++)
+//      test_images[ii] = d_buffer+((dataset.training_images.size()+ii)*IMG_SIZE);
+//
+//    cudaMallocManaged(&l_buffer, (dataset.training_images.size() + dataset.test_images.size())* sizeof(uint8_t));
+//    training_labels = l_buffer+(0);
+//    test_labels = l_buffer+(dataset.training_images.size());
+//  }
+//#endif
+//
+//  shuffleDeck(dataset.training_images.size(),rng);
+//#ifdef IDEA_SHARED_DATA_DYNAMIC_POINTER
+//  SHD.x().increaseSizeTo(IMG_SIZE);
+//  for (int i=0; i<IMG_SIZE; ++i) SHD.x()[i]=PRELIM_STATE;
+//#else
+//  SHD.x.increaseSizeTo(IMG_SIZE);
+//  for (int i=0; i<IMG_SIZE; ++i) SHD.x[i]=PRELIM_STATE;
+//#endif
+//  SHD.imageIndex=-1;
+//  SHD.trainingEpoch=1;
+//}
+//void SupervisorNodeCompCategory::host_updateShared(RNG& rng)
+//{
+//  SHD.refreshErrors = false;
+//  bool output=false;
+//  ++SHD.numberOfInputs;
+//
+//  unsigned label, oldLabel;
+//
+//#ifdef IDEA_SHARED_DATA_DYNAMIC_POINTER
+//  if (!SHD.shready) SHD.shready = isReady();
+//  else oldLabel=SHD.labels()[SHD.labelIndex];
+//#else
+//  if (!SHD.shready) SHD.shready = isReady();
+//  else oldLabel=SHD.labels[SHD.labelIndex];
+//#endif
+//  
+//  if (!SHD.test) {
+//    do {
+//      if (++SHD.imageIndex==dataset.training_images.size()) {
+//	SHD.imageIndex=0;
+//	shuffleDeck(dataset.training_images.size(),rng);
+//	if (SHD.shready) output=true;
+//	if (++SHD.trainingEpoch>SHD.trainingEpochs) {
+//	  SHD.test = true;
+//	  shuffleDeck(dataset.test_images.size(),rng);
+//	}
+//      }
+//      label = dataset.training_labels[_shuffledDeck[SHD.imageIndex]];
+//#ifdef IDEA_SHARED_DATA_DYNAMIC_POINTER
+//      if (SHD.shready) SHD.labels()[SHD.labelIndex]=label;
+//#else
+//      if (SHD.shready) SHD.labels[SHD.labelIndex]=label;
+//#endif
+//    } while (label>SHD.numberOfLabels-1);
+//#ifdef IDEA_SHARED_DATA_DYNAMIC_POINTER
+//    SupervisorNodeCompCategory_kernel_changeRef<<<1,1>>>(&SHD.x(), 
+//	training_images,
+//	um_shuffledDeck,
+//	SHD.imageIndex
+//	);
+//    //SHD.x().changeRef(training_images[um_shuffledDeck[SHD.imageIndex]]);
+//#else
+//    assert(0); //only for SHARED dynamic pointer
+//#endif
+//  }
+//  else {
+//    do {
+//      if (++SHD.imageIndex==dataset.test_images.size()) {
+//	SHD.imageIndex=0;
+//	shuffleDeck(dataset.test_images.size(),rng);
+//	if (SHD.shready) output=true;
+//      }
+//      label = dataset.test_labels[_shuffledDeck[SHD.imageIndex]];
+//#ifdef IDEA_SHARED_DATA_DYNAMIC_POINTER
+//      if (SHD.shready) SHD.labels()[SHD.labelIndex]=label;
+//#else
+//      if (SHD.shready) SHD.labels[SHD.labelIndex]=label;
+//#endif
+//    } while (label>SHD.numberOfLabels-1);
+//#ifdef IDEA_SHARED_DATA_DYNAMIC_POINTER
+//    SupervisorNodeCompCategory_kernel_changeRef<<<1,1>>>(&SHD.x(), 
+//	test_images,
+//	um_shuffledDeck,
+//	SHD.imageIndex
+//	);
+//#else
+//    assert(0);
+//#endif
+//  }
+//#ifdef IDEA_SHARED_DATA_DYNAMIC_POINTER
+//  if (!SHD.shready) {
+//    SHD.labels().push_back(label);
+//  }
+//  else {
+//    if (++SHD.labelIndex == SHD.labels().size()) SHD.labelIndex = 0;
+//  }
+//#else
+//  if (!SHD.shready) {
+//    SHD.labels.push_back(label);
+//  }
+//  else {
+//    if (++SHD.labelIndex == SHD.labels.size()) SHD.labelIndex = 0;
+//  }
+//#endif
+//  if (output) outputError(oldLabel);
+//}

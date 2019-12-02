@@ -9,6 +9,7 @@
 class DNEdgeSet : public CG_DNEdgeSet
 {
    public:
+      using Node::initialize;
       void initialize(RNG& rng);
       void update(RNG& rng);
       virtual ~DNEdgeSet();

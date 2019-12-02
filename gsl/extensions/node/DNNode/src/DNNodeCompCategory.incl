@@ -1,0 +1,72 @@
+#if  defined(HAVE_GPU)
+void CG_DNNodeCompCategory::CG_host_initialize(NodePartitionItem* arg, CG_DNNodeWorkUnitInstance* wu) 
+{
+   int THREADS_PER_BLOCK= 256;
+   int BLOCKS= ceil((float)_nodes.size() / THREADS_PER_BLOCK);
+   DNNode_kernel_initialize<<< BLOCKS, THREADS_PER_BLOCK >>> (
+      um_output.getDataRef()
+      , um_gradient.getDataRef()
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_inputs.getDataRef()
+      #endif
+      , um_weightedGradient.getDataRef()
+      , um_ready.getDataRef()
+      , _nodes.size()
+   );
+   gpuErrorCheck( cudaPeekAtLastError() );
+}
+#endif
+
+#if  defined(HAVE_GPU)
+void CG_DNNodeCompCategory::CG_host_update(NodePartitionItem* arg, CG_DNNodeWorkUnitInstance* wu) 
+{
+   //int BLOCKS= _nodes.size();
+   //int THREADS_PER_BLOCK = 1;
+   //ShallowArray_Flat< ShallowArray_Flat< ShallowArray_Flat<double, Array_Flat<int>::MemLocation::UNIFIED_MEM>* , Array_Flat<int>::MemLocation::UNIFIED_MEM>, Array_Flat<int>::MemLocation::UNIFIED_MEM> um_inputs_inputArray;
+   //ShallowArray_Flat< ShallowArray_Flat< unsigned, Array_Flat<int>::MemLocation::UNIFIED_MEM>, Array_Flat<int>::MemLocation::UNIFIED_MEM> um_inputs_inputIndex;
+   //
+   ////ShallowArray_Flat< ShallowArray_Flat<double, Array_Flat<int>::MemLocation::UNIFIED_MEM>* , Array_Flat<int>::MemLocation::UNIFIED_MEM >  um_inputs_inputArray;
+   ////ShallowArray_Flat< unsigned, Array_Flat<int>::MemLocation::UNIFIED_MEM> um_inputs_inputIndex;
+
+   ////ShallowArray_Flat<ShallowArray_Flat<double, Array_Flat<int>::MemLocation::UNIFIED_MEM>, Array_Flat<int>::MemLocation::UNIFIED_MEM> inputArray;
+   ////ShallowArray_Flat<unsigned, Array_Flat<int>::MemLocation::UNIFIED_MEM> inputIndex;
+   ////inputArray.resize_allocated(_nodes.size());
+   ////inputIndex.resize_allocated(_nodes.size());
+   //um_inputs_inputArray.resize_allocated(_nodes.size());
+   //um_inputs_inputIndex.resize_allocated(_nodes.size());
+   //for (int ii=0; ii < _nodes.size(); ii++)
+   //{
+   //   //inputArray.increase(); 
+   //   //inputArray.push_back(*um_inputs[ii].inputArray);
+   //   //inputIndex.push_back(um_inputs[ii].inputIndex);
+   //   for (int jj=0; ii < um_inputs[ii].size(); jj++)
+   //   {
+   //      um_inputs_inputArray.push_back(um_inputs[ii][jj].inputArray);
+   //      um_inputs_inputIndex.push_back(um_inputs[ii][jj].inputIndex);
+   //   }
+   //}
+   int THREADS_PER_BLOCK= 256;
+   int BLOCKS= ceil((float)_nodes.size() / THREADS_PER_BLOCK);
+   DNNode_kernel_update<<< BLOCKS, THREADS_PER_BLOCK >>> (
+      um_output.getDataRef()
+      , um_gradient.getDataRef()
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_inputs.getDataRef()
+      #endif
+      , um_weightedGradient.getDataRef()
+      , um_ready.getDataRef()
+      , _nodes.size()
+   );
+   //DNNode_kernel_update_test<<< BLOCKS, THREADS_PER_BLOCK >>> (
+   //   um_output.getDataRef()
+   //   , um_gradient.getDataRef()
+   //   , um_inputs_inputArray.getDataRef()
+   //   , um_inputs_inputIndex.getDataRef()
+   //   , um_weightedGradient.getDataRef()
+   //   , um_ready.getDataRef()
+   //   , _nodes.size()
+   //);
+   gpuErrorCheck( cudaPeekAtLastError() );
+}
+#endif
+

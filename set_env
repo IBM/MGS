@@ -1,3 +1,19 @@
+#Escape code
+esc=`echo -en "\033"`
+
+# Set colors
+cc_red="${esc}[0;31m"
+cc_green="${esc}[0;32m"
+cc_yellow="${esc}[0;33m"
+cc_blue="${esc}[0;34m"
+cc_normal=`echo -en "${esc}[m\017"`
+
+echoerr()
+{
+  echo "$@" 1>&2;
+}
+
+
 export NTSMGSROOT=`pwd`
 export NTSROOT=`pwd`
 export MGSROOT=`pwd`
@@ -5,10 +21,38 @@ export LENSROOT=$NTSROOT/gsl
 export MDLROOT=$NTSROOT/mdl
 export PATH=$NTSROOT/gsl/bin:$PATH
 export GSLPARSER=$NTSROOT/gsl/bin/gslparser
+
+
 if [ -f .built ]; then
 sed -i "1s@.*@$NTSROOT@" .built
 sed -i "2s@.*@@" .built
 fi
+
+if [[ -z "${MGS_PYTHON_LIB}" ]]; then
+  if `ldconfig -p | grep -q libpython3.6m`; then
+    echo "libpython3.6m.so found"
+    MGS_PYTHON_LIB=$(ldconfig -p | grep libpython3.6m | awk -F"=>" '{print $2;}')
+    MGS_PYTHON_LIB=$(dirname $MGS_PYTHON_LIB | uniq)
+    export MGS_PYTHON_LIB=$MGS_PYTHON_LIB
+  else
+    echoerr -e "${cc_red}Please export MGS_PYTHON_LIB=/path/to/libpython3.6m.so${cc_normal}"
+    echoerr " e.g: export MGS_PYTHON_LIB=/usr/lib/x86_64-linux-gnu/"
+  fi
+fi
+
+OUTPUT=`echo '#include <python3.6m/Python.h>' | cpp -H -o /dev/null 2>&1 | head -n1`
+if [[ "${OUTPUT}" == *"fatal error"* ]]; then
+  echoerr -e "${cc_red}Python.h not found. Either:${cc_normal}"
+  echoerr " install (Ubuntu): sudo apt-get install python3-dev"
+  echoerr " or export MGS_PYTHON_INCLUDE_DIR=/path/to/Python.h"
+  echoerr " e.g: export MGS_PYTHON_INCLUDE_DIR=/usr/include/python2.7/"
+  echoerr " e.g: export MGS_PYTHON_INCLUDE_DIR=/usr/include/python3.6/"
+else
+  MGS_PYTHON_INCLUDE_DIR=$(echo $OUTPUT | cut -d' ' -f2- )
+  MGS_PYTHON_INCLUDE_DIR=$(dirname $MGS_PYTHON_INCLUDE_DIR | uniq)
+  export MGS_PYTHON_INCLUDE_DIR=$MGS_PYTHON_INCLUDE_DIR
+fi
+
 #module switch gcc/7.3
 #module switch cuda/9.2
 #module switch ompi/3.1.1_cuda9.2_gcc7.3

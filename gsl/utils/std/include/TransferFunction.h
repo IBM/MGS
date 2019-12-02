@@ -4,6 +4,13 @@
 #include <math.h>
 #include "String.h"
 
+enum TRANSFER_FUNC_ENUM
+{
+   TANH=0,
+   RELU,
+   NUM_TRANSFER_FUNC
+};
+
 class TransferFunction
 {
   public: 
@@ -11,23 +18,25 @@ class TransferFunction
      double (*transfer) (double);
      double (*derivativeOfTransfer) (double);
      
-     void setType(String type) {
+     /* return (int): the index to the function from array of function pointer 
+      * IMPORTANT: This has to be the same order of those declared in DNEdgeSetCompCategory.cu file */
+     int setType(String type) {
+       int index=0;
        if (type == "tanh") {
 	 transfer = &tanh;
 	 derivativeOfTransfer = &dtanh;
+	 index=TANH;
        }
        else if (type == "relu") {
 	 transfer = &relu;
 	 derivativeOfTransfer = &drelu;
-       }
-       else if (type == "identity") {
-	 transfer = &identity;
-	 derivativeOfTransfer = &didentity;
+	 index=RELU;
        }
        else {
 	 std::cerr << "Unrecognized transfer function!" << std::endl;
 	 exit(-1);
        }
+       return index;
      }
      
      static double dtanh(double _tanh_) {

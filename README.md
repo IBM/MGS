@@ -175,6 +175,10 @@ docker rm <container-name>
 
 # return to a running container, using the container's ID  (minimal 3 digits can be used)
 docker attach <CONTAINER-ID>
+
+# stop and remove a container
+docker stop <containerName>
+docker rm <containerName>
 ```
   
 # Run flags

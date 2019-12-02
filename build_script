@@ -600,23 +600,13 @@ if [ "$ARMA" == "--arma" ]; then
 fi
 #}}}
 #{{{ 
-if [[ -z "${PYTHON_INCLUDE_DIR}" ]]; then
-  echoerr "Please export PYTHON_INCLUDE_DIR=/path/to/Python.h"
-  echoerr " e.g: export PYTHON_INCLUDE_DIR=/usr/include/python2.7/"
-  echoerr " e.g: export PYTHON_INCLUDE_DIR=/usr/include/python3.6/"
+if [[ -z "${MGS_PYTHON_INCLUDE_DIR}" ]]; then
+  echoerr "Please run: source set_env"
   exit 1
 fi
-if [[ -z "${PYTHON_LIB}" ]]; then
-  if `ldconfig -p | grep -q libpython3.6m`; then
-    echo "libpython3.6m.so found"
-    PYTHON_LIB=$(ldconfig -p | grep libpython3.6m | awk -F"=>" '{print $2;}')
-    PYTHON_LIB=$(dirname $PYTHON_LIB | uniq)
-    export PYTHON_LIB=$PYTHON_LIB
-  else
-    echo "Please export PYTHON_LIB=/path/to/libpython3.6m.so"
-    echo " e.g: export PYTHON_LIB=/usr/lib/x86_64-linux-gnu/"
-    exit 1
-  fi
+if [[ -z "${MGS_PYTHON_LIB}" ]]; then
+  echoerr "Please run: source set_env"
+  exit 1
 fi
 if [ "$BUILD_TARGET" == "--as-NTS-NVU" ]; then
 if [[ -z "${SUITESPARSE}" ]]; then

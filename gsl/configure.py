@@ -976,7 +976,6 @@ SO_DIR := $(LENSROOT)/so
 PARSER_PATH := framework/parser
 STD_UTILS_OBJ_PATH := utils/std/obj
 TOTALVIEW_LIBPATH := /opt/toolworks/totalview.8.4.1-7/rs6000/lib
-
 """
 
         # BlueGene MPI flags
@@ -1529,15 +1528,14 @@ SRC_HEADER_INC += -I../common/include
     def getNVCCFlags(self):  # noqa
         retStr = \
             """\
-# OTHER_LIBS :=-lgmp -lpython2.7
-OTHER_LIBS :=-lgmp  \
+OTHER_LIBS := -lgmp \
 """
-        retStr += " -I$(PYTHON_INCLUDE_DIR) -L$(PYTHON_LIB) -l{} ".format(self.pythonLibName)
+        retStr += "-I$(MGS_PYTHON_INCLUDE_DIR) -L$(MGS_PYTHON_LIB) -l{} ".format(self.pythonLibName)
 
         retStr += "\n"
         retStr += \
             """\
-OTHER_LIBS_HEADER :=-I$(PYTHON_INCLUDE_DIR)
+OTHER_LIBS_HEADER := -I$(MGS_PYTHON_INCLUDE_DIR)
 """
         retStr += "\n"
         retStr += \
@@ -1678,15 +1676,14 @@ CUDA_NVCC_COMBINED_LDFLAGS :=   $(GENCODE_FLAGS) -lib
     def getCFlags(self):  # noqa
         retStr = \
             """\
-# OTHER_LIBS :=-lgmp -lpython2.7
-OTHER_LIBS :=-lgmp  \
+OTHER_LIBS :=-lgmp \
 """
-        retStr += " -I$(PYTHON_INCLUDE_DIR) -L$(PYTHON_LIB) -l{}".format(self.pythonLibName)
+        retStr += "-I$(MGS_PYTHON_INCLUDE_DIR) -L$(MGS_PYTHON_LIB) -l{}".format(self.pythonLibName)
 
         retStr += "\n"
         retStr += \
             """\
-OTHER_LIBS_HEADER :=-I$(PYTHON_INCLUDE_DIR)
+OTHER_LIBS_HEADER := -I$(MGS_PYTHON_INCLUDE_DIR)
 """
         retStr += "\n"
         retStr += \
@@ -2018,7 +2015,7 @@ DX_INCLUDE := framework/dca/include
 #.h:
 #	true
 """
-        if self.separate_compile is True:
+        if self.options.withGpu is True and self.separate_compile is True:
             retStr += """
 $(OBJS_DIR)/CG_%CompCategory.o : CG_%CompCategory.C
 \t$(NVCC) $(CUDA_NVCC_FLAGS) $(SRC_HEADER_INC) $(OTHER_LIBS_HEADER) """
@@ -2105,7 +2102,7 @@ $(OBJS_DIR)/speclang.tab.o: framework/parser/generated/speclang.tab.C framework/
             retStr += \
                 """
 $(OBJS_DIR)/speclang.tab.o: framework/parser/generated/speclang.tab.C framework/parser/bison/speclang.y
-\t$(CC) -c $< -DYYDEBUG $(CFLAGS) $(OBJECTONLYFLAGS) -o $@
+\t$(CC) $(SRC_HEADER_INC) -c $< -DYYDEBUG $(CFLAGS) -o $@
 
 """
 
@@ -2142,7 +2139,7 @@ $(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/
             retStr += \
                 """
 $(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
-\t$(CC) -c $< $(CFLAGS) $(OBJECTONLYFLAGS) -o $@
+\t$(CC) -c $< $(CFLAGS) $(SRC_HEADER_INC) -o $@
 """
         retStr += "\n"
         return retStr
@@ -2332,7 +2329,8 @@ clean:
                     if fnmatch.fnmatch(name, pattern):
                         result.append(name)
             return result
-        libs_found = find("libpython*.so", os.environ["PYTHON_LIB"])
+        # NOTE: must match the one requested from set_env script
+        libs_found = find("libpython3.6*.so", os.environ["MGS_PYTHON_LIB"])
         if not libs_found:
             self.pythonLibName = "python2.7"
         else:
