@@ -311,6 +311,7 @@ class Array_Flat //: public Managed
 
     CUDA_CALLABLE T* getDataRef() {return _data; };
     CUDA_CALLABLE void increaseSizeTo(int64_t newSize, bool force_trim_memory_to_smaller = false);
+    CUDA_CALLABLE void resize(int64_t newSize);
     void decreaseSizeTo(int64_t newSize);
     //void resize_allocated(unsigned newSize);
     CUDA_CALLABLE void resize_allocated(int64_t newSize, bool force_trim_memory_to_smaller = false);
@@ -648,6 +649,12 @@ void Array_Flat<T, memLocation>::decreaseSizeTo(int64_t newSize)
   //resize_allocated(newSize+NUM_TRAILING_ELEMENT);
   resize_allocated(newSize);
   _size = newSize;
+}
+template <class T, int memLocation>
+void Array_Flat<T, memLocation>::resize(int64_t newSize)
+{
+ bool force_trim_memory_to_smaller=true;
+ increaseSizeTo(newSize, force_trim_memory_to_smaller);
 }
 
 /*

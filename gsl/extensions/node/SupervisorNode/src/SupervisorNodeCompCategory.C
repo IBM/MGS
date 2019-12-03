@@ -286,7 +286,7 @@ bool SupervisorNodeCompCategory::isReady()
 void SupervisorNodeCompCategory::shuffleDeck(unsigned deckSize, RNG& rng)
 {
   if (_shuffledDeck.size() != deckSize)
-    _shuffledDeck.increaseSizeTo(deckSize);
+    _shuffledDeck.resize(deckSize);
 #ifdef DONT_SHUFFLE
   unsigned ii=0;
   for (unsigned ii=0; ii < deckSize; ++ii) {
@@ -313,7 +313,7 @@ void SupervisorNodeCompCategory::shuffleDeck(unsigned deckSize, RNG& rng)
 #ifdef HAVE_GPU
   {///GPU-specific
     if (um_shuffledDeck.size() != deckSize)
-      um_shuffledDeck.increaseSizeTo(deckSize);
+      um_shuffledDeck.resize(deckSize);
     auto mend=_shuffledDeck.end();
     int ii =0;
     for (auto miter=_shuffledDeck.begin(); miter!=mend; ++miter, ++ii) {
