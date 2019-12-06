@@ -275,9 +275,9 @@ class Array_Flat //: public Managed
     CUDA_CALLABLE void destructContents();
     /* make the data reference to some external data 
      * NOTE: the memory management is not taken cared by this container */
-    void changeRef(T* target, int size, bool delete_current_data=true)
+    void changeRef(T* target, int size)
     {
-      if (delete_current_data)
+      if (not _referenceOtherData)
 	destructContents(); //delete old data
       if (target == nullptr)
 	assert(0);

@@ -1025,7 +1025,7 @@ MPI_INC = -I$(BGP_ROOT)/arch/include
             retStr += """
 # Gencode arguments
 #SMS ?= 35 37 50 52 60 61 70 75
-SMS ?= 70 
+SMS ?= 70
 
 ifeq ($(SMS),)
 $(info >>> WARNING - no SM architectures have been specified - waiving sample <<<)
@@ -1668,7 +1668,7 @@ CUDA_NVCC_FLAGS += $(SOURCE_AS_CPP)
 # NVCC fails with this --compiler-options -flto
 #https://devtalk.nvidia.com/default/topic/1026826/link-time-optimization-with-cuda-on-linux-flto-/?offset=6
 
-CUDA_NVCC_LDFLAGS :=  $(GENCODE_FLAGS) -dlink 
+CUDA_NVCC_LDFLAGS :=  $(GENCODE_FLAGS) -dlink
 CUDA_NVCC_COMBINED_LDFLAGS :=   $(GENCODE_FLAGS) -lib
 """
         return retStr
@@ -1928,9 +1928,9 @@ LIBS := """
         if self.operatingSystem == "Linux":
             if self.options.withGpu is True:
                 pass
-                # retStr += "-Xlinker -rdynamic"
+                # retStr += " -Xlinker -rdynamic"
             else:
-                retStr += LINUX_FINAL_TARGET_FLAG
+                retStr += " " + LINUX_FINAL_TARGET_FLAG
         elif self.operatingSystem == "AIX":
 
             if self.options.dynamicLoading is True:

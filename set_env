@@ -40,17 +40,19 @@ if [[ -z "${MGS_PYTHON_LIB}" ]]; then
   fi
 fi
 
-OUTPUT=`echo '#include <python3.6m/Python.h>' | cpp -H -o /dev/null 2>&1 | head -n1`
-if [[ "${OUTPUT}" == *"fatal error"* ]]; then
-  echoerr -e "${cc_red}Python.h not found. Either:${cc_normal}"
-  echoerr " install (Ubuntu): sudo apt-get install python3-dev"
-  echoerr " or export MGS_PYTHON_INCLUDE_DIR=/path/to/Python.h"
-  echoerr " e.g: export MGS_PYTHON_INCLUDE_DIR=/usr/include/python2.7/"
-  echoerr " e.g: export MGS_PYTHON_INCLUDE_DIR=/usr/include/python3.6/"
-else
-  MGS_PYTHON_INCLUDE_DIR=$(echo $OUTPUT | cut -d' ' -f2- )
-  MGS_PYTHON_INCLUDE_DIR=$(dirname $MGS_PYTHON_INCLUDE_DIR | uniq)
-  export MGS_PYTHON_INCLUDE_DIR=$MGS_PYTHON_INCLUDE_DIR
+if [[ -z "${MGS_PYTHON_INCLUDE_DIR}" ]]; then
+  OUTPUT=`echo '#include <python3.6m/Python.h>' | cpp -H -o /dev/null 2>&1 | head -n1`
+  if [[ "${OUTPUT}" == *"fatal error"* ]]; then
+    echoerr -e "${cc_red}Python.h not found. Either:${cc_normal}"
+    echoerr " install (Ubuntu): sudo apt-get install python3-dev"
+    echoerr " or export MGS_PYTHON_INCLUDE_DIR=/path/to/Python.h"
+    echoerr " e.g: export MGS_PYTHON_INCLUDE_DIR=/usr/include/python2.7/"
+    echoerr " e.g: export MGS_PYTHON_INCLUDE_DIR=/usr/include/python3.6/"
+  else
+    MGS_PYTHON_INCLUDE_DIR=$(echo $OUTPUT | cut -d' ' -f2- )
+    MGS_PYTHON_INCLUDE_DIR=$(dirname $MGS_PYTHON_INCLUDE_DIR | uniq)
+    export MGS_PYTHON_INCLUDE_DIR=$MGS_PYTHON_INCLUDE_DIR
+  fi
 fi
 
 #module switch gcc/7.3

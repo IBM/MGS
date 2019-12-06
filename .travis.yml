@@ -16,7 +16,7 @@ compiler:
 
 env:
   global:
-    - MGS_PYTHON_INCLUDE_DIR=/usr/include/python3.6/
+    - MGS_PYTHON_INCLUDE_DIR=/usr/include/python3.6m/
     - MGS_PYTHON_LIB=/usr/lib/x86_64-linux-gnu/
     - CUDA=9.2.148-1
     - CUDA_SHORT=9.2
@@ -173,7 +173,7 @@ jobs:
           if [ -f "${TRAVIS_BUILD_DIR}/gsl/bin/gslparser" ]; then
           rm ${TRAVIS_BUILD_DIR}/gsl/bin/gslparser
           fi
-        - echo "source set_env && ./build_script -p LINUX $BUILD_SYSTEM --rebuild > /tmp/log_mgs.txt 2>&1 " > quick_build.sh
+        - echo "./build_script -p LINUX $BUILD_SYSTEM --rebuild > /tmp/log_mgs.txt 2>&1 " > quick_build.sh
         - chmod +x ./quick_build.sh
         - travis_wait 30 sh -c ./quick_build.sh 
         - |
