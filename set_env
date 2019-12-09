@@ -31,7 +31,7 @@ fi
 if [[ -z "${MGS_PYTHON_LIB}" ]]; then
   if `ldconfig -p | grep -q libpython3.6m`; then
     echo "libpython3.6m.so found"
-    MGS_PYTHON_LIB=$(ldconfig -p | grep libpython3.6m | awk -F"=>" '{print $2;}' | xargs dirname | uniq) 
+    MGS_PYTHON_LIB=$(ldconfig -p | grep libpython3.6m | awk -F"=>" '{print $2;}' | xargs dirname | uniq)
     export MGS_PYTHON_LIB=$MGS_PYTHON_LIB
   else
     echoerr -e "${cc_red}Please export MGS_PYTHON_LIB=/path/to/libpython3.6m.so${cc_normal}"
