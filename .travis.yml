@@ -62,6 +62,16 @@ env:
     - INCLUDE_PATH=${SUITESPARSE_HOME}/include:${INCLUDE_PATH}
     - CPLUS_INCLUDE_PATH=${SUITESPARSE_HOME}/include:${CPLUS_INCLUDE_PATH}
     - INCLUDE=${SUITESPARSE_HOME}/include:${INCLUDE}
+    - CUDA_HOME=/usr/local/cuda-${CUDA_SHORT}
+    - PATH=${CUDA_HOME}/bin:${PATH}
+    - LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${CUDA_HOME}/lib64/stubs:${LD_LIBRARY_PATH}
+    - LD_RUN_PATH=${CUDA_HOME}/lib64:${CUDA_HOME}/lib64/stubs:${LD_RUN_PATH}
+    - LIBRARY_PATH=${CUDA_HOME}/lib64:${CUDA_HOME}/lib64/stubs:${LIBRARY_PATH}
+    - CPATH=${CUDA_HOME}/include:${CPATH}
+    - C_INCLUDE_PATH=${CUDA_HOME}/include:${C_INCLUDE_PATH}
+    - INCLUDE_PATH=${CUDA_HOME}/include:${INCLUDE_PATH}
+    - CPLUS_INCLUDE_PATH=${CUDA_HOME}/include:${CPLUS_INCLUDE_PATH}
+    - INCLUDE=${CUDA_HOME}/include:${INCLUDE}
 
 addons:
   apt:
@@ -173,15 +183,18 @@ jobs:
           if [ -f "${TRAVIS_BUILD_DIR}/gsl/bin/gslparser" ]; then
           rm ${TRAVIS_BUILD_DIR}/gsl/bin/gslparser
           fi
-        - echo "./build_script -p LINUX $BUILD_SYSTEM --rebuild > /tmp/log_mgs.txt 2>&1 " > quick_build.sh
+        - echo "./build_script -p LINUX $BUILD_SYSTEM --rebuild > /tmp/log_mgs.txt 2>&1; tail -n 50 /tmp/log_mgs.txt " > quick_build.sh
+        - echo "cd gsl; make > /tmp/log_mgs_fail.txt 2>&1" > check_error.sh
         - chmod +x ./quick_build.sh
+        - chmod +x ./check_error.sh
         - travis_wait 30 sh -c ./quick_build.sh 
         - |
           if [ -f "${TRAVIS_BUILD_DIR}/gsl/bin/gslparser" ]; then
+          tail -n 30 /tmp/log_mgs.txt
           echo "Build successful"
-          tail -n 50 /tmp/log_mgs.txt
           else
-          tail -n 100 /tmp/log_mgs.txt
+          ./check_error.sh
+          tail -n 20 /tmp/log_mgs_fail.txt
           echo "Build failed"
           fi
     - stage: NGS 

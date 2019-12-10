@@ -267,6 +267,7 @@ std::string ConnectionCCBase::getAddConnectionFunctionBodyExtra(
       end3 = predicateFunctions.end();
       for (it3 = predicateFunctions.begin(); it3 != end3; ++it3) {
 	 os << TAB << "bool " << PREDICATEFUNCTIONPREFIX << *it3 << " = " 
+	    << " true; //"
 	    << *it3 << "(" << functionParameters << ");\n";
       }   
       if ((subBody != "") || predicateFunctions.size() > 0) { 
