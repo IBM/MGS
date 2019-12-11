@@ -3,4 +3,5 @@
 #include "Life/Life.mdl"
 #include "Life/LifeDataCollectors.mdl"
 #include "PointNeuronTools/PointNeuronTools.mdl"
-
+#include "DNN/DNN.mdl"
+#include "DNN/DNNTools.mdl"
