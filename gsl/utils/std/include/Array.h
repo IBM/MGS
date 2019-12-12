@@ -80,6 +80,7 @@ class Array
       _activeBlocksSize = getBlockIncrementSize();
       _blocksArray = new T*[_activeBlocksSize];
     }
+    void resize(unsigned newSize);
     void increaseSizeTo(unsigned newSize);
     void decreaseSizeTo(unsigned newSize);
     void increase();
@@ -206,6 +207,14 @@ void Array<T>::decreaseSizeTo(unsigned newSize)
    {
       decrease();
    }
+}
+template <class T>
+void Array<T>::resize(unsigned newSize)
+{
+  if (_size < newSize)
+    increaseSizeTo(newSize);
+  else
+    decreaseSizeTo(newSize);
 }
 
 /*

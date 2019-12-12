@@ -136,7 +136,9 @@ class InterfaceImplementorBase : public Generatable {
 			   ) const; 
       void generateOutAttrPSet();
       void generatePublisher();
+      void generatePublisher(bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType);
       std::unique_ptr<Class> generateInstanceBase(); //to support GPU, the CG_LifeNode class's data is now part of CG_LifeNodeCompCategory, so we expand the API to return the Class object representing CG_LifeNodeCompCategory
+      //the expaned API that is supposed to be used by the NodeType
       std::unique_ptr<Class> generateInstanceBase(bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType);
       void generateInstanceProxy();
       void generateInstanceProxy(bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType);
@@ -148,14 +150,15 @@ class InterfaceImplementorBase : public Generatable {
 	 std::auto_ptr<Class>& instance) const;
       virtual void addExtraOptionalServiceHeaders(
 	 std::auto_ptr<Class>& instance) const;
-      std::string getInstanceServices(const std::string& tab) const;
+      std::string getInstanceServices(const std::string& tab, const Class* instance=nullptr) const;
       std::string getOptionalInstanceServices(const std::string& tab) const;
       virtual std::string getExtraServices(const std::string& tab) const;
       virtual std::string getExtraOptionalServices(
 	 const std::string& tab) const;
 
       std::string getInstanceServiceNames(const std::string& tab, 
-	    MachineType mach_type=MachineType::CPU) const;
+	    MachineType mach_type=MachineType::CPU, 
+	    Class* instance=nullptr) const;
       std::string getOptionalInstanceServiceNames(
 	 const std::string& tab) const;
       virtual std::string getExtraServiceNames(const std::string& tab) const;
@@ -164,7 +167,8 @@ class InterfaceImplementorBase : public Generatable {
 
       std::string getInstanceServiceDescriptions(
 	 const std::string& tab,
-	 MachineType mach_type=MachineType::CPU
+	 MachineType mach_type=MachineType::CPU,
+	 const Class* instance=nullptr
 	 ) const;
       std::string getOptionalInstanceServiceDescriptions(
 	 const std::string& tab) const;
@@ -183,7 +187,8 @@ class InterfaceImplementorBase : public Generatable {
 	 const std::string& tab) const;
 
       std::string createServices(const MemberContainer<DataType>& members, 
-				 const std::string& tab) const;
+				 const std::string& tab,
+				 const Class* instance=nullptr) const;
 
       std::string createOptionalServices(
 	 const MemberContainer<DataType>& members, 
@@ -191,7 +196,8 @@ class InterfaceImplementorBase : public Generatable {
 
       std::string createServiceNames(const MemberContainer<DataType>& members, 
 				     const std::string& tab,
-				     MachineType mach_type=MachineType::CPU
+				     MachineType mach_type=MachineType::CPU,
+				     Class* instance=nullptr
 				     ) const;
 
       std::string createOptionalServiceNames(
@@ -209,7 +215,8 @@ class InterfaceImplementorBase : public Generatable {
       std::string createServiceDescriptions(
 	 const MemberContainer<DataType>& members, 
 	 const std::string& tab,
-	 MachineType mach_type=MachineType::CPU
+	 MachineType mach_type=MachineType::CPU,
+	 const Class* instance=nullptr
 	 ) const;
 
       std::string createOptionalServiceDescriptions(

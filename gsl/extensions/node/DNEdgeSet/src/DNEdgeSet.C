@@ -8,22 +8,24 @@
 
 #ifdef HAVE_GPU
 
-#define weights  (_container->um_weights[index])
-#define deltaWeights  (_container->um_deltaWeights[index])
-#define deltaWeightsSquared  (_container->um_deltaWeightsSquared[index])
-#define weightedOutputs  (_container->um_weightedOutputs[index])
-#define weightedGradient  (_container->um_weightedGradient[index])
-#define echoes  (_container->um_echoes[index])
-#define echoIndex  (_container->um_echoIndex[index])
-#define biasCorrectionW  (_container->um_biasCorrectionW[index])
-#define biasCorrectionS  (_container->um_biasCorrectionS[index])
-#define input  (_container->um_input[index])
-#define gradients  (_container->um_gradients[index])
-#define readyForward  (_container->um_readyForward[index])
-#define readyBackward  (_container->um_readyBackward[index])
-#define transferFunctionName  (_container->um_transferFunctionName[index])
-#define momentum  (_container->um_momentum[index])
-#define rmsprop  (_container->um_rmsprop[index])
+#define weights  (_container->um_weights[__index__])
+#define deltaWeights  (_container->um_deltaWeights[__index__])
+#define deltaWeightsSquared  (_container->um_deltaWeightsSquared[__index__])
+#define weightedOutputs  (_container->um_weightedOutputs[__index__])
+#define weightedGradient  (_container->um_weightedGradient[__index__])
+#define echoes  (_container->um_echoes[__index__])
+#define echoIndex  (_container->um_echoIndex[__index__])
+#define biasCorrectionW  (_container->um_biasCorrectionW[__index__])
+#define biasCorrectionS  (_container->um_biasCorrectionS[__index__])
+#define input  (_container->um_input[__index__])
+#define gradients  (_container->um_gradients[__index__])
+#define readyForward  (_container->um_readyForward[__index__])
+#define readyBackward  (_container->um_readyBackward[__index__])
+#define transferFunctionName  (_container->um_transferFunctionName[__index__])
+#define momentum  (_container->um_momentum[__index__])
+#define rmsprop  (_container->um_rmsprop[__index__])
+
+#define udef_fncIndex (_container->udef_um_fncIndex[__index__])
 #endif
 
 #define PRELIM_STATE DBL_MAX
@@ -32,14 +34,16 @@
 
 void DNEdgeSet::initialize(RNG& rng) 
 {
-  /*
-  if (bias) {
-    std::cerr<<*bias<<std::endl;
-    input=bias;
-  }
-  */
+#if defined(HAVE_GPU)
+  // must be pre-allocated to work on GPU
+  echoes.resize_allocated(SHD.max_num_layers);
+  // track the index to the transfer function
+  udef_fncIndex = transferFunction.setType(transferFunctionName);
+  //...
+#else
+  transferFunction.setType(transferFunctionName);
+#endif
   unsigned sz = gradients.size();
-
   weightedOutputs.increaseSizeTo(sz);
   weights.increaseSizeTo(sz);
   deltaWeights.increaseSizeTo(sz);
@@ -53,12 +57,12 @@ void DNEdgeSet::initialize(RNG& rng)
   weightedGradient = PRELIM_STATE;
   readyForward = false;
   readyBackward = false;
-  transferFunction.setType(transferFunctionName);
+
   biasCorrectionW = SHD.alpha;
   biasCorrectionS = SHD.beta;
 
-  ShallowArray<String>::const_iterator oiter, oend = SHD.optimization.end();
-  for (oiter=SHD.optimization.begin(); oiter!=oend; ++oiter) {
+  auto oend = SHD.optimization.end();
+  for (auto oiter=SHD.optimization.begin(); oiter!=oend; ++oiter) {
     if (*oiter=="Momentum") momentum=true;
     else if (*oiter=="RMSprop") rmsprop=true;
     else if (*oiter=="Adam") momentum=rmsprop=true;
@@ -72,11 +76,11 @@ void DNEdgeSet::update(RNG& rng)
     
   auto gend = gradients.end();
   if (readyForward) {
-    auto witer=weights.begin(),
-      diter=deltaWeights.begin(),
-      siter=deltaWeightsSquared.begin(),
-      woiter=weightedOutputs.begin(),
-      woend=weightedOutputs.end();
+    auto witer=weights.begin();
+    auto diter=deltaWeights.begin();
+    auto siter=deltaWeightsSquared.begin();
+    auto woiter=weightedOutputs.begin();
+    auto woend=weightedOutputs.end();
 
     double transferInput = transferFunction.transfer(*input);
     
@@ -110,7 +114,6 @@ void DNEdgeSet::update(RNG& rng)
 	  *diter = ( (1-SHD.alpha) * deltaWeight + SHD.alpha * *diter ) / (1.0 - biasCorrectionW);
 	  update *=  *diter;
 	}
-
 	else
 	  update *= deltaWeight;
 

@@ -38,8 +38,8 @@ class BaseClass;
 class Class
 {
    public:
-      enum class PrimeType{ UN_SET, Node, Variable, CCDemarshaller };
-      enum class SubType{ UN_SET, BaseClass, Class, BaseCompCategory, CompCategory, BaseClasFactory, BaseClassGridLayerData, BaseClassInAttrPSet, BaseClassNodeAccessor, BaseClassOutAttrPSet, BaseClassPSet, BaseClassProxy };
+      enum class PrimeType{ UN_SET, Node, Variable, CCDemarshaller, Struct, Constant };
+      enum class SubType{ UN_SET, BaseClass, Class, BaseCompCategory, CompCategory, BaseClasFactory, BaseClassGridLayerData, BaseClassInAttrPSet, BaseClassNodeAccessor, BaseClassOutAttrPSet, BaseClassPSet, BaseClassProxy, SharedMembers, Publisher };
       void setClassInfo(std::pair<PrimeType, SubType> _pair){ _classInfo = _pair; };
       PrimeType getClassInfoPrimeType() const { return _classInfo.first; };
       SubType getClassInfoSubType() const { return _classInfo.second; };
@@ -103,6 +103,16 @@ class Class
 	    _attributes.push_back(att.release());
 	 else if (mach_type == MachineType::GPU)
 	    _attributes_gpu.push_back(att.release());
+	 else 
+	    assert(0);
+      }
+      //the attribute the is outside the class - i.e. global-scope level
+      void addGlobalAttribute(std::unique_ptr<Attribute>& att, MachineType mach_type=MachineType::CPU) {
+	 _generateSourceFile=true;
+	 if (mach_type == MachineType::CPU)
+	    _attributes_global.push_back(att.release());
+	 else if (mach_type == MachineType::GPU)
+	    _attributes_gpu_global.push_back(att.release());
 	 else 
 	    assert(0);
       }
@@ -213,9 +223,9 @@ class Class
       void setAlternateFileName(std::string s) {_alternateFileName=s;}
       std::string getFileName();
       /*
-       * arg (as called from CPU-side)= um_value.getDataRef()
-       * param (for definition)= value
-       * typeStr (for definition)=  'int*'
+       * arg (as called from CPU-side)= e.g. um_value.getDataRef() or _nodes.size()
+       * param (name for definition)= e.g. value or size
+       * typeStr (type for definition)=  'int*'
        */
       void addKernelArgs(std::string arg, std::string param, std::string typeStr){
          if (_gpuKernelArgs.empty())
@@ -278,6 +288,14 @@ class Class
 	       << TAB << comma << dt->getDescriptor() << "* " << dt->getName() << "\n"
 	       << TAB << "//need more info here\n"
 	       << TAB << "#endif\n";
+	 }else if (dt->isArray() and sharedData)
+	 {
+	    ArrayType* arr_dt = dynamic_cast<ArrayType*>(dt);
+	    std::string firstcomma = ", ";
+	    if (_gpuKernelArgs.empty())
+	       firstcomma="";
+	    os << "getSharedMembers()." << dt->getName() << ".getDataRef()";
+	    os_gpu << TAB << firstcomma << arr_dt->getType()->getTypeString() << "* " << dt->getName() ;
 	 }
 	 if (_gpuKernelArgs.empty())
 	 {
@@ -286,7 +304,13 @@ class Class
 	       _gpuKernelArgsAsCalledFromCPU = TAB + TAB + os.str() + "\n";
 	       _gpuKernelArgs = TAB + os_gpu.str() + "\n";
 
-	    }else
+	    }
+	    else if (dt->isArray() and sharedData)
+	    {
+	       _gpuKernelArgsAsCalledFromCPU = TAB + TAB + os.str()+ "\n";
+	       _gpuKernelArgs = TAB + os_gpu.str() + "\n";
+	    }
+	    else
 	    {
 	       _gpuKernelArgsAsCalledFromCPU = TAB + TAB + arg + "\n";
 	       _gpuKernelArgs = TAB + typeStr + " " + param + "\n";
@@ -298,7 +322,13 @@ class Class
 	       _gpuKernelArgsAsCalledFromCPU += TAB + TAB + os.str() + "\n";
 	       _gpuKernelArgs += TAB + os_gpu.str() + "\n";
 
-	    }else
+	    }
+	    else if (dt->isArray() and sharedData)
+	    {
+	       _gpuKernelArgsAsCalledFromCPU += TAB + TAB +  ", " + os.str() + "\n";
+	       _gpuKernelArgs += os_gpu.str() + "\n";
+	    }
+	    else
 	    {
 	       _gpuKernelArgsAsCalledFromCPU += TAB + TAB + ", " + arg + "\n";
 	       _gpuKernelArgs += TAB + ", " + typeStr + " " + param + "\n";
@@ -307,8 +337,7 @@ class Class
       }
       void printGPUSource(std::string method, std::ostringstream& os);
       void addDataNameMapping(std::string nameMapping){
-	 /*
-       #define u  (_container->mu_u[index])
+	 /* #define u  (_container->mu_u[index])
 	  */
 	 _dataNamesInNodes += nameMapping + "\n";
       }
@@ -328,6 +357,7 @@ class Class
 	    MemberContainer<DataType>::const_iterator it, end = sharedMembers.end();
 	    for (it = sharedMembers.begin(); it != end; ++it) {
 	       //std::string name="getSharedMembers()." + it->first;
+	       std::cout << "TEST " << it->first << std::endl;
 	       //addKernelArgs(name, name, it->second->getDescriptor());
 	       addKernelArgs(it->second, true);
 	    }
@@ -354,6 +384,8 @@ class Class
       void printMemberClassesMethods(std::ostringstream& os);
       void printMethods(std::ostringstream& os);
       void printAttributes(AccessType type, std::ostringstream& os, MachineType mach_type=MachineType::CPU);
+      //these attributes are saved to Source file
+      void printGlobalAttributes(std::ostringstream& os, MachineType mach_type);
       void printAccess(AccessType type, const std::string& name, 
 		       std::ostringstream& os);
       void printAccessMemberClasses(AccessType type, const std::string& name, 
@@ -378,6 +410,7 @@ class Class
       void addDestructor();
       void addDuplicate();
       bool hasOwnedHeapData();
+      int numAttributesOfType(const std::vector<Attribute*>& attributes, const AccessType& type) const;
       std::string _name;
       std::string _nameParentClass;
       // Duplicate types that are not direct superClasses.
@@ -393,6 +426,8 @@ class Class
       std::vector<BaseClass*> _baseClasses;
       std::vector<Attribute*> _attributes;
       std::vector<Attribute*> _attributes_gpu; //copied from InterfaceImplementorBase
+      std::vector<Attribute*> _attributes_global;
+      std::vector<Attribute*> _attributes_gpu_global; //copied from InterfaceImplementorBase
       std::vector<Method*> _methods;
       std::vector<std::string> _templateClassParameters;
       std::vector<std::string> _templateClassSpecializations;

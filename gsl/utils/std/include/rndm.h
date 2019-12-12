@@ -42,6 +42,69 @@ inline    void _check(cudaError_t r, const char* file, int line, bool abort=true
     if (abort) exit(0);
   }
 }
+#ifndef DEVICE_RESET
+#define DEVICE_RESET cudaDeviceReset();
+#endif
+static const char *_cudaGetErrorEnum(cudaError_t error) {
+  return cudaGetErrorName(error);
+}
+template <typename T>
+void check(T result, char const *const func, const char *const file,
+           int const line) {
+  if (result) {
+    fprintf(stderr, "CUDA error at %s:%d code=%d(%s) \"%s\" \n", file, line,
+            static_cast<unsigned int>(result), _cudaGetErrorEnum(result), func);
+    DEVICE_RESET
+    // Make sure we call CUDA Device Reset before exiting
+    exit(EXIT_FAILURE);
+  }
+}
+
+class Managed
+{
+  public:
+    /* 
+     * T = data type for 1 element
+     * len = num_elements * sizeof(T)
+     */
+    void *operator new(size_t len)
+    {
+      void *ptr;
+      cudaMallocManaged(&ptr, len);
+      cudaDeviceSynchronize();
+      return ptr;
+    }
+    void operator delete(void* ptr)
+    {
+      cudaDeviceSynchronize();
+      cudaFree(ptr);
+    }
+
+    CUDA_CALLABLE void * new_memory(size_t len)
+    {
+      void *ptr=nullptr;
+#if ! defined(__CUDA_ARCH__)
+      gpuErrorCheck(cudaDeviceSynchronize());
+      gpuErrorCheck(cudaMallocManaged(&ptr, len));
+#else
+      assert(0);
+#endif
+      return ptr;
+    }
+    CUDA_CALLABLE void delete_memory(void* ptr)
+    {
+#if ! defined(__CUDA_ARCH__)
+      gpuErrorCheck(cudaDeviceSynchronize());
+      gpuErrorCheck(cudaFree(ptr));
+#else
+      assert(0);
+#endif
+    }
+};
+
+// This will output the proper CUDA error strings in the event
+// that a CUDA host call returns an error
+#define checkCudaErrors(val) check((val), #val, __FILE__, __LINE__)
 
 /* IMPORTANT: this is necessary for large-scale simulation */
 #define ARRAY_LAZY_ALLOCATION
@@ -189,6 +252,7 @@ inline    void _check(cudaError_t r, const char* file, int line, bool abort=true
 #endif
 #else
 #define CUDA_CALLABLE
+#define __df__
 #endif
 
 inline double drandom(RNG_ns& rangen)
@@ -309,5 +373,25 @@ CUDA_CALLABLE T tanh(T x)
   return 2/(1+exp(-2*x))-1; 
 }
 
+
+//here, the iterator needs to be dereferenced to get the value
+static bool dereference_compare(double* a, double* b)
+{
+    return (*a) < (*b);
+}
+template<class ForwardIt, class Compare>
+ForwardIt max_element_dereference(ForwardIt first, ForwardIt last, Compare comp)
+{
+    if (first == last) return last;
+
+    ForwardIt largest = first;
+    ++first;
+    for (; first != last; ++first) {
+        if (comp(*largest, *first)) {
+            largest = first;
+        }
+    }
+    return largest;
+}
 
 #endif

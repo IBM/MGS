@@ -44,7 +44,8 @@ class ArrayType : public DataType {
       virtual std::string getHeaderDataItemString() const;
       virtual std::string getInitializerString(
 	 const std::string& diArg, int level = 0, 
-	 bool isIterator = true, bool forPSet = false) const;
+	 bool isIterator = true, bool forPSet = false,
+	 const Class* instance=nullptr) const;
 
       // This function returns a string showing what kind of array should
       // be produced. Shallow, Deep, Duplicate

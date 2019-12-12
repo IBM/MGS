@@ -14,7 +14,7 @@
 // =================================================================
 
 #include "../std/std.gsl"
-InitPhases = { initialize };
+InitPhases = { initializeShared, initialize };
 RuntimePhases = { updateMNIST, updateNodes, updateEdgeSets, lastPhase };
 FinalPhases = { finalize };
 
@@ -26,8 +26,9 @@ NodeType DNNode() {update->updateNodes};
 
 NodeType DNEdgeSet(<
 	eta=0.00025,
-     	alpha=0.3,
+	alpha=0.3,
 	beta=0.9,
+	max_num_layers=20,
 	optimization = { "Adam" }
 //	optimization = { "Momentum", "RMSprop" } // This is equivalent to Adam
 //	optimization = { "Momentum" }
@@ -106,6 +107,7 @@ Bias biasInput < output=1.0 >;
 Grid WeightedBias
 {
    Dimension(1,1);
+   //ASKE JAMES: use singular? is this a typo or for a purpose?
    Layer(edgeSet, DNEdgeSet, UniformLayout(1), < nodekind="EdgeSet" > );
    InitNodes( .[].Layer(edgeSet), Same(Pset < DNEdgeSet, NodeInit > (<transferFunctionName=TRANSFER_FUNCTION>)));
    polyConnect(biasInput, .[].Layer(edgeSet), <>, <identifier="bias">);

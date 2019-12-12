@@ -8,6 +8,7 @@
 class SupervisorNode : public CG_SupervisorNode
 {
    public:
+      using Node::initialize;
       void initialize(RNG& rng);
       void update(RNG& rng);
       virtual ~SupervisorNode();

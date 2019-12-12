@@ -13,7 +13,7 @@
 //
 // =================================================================
 
-#ifndef EDGEQUERIALBE_H
+#ifndef EDGEQUERIABLE_H
 #define EDGEQUERIABLE_H
 #include "Copyright.h"
 
