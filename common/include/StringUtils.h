@@ -52,16 +52,16 @@ class StringUtils
   }
   static int readOneWord(FILE* fpF, char* oneword);
   static std::string random_string( size_t length );
-  -
--  /* convert an ifstream to a single string */
--  static std::string to_string(std::ifstream& in) {
--    std::stringstream sstr;
--    sstr << in.rdbuf();
--    return sstr.str();
--  }
--  //static std::string slurp(std::ifstream& in) {
--  //  return static_cast<std::stringstream const&>(std::stringstream() << in.rdbuf()).str();
--  //}
+  
+  /* convert an ifstream to a single string */
+  static std::string to_string(std::ifstream& in) {
+    std::stringstream sstr;
+    sstr << in.rdbuf();
+    return sstr.str();
+  }
+  //static std::string slurp(std::ifstream& in) {
+  //  return static_cast<std::stringstream const&>(std::stringstream() << in.rdbuf()).str();
+  //}
 };
 
 #endif
