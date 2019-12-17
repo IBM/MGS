@@ -1,0 +1,340 @@
+#if  defined(HAVE_GPU)
+
+#include "NumSolver_RK4_GPU.h"
+//#define DEBUG_CUDA
+
+void CG_MahonUnitCompCategory::CG_host_initialize(NodePartitionItem* arg, CG_MahonUnitWorkUnitInstance* wu) 
+{
+   //create a solver's data structure
+   // TODO: replace this with 3 informations
+   //   num-vars-per-node
+   //   num-nodes
+   //   row-size = max(num-nodes, smalles-value-greater-than-num-nodes-that-
+   //   (num-nodes * num-bytes) devided by 256)   - to ensure new row's starting address is an alligned memory address
+   //   https://devblogs.nvidia.com/how-access-global-memory-efficiently-cuda-c-kernels/
+   int NODE_NUMVARS = 12;
+   //int NUMVARS = _nodes.size() * NODE_NUMVARS;
+   int NUM_NODES = _nodes.size();
+   VarType default_value = 1.0;
+   //solver = new_memory_general<NumSolverCompCat_RK4< MahonNet_StateType, MahonNet_StateType, VarType, TimeType >>();
+   //TODO: add 
+   // FinalPhase phase to free memory 
+   //delete_memory(solver);
+   //time step should be passed each time
+   //solver.initialize(NODE_NUMVARS, NUMVARS, default_value);
+   solver.initialize(NODE_NUMVARS, NUM_NODES, default_value);
+   auto& x = solver.get_state();
+   
+   //int BLOCKS= _nodes.size();
+   //int THREADS_PER_BLOCK = 1;
+   int THREADS_PER_BLOCK= 256;
+   //int BLOCKS= ceil((float)_nodes.size() / THREADS_PER_BLOCK);
+   int BLOCKS= ceil((float)solver.get_stride() / THREADS_PER_BLOCK);
+   MahonUnit_kernel_initialize<<< BLOCKS, THREADS_PER_BLOCK >>> (
+      um_V_init.getDataRef()
+      , x.getDataRef()
+      , _nodes.size()
+      , solver.get_stride()
+   );
+#if defined(DEBUG_CUDA)
+   gpuErrorCheck(cudaDeviceSynchronize());
+#endif
+   gpuErrorCheck( cudaPeekAtLastError() );
+}
+#endif
+
+#if  defined(HAVE_GPU)
+void CG_MahonUnitCompCategory::CG_host_update1(NodePartitionItem* arg, CG_MahonUnitWorkUnitInstance* wu) 
+{
+#if defined(USE_SIMULATION_INFO)
+   auto& t = currentTime;
+ #else
+   double t = getSimulation().getIteration()*getSharedMembers().deltaT;
+ #endif
+   //int BLOCKS= _nodes.size();
+   //int THREADS_PER_BLOCK = 1;
+   int THREADS_PER_BLOCK= 256;
+   int BLOCKS= ceil((float)_nodes.size() / THREADS_PER_BLOCK);
+   auto& real_x = solver.get_state();
+   MahonNet_StateType* x;
+   MahonNet_StateType* dx;
+   int ii = 1; //individual step
+   solver.get_x_dx(ii, x, dx);
+   do_step_small_on_gpu< 
+      //NumSolverCompCat_RK4< MahonNet_StateType, MahonNet_StateType, VarType, TimeType >,
+      MahonNet_SolverType,
+      MahonNet_StateType, MahonNet_StateType, VarType, TimeType >
+      (BLOCKS, THREADS_PER_BLOCK
+      , solver
+      , real_x
+      , t
+      , getSharedMembers().deltaT
+      , ii
+      , MahonNet_derivs
+      , x->getDataRef()
+      , dx->getDataRef()
+      , um_MSNNetInps.getDataRef()
+      , um_drivinp.getDataRef()
+      , um_synb.getDataRef()
+      , _nodes.size()
+      , solver.get_stride()
+   );
+#if defined(DEBUG_CUDA)
+   gpuErrorCheck(cudaDeviceSynchronize());
+#endif
+   gpuErrorCheck( cudaPeekAtLastError() );
+}
+#endif
+
+#if  defined(HAVE_GPU)
+void CG_MahonUnitCompCategory::CG_host_update2(NodePartitionItem* arg, CG_MahonUnitWorkUnitInstance* wu) 
+{
+#if defined(USE_SIMULATION_INFO)
+   auto& t = currentTime;
+ #else
+   double t = getSimulation().getIteration()*getSharedMembers().deltaT;
+ #endif
+   //int BLOCKS= _nodes.size();
+   //int THREADS_PER_BLOCK = 1;
+   int THREADS_PER_BLOCK= 256;
+   int BLOCKS= ceil((float)_nodes.size() / THREADS_PER_BLOCK);
+   auto& real_x = solver.get_state();
+   MahonNet_StateType* x;
+   MahonNet_StateType* dx;
+   int ii = 2; //individual step
+   solver.get_x_dx(ii, x, dx);
+   do_step_small_on_gpu< 
+      NumSolverCompCat_RK4< MahonNet_StateType, MahonNet_StateType, VarType, TimeType >,
+      MahonNet_StateType, MahonNet_StateType, VarType, TimeType >
+      (BLOCKS, THREADS_PER_BLOCK
+      , solver
+      , real_x
+      , t
+      , getSharedMembers().deltaT
+      , ii
+      , MahonNet_derivs
+      , x->getDataRef()
+      , dx->getDataRef()
+      , um_MSNNetInps.getDataRef()
+      , um_drivinp.getDataRef()
+      , um_synb.getDataRef()
+      , _nodes.size()
+      , solver.get_stride()
+   );
+#if defined(DEBUG_CUDA)
+   gpuErrorCheck(cudaDeviceSynchronize());
+#endif
+   gpuErrorCheck( cudaPeekAtLastError() );
+}
+#endif
+
+#if  defined(HAVE_GPU)
+void CG_MahonUnitCompCategory::CG_host_update3(NodePartitionItem* arg, CG_MahonUnitWorkUnitInstance* wu) 
+{
+#if defined(USE_SIMULATION_INFO)
+   auto& t = currentTime;
+ #else
+   double t = getSimulation().getIteration()*getSharedMembers().deltaT;
+ #endif
+   //int BLOCKS= _nodes.size();
+   //int THREADS_PER_BLOCK = 1;
+   int THREADS_PER_BLOCK= 256;
+   int BLOCKS= ceil((float)_nodes.size() / THREADS_PER_BLOCK);
+   auto& real_x = solver.get_state();
+   MahonNet_StateType* x;
+   MahonNet_StateType* dx;
+   int ii = 3; //individual step
+   solver.get_x_dx(ii, x, dx);
+   do_step_small_on_gpu< 
+      NumSolverCompCat_RK4< MahonNet_StateType, MahonNet_StateType, VarType, TimeType >,
+      MahonNet_StateType, MahonNet_StateType, VarType, TimeType >
+      (BLOCKS, THREADS_PER_BLOCK
+      , solver
+      , real_x
+      , t
+      , getSharedMembers().deltaT
+      , ii
+      , MahonNet_derivs
+      , x->getDataRef()
+      , dx->getDataRef()
+      , um_MSNNetInps.getDataRef()
+      , um_drivinp.getDataRef()
+      , um_synb.getDataRef()
+      , _nodes.size()
+      , solver.get_stride()
+   );
+#if defined(DEBUG_CUDA)
+   gpuErrorCheck(cudaDeviceSynchronize());
+#endif
+   gpuErrorCheck( cudaPeekAtLastError() );
+}
+#endif
+
+#if  defined(HAVE_GPU)
+void CG_MahonUnitCompCategory::CG_host_update4(NodePartitionItem* arg, CG_MahonUnitWorkUnitInstance* wu) 
+{
+#if defined(USE_SIMULATION_INFO)
+   auto& t = currentTime;
+ #else
+   double t = getSimulation().getIteration()*getSharedMembers().deltaT;
+ #endif
+   //int BLOCKS= _nodes.size();
+   //int THREADS_PER_BLOCK = 1;
+   int THREADS_PER_BLOCK= 256;
+   int BLOCKS= ceil((float)_nodes.size() / THREADS_PER_BLOCK);
+   auto& real_x = solver.get_state();
+   MahonNet_StateType* x;
+   MahonNet_StateType* dx;
+   int ii = 4; //individual step
+   solver.get_x_dx(ii, x, dx);
+   do_step_small_on_gpu< 
+      NumSolverCompCat_RK4< MahonNet_StateType, MahonNet_StateType, VarType, TimeType >,
+      MahonNet_StateType, MahonNet_StateType, VarType, TimeType >
+      (BLOCKS, THREADS_PER_BLOCK
+      , solver
+      , real_x
+      , t
+      , getSharedMembers().deltaT
+      , ii
+      , MahonNet_derivs
+      , x->getDataRef()
+      , dx->getDataRef()
+      , um_MSNNetInps.getDataRef()
+      , um_drivinp.getDataRef()
+      , um_synb.getDataRef()
+      , _nodes.size()
+      , solver.get_stride()
+   );
+#if defined(DEBUG_CUDA)
+   gpuErrorCheck(cudaDeviceSynchronize());
+#endif
+   gpuErrorCheck( cudaPeekAtLastError() );
+}
+#endif
+
+#if  defined(HAVE_GPU)
+void CG_MahonUnitCompCategory::CG_host_flushVars1(NodePartitionItem* arg, CG_MahonUnitWorkUnitInstance* wu) 
+{
+   //int BLOCKS= _nodes.size();
+   //int THREADS_PER_BLOCK = 1;
+   int THREADS_PER_BLOCK= 256;
+   int BLOCKS= ceil((float)_nodes.size() / THREADS_PER_BLOCK);
+   auto& x = solver.get_state();
+   MahonUnit_kernel_flushVars1<<< BLOCKS, THREADS_PER_BLOCK >>> (
+      um_g_out.getDataRef()
+      , x.getDataRef()
+      , _nodes.size()
+      , solver.get_stride()
+   );
+#if defined(DEBUG_CUDA)
+   gpuErrorCheck(cudaDeviceSynchronize());
+#endif
+   gpuErrorCheck( cudaPeekAtLastError() );
+}
+#endif
+
+#if  defined(HAVE_GPU)
+void CG_MahonUnitCompCategory::CG_host_flushVars2(NodePartitionItem* arg, CG_MahonUnitWorkUnitInstance* wu) 
+{
+   //int BLOCKS= _nodes.size();
+   //int THREADS_PER_BLOCK = 1;
+   int THREADS_PER_BLOCK= 256;
+   int BLOCKS= ceil((float)_nodes.size() / THREADS_PER_BLOCK);
+   auto& x = solver.get_state_tmp();
+       ////TUAN TODO - should get x_tmp (or x1 based on Adam's code)
+   MahonUnit_kernel_flushVars2<<< BLOCKS, THREADS_PER_BLOCK >>> (
+      um_g_out.getDataRef()
+      , x.getDataRef()
+      , _nodes.size()
+      , solver.get_stride()
+   );
+#if defined(DEBUG_CUDA)
+   gpuErrorCheck(cudaDeviceSynchronize());
+#endif
+   gpuErrorCheck( cudaPeekAtLastError() );
+}
+#endif
+
+#if  defined(HAVE_GPU)
+void CG_MahonUnitCompCategory::CG_host_flushVars3(NodePartitionItem* arg, CG_MahonUnitWorkUnitInstance* wu) 
+{
+   //int BLOCKS= _nodes.size();
+   //int THREADS_PER_BLOCK = 1;
+   int THREADS_PER_BLOCK= 256;
+   int BLOCKS= ceil((float)_nodes.size() / THREADS_PER_BLOCK);
+   auto& x = solver.get_state_tmp();
+       ////TUAN TODO - should get x_tmp (or x1 based on Adam's code)
+   MahonUnit_kernel_flushVars3<<< BLOCKS, THREADS_PER_BLOCK >>> (
+      um_g_out.getDataRef()
+      , x.getDataRef()
+      , _nodes.size()
+      , solver.get_stride()
+   );
+#if defined(DEBUG_CUDA)
+   gpuErrorCheck(cudaDeviceSynchronize());
+#endif
+   gpuErrorCheck( cudaPeekAtLastError() );
+}
+#endif
+
+#if  defined(HAVE_GPU)
+void CG_MahonUnitCompCategory::CG_host_flushVars4(NodePartitionItem* arg, CG_MahonUnitWorkUnitInstance* wu) 
+{
+   //int BLOCKS= _nodes.size();
+   //int THREADS_PER_BLOCK = 1;
+   int THREADS_PER_BLOCK= 256;
+   int BLOCKS= ceil((float)_nodes.size() / THREADS_PER_BLOCK);
+   auto& x = solver.get_state_tmp();
+       ////TUAN TODO - should get x_tmp (or x1 based on Adam's code)
+   MahonUnit_kernel_flushVars4<<< BLOCKS, THREADS_PER_BLOCK >>> (
+      um_g_out.getDataRef()
+      , x.getDataRef()
+      , _nodes.size()
+      , solver.get_stride()
+   );
+#if defined(DEBUG_CUDA)
+   gpuErrorCheck(cudaDeviceSynchronize());
+#endif
+   gpuErrorCheck( cudaPeekAtLastError() );
+}
+#endif
+
+#if  defined(HAVE_GPU)
+void CG_MahonUnitCompCategory::CG_host_updateOutputs(NodePartitionItem* arg, CG_MahonUnitWorkUnitInstance* wu) 
+{
+   //int BLOCKS= _nodes.size();
+   //int THREADS_PER_BLOCK = 1;
+   int THREADS_PER_BLOCK= 256;
+   int BLOCKS= ceil((float)_nodes.size() / THREADS_PER_BLOCK);
+   auto& x = solver.get_state();
+   MahonUnit_kernel_updateOutputs<<< BLOCKS, THREADS_PER_BLOCK >>> (
+      um_var1.getDataRef()
+      , um_var2.getDataRef()
+      , um_var3.getDataRef()
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_MSNNetInps.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_MSNNetInps.getDataRef()
+      , um_MSNNetInps_start_offset.getDataRef()
+      , um_MSNNetInps_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_MSNNetInps.getDataRef()
+      , um_MSNNetInps_max_elements
+      , um_MSNNetInps_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_MSNNetInps.getDataRef()
+      //need more info here
+      #endif
+      , um_spike.getDataRef()
+      , getSharedMembers().spikethresh
+      , x.getDataRef()
+      , _nodes.size()
+      , solver.get_stride()
+   );
+#if defined(DEBUG_CUDA)
+   gpuErrorCheck(cudaDeviceSynchronize());
+#endif
+   gpuErrorCheck( cudaPeekAtLastError() );
+}
+#endif
+

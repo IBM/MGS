@@ -21,6 +21,7 @@ GSA ADP Schedule Contract with IBM Corp.
 #include <vector>
 #include <sstream>
 #include <string.h>
+#include <fstream>
 
 class StringUtils
 {
@@ -51,6 +52,16 @@ class StringUtils
   }
   static int readOneWord(FILE* fpF, char* oneword);
   static std::string random_string( size_t length );
+  -
+-  /* convert an ifstream to a single string */
+-  static std::string to_string(std::ifstream& in) {
+-    std::stringstream sstr;
+-    sstr << in.rdbuf();
+-    return sstr.str();
+-  }
+-  //static std::string slurp(std::ifstream& in) {
+-  //  return static_cast<std::stringstream const&>(std::stringstream() << in.rdbuf()).str();
+-  //}
 };
 
 #endif

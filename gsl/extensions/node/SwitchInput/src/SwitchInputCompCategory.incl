@@ -1,0 +1,68 @@
+#if  defined(HAVE_GPU)
+void CG_SwitchInputCompCategory::CG_host_initialize(NodePartitionItem* arg, CG_SwitchInputWorkUnitInstance* wu) 
+{
+   int size = _nodes.size();
+   int stride = _nodes.size();
+   um_drivinp_gpu.resize(getSharedMembers().statenum*stride);
+//-> travese along node first, and statenum second
+   //for(int stream_idx =0; stream_idx < getSharedMembers().statenum; stream_idx++)
+   //{
+   //   int base = stream_idx*stride;
+   //   int index = 0;
+   //   for (int jj=base; jj < base+size; jj++, index++)
+   //   {
+   //      um_drivinp_gpu[jj] = drandom(um_inplo[index],um_inphi[index],wu->getRNG());
+   //      if (stream_idx== 0)
+   //         um_drivinp[index] = um_drivinp_gpu[jj];
+   //   }
+   //}
+   
+//to coherent with CPU-based travesal order
+//traverse along statenum first
+   for (int index=0; index < size; index++)
+   {
+      for(int stream_idx =0; stream_idx < getSharedMembers().statenum; stream_idx++)
+      {
+         int jj = stream_idx*stride + index;
+         um_drivinp_gpu[jj] = drandom(um_inplo[index],um_inphi[index],wu->getRNG());
+         if (stream_idx== 0)
+            um_drivinp[index] = um_drivinp_gpu[jj];
+      }
+   }
+
+  String temp(getSharedMembers().directory);
+  std::string output_dir(temp.c_str());
+    if (output_dir.length() == 0)
+      output_dir = "./";
+    if (output_dir.back() != '/')
+      output_dir.append("/");
+
+  std::ostringstream os1;
+    os1<< output_dir << "inps.dat";
+  std::ofstream ofs;
+  ofs.open (os1.str(), std::ofstream::out | std::ofstream::app);
+  //outputDrivInp(ofs);
+ for (int ii=0; ii < _nodes.size(); ii++)
+   ofs << um_drivinp[ii] << ", " << um_inplo[ii] << ", " << um_inphi[ii]<< std::endl;
+  ofs.close();
+}
+#endif
+
+#if  defined(HAVE_GPU)
+void CG_SwitchInputCompCategory::CG_host_update(NodePartitionItem* arg, CG_SwitchInputWorkUnitInstance* wu) 
+{
+   //int BLOCKS= _nodes.size();
+   //int THREADS_PER_BLOCK = 1;
+   int THREADS_PER_BLOCK= 256;
+   int BLOCKS= ceil((float)_nodes.size() / THREADS_PER_BLOCK);
+   int inpnum = getSharedMembers().inpnum;
+   int stride = _nodes.size();
+   SwitchInput_kernel_update<<< BLOCKS, THREADS_PER_BLOCK >>> (
+      um_drivinp_gpu.getDataRef()+inpnum*stride
+      , um_drivinp.getDataRef()
+      , _nodes.size()
+   );
+   gpuErrorCheck( cudaPeekAtLastError() );
+}
+#endif
+

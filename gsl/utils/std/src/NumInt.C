@@ -141,7 +141,6 @@ void RK4Phased::callIteratePhase3()
     *i1 = *i2 + dT**i3;
     *i3 += *i4;
     }
-
 }
 
 void RK4Phased::callIteratePhase4()
@@ -152,7 +151,6 @@ void RK4Phased::callIteratePhase4()
 
   for (i1=dx1.begin(),i2=x.begin(),i3=dx3.begin(),i4=dx2.begin();i1!=dx1.end();i1++,i2++,i3++,i4++)
    *i2 = *i2 + dT6*(*i1 + *i4 + 2.0**i3);
-
 }
 
 

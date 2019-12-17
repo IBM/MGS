@@ -25,7 +25,7 @@ Node SwitchInput Implements OutputProducer
   double inplo, inphi;
 
   Shared {
-    
+    string directory;
     double deltaT; 
     double noiselev, tscale, var1, var2;
 

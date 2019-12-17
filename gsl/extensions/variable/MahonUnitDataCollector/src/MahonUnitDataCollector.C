@@ -53,16 +53,13 @@ void MahonUnitDataCollector::initialize(RNG& rng)
     os1<< output_dir << "timewindow_"<<fileName;
     x4_file=new std::ofstream(os1.str().c_str(), std::ofstream::out | std::ofstream::app);}
 
-
   assert(rows.size()==cols.size());
   assert(cols.size()==spikes.size());
   assert(cols.size()==x1.size());
   assert(cols.size()==x2.size());
   assert(cols.size()==x3.size());
 
-
   /*
-
   std::map<unsigned, std::map<unsigned, std::pair<float*, std::pair<double*, bool* > > > >  sorter;
 
   int sz=x1.size();
@@ -84,12 +81,9 @@ void MahonUnitDataCollector::initialize(RNG& rng)
       g.push_back(miter2->second.second.first);
     }
   }
-
-
   */
 
   /*
-
   ShallowArray<double *> var1, var2, var3;
   ShallowArray<bool *> var4;
   //ShallowArray<int> index1;
@@ -204,11 +198,17 @@ void MahonUnitDataCollector::finalize(RNG& rng)
   x4_file->close();
 
   {std::ofstream ofs;
-  ofs.open ("weights.dat", std::ofstream::out | std::ofstream::app);
+  std::string output_dir(directory.c_str());
+  if (output_dir.length() == 0)
+    output_dir = "./";
+  if (output_dir.back() != '/')
+    output_dir.append("/");
+
+  std::ostringstream os1;
+    os1<< output_dir << "weights.dat";
+  ofs.open (os1.str(), std::ofstream::out | std::ofstream::app);
   ofs << -10000 << " " << -10000 << " " << -10000 << std::endl;
   ofs.close();}
-
-
 }
 
 void MahonUnitDataCollector::dataCollectionLFP(Trigger* trigger, NDPairList* ndPairList) 
@@ -219,8 +219,6 @@ void MahonUnitDataCollector::dataCollectionLFP(Trigger* trigger, NDPairList* ndP
   for (;iter!=end; ++iter) tot+=(**iter); 
    
   output<<ITER*deltaT<<" "<<tot<<std::endl;
-  
-
 }
 
 void MahonUnitDataCollector::dataCollection(Trigger* trigger, NDPairList* ndPairList) 
@@ -234,8 +232,6 @@ void MahonUnitDataCollector::dataCollection(Trigger* trigger, NDPairList* ndPair
   }
   output<<std::endl;}
 
-
- 
   {std::ofstream& output=*x2_file;
   output<<ITER*deltaT<<" ";//std::endl;
   ShallowArray<double*>::iterator iter=x2.begin(), end=x2.end();
@@ -244,10 +240,7 @@ void MahonUnitDataCollector::dataCollection(Trigger* trigger, NDPairList* ndPair
    
   }
   output<<std::endl;}
-
 }
-
-
 
 
 void MahonUnitDataCollector::dataCollectionSpike(Trigger* trigger, NDPairList* ndPairList) 

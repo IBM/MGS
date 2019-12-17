@@ -10,6 +10,7 @@
 class MahonUnit : public CG_MahonUnit, public RK4Phased
 {
    public:
+      using Node::initialize;
       void initialize(RNG& rng);
       void update1(RNG& rng);
       void update2(RNG& rng);

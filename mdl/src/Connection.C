@@ -223,10 +223,23 @@ std::string Connection::getCommonConnectionCodeAlternativeInterfaceSet(const std
 	 //os << tab << TAB <<  "bool sizeIncreased = false; \n";
          ////NOTE: For each subarray data members
          //--> bool sizeIncreased_um_inputs  = false; 
+	 std::map<std::string, bool> used_name;
 	 for (it2 = _interfaces.begin(); it2 != end2; ++it2) {
 	    for (auto it = it2->second->getMappings().begin(); it != it2->second->getMappings().end(); ++it) {
-	       if (it->getDataType()->isArray())
+	       std::string name(it->getDataType()->getName());
+	       if (it->getDataType()->isArray() and used_name.count(name) == 0)
+	       {
 		  os << tab << TAB <<  "bool sizeIncreased_" << PREFIX_MEMBERNAME << it->getDataType()->getName() << " = false; \n";
+		  used_name[name] = true;
+	       }
+	    }
+	 }
+	 for (auto it = _psetMappings.begin(); it != _psetMappings.end(); ++it) {
+	    std::string name(it->second->getName());
+	    if (it->second->isArray() and used_name.count(name) == 0)
+	    {
+	       used_name[name] = true;
+	       os << tab << TAB <<  "bool sizeIncreased_" << PREFIX_MEMBERNAME << it->second->getName() << " = false; \n";
 	    }
 	 }
       }

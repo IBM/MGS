@@ -10,6 +10,7 @@
 class MahonUnitDataCollector : public CG_MahonUnitDataCollector
 {
    public:
+      using CG_MahonUnitDataCollector::initialize;
       void initialize(RNG& rng);
       void finalize(RNG& rng);
       virtual void dataCollection(Trigger* trigger, NDPairList* ndPairList);
