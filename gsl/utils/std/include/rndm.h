@@ -406,7 +406,7 @@ CUDA_CALLABLE bool threshold(T val, T thresh)
 }
 
 template <typename T>
-__CUDA_INLINE  CUDA_CALLABLE T sigmoid(const T & V, const T Vb, const T k) 
+CUDA_INLINE  CUDA_CALLABLE T sigmoid(const T & V, const T Vb, const T k) 
 {
 return 1.0/(1.0 + exp(-1.0*(V - Vb)/k));
 }
