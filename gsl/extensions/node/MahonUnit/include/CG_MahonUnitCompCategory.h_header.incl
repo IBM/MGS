@@ -1,0 +1,23 @@
+// Please include any header files for the extra data that you add to  CG_MahonUnitCompCategory
+
+//#if defined(__CUDA_ARCH__)
+#include "NumSolver_RK4.h"
+//#endif
+#include "ShallowArray.h"
+
+#ifdef HAVE_THRUST
+typedef managed_device_vector MahonNet_StateType;
+#else
+typedef ShallowArray_Flat<double, Array_Flat<int>::MemLocation::UNIFIED_MEM> MahonNet_StateType; 
+#endif
+
+#if !defined(TIME_TYPE)
+#define TIME_TYPE
+typedef double TimeType;
+#endif
+
+#if !defined(VAR_TYPE)
+#define VAR_TYPE
+typedef double VarType;
+#endif
+typedef NumSolverCompCat_RK4< MahonNet_StateType, MahonNet_StateType, VarType, TimeType > MahonNet_SolverType;
