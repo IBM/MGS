@@ -1012,7 +1012,7 @@ void Class::generateClassDefinition(std::ostringstream& os)
        getClassInfoSubType() == SubType::BaseCompCategory)
    {
      std::string extra_inc_file(_name + ".h_header.incl");
-     os << "#if __has_include(\"" << extra_inc_file << "\")\n"
+     os << "#if __has_include(\"" << extra_inc_file << "\") && defined(HAVE_GPU)\n"
        << "      #include \"" << extra_inc_file << "\"\n" 
        << "#endif\n";
      std::string gen_file(extra_inc_file + ".gen");
@@ -1067,7 +1067,7 @@ void Class::generateClassDefinition(std::ostringstream& os)
        getClassInfoSubType() == SubType::BaseCompCategory)
    {
      std::string extra_inc_file(_name + ".h_extra.incl");
-     os << "#if __has_include(\"" << extra_inc_file << "\")\n"
+     os << "#if __has_include(\"" << extra_inc_file << "\") && defined(HAVE_GPU)\n"
        << "      #include \"" << extra_inc_file << "\"\n" 
        << "#endif\n";
      std::string gen_file(extra_inc_file + ".gen");
