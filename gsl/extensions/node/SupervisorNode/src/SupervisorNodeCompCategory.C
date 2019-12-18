@@ -16,7 +16,7 @@
 
 //#define DEBUG_LOAD_SINGLE_IMAGE
 
-//#define LOAD_ALL_IMAGES_IN_GPU
+#define LOAD_ALL_IMAGES_IN_GPU
 
 SupervisorNodeCompCategory::SupervisorNodeCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList) 
    : CG_SupervisorNodeCompCategory(sim, modelName, ndpList)
@@ -188,8 +188,15 @@ void SupervisorNodeCompCategory::updateShared_GPU(RNG& rng)
       label = dataset.training_labels[_shuffledDeck[SHD.imageIndex]];
       if (SHD.shready) SHD.labels[SHD.labelIndex]=label;
     } while (label>SHD.numberOfLabels-1);
-    bool delete_current_data = false;
-    SHD.x->changeRef(training_images[_shuffledDeck[SHD.imageIndex]], IMG_SIZE, delete_current_data);
+#ifdef DEBUG_LOAD_SINGLE_IMAGE
+    if (not loaded_train_image)
+    {
+      SHD.x->changeRef(training_images[_shuffledDeck[SHD.imageIndex]], IMG_SIZE);
+      loaded_train_image = true;
+    }
+#else
+    SHD.x->changeRef(training_images[_shuffledDeck[SHD.imageIndex]], IMG_SIZE);
+#endif
   }
   else {
     do {
@@ -201,8 +208,15 @@ void SupervisorNodeCompCategory::updateShared_GPU(RNG& rng)
       label = dataset.test_labels[_shuffledDeck[SHD.imageIndex]];
       if (SHD.shready) SHD.labels[SHD.labelIndex]=label;
     } while (label>SHD.numberOfLabels-1);
-    bool delete_current_data = false;
-    SHD.x->changeRef(test_images[_shuffledDeck[SHD.imageIndex]], IMG_SIZE, delete_current_data);
+#ifdef DEBUG_LOAD_SINGLE_IMAGE
+    if (not loaded_test_image)
+    {
+      SHD.x->changeRef(test_images[_shuffledDeck[SHD.imageIndex]], IMG_SIZE);
+      loaded_test_image = true;
+    }
+#else
+    SHD.x->changeRef(test_images[_shuffledDeck[SHD.imageIndex]], IMG_SIZE);
+#endif
   }
   if (!SHD.shready) {
     SHD.labels.push_back(label); //keep the label until it is being used to calculate gradient - eventually it's the size of the DNN
