@@ -28,6 +28,8 @@
 
 #define CUDA_CALLABLE __host__ __device__
 
+#define CUDA_INLINE __forceinline__
+
 #define TEST_USING_GPU_COMPUTING
 
 //#define TEST_INITNODE_ON_CPU
@@ -252,6 +254,7 @@ class Managed
 #endif
 #else
 #define CUDA_CALLABLE
+#define CUDA_INLINE 
 #define __df__
 #endif
 
@@ -403,7 +406,7 @@ CUDA_CALLABLE bool threshold(T val, T thresh)
 }
 
 template <typename T>
-__forceinline__ CUDA_CALLABLE T sigmoid(const T & V, const T Vb, const T k) 
+__CUDA_INLINE  CUDA_CALLABLE T sigmoid(const T & V, const T Vb, const T k) 
 {
 return 1.0/(1.0 + exp(-1.0*(V - Vb)/k));
 }
