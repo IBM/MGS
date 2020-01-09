@@ -130,7 +130,10 @@ docker build --target devel-base -t mgs_baseimage  -f Dockerfile.build_ppc64le .
 ```
 
 ### Step 3.b [launch the container]
-The option `--gpus all` is only available from Docker 19.03:
+
+IMPORTANT: 
+1. Do not use `--gpus all` on non-GPU systems
+1.  The option `--gpus all` is only available from Docker 19.03:
 
 ```console
 docker run --gpus all -it  --name=mgs_dev --mount src="$(pwd)",target=/home/mgs,type=bind -e LOCAL_USER_ID=`id -u $USER`  mgs_baseimage /bin/bash
@@ -138,6 +141,11 @@ docker run --gpus all -it  --name=mgs_dev --mount src="$(pwd)",target=/home/mgs,
 
 # with debug-support to run gdb
 docker run --privileged --gpus all -it  --name=mgs_dev --mount src="$(pwd)",target=/home/mgs,type=bind -e LOCAL_USER_ID=`id -u $USER`  mgs_baseimage /bin/bash
+```
+
+Non-GPU systems:
+```console
+docker run -it  --name=mgs_dev --mount src="$(pwd)",target=/home/mgs,type=bind -e LOCAL_USER_ID=`id -u $USER`  mgs_baseimage /bin/bash
 ```
 
 ## Step 4 [now you are inside the container]
@@ -156,6 +164,33 @@ docker run --privileged --gpus all -it  --name=mgs_dev --mount src="$(pwd)",targ
 # ... (do code development) and then switch to the container environment (for compiling/running gslparser) using 'docker attach'
 ```
 
+## Step 5 [generate the runtime image]
+
+
+Suppose you already build the desired 'gslparser' inside the container launched from the above image.
+```console
+docker build --target runtime -t mgs_runtime  -f Dockerfile.build_ppc64le .
+```
+
+Now, we can use the deployment
+
+1. Run and remove the container right after that
+```console
+docker run -it --rm --mount src="$(pwd)",target=/home/mgs,type=bind -e LOCAL_USER_ID=`id -u $USER`  mgs_runtime Life.gsl 
+
+
+# unique-name
+docker run -it --rm  --name=mgs_runtime_container --mount src="$(pwd)",target=/home/mgs,type=bind -e LOCAL_USER_ID=`id -u $USER`  mgs_runtime Life.gsl 
+```
+2. Run  (MaaS-config)
+```console
+export MOUNT_PATH=/home/mgs
+export DATA_PATH=~/ParamSearchTmpDir/
+docker run -it -d --name=mgs_runtime_container --mount src="${DATA_PATH}",target=${MOUNT_PATH},type=bind -e LOCAL_USER_ID=`id -u $USER`  mgs_runtime
+docker exec mgs_runtime_container bash -c "cd $TARGET && gslparser model.gsl"
+```
+
+
 ## Hints
 Some common commands to work with docker
 ```console
@@ -168,8 +203,14 @@ docker container ls
 # list stopped containers
 docker ps -a
 
+# remove dangling images
+docker images -f "dangling=true" -q | xargs docker rmi -f
+
 # remove a docker container (as shown in NAMES field)
 docker rm <container-name> 
+
+# remove all exited containers
+docker ps -a | grep Exit | cut -d ' ' -f 1 | xargs docker rm
 
 # within a container, switch to host with <Ctrl>-p-q 
 
