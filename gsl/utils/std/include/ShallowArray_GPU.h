@@ -7,8 +7,21 @@
 #include <cxxabi.h>
 
 template <class T>
-T * new_memory(size_t size=1)
-{
+T * new_memory_scalar(size_t size=1)
+{//array of scalar
+//IMPORTANT: bug here -> as if T is a struct, its data members as arrays are not configured so that 
+//   memLocation is on Unified Memory
+  //use this if T is not a ShallowArray_Flat 
+   T* ptr; //void *ptr;
+   int len = size* sizeof(T);
+   gpuErrorCheck(cudaGetLastError());
+   gpuErrorCheck(cudaMallocManaged(&ptr, len));
+   gpuErrorCheck(cudaDeviceSynchronize());
+   return ptr;
+}
+template <class T>
+T * new_memory_array(size_t size=1)
+{//array of array
    T* ptr; //void *ptr;
    int len = size* sizeof(T);
    gpuErrorCheck(cudaGetLastError());
@@ -1089,8 +1102,8 @@ ShallowArray_Flat<T, memLocation, blockIncrementSize>&
   {
     return *this;
   }
-  Array_Flat<T, memLocation>::operator=(rv);
   destructContents();
+  Array_Flat<T, memLocation>::operator=(rv);
   copyContents(rv);
   return *this;
 }

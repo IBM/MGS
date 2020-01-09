@@ -1336,8 +1336,8 @@ void Class::addConstructor()
      fb << STR_GPU_CHECK_START;
      for (it = _attributes_gpu.begin(); it != end; ++it) {
        std::string attName = (*it)->getName();
-       if ((*it)->isPointer()) {
-	 fb << tab << attName  << " = new_memory<" << (*it)->getType() << ">();\n";
+       if ((*it)->isPointer() and (*it)->getType().find("ShallowArray") != std::string::npos) {
+	 fb << tab << attName  << " = new_memory_array<" << (*it)->getType() << ">();\n";
        }
      }
      fb << STR_GPU_CHECK_END;
@@ -1455,7 +1455,7 @@ void Class::addDestructor()
        fb << STR_GPU_CHECK_START;
        for (it = _attributes_gpu.begin(); it != end; ++it) {
 	 std::string attName = (*it)->getName();
-	 if ((*it)->isPointer()) {
+	 if ((*it)->isPointer() and (*it)->getType().find("ShallowArray") != std::string::npos) {
 	   fb << tab << "delete_memory(" << attName << ");\n";
 	 }
        }

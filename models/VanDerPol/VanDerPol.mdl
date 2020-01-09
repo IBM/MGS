@@ -1,0 +1,171 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-07-18-2017
+//
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef VANDERPOL_MDL
+#define VANDERPOL_MDL
+#include "../std/std.mdl"
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+#define SVDValue OutputProducer
+
+//This is actually CoupledVanDerPol
+Node VanDerPolCoupledSystem Implements SVDValue 
+{
+   //{{{
+   // This represents a coupled van der Pol systems with 'm' components, i.e. [m] x1; 
+
+   //{{{data
+   int m;
+   double[] x1;  
+   double[] x2;
+   double[] alpha1; 
+   double[] alpha2; 
+
+   //m*m matrix ~ (m*m)-element vector
+   double[] W;
+
+   //dummy value
+   double u;
+
+   Shared {
+     //{{{
+
+     double dT;   // [unit of ms]
+     //dyn_var_t* deltaT; // [unit ms]
+     //dyn_var_t* currentTime;
+
+     //{{{// not user-passable [calculated inside]
+     double predictionFactor;  
+     //}}}
+
+     string json_file; //this special json file is supposed to contain extra information that a node needs
+     string sharedDirectory;
+     string sharedFileExt;     
+     int [] collectWeightsOn;
+     int collectWeightsNext;
+     bool saveBinary;
+     
+     RuntimePhase outputWeightsShared();
+     InitPhase initializeShared();
+     InitPhase restore();
+     FinalPhase checkpoint(); 
+      //}}}
+   }
+   //}}}
+
+   InAttrPSet {
+     string identifier;
+     double weight;
+     int plasticity; // 0 = rigid-weight, 1 = dynamic weight 
+   }
+
+   //{{{ phases
+   InitPhase initializeNode();
+   InitPhase initializeSolver();
+   /* we use 4 - because of the RK4 scheme */
+   RuntimePhase update1(u);
+   RuntimePhase update2(u);
+   RuntimePhase update3(u);
+   RuntimePhase update4(u);
+   //}}}
+
+   SVDValue.output << &u;
+
+   //{{{ connections
+   //Connection Pre Variable (PSet.identifier=="dt") Expects TimeStepProducerMS, TimeProducerMS{
+   //   TimeStepProducerMS.deltaT >> Shared.deltaT; // in milisec
+   //   TimeProducerMS.time >> Shared.currentTime; // in milisecond
+   //}
+   //}}}
+
+//}}}
+}
+
+///* to be reviewed */
+//Node VanDerPol Implements SVDValue {
+//   //{{{
+//   // This represents a coupled van der Pol systems with 'm' components, i.e. [m] x1; 
+//
+//   //{{{data
+//   int m;
+//   double x1;  
+//   double x2;
+//   double alpha1; 
+//   double alpha2; 
+//
+//
+//   //dummy value
+//   double u;
+//
+//   Shared {
+//     //{{{
+//     //m*m matrix ~ (m*m)-element vector
+//     double[] W;
+//
+//     double dT;   // [unit of ms]
+//     dyn_var_t* deltaT; // [unit ms]
+//     dyn_var_t* currentTime;
+//
+//     //{{{// not user-passable [calculated inside]
+//     double predictionFactor;  
+//     //}}}
+//
+//     string json_file; //this special json file is supposed to contain extra information that a node needs
+//     string sharedDirectory;
+//     string sharedFileExt;     
+//     int [] collectWeightsOn;
+//     int collectWeightsNext;
+//     bool saveBinary;
+//     
+//     RuntimePhase outputWeightsShared();
+//     InitPhase initializeShared();
+//     InitPhase restore();
+//     FinalPhase checkpoint(); 
+//      //}}}
+//   }
+//   //}}}
+//
+//   InAttrPSet {
+//     string identifier;
+//     double weight;
+//     int plasticity; // 0 = rigid-weight, 1 = dynamic weight 
+//   }
+//
+//   //{{{ phases
+//   InitPhase initializeNode();
+//   InitPhase initializeSolver();
+//   /* we use 4 - because of the RK4 scheme */
+//   RuntimePhase update1(u);
+//   RuntimePhase update2(u);
+//   RuntimePhase update3(u);
+//   RuntimePhase update4(u);
+//   //}}}
+//
+//   SVDValue.output << &u;
+//
+//   //{{{ connections
+//   Connection Pre Variable (PSet.identifier=="VDP") Expects TimeStepProducerMS, TimeProducerMS{
+//      TimeStepProducerMS.deltaT >> Shared.deltaT; // in milisec
+//      TimeProducerMS.time >> Shared.currentTime; // in milisecond
+//   }
+//   Connection Pre Variable (PSet.identifier=="dt") Expects TimeStepProducerMS, TimeProducerMS{
+//      TimeStepProducerMS.deltaT >> Shared.deltaT; // in milisec
+//      TimeProducerMS.time >> Shared.currentTime; // in milisecond
+//   }
+//   //}}}
+//
+////}}}
+//}
+#endif

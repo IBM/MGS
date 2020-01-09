@@ -990,7 +990,7 @@ void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pa
    }   
    setDestinationMethodFB << indent_body << "reset();\n";
    if (parsingError) {
-      std::cerr << "\nWarning: Some variables used in interface are missing in phase's changing variable list!";
+      std::cerr << "\nWarning: Some variables used in interface are missing in phase's changing variable list!\n";
    }
 
    constructor1->setInitializationStr(initString1.str());
