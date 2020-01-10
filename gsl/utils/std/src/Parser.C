@@ -14,7 +14,23 @@
 // =================================================================
 
 #include "Parser.h"
+#include "Simulation.h"
 
+std::vector<std::string> getNamesOfSupportedNodeType() {
+   return FactoryMap<NodeType>::getFactoryMap()->getNamesOfSupportedType();
+}
+std::vector<std::string> getNamesOfSupportedFunctorType() {
+   return FactoryMap<FunctorType>::getFactoryMap()->getNamesOfSupportedType();
+}
+std::vector<std::string> getNamesOfSupportedTriggerType() {
+   return FactoryMap<TriggerType>::getFactoryMap()->getNamesOfSupportedType();
+}
+std::vector<std::string> getNamesOfSupportedVariableType() {
+   return FactoryMap<VariableType>::getFactoryMap()->getNamesOfSupportedType();
+}
+std::vector<std::string> getNamesOfSupportedConstantType() {
+   return FactoryMap<ConstantType>::getFactoryMap()->getNamesOfSupportedType();
+}
 void Parser::help() {
    std::cout << "Usage: lensparser lensFile <options> <switches>\n" << std::endl;
    std::cout << "  For options, a value is needed:" << std::endl;
@@ -39,6 +55,21 @@ void Parser::help() {
    std::cout << std::endl;
    std::cout << "  lensFile: the lens spec file to parse (mandatory)" << std::endl;
    std::cout << std::endl << std::endl;
+
+   std::cout << "Supported NodeTypes: ";
+   getNamesOfSupportedNodeType();
+   std::cout << "\n";
+   std::cout << "Supported FunctorTypes: ";
+   getNamesOfSupportedFunctorType();
+   std::cout << "\n";
+   std::cout << "Supported TriggerTypes: ";
+   getNamesOfSupportedTriggerType();
+   std::cout << "\n";
+   std::cout << "Supported VariableTypes: ";
+   getNamesOfSupportedVariableType();
+   std::cout << "\n";
+   std::cout << "Supported ConstantTypes: ";
+   getNamesOfSupportedConstantType();
 }
 
 int Parser::countOptions(String arg) {
