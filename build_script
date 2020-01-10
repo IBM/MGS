@@ -285,7 +285,7 @@ while getopts "$optspec" optchar; do
                     BUILD_TARGET="--as-NGS"
                     MDF_TARGET="ngs.mdf"
                     ;;
-                -as-file)
+                as-file)
                     MDF_TARGET="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
                     if [ -z $MDF_TARGET ] || [ "${MDF_TARGET:0:1}" == "-" ]; then
                       echoerr "Please select a value for --${OPTARG} option"
