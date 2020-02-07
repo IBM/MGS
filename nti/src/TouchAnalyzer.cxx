@@ -78,11 +78,9 @@ TouchAnalyzer::TouchAnalyzer(
   
   TouchTableEntry tableEntry;
 
-  Datatype datatype(4, &tableEntry);
-  datatype.set(0, MPI_LB, 0);
-  datatype.set(1, MPI_DOUBLE, 2, &tableEntry.key1);
-  datatype.set(2, MPI_LONG, 1, &tableEntry.count);
-  datatype.set(3, MPI_UB, sizeof(TouchTableEntry));
+  Datatype datatype(2, &tableEntry, 0, sizeof(TouchTableEntry));
+  datatype.set(0, MPI_DOUBLE, 2, &tableEntry.key1);
+  datatype.set(1, MPI_LONG, 1, &tableEntry.count);
   _typeTouchTableEntry = datatype.commit();
   _tableEntriesSendBuf = new TouchTableEntry[_sendBufSize];
   _tableEntriesRecvBuf = new TouchTableEntry[_recvBufSize];

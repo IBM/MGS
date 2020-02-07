@@ -57,18 +57,14 @@ MPI_Datatype* Touch::getTypeTouch() {
     Touch t;
     _typeTouch = new MPI_Datatype;
 #ifndef LTWT_TOUCH
-    Datatype datatype(5, &t);
-    datatype.set(0, MPI_LB, 0);
-    datatype.set(1, MPI_DOUBLE, N_TOUCH_DATA, t._touchData);
-    datatype.set(2, MPI_SHORT, 4, t._endTouch);
-    datatype.set(3, MPI_CHAR, 1, t._remains);
-    datatype.set(4, MPI_UB, sizeof(Touch));
+    Datatype datatype(3, &t, 0, sizeof(Touch));
+    datatype.set(0, MPI_DOUBLE, N_TOUCH_DATA, t._touchData);
+    datatype.set(1, MPI_SHORT, 4, t._endTouch);
+    datatype.set(2, MPI_CHAR, 1, t._remains);
     *_typeTouch = datatype.commit();
 #else
-    Datatype datatype(3, &t);
-    datatype.set(0, MPI_LB, 0);
-    datatype.set(1, MPI_DOUBLE, N_TOUCH_DATA, t._touchData);
-    datatype.set(2, MPI_UB, sizeof(Touch));
+    Datatype datatype(1, &t, 0, sizeof(Touch));
+    datatype.set(0, MPI_DOUBLE, N_TOUCH_DATA, t._touchData);
     *_typeTouch = datatype.commit();
 #endif
   }

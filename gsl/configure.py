@@ -1719,13 +1719,10 @@ CFLAGS += $(COLAB_CFLAGS) \
             retStr += " -DHAVE_GPU"
 
         if self.options.withArma is True:
-            retStr += " -DHAVE_ARMA"
+            retStr += " -DHAVE_ARMA -DARMA_DONT_USE_WRAPPER -DARMA_USE_BLAS -DARMA_USE_LAPACK -DARMA_USE_HDF5"
 
         if self.options.withGpu is True:
             retStr += " -DHAVE_GPU"
-
-        if self.options.withArma is True:
-            retStr += " -DHAVE_ARMA"
 
         if self.options.profile == USE:
             retStr += " -DPROFILING"
@@ -1820,9 +1817,6 @@ LIBS := """
             if self.options.withMpi is True:
                 retStr += " -lmpi_cxx -lmpi -lopen-pal"
 
-        if self.options.withArma is True:
-            retStr += " -llapack -lopenblas -larmadillo"
-
         if self.options.colab is True:
             if self.options.debug == USE:
                 retStr += " -I$(NTI_INC_DIR) -L$(shell pwd)/lib/ -Wl,--rpath=$(shell pwd)/lib/ -lnti_db -lnts_db -lutils_db"
@@ -1831,7 +1825,8 @@ LIBS := """
         retStr += " $(OTHER_LIBS)"
 
         if self.options.withArma is True:
-            retStr += " -llapack -lopenblas -larmadillo"
+            retStr += " -lopenblas -llapack -lhdf5"
+#retStr += " -llapack -lopenblas -larmadillo"
 
         retStr += "\n"
         return retStr

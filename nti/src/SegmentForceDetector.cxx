@@ -84,10 +84,9 @@ SegmentForceDetector::SegmentForceDetector(
     (nSlicers>nSegmentForceDetectors)?nSlicers:nSegmentForceDetectors;
 
   SegmentForce segmentForce;
-  Datatype segmentForceDatatype(3, &segmentForce);
-  segmentForceDatatype.set(0, MPI_LB, 0);
-  segmentForceDatatype.set(1, MPI_DOUBLE, N_SEGFORCE_DATA, segmentForce.getSegmentForceData());
-  segmentForceDatatype.set(2, MPI_UB, sizeof(SegmentForce));
+  Datatype segmentForceDatatype(1, &segmentForce, 0, sizeof(SegmentForce));
+
+  segmentForceDatatype.set(0, MPI_DOUBLE, N_SEGFORCE_DATA, segmentForce.getSegmentForceData());
   _typeSegmentForce = segmentForceDatatype.commit();
 
 #ifdef A2AW
@@ -116,10 +115,8 @@ SegmentForceDetector::SegmentForceDetector(
   MPI_Type_commit(&typeCapsule);
 #else
   _typeSegments = new MPI_Datatype[1];
-  Datatype capsuleDatatype(3, &capsule);
-  capsuleDatatype.set(0, MPI_LB, 0);
-  capsuleDatatype.set(1, MPI_DOUBLE, N_CAP_DATA, capsule.getData());
-  capsuleDatatype.set(2, MPI_UB, sizeof(Capsule));
+  Datatype capsuleDatatype(1, &capsule, 0, sizeof(Capsule));
+  capsuleDatatype.set(0, MPI_DOUBLE, N_CAP_DATA, capsule.getData());
   _typeSegments[0] = capsuleDatatype.commit();
 #endif
 

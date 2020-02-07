@@ -20,6 +20,7 @@
 #include <cassert>
 #include <iostream>
 #include <math.h>
+#include <cmath>
 
 #ifndef TOAST_OFF
 #define ISTOAST(x) if(isToast(x, (getSimulation().getIteration()))){assert(0);}
