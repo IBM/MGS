@@ -5,11 +5,15 @@
 #include <cstddef>
 #include "rndm.h"
 #include <vector>
+#include <math.h>
 //#define USE_SMART_PTR
 #ifdef USE_SMART_PTR
 #include "Array_GPU_unique_ptr.h"
 #else
 //class GranuleMapper;
+#if defined(__CUDA_ARCH__)
+#include "builtins.cuh"
+#endif
 
 #define MINIMAL_SIZE_ARR 12
 // use BLOCK_INCREMENTAL  (which can be 4, 8 or 16)
@@ -49,40 +53,6 @@ public:
 //    static constexpr bool value = decltype(isDerivedFrom::test(std::declval<U>()))::value;
 //};
 
-class Managed
-{
-  public:
-    /* 
-     * T = data type for 1 element
-     * len = num_elements * sizeof(T)
-     */
-    //void *operator new(size_t len)
-    //{
-    //  void *ptr;
-    //  cudaMallocManaged(&ptr, len);
-    //  cudaDeviceSynchronize();
-    //  return ptr;
-    //}
-    //void operator delete(void* ptr)
-    //{
-    //  cudaDeviceSynchronize();
-    //  cudaFree(ptr);
-    //}
-
-    void * new_memory(size_t len)
-    {
-      void *ptr;
-      gpuErrorCheck(cudaDeviceSynchronize());
-      gpuErrorCheck(cudaMallocManaged(&ptr, len));
-      return ptr;
-    }
-    void delete_memory(void* ptr)
-    {
-      gpuErrorCheck(cudaDeviceSynchronize());
-      gpuErrorCheck(cudaFree(ptr));
-    }
-};
-
 #include <memory>
 #include <new>
 /*
@@ -109,9 +79,9 @@ class Array_Flat //: public Managed
     /* len = in number of bytes */
 #if defined(FLAT_MEM_MANAGEMENT) && FLAT_MEM_MANAGEMENT  == USE_PLACEMENT_NEW
     //T* new_memory(size_t len, char*& new_pBuffer)
-    T* new_memory(size_t len, char** new_pBuffer)
+    CUDA_CALLABLE T* new_memory(size_t len, char** new_pBuffer)
 #else
-    T * new_memory(size_t len)
+    CUDA_CALLABLE T * new_memory(size_t len)
 #endif
     {
       //std::cout << " ... new_memory size in GB " << len/1024/1024/1024 << " GB\n";
@@ -126,6 +96,7 @@ class Array_Flat //: public Managed
 
       if (_mem_location == MemLocation::CPU)
       {
+#if ! defined(__CUDA_ARCH__)
 //#define DEBUG_SIZE_INFO
 #if defined(DEBUG_SIZE_INFO)
 	double sizeGB = ((double)len) /1024/1024/1024;
@@ -245,19 +216,29 @@ class Array_Flat //: public Managed
 	  std::cout << "end" << sizeMB << "MB\n";
 	}
 #endif
+#endif
       }
       else if (_mem_location == MemLocation::UNIFIED_MEM){
-      gpuErrorCheck(cudaGetLastError());
-      gpuErrorCheck(cudaMallocManaged(&ptr, len));
-      gpuErrorCheck(cudaDeviceSynchronize());
+#if ! defined(__CUDA_ARCH__)
+	 gpuErrorCheck(cudaGetLastError());
+	 gpuErrorCheck(cudaMallocManaged(&ptr, len));
+	 gpuErrorCheck(cudaDeviceSynchronize());
+#else
+	 ptr = (T*)malloc(len);
+	 assert(0);
+#endif
       }
       else{
 	assert(0);
       }
       return ptr;
     }
-    void delete_memory(T*& ptr)
+    //TUAN TODO: move to protected
+    CUDA_CALLABLE void delete_memory(T*& ptr)
     {
+      if (_referenceOtherData)
+	//don't do anything
+	return;
 //#ifdef USE_FLATARRAY_UM
 //      cudaDeviceSynchronize();
 //      cudaFree(ptr);
@@ -266,6 +247,7 @@ class Array_Flat //: public Managed
 //#endif
       if (_mem_location == MemLocation::CPU)
       {
+#if ! defined(__CUDA_ARCH__)
 #if defined(FLAT_MEM_MANAGEMENT) && FLAT_MEM_MANAGEMENT  == USE_STD_ALLOCATOR
 	for (size_t i =0; i < _size; ++i)
 	  allocator.destroy(ptr+i);
@@ -280,10 +262,28 @@ class Array_Flat //: public Managed
 #else
       ::delete[] ptr;
 #endif
+#endif
       }else if (_mem_location == MemLocation::UNIFIED_MEM){
+#if ! defined(__CUDA_ARCH__)
       gpuErrorCheck(cudaDeviceSynchronize());
       gpuErrorCheck(cudaFree(ptr));         
+#else
+	assert(0);
+#endif
       }
+    }
+    CUDA_CALLABLE void destructContents();
+    /* make the data reference to some external data 
+     * NOTE: the memory management is not taken cared by this container */
+    void changeRef(T* target, int size)
+    {
+      if (not _referenceOtherData)
+	destructContents(); //delete old data
+      if (target == nullptr)
+	assert(0);
+      _data = target;
+      _size = size;
+      _referenceOtherData = true;
     }
 
     //bool should_be_on_UM() {return true;};
@@ -295,7 +295,7 @@ class Array_Flat //: public Managed
      * With MemLocation, now we use
      *      DuplicatePointerArray<GranuleMapper, 0, 50> _granuleMapperList;
      */
-    Array_Flat(int64_t incrementSize);
+    CUDA_CALLABLE Array_Flat(int64_t incrementSize);
     /* delete all existing memory
      * then re-create to the minimal size
      * and set num-elements to 0
@@ -310,17 +310,18 @@ class Array_Flat //: public Managed
     };
 
     CUDA_CALLABLE T* getDataRef() {return _data; };
-    void increaseSizeTo(int64_t newSize, bool force_trim_memory_to_smaller = false);
+    CUDA_CALLABLE void increaseSizeTo(int64_t newSize, bool force_trim_memory_to_smaller = false);
+    CUDA_CALLABLE void resize(int64_t newSize);
     void decreaseSizeTo(int64_t newSize);
     //void resize_allocated(unsigned newSize);
-    void resize_allocated(int64_t newSize, bool force_trim_memory_to_smaller = false);
-    void resize_allocated_subarray(int64_t MAX_SUBARRAY_SIZE, uint8_t location);
+    CUDA_CALLABLE void resize_allocated(int64_t newSize, bool force_trim_memory_to_smaller = false);
+    CUDA_CALLABLE void resize_allocated_subarray(int64_t MAX_SUBARRAY_SIZE, uint8_t location);
     void increase();
     void decrease();
     void assign(int64_t n, const T& val);
-    void insert(const T& element);
+    CUDA_CALLABLE void insert(const T& element);
     void replace(int64_t index, const T& element); //replace the element at index 'index' with new value
-    void push_back(const T& element) 
+    CUDA_CALLABLE void push_back(const T& element) 
     {
       insert(element);
     }
@@ -329,7 +330,7 @@ class Array_Flat //: public Managed
     CUDA_CALLABLE Array_Flat& operator=(const Array_Flat& rv);
     //virtual void duplicate(std::unique_ptr<Array_Flat<T>>& rv) const = 0;
     virtual void duplicate(std::unique_ptr<Array_Flat<T, memLocation>>& rv) const = 0;
-    virtual ~Array_Flat();
+    CUDA_CALLABLE virtual ~Array_Flat();
     
     CUDA_CALLABLE size_t size() const 
     {
@@ -415,11 +416,11 @@ class Array_Flat //: public Managed
 	  resize_allocated(MINIMAL_SIZE_ARR);
       }
 
+      CUDA_CALLABLE
       virtual void internalCopy(T& lval, T& rval) = 0;
       /* wipe everything
        * don't create minimal data
        */
-      CUDA_CALLABLE void destructContents();
       CUDA_CALLABLE void copyContents(const Array_Flat& rv);
       void demote (size_t, size_t); 
 	  // NOTE: Arrays are organized in the form of multiple 'logical blocks'
@@ -429,23 +430,32 @@ class Array_Flat //: public Managed
       size_t _size; //the number of elements in the array containing data
       unsigned _communicatedSize; //the number of elements MPI has communicated
       unsigned _sizeToCommunicate; //the number of elements MPI is to communicate
+      bool _referenceOtherData = false;
       T* _data; // the flat array of data (to be on Unified Memory)
 #if defined(FLAT_MEM_MANAGEMENT) && FLAT_MEM_MANAGEMENT  == USE_PLACEMENT_NEW
       char* pBuffer;
 #endif
       uint8_t _mem_location;  //
       uint8_t _array_design;
+#if ! defined(__CUDA_ARCH__)
 #if defined(FLAT_MEM_MANAGEMENT) && FLAT_MEM_MANAGEMENT  == USE_STD_ALLOCATOR
       std::allocator<T> allocator;
+#endif
 #endif
    public:
       //TUAN: make this public so that we can use
       // Array_Flat<int>::MemLocation::CPU
       typedef enum {CPU=0, UNIFIED_MEM} MemLocation; //IMPORTANT: Keep CPU=0
       typedef enum {DOUBLE_ARRAY, FLAT_ARRAY} ArrayDesign;
+      /* NOTE: This is required to set data on array allocated via SHARED region */
+      void ____set_mem(int loc) {
+	_mem_location = loc;
+	_incremental_size = DEFAULT_INCREMENTAL_SIZE_ARR;
+      }
 };
 
 template <class T, int memLocation>
+CUDA_CALLABLE
 Array_Flat<T, memLocation>::Array_Flat(int64_t incrementSize)
   : _allocated_size(0), _incremental_size(incrementSize), 
   _size(0), _communicatedSize(0),  _sizeToCommunicate(0),
@@ -482,6 +492,7 @@ Array_Flat<T, memLocation>::Array_Flat(int64_t incrementSize)
  *     (default)just trim the elements at the end [no change physically allocated memory]
  */
 template <class T, int memLocation>
+CUDA_CALLABLE
 void Array_Flat<T, memLocation>::resize_allocated(int64_t newSize, bool force_trim_memory_to_smaller)
 {
   //std::cout << " resize_allocated size in GB " << newSize * sizeof(T)/1024/1024/1024 << " GB\n";
@@ -561,8 +572,13 @@ void Array_Flat<T, memLocation>::resize_allocated(int64_t newSize, bool force_tr
   //FINALLY
   if (_data != nullptr)
   {
+#if ! defined(__CUDA_ARCH__)
     if (_size > 0)
       std::copy_n((T*)_data, std::min((size_t)newSize, _size), new_data);
+#else
+    if (_size > 0)
+	memcpy(new_data, (T*)_data, minimum((size_t)newSize, _size));
+#endif
     delete_memory(_data);  // this use overloadded 
   }
   _data = new_data;
@@ -573,15 +589,18 @@ void Array_Flat<T, memLocation>::resize_allocated(int64_t newSize, bool force_tr
 }
 
 template <class T, int memLocation>
+CUDA_CALLABLE
 void Array_Flat<T, memLocation>::resize_allocated_subarray(int64_t MAX_SUBARRAY_SIZE,
    uint8_t mem_location)
 {
+#if ! defined(__CUDA_ARCH__)
   if (MAX_SUBARRAY_SIZE> std::numeric_limits<decltype(_incremental_size)>::max())
   {
     std::cout << "ERROR: size too large\n";
     assert(0);
     return;
   }
+#endif
 //#define MAX_SUBARRAY_SIZE 20
   /* need to allocate memory */
   auto newSize = MAX_SUBARRAY_SIZE;
@@ -614,9 +633,11 @@ void Array_Flat<T, memLocation>::increaseSizeTo(int64_t newSize, bool force_trim
 {
   //resize_allocated(newSize+NUM_TRAILING_ELEMENT, force_trim_memory_to_smaller);
   resize_allocated(newSize, force_trim_memory_to_smaller);
+#if ! defined(__CUDA_ARCH__)
 #if defined(FLAT_MEM_MANAGEMENT) && FLAT_MEM_MANAGEMENT  == USE_STD_ALLOCATOR
   for (size_t i = _size; i < newSize; ++i)
     allocator.construct(_data + i);
+#endif
 #endif
   _size = newSize;
 }
@@ -628,6 +649,12 @@ void Array_Flat<T, memLocation>::decreaseSizeTo(int64_t newSize)
   //resize_allocated(newSize+NUM_TRAILING_ELEMENT);
   resize_allocated(newSize);
   _size = newSize;
+}
+template <class T, int memLocation>
+void Array_Flat<T, memLocation>::resize(int64_t newSize)
+{
+ bool force_trim_memory_to_smaller=true;
+ increaseSizeTo(newSize, force_trim_memory_to_smaller);
 }
 
 /*
@@ -649,7 +676,7 @@ void Array_Flat<T, memLocation>::decrease()
 }
 
 template <class T, int memLocation>
-void Array_Flat<T, memLocation>::insert(const T& element)
+CUDA_CALLABLE void Array_Flat<T, memLocation>::insert(const T& element)
 {
   if (_allocated_size == 0)
   {
@@ -717,6 +744,7 @@ CUDA_CALLABLE Array_Flat<T, memLocation>& Array_Flat<T, memLocation>::operator=(
 }
 
 template <class T, int memLocation>
+CUDA_CALLABLE
 Array_Flat<T, memLocation>::~Array_Flat()
 {
    destructContents();
@@ -729,6 +757,7 @@ Array_Flat<T, memLocation>::~Array_Flat()
  *   with rvalue
  */
 template <class T, int memLocation>
+CUDA_CALLABLE
 void Array_Flat<T, memLocation>::copyContents(const Array_Flat& rv)
 {
    if (_size == 0 and rv._size == 0)
@@ -824,7 +853,11 @@ void Array_Flat<T, memLocation>::merge(const Array_Flat& rv)
     }
     increaseSizeTo(m+n);
     //memcpy(&_data[_size-1], rv._data, n);
+#if ! defined(__CUDA_ARCH__)
     std::copy_n(rv._data, n, &_data[_size-1]);
+#else
+    memcpy(&_data[_size-1], rv._data, n);
+#endif
     //--m;
     //--n;
     //for (int i=_size-1; i>=0; --i) {
@@ -841,6 +874,7 @@ void Array_Flat<T, memLocation>::merge(const Array_Flat& rv)
 }
   
 template <class T, int memLocation>
+CUDA_CALLABLE
 void Array_Flat<T, memLocation>::destructContents()
 {
   if (_data != nullptr)

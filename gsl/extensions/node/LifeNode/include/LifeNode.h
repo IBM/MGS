@@ -27,6 +27,7 @@
 class LifeNode : public CG_LifeNode
 {
    public:
+      using Node::initialize;
       ///TUAN NOTE: we cann't make them '__global__' if we use static data member '_container'
       //  This is ok, as we don't put data member inside class
       //CUDA_CALLABLE void initialize(RNG& rng);

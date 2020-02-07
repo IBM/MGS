@@ -1,0 +1,25 @@
+// Please add any extra data member that you add to  CG_SupervisorNodeCompCategory
+#if  defined(HAVE_GPU)
+public:
+ShallowArray_Flat<unsigned, Array_Flat<int>::MemLocation::UNIFIED_MEM> udef_um_globalIdx;
+//ShallowArray_Flat<double, Array_Flat<int>::MemLocation::UNIFIED_MEM> um_ready;
+
+// This is buffer design
+// d_buffer = NUM_SAMPLES * sample_size      <--- [data buffer]
+// l_buffer = NUM_SAMPLES                    <--- [label buffer]
+// Depending on the phase (training/testing) the data can be used for each purpose
+double* d_buffer;
+uint8_t* l_buffer;
+//
+// training_images = the array in that each element is a pointer points to the right address on d_buffer
+// test_images     = the array in that each element is a pointer points to the right address on d_buffer
+double** training_images;
+uint8_t* training_labels;
+// training_label = the array in that each element is a pointer points to the right address on l_buffer
+// testing_label  = the array in that each element is a pointer points to the right address on l_buffer
+double** test_images;
+uint8_t* test_labels;
+
+bool allocated_gpu=false;
+ShallowArray_Flat<unsigned, Array_Flat<int>::MemLocation::UNIFIED_MEM> um_shuffledDeck;
+#endif

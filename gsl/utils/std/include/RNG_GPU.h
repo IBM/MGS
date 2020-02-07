@@ -19,6 +19,7 @@
 #ifdef HAVE_GPU
 
 #include <cuda.h>
+#include <cuda_runtime_api.h>
 #include <curand.h>
 #include <math.h>
 #include <stdio.h>

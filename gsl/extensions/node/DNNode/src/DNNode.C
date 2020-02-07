@@ -9,11 +9,11 @@
 
 #ifdef HAVE_GPU
 
-#define output  (_container->um_output[index])
-#define gradient  (_container->um_gradient[index])
-#define inputs  (_container->um_inputs[index])
-#define weightedGradient  (_container->um_weightedGradient[index])
-#define ready  (_container->um_ready[index])
+#define output  (_container->um_output[__index__])
+#define gradient  (_container->um_gradient[__index__])
+#define inputs  (_container->um_inputs[__index__])
+#define weightedGradient  (_container->um_weightedGradient[__index__])
+#define ready  (_container->um_ready[__index__])
 #endif
 
 #define TOASTED
@@ -33,17 +33,23 @@ void DNNode::initialize(RNG& rng)
 
 void DNNode::update(RNG& rng) 
 {
-  ShallowArray<EdgeSetInput>::iterator iter, end = inputs.end();
+  auto end = inputs.end();
   if (!ready) {
-    for (iter=inputs.begin(); iter!=end; ++iter) {
+    /* getIndex() and getNodeIndex() return a Grid-instance-based index 
+     * getGlobalIndex() return the node instance index (unique across Grids that define the Layer for that NodeType)
+     * */
+    for (auto iter=inputs.begin(); iter!=end; ++iter) {
       ready = (*iter->inputArray)[iter->inputIndex] != PRELIM_STATE;
       if (!ready) break;
     }
   }
   if (ready) {
     output = 0;
-    for (iter=inputs.begin(); iter!=end; ++iter)
+    for (auto iter=inputs.begin(); iter!=end; ++iter)
+    {
+      // += h_j * w_{ji}  : which is 'weightedOutput' from by all incoming DNEdgeSet
       output += (*iter->inputArray)[iter->inputIndex];    
+    }
     gradient = *weightedGradient;
 
 #ifdef TOASTED

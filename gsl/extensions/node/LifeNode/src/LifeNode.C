@@ -24,12 +24,12 @@
 #define SHD getSharedMembers()
 
 #if defined(HAVE_GPU) 
-#define value (_container->um_value[index]) 
-#define publicValue (_container->um_publicValue[index]) 
-#define neighbors (_container->um_neighbors[index]) 
-#define weight (_container->um_weight[index]) 
-#define publicWeight  (_container->um_publicWeight[index])
-#define neighborsWeight  (_container->um_neighborsWeight[index])
+#define value (_container->um_value[__index__]) 
+#define publicValue (_container->um_publicValue[__index__]) 
+#define neighbors (_container->um_neighbors[__index__]) 
+#define weight (_container->um_weight[__index__]) 
+#define publicWeight  (_container->um_publicWeight[__index__])
+#define neighborsWeight  (_container->um_neighborsWeight[__index__])
 #endif
 void LifeNode::initialize(RNG& rng) 
 {
@@ -74,14 +74,14 @@ void LifeNode::update(RNG& rng)
 //    * becomes
 //    *       (_container->um_neighbors[idx])
 //    */
-//   auto um_neighbors_from = _container->um_neighbors_start_offset[index];
-//   auto um_neighbors_to = _container->um_neighbors_num_elements[index]-1;
+//   auto um_neighbors_from = _container->um_neighbors_start_offset[__index__];
+//   auto um_neighbors_to = _container->um_neighbors_num_elements[__index__]-1;
 //   for (auto idx = um_neighbors_from; idx < um_neighbors_to; ++idx) {
 //     neighborCount += *(_container->um_neighbors[idx]);
 //   }
 // #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
-//   auto um_neighbors_from = index * _container->um_neighbors_max_elements;
-//   auto um_neighbors_to = um_neighbors_from + _container->um_neighbors_num_elements[index];
+//   auto um_neighbors_from = __index__ * _container->um_neighbors_max_elements;
+//   auto um_neighbors_to = um_neighbors_from + _container->um_neighbors_num_elements[__index__];
 //   for (auto idx = um_neighbors_from; idx < um_neighbors_to; ++idx) {
 //     neighborCount += *(_container->um_neighbors[idx]);
 //   }
@@ -113,8 +113,8 @@ void LifeNode::updateWeight(RNG& rng)
         weightSum += **iter;
       }
   #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
-      auto um_neighborsWeight_from = index * _container->um_neighborsWeight_max_elements;
-      auto um_neighborsWeight_to = um_neighborsWeight_from + _container->um_neighborsWeight_num_elements[index];
+      auto um_neighborsWeight_from = __index__ * _container->um_neighborsWeight_max_elements;
+      auto um_neighborsWeight_to = um_neighborsWeight_from + _container->um_neighborsWeight_num_elements[__index__];
       for (auto idx = um_neighborsWeight_from; idx < um_neighborsWeight_to; ++idx) {
         weightSum += *(_container->um_neighborsWeight[idx]);
       }

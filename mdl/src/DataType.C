@@ -84,7 +84,8 @@ std::string DataType::getHeaderDataItemString() const
 }
 
 std::string DataType::getInitializerString(const std::string& diArg, int level,
-					   bool isIterator, bool forPSet) const
+					   bool isIterator, bool forPSet,
+					   const Class* instance) const
 {
    std::string tab;
    setTabWithLevel(tab, level);
@@ -122,9 +123,24 @@ std::string DataType::getInitializerString(const std::string& diArg, int level,
    } else {
       os << duplicateIfOwned(diName, tab, newForDuplicate);
    }
+   if (instance and instance->getClassInfoPrimeType() == Class::PrimeType::Constant)
+   {
+      //Constant
+      std::string attName = PREFIX_MEMBERNAME + "constant_"+ instance->getName().substr(3)  + "_" + _name;
+      os << STR_GPU_CHECK_START;
+      os << tab << TAB  
+	 << attName << "[getIndex()] = " << getDataFromVariable(newForDuplicate)
+	 << ";\n";
+      os << "#else\n";
+   }
    os << tab << TAB << getName() << " = "
       << getDataFromVariable(newForDuplicate)
-      << ";\n"
+      << ";\n";
+   if (instance and instance->getClassInfoPrimeType() == Class::PrimeType::Constant)
+   {
+      os << STR_GPU_CHECK_END;
+   }
+   os
       << tab << "}\n";
    if (isIterator) {
       os << tab << diArg + "++;\n";
@@ -133,7 +149,8 @@ std::string DataType::getInitializerString(const std::string& diArg, int level,
 
 }
 
-std::string DataType::getPSetString(const std::string& diArg, bool first) const
+std::string DataType::getPSetString(const std::string& diArg, bool first,
+      const Class* instance) const
 {
    std::ostringstream os;
    os << TAB << TAB ;
@@ -142,7 +159,7 @@ std::string DataType::getPSetString(const std::string& diArg, bool first) const
    }
    os << "if (" << diArg << "->getName() == \"" << getName() << "\") {\n"
       << TAB << TAB << TAB << FOUND << " = true;\n"
-      << getInitializerString(diArg + "->getDataItem()", 2, false, true)
+      << getInitializerString(diArg + "->getDataItem()", 2, false, true, instance)
       << TAB << TAB << "}\n";
    return os.str();
 }
@@ -316,7 +333,7 @@ std::string DataType::getServiceString(const std::string& tab) const
 {
    return getServiceString(tab, MachineType::CPU);
 }
-std::string DataType::getServiceString(const std::string& tab, MachineType mach_type) const
+std::string DataType::getServiceString(const std::string& tab, MachineType mach_type, const Class* instance) const
 {
    // No services for pointers that are not optional
    if (isPointer()) {
@@ -383,12 +400,44 @@ std::string DataType::getServiceString(const std::string& tab, MachineType mach_
       }else{
 	 os << tab << TAB << "rval = new GenericService< " << getTypeString() 
 	    << " >(" << DATA << ", " << "&("; 
-	 os<< open_parenthesis << DATA << "->";
-	 if (_shared) {
-	    os << "getNonConstSharedMembers().";
-	 } 
-	 os << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << getName() << close_parenthesis << "[" << DATA << "->" << REF_INDEX << "]" << ")" << ");\n";
+	 if (instance and instance->getClassInfoPrimeType() == Class::PrimeType::Constant 
+	       and instance->getClassInfoSubType() == Class::SubType::Publisher)
+	 {
+	    if (_shared) {
+	       os << "getNonConstSharedMembers().";
+	    } 
+	    //Constant
+	    int str_index_right = instance->getName().size()-9-3;
+	    std::string attName = PREFIX_MEMBERNAME + "constant_"+ instance->getName().substr(3, str_index_right)  + "_" + _name;
+	    os << attName << "[_data->getIndex()]" << ")" << ");\n";
+	 }
+	 else {
+	    os<< open_parenthesis << DATA << "->";
+	    if (_shared) {
+	       os << "getNonConstSharedMembers().";
+	    } 
+	    os << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << getName() << close_parenthesis << "[" << DATA << "->" << REF_INDEX << "]" << ")" << ");\n";
+	 }
       }
+   }
+   else if (mach_type == MachineType::GPU and _shared and isArray())
+   {
+      std::string  type = getTypeString();
+      std::string from = "ShallowArray<";
+      std::string to = "ShallowArray_Flat<";
+      type = type.replace(type.find(from),from.length(),to);
+      std::size_t start = type.find_first_of("<");
+      std::size_t last = type.find_first_of(">");
+      std::string element_datatype = type.substr(start+1, last-start-1);
+      type = type.replace(start+1, last-start-1, element_datatype + ", " + MEMORY_LOCATION);
+      os << tab << TAB << "rval = new GenericService< " << type
+	 << " >(" << DATA << ", " << "&(";
+      os<< DATA << "->";
+      if (_shared) {
+	 os << "getNonConstSharedMembers().";
+      }
+      os << getName() << ")" << ");\n";
+      std::string comment = "// ";
    }
    else{
       os << tab << TAB << "rval = new GenericService< " << getTypeString() 
@@ -425,18 +474,20 @@ std::string DataType::getOptionalServiceString(const std::string& tab) const
 }
 
 std::string DataType::getServiceNameString(const std::string& tab,
-				     MachineType mach_type
+				     MachineType mach_type,
+				     const Class* instance
       ) const
 {
-   return getServiceInfoString(tab, getName(), mach_type);
+   return getServiceInfoString(tab, getName(), mach_type, instance);
 }
 
 std::string DataType::getServiceDescriptionString(
 	 const std::string& tab,
-	 MachineType mach_type
+	 MachineType mach_type,
+	 const Class* instance
 	 ) const
 {
-   return getServiceInfoString(tab, getComment(), mach_type);
+   return getServiceInfoString(tab, getComment(), mach_type, instance);
 }
 
 std::string DataType::getOptionalServiceNameString(
@@ -453,7 +504,8 @@ std::string DataType::getOptionalServiceDescriptionString(
 
 std::string DataType::getServiceInfoString(
    const std::string& tab, const std::string& info,
-   MachineType mach_type
+   MachineType mach_type,
+   const Class* instance
    ) const
 {
    // No services for pointers
@@ -506,11 +558,24 @@ std::string DataType::getServiceInfoString(
       else{
 	 if (mach_type == MachineType::GPU)
 	 {
-	    os << tab << "if (" << PUBDATANAME << " == &(";
-	    os << REF_CC_OBJECT+"->" + PREFIX_MEMBERNAME + _name + "[" + REF_INDEX + "]";
-	    os << ")) {\n"
-	       << tab << TAB << "return \"" << info << "\";\n"
-	       << tab << "}\n";
+	    if (instance and instance->getClassInfoPrimeType() == Class::PrimeType::Constant)
+	    {
+	       //Constant
+	       std::string attName = PREFIX_MEMBERNAME + "constant_"+ instance->getName().substr(3)  + "_" + _name;
+	       os << tab << "if (" << PUBDATANAME << " == &(";
+	       os << attName + "[" + REF_INDEX + "]";
+	       os << ")) {\n"
+		  << tab << TAB << "return \"" << info << "\";\n"
+		  << tab << "}\n";
+
+	    }else{
+	       //Node
+	       os << tab << "if (" << PUBDATANAME << " == &(";
+	       os << REF_CC_OBJECT+"->" + PREFIX_MEMBERNAME + _name + "[" + REF_INDEX + "]";
+	       os << ")) {\n"
+		  << tab << TAB << "return \"" << info << "\";\n"
+		  << tab << "}\n";
+	    }
 	 }
 	 else{
 	    os << tab << "if (" << PUBDATANAME << " == &(";

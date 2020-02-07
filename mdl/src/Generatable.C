@@ -232,7 +232,7 @@ void Generatable::generateType()
    std::string moduleTypeNameCap = getModuleTypeName();
    moduleTypeNameCap[0] += 'A' - 'a';
    std::string moduleTypeNameCapType = moduleTypeNameCap + "Type";
-   std::string fullName = PREFIX + getModuleName() + "Type";
+   std::string fullName = PREFIX + getModuleName() + "Type";/* constant, functor, struct, e.g. CG_BiasType, CG_EdgeSetInputType */
    std::auto_ptr<Class> instance(new Class(fullName));
 
    std::string instanceInitializer = 
@@ -369,7 +369,7 @@ void Generatable::addDoInitializeMethods(
    doInitMethod->addParameter("const std::vector<DataItem*>& args");
    doInitMethod->setVirtual();
    doInitMethod->setAccessType(AccessType::PROTECTED);
-   doInitMethod->setFunctionBody(getDoInitializeMethodBody(members));
+   doInitMethod->setFunctionBody(getDoInitializeMethodBody(members, &instance));
    instance.addMethod(doInitMethod);
 
    instance.addExtraSourceHeader("\"NDPairList.h\"");
@@ -377,12 +377,12 @@ void Generatable::addDoInitializeMethods(
    setUpMethod->addParameter("const NDPairList& ndplist");
    setUpMethod->setVirtual();
    setUpMethod->setAccessType(AccessType::PROTECTED);
-   setUpMethod->setFunctionBody(getSetupFromNDPairListMethodBody(members));
+   setUpMethod->setFunctionBody(getSetupFromNDPairListMethodBody(members, &instance));
    instance.addMethod(setUpMethod);
 }
 
 std::string Generatable::getDoInitializeMethodBody(
-   const MemberContainer<DataType>& members) const
+   const MemberContainer<DataType>& members, const Class* instance) const
 {
    if (members.size() == 0) {
       return "";
@@ -398,11 +398,21 @@ std::string Generatable::getDoInitializeMethodBody(
    MemberContainer<DataType>::const_iterator it, end = members.end();
    std::string initStr;
    for (it = members.begin(); it != end; it++) {
-      initStr = it->second->getInitializerString(PREFIX + "currentDI");
+      initStr = it->second->getInitializerString(PREFIX + "currentDI", 0, true, false, instance);
       if (initStr != "") {
 	 doInitFunctionSubBody << initStr;
 	 ++initSize;
       }
+   }
+
+   if (instance and instance->getClassInfoPrimeType() == Class::PrimeType::Constant)
+   {
+      doInitFunctionBody << STR_GPU_CHECK_START
+	 << TAB << 
+	 "if (! getSimulation().isGranuleMapperPass())\n"
+	 << TAB << 
+	 "{//should be simulatePass\n"
+	 << STR_GPU_CHECK_END;
    }
 
    doInitFunctionBody 
@@ -414,17 +424,36 @@ std::string Generatable::getDoInitializeMethodBody(
       << TAB << TAB << "throw SyntaxErrorException(" 
       << PREFIX << "mes.str());\n"
       << TAB << "}\n" << doInitFunctionSubBody.str();
+
+   if (instance and instance->getClassInfoPrimeType() == Class::PrimeType::Constant)
+   {
+      doInitFunctionBody << STR_GPU_CHECK_START
+	 << TAB << 
+	 "}//should be simulatePass\n"
+	 << STR_GPU_CHECK_END;
+   }
    return doInitFunctionBody.str();
 }
 
 std::string Generatable::getSetupFromNDPairListMethodBody(
-   const MemberContainer<DataType>& members) const
+   const MemberContainer<DataType>& members, const Class* instance) const
 {
    if (members.size() == 0) {
       return "";
    }
 
    std::ostringstream os;
+   if (instance and instance->getClassInfoPrimeType() == Class::PrimeType::Constant)
+   {
+      os << STR_GPU_CHECK_START
+	 << TAB << 
+	 "if (! getSimulation().isGranuleMapperPass())\n"
+	 << TAB << 
+	 "{//should be simulatePass\n"
+	 << STR_GPU_CHECK_END;
+   }
+
+
    os << TAB << "NDPairList::const_iterator it, end = ndplist.end();\n"
       << TAB << "for (it = ndplist.begin(); it != end; it++) {\n"
       << TAB << TAB << "bool " << FOUND << " = false;\n";
@@ -432,7 +461,7 @@ std::string Generatable::getSetupFromNDPairListMethodBody(
 
    MemberContainer<DataType>::const_iterator it, end = members.end();
    for (it = members.begin(); it != end; it++) {
-      os << it->second->getPSetString("(*it)", first);
+      os << it->second->getPSetString("(*it)", first, instance);
       if (first) {
 	 first = false;
       }
@@ -446,6 +475,13 @@ std::string Generatable::getSetupFromNDPairListMethodBody(
       << TAB << TAB << TAB << "throw SyntaxErrorException(os.str());\n"
       << TAB << TAB << "}\n"      
       << TAB << "}\n";
+   if (instance and instance->getClassInfoPrimeType() == Class::PrimeType::Constant)
+   {
+      os << STR_GPU_CHECK_START
+	 << TAB << 
+	 "}//should be simulatePass\n"
+	 << STR_GPU_CHECK_END;
+   }
    return os.str();
 }
 

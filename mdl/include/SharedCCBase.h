@@ -74,6 +74,8 @@ class SharedCCBase : public ConnectionCCBase {
       virtual std::string getLoadedInstanceTypeArguments();
 
       void generateSharedMembers();
+      void generateSharedMembers(bool use_classType, 
+	    std::pair<Class::PrimeType, Class::SubType> classType);
       void generateWorkUnitShared();
 
       std::string getSharedMembersName() const {

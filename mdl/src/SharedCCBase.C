@@ -351,11 +351,21 @@ void SharedCCBase::addExtraCompCategoryMethods(Class& instance) const
 
 void SharedCCBase::generateSharedMembers()
 {
+   auto classType = std::make_pair(Class::PrimeType::UN_SET, Class::SubType::UN_SET);
+   bool use_classType = false;
+   generateSharedMembers(use_classType, classType); 
+}
+void SharedCCBase::generateSharedMembers(bool use_classType, 
+      std::pair<Class::PrimeType, Class::SubType> classType)
+{
    std::auto_ptr<Class> instance(new Class(getSharedMembersName()));
+   if (use_classType)
+      instance->setClassInfo(classType);
 
    instance->addHeader("<memory>");
    instance->addHeader("<sstream>");
    instance->addExtraSourceHeader("\"SyntaxErrorException.h\"");
+   instance->addExtraSourceHeader("\"rndm.h\"");
    instance->addClass("NDPairList");
 
    addExtraOptionalServiceHeaders(instance);

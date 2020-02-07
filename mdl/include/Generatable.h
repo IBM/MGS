@@ -50,6 +50,11 @@ class Generatable {
 	 const bool is_in = _supportedMachineType == mach;
 	 return is_in;
       };
+      /*
+      std::set<MachineType>& getSupportedMachineType() const { 
+	 return _supportedMachineType;
+      };
+      */
       MachineType getSupportedMachineType() const { 
 	 return _supportedMachineType;
       };
@@ -143,10 +148,10 @@ class Generatable {
 	 Class& instance, const MemberContainer<DataType>& members) const;
 
       std::string getDoInitializeMethodBody(
-	 const MemberContainer<DataType>& members) const;
+	 const MemberContainer<DataType>& members, const Class* instance=nullptr) const;
 
       std::string getSetupFromNDPairListMethodBody(
-	 const MemberContainer<DataType>& members) const;
+	 const MemberContainer<DataType>& members, const Class* instance=nullptr) const;
 
       // This function can be overridden to add an attribute to the class of generate type.
       virtual void addGenerateTypeClassAttribute(Class& c) const {

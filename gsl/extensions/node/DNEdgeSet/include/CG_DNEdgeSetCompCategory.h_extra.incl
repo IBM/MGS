@@ -1,0 +1,8 @@
+// Please add any extra data member that you add to  CG_DNEdgeSetCompCategory
+#if  defined(HAVE_GPU)
+/* tell the index of the transfer function that is being used by the specific node */
+/* --> can be defined via MDL level -> so that it can be used inside C++ CPU code */
+public:
+ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM> udef_um_fncIndex;
+//TransferFunction transferFunction;
+#endif

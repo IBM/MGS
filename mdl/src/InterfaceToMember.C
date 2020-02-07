@@ -47,7 +47,6 @@ void InterfaceToMember::duplicate(std::auto_ptr<InterfaceMapping>& rv) const
 
 void InterfaceToMember::checkAndExtraWork(const std::string& name,
    DataType* member, const DataType* interface, bool amp) {
-   
    const DataType* realMember;
       
    const std::vector<std::string>& subAttributePath = 
@@ -188,7 +187,8 @@ std::string InterfaceToMember::getInterfaceToMemberCode(
 	    _interface->getName() + "_" + it->getName() + "()";
 
 	 if (*mIt == ONETOONE) {
-	    os << tab << memberName << path << " = " << getMethod << ";\n";
+	    /* comment out in dummy setting */
+	    os << tab << "//" << memberName << path << " = " << getMethod << ";\n";
 	 } else { // ONETOMANY
 	    if (path == "") {
 	       if (mach_type == MachineType::GPU)

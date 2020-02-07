@@ -616,7 +616,7 @@ class BuildSetup:
 
         # decide if we want to compile all codes via nvcc
         # or just those with CUDA code using nvcc
-        self.separate_compile = False
+        self.separate_compile = True #False
 
         # Command line options
         self.options = Options(sys.argv)
@@ -902,12 +902,14 @@ class BuildSetup:
                 # consider switching to using gcc and nvcc for different codes
                 if self.separate_compile:
                     self.nvccCompiler = findFile("nvcc", True)
+                    # self.nvccCompiler += " -ccbin g++"
                     # self.cCompiler = findFile("gcc", True)
                     # self.cppCompiler = findFile("g++", True)
                     self.cCompiler = findFile("mpicc", True)
                     self.cppCompiler = findFile("mpiCC", True)
                 else:
                     self.cCompiler = findFile("nvcc", True)
+                    # self.cCompiler += " -ccbin g++"
                     # findFile("nvcc", True)
                     self.cppCompiler = findFile("nvcc", True)
                 # findFile("nvcc", True)
@@ -974,7 +976,6 @@ SO_DIR := $(LENSROOT)/so
 PARSER_PATH := framework/parser
 STD_UTILS_OBJ_PATH := utils/std/obj
 TOTALVIEW_LIBPATH := /opt/toolworks/totalview.8.4.1-7/rs6000/lib
-
 """
 
         # BlueGene MPI flags
@@ -996,7 +997,11 @@ MPI_INC = -I$(BGP_ROOT)/arch/include
 """
 
         if self.options.withGpu is True:
-            retStr += "NVCC := " + self.nvccCompiler + "\n"
+            retStr += """
+# CUDA 7.5 only work until gcc 4.10
+# CUDA 9.2. only work until gcc 6.x and ompi 1.10.6
+"""
+            retStr += "NVCC := " + self.nvccCompiler + " -ccbin g++\n"
         retStr += "CC := " + self.cppCompiler + "\n"
         retStr += "C_COMP := " + self.cCompiler + "\n"
         if self.options.withMpi is True:
@@ -1015,6 +1020,28 @@ MPI_INC = -I$(BGP_ROOT)/arch/include
             retStr += "HAVE_PTHREADS := 1\n"
         if self.options.profile == USE:
             retStr += "PROFILING := 1\n"
+
+        if self.options.withGpu is True:
+            retStr += """
+# Gencode arguments
+#SMS ?= 35 37 50 52 60 61 70 75
+SMS ?= 70
+
+ifeq ($(SMS),)
+$(info >>> WARNING - no SM architectures have been specified - waiving sample <<<)
+SAMPLE_ENABLED := 0
+endif
+
+ifeq ($(GENCODE_FLAGS),)
+    # Generate SASS code for each SM architecture listed in $(SMS)
+    $(foreach sm,$(SMS),$(eval GENCODE_FLAGS += -gencode arch=compute_$(sm),code=sm_$(sm)))
+    # Generate PTX code from the highest SM architecture in $(SMS) to guarantee forward-compatibility
+    HIGHEST_SM := $(lastword $(sort $(SMS)))
+    ifneq ($(HIGHEST_SM),)
+        GENCODE_FLAGS += -gencode arch=compute_$(HIGHEST_SM),code=compute_$(HIGHEST_SM)
+    endif
+endif
+"""
         return retStr
 
     def getMake64(self):
@@ -1067,7 +1094,7 @@ COLAB_FRAMEWORK_MODULES := \\
             """\
 \t\tstd \\
 \t\timg \\
-\t\tmnist-master\\
+\t\tmnist\\
 """
         if self.options.colab is False:
             retStr += \
@@ -1461,9 +1488,14 @@ CUDA_EXTENSION_MODULES += $(patsubst %,node/%,$(CUDA_NODE_MODULES))
 CUDA_EXTENSION_MODULES := $(patsubst %,extensions/%,$(CUDA_EXTENSION_MODULES))
 CUDA_MODULES := $(CUDA_EXTENSION_MODULES)
 CUDA_SOURCES_DIRS := $(patsubst %,%/src, $(CUDA_MODULES))
-CUDA_CODE := $(foreach dir,$(CUDA_SOURCES_DIRS),$(wildcard $(dir)/CG_*.C))
+CUDA_CODE := $(foreach dir,$(CUDA_SOURCES_DIRS),$(wildcard $(dir)/CG_*CompCategory.C))
 
-CUDA_PURE_OBJS := $(patsubst %.C, %.o, $(CUDA_CODE))
+CUDA_SOURCES_FILENAME_ONLY :=$(shell for file in $(notdir $(CUDA_CODE)); do \
+	       echo $${file} ; \
+	       done)
+
+#CUDA_PURE_OBJS := $(patsubst %.C, %.o, $(CUDA_CODE))
+CUDA_PURE_OBJS := $(patsubst %.C, %.o, $(CUDA_SOURCES_FILENAME_ONLY))
 
 CUDA_OBJS := $(patsubst %, $(OBJS_DIR)/%, $(CUDA_PURE_OBJS))
 """
@@ -1486,18 +1518,24 @@ CUDA_OBJS := $(patsubst %, $(OBJS_DIR)/%, $(CUDA_PURE_OBJS))
         retStr += "\n"
         return retStr
 
+    def getHeaderPaths(self):
+        retStr = """
+SRC_HEADER_INC := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generated,$(PARSER_PATH)) $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES))
+SRC_HEADER_INC += -I../common/include
+        """
+        return retStr
+
     def getNVCCFlags(self):  # noqa
         retStr = \
             """\
-# OTHER_LIBS :=-lgmp -lpython2.7
-OTHER_LIBS :=-lgmp  \
+OTHER_LIBS := -lgmp \
 """
-        retStr += " -I$(PYTHON_INCLUDE_DIR) -L$(PYTHON_LIB) -l{} ".format(self.pythonLibName)
+        retStr += "-I$(MGS_PYTHON_INCLUDE_DIR) -L$(MGS_PYTHON_LIB) -l{} ".format(self.pythonLibName)
 
         retStr += "\n"
         retStr += \
             """\
-OTHER_LIBS_HEADER :=-I$(PYTHON_INCLUDE_DIR)
+OTHER_LIBS_HEADER := -I$(MGS_PYTHON_INCLUDE_DIR)
 """
         retStr += "\n"
         retStr += \
@@ -1508,8 +1546,7 @@ OTHER_LIBS_HEADER += -I$(SUITESPARSE)/include -DUSE_SUITESPARSE
 endif
 #LDFLAGS := -shared
 """
-        retStr += \
-            """
+        """
 # https://github.com/OpenGP/htrack/blob/master/cmake/ConfigureCUDA.cmake
 # set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -w -Xcompiler -fPIC" )
 # set(CUDA_NVCC_FLAGS "-gencode arch=compute_50,code=sm_50") # GTX980
@@ -1521,34 +1558,52 @@ endif
 #CFLAGS := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generated,$(PARSER_PATH)) $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES))  -DLINUX -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI
 #CFLAGS += -I../common/include -std=c++14 -Wno-deprecated-declarations
 #CFLAGS += --compiler-options -fPIC -MMD
-#CFLAGS += -g -fno-inline -fno-eliminate-unused-debug-types -DDEBUG_ASSERT -DNOWARNING_DYNAMICCAST -Og -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI -DHAVE_GPU -DHAVE_GPU
+#CFLAGS += -g -fno-inline -fno-eliminate-unused-debug-types -DDEBUG_ASSERT -DNOWARNING_DYNAMICCAST -Og -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI -DHAVE_GPU
+"""
+        retStr += self.getHeaderPaths()
 
+        retStr += \
+            """
 # SOURCE_AS_CPP := -x c++
 SOURCE_AS_CPP := -x cu
-CUDA_NVCC_FLAGS := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generated,$(PARSER_PATH)) $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES))  -DLINUX -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI -DHAVE_GPU
-CUDA_NVCC_FLAGS += -I../common/include -std=c++14 -Wno-deprecated-declarations
-CUDA_NVCC_FLAGS += --compiler-options -fPIC \
+CUDA_NVCC_FLAGS := --compiler-options -fPIC -std=c++14 -Xcompiler -Wno-deprecated-declarations \
 """
-        if self.options.debug == USE:
-            retStr += " -g -G"
-            # to add '-pg' run with --profile
+        retStr += " -DLINUX -DDISABLE_DYNAMIC_LOADING -Xcompiler -DHAVE_MPI -Xcompiler -DHAVE_GPU"
+        if self.options.debug_assert is True:
+            retStr += " " + DEBUG_ASSERT
+
+        if self.options.debug_hh is True:
+            retStr += " " + DEBUG_HH
+
+        if self.options.debug_loops is True:
+            retStr += " " + DEBUG_LOOPS
+
+        if self.options.debug_cpts is True:
+            retStr += " " + DEBUG_CPTS
+
+        if self.options.nowarning_dynamiccast is True:
+            retStr += " " + NOWARNING_DYNAMICCAST
+
         if self.options.profile == USE:
             retStr += " " + PROFILING_FLAGS
 
-        if self.options.optimization == "O":
-            retStr += " " + O_OPTIMIZATION_FLAG
-        if self.options.optimization == "O2":
-            retStr += " " + O2_OPTIMIZATION_FLAG
-        if self.options.optimization == "O3":
-            retStr += " " + O3_OPTIMIZATION_FLAG
-        if self.options.optimization == "O4":
-            retStr += " " + O4_OPTIMIZATION_FLAG
-        if self.options.optimization == "O5":
-            retStr += " " + O5_OPTIMIZATION_FLAG
-        # if self.options.optimization == "Og":
-        #    retStr += " " + OG_OPTIMIZATION_FLAG
+        if self.options.debug == USE:
+            retStr += " -g -G -Xcompiler -rdynamic"
+            # to add '-pg' run with --profile
+        else:
+            if self.options.optimization == "O":
+                retStr += " " + O_OPTIMIZATION_FLAG
+            if self.options.optimization == "O2":
+                retStr += " " + O2_OPTIMIZATION_FLAG
+            if self.options.optimization == "O3":
+                retStr += " " + O3_OPTIMIZATION_FLAG
+            if self.options.optimization == "O4":
+                retStr += " " + O4_OPTIMIZATION_FLAG
+            if self.options.optimization == "O5":
+                retStr += " " + O5_OPTIMIZATION_FLAG
+            # if self.options.optimization == "Og":
+            #    retStr += " " + OG_OPTIMIZATION_FLAG
 
-        # if self.options.debug == USE:
         Gencode_Tesla = " -gencode arch=compute_10,code=sm_10 "  # NOQA
         Gencode_Fermi = " -gencode arch=compute_20,code=sm_20 "  # NOQA
         Gencode_Kepler_1 = " -gencode arch=compute_30,code=sm_30 "  # NOQA
@@ -1595,34 +1650,40 @@ CUDA_NVCC_FLAGS += --compiler-options -fPIC \
         Gencode_Volta = """ -gencode=arch=compute_70,code=sm_70 \
   -gencode=arch=compute_70,code=compute_70 \
  """
-        # retStr += Gencode_NVCC8_0
-        # retStr += Gencode_NVCC9_0
-        # retStr += Gencode_Volta
-        retStr += Gencode_Kepler_3
+        machine_choice = Gencode_Kepler_2
+        # machine_choice = Gencode_NVCC8_0
+        # machine_choice = Gencode_NVCC9_0
+        # machine_choice = Gencode_Volta
+        # retStr += machine_choice + " -dc "
 
         retStr += "\n"
 
+        if not self.separate_compile:
+            retStr += """LDFLAGS:= """+ machine_choice
         retStr += """
-LDFLAGS: $(CUDA_NVCC_FLAGS)
+CUDA_NVCC_FLAGS += $(GENCODE_FLAGS) -dc
 CUDA_NVCC_FLAGS += $(SOURCE_AS_CPP)
+
 #--compiler-options -mcpu=power9
 # NVCC fails with this --compiler-options -flto
 #https://devtalk.nvidia.com/default/topic/1026826/link-time-optimization-with-cuda-on-linux-flto-/?offset=6
+
+CUDA_NVCC_LDFLAGS :=  $(GENCODE_FLAGS) -dlink
+CUDA_NVCC_COMBINED_LDFLAGS :=   $(GENCODE_FLAGS) -lib
 """
         return retStr
 
     def getCFlags(self):  # noqa
         retStr = \
             """\
-# OTHER_LIBS :=-lgmp -lpython2.7
-OTHER_LIBS :=-lgmp  \
+OTHER_LIBS :=-lgmp \
 """
-        retStr += " -I$(PYTHON_INCLUDE_DIR) -L$(PYTHON_LIB) -l{}".format(self.pythonLibName)
+        retStr += "-I$(MGS_PYTHON_INCLUDE_DIR) -L$(MGS_PYTHON_LIB) -l{}".format(self.pythonLibName)
 
         retStr += "\n"
         retStr += \
             """\
-OTHER_LIBS_HEADER :=-I$(PYTHON_INCLUDE_DIR)
+OTHER_LIBS_HEADER := -I$(MGS_PYTHON_INCLUDE_DIR)
 """
         retStr += "\n"
         retStr += \
@@ -1633,16 +1694,16 @@ OTHER_LIBS_HEADER += -I$(SUITESPARSE)/include -DUSE_SUITESPARSE
 endif
 #LDFLAGS := -shared
 """
+        if self.options.withGpu is False:
+            retStr += self.getHeaderPaths()
         retStr += \
             """
-CFLAGS := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generated,$(PARSER_PATH)) $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES))  -DLINUX -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI
-CFLAGS += -I../common/include -std=c++14 -Wno-deprecated-declarations
-CFLAGS += -fPIC \
+CFLAGS := -fPIC -std=c++14 -Wno-deprecated-declarations
+CFLAGS +=  \
 """
         if self.options.colab is True:
             retStr += \
-                """
-CFLAGS += $(COLAB_CFLAGS) \
+                """$(COLAB_CFLAGS) \
 """
         if self.options.blueGene is False:
             retStr += \
@@ -1720,9 +1781,6 @@ CFLAGS += $(COLAB_CFLAGS) \
 
         if self.options.withArma is True:
             retStr += " -DHAVE_ARMA -DARMA_DONT_USE_WRAPPER -DARMA_USE_BLAS -DARMA_USE_LAPACK -DARMA_USE_HDF5"
-
-        if self.options.withGpu is True:
-            retStr += " -DHAVE_GPU"
 
         if self.options.profile == USE:
             retStr += " -DPROFILING"
@@ -1862,13 +1920,15 @@ LIBS := """
 
     def getFinalTargetFlag(self):
         retStr = "FINAL_TARGET_FLAG = "
+        if self.options.debug == USE:
+            retStr += " -g"
 
         if self.operatingSystem == "Linux":
             if self.options.withGpu is True:
                 pass
-                # retStr += "-Xlinker -rdynamic"
+                # retStr += " -Xlinker -rdynamic"
             else:
-                retStr += LINUX_FINAL_TARGET_FLAG
+                retStr += " " + LINUX_FINAL_TARGET_FLAG
         elif self.operatingSystem == "AIX":
 
             if self.options.dynamicLoading is True:
@@ -1952,18 +2012,33 @@ DX_INCLUDE := framework/dca/include
 
 #.h:
 #	true
+"""
+        if self.options.withGpu is True and self.separate_compile is True:
+            retStr += """
+$(OBJS_DIR)/CG_%CompCategory.o : CG_%CompCategory.C
+\t$(NVCC) $(CUDA_NVCC_FLAGS) $(SRC_HEADER_INC) $(OTHER_LIBS_HEADER) """
+            if (self.options.asNts is True) or (self.options.asNtsNVU is True):
+                retStr += "-I$(NTI_INC_DIR) "
+            if (self.options.withGpu is True):
+                retStr += """-c $< -o $@
+    """
+            else:
+                retStr += """-c $< -o $@
+    """
 
+        retStr += \
+"""
 $(OBJS_DIR)/%.o : %.C
-\t$(CC) $(CFLAGS) """
+\t$(CC) $(CFLAGS) $(SRC_HEADER_INC) $(OTHER_LIBS_HEADER) """
         # if (self.options.withGpu is True):
         #     retStr += "$(SOURCE_AS_CPP) "
         if (self.options.asNts is True) or (self.options.asNtsNVU is True):
             retStr += "-I$(NTI_INC_DIR) "
         if (self.options.withGpu is True):
-            retStr += """-c $< $(OTHER_LIBS_HEADER) -o $@
+            retStr += """-c $< -o $@
 """
         else:
-            retStr += """-c $< $(OTHER_LIBS_HEADER) -o $@
+            retStr += """-c $< -o $@
 """
         return retStr
 
@@ -2018,14 +2093,14 @@ framework/parser/generated/speclang.tab.C: framework/parser/bison/speclang.y
             retStr += \
                 """
 $(OBJS_DIR)/speclang.tab.o: framework/parser/generated/speclang.tab.C framework/parser/bison/speclang.y
-\t$(CC) -c $< -DYYDEBUG $(CFLAGS) -o $@
+\t$(CC) $(SRC_HEADER_INC) -c $< -DYYDEBUG $(CFLAGS) -o $@
 
 """
         else:
             retStr += \
                 """
 $(OBJS_DIR)/speclang.tab.o: framework/parser/generated/speclang.tab.C framework/parser/bison/speclang.y
-\t$(CC) -c $< -DYYDEBUG $(CFLAGS) $(OBJECTONLYFLAGS) -o $@
+\t$(CC) $(SRC_HEADER_INC) -c $< -DYYDEBUG $(CFLAGS) -o $@
 
 """
 
@@ -2056,13 +2131,13 @@ framework/parser/generated/lex.yy.C: framework/parser/flex/speclang.l
             retStr += \
                 """
 $(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
-\t$(CC) -c $< $(CFLAGS)  -o $@
+\t$(CC) -c $< $(CFLAGS) $(SRC_HEADER_INC) -o $@
 """
         else:
             retStr += \
                 """
 $(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
-\t$(CC) -c $< $(CFLAGS) $(OBJECTONLYFLAGS) -o $@
+\t$(CC) -c $< $(CFLAGS) $(SRC_HEADER_INC) -o $@
 """
         retStr += "\n"
         return retStr
@@ -2080,17 +2155,33 @@ $(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/
             retStr += " $(DX_DIR)/EdgeSetSubscriberSocket $(DX_DIR)/NodeSetSubscriberSocket "
         retStr += " | $(BIN_DIR)"
         retStr += "\n"
+
+        if self.options.withGpu and self.separate_compile:
+            if self.options.colab is True:
+                retStr += "\t$(NVCC) $(CUDA_NVCC_LDFLAGS) $(LIBS) $(FINAL_TARGET_FLAG) $(NEEDED_OBJS) "
+            else:
+                retStr += "\t$(NVCC) -Xlinker -DHAVE_GPU $(CUDA_NVCC_LDFLAGS) $(LIBS) $(FINAL_TARGET_FLAG) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) "
+            if self.options.colab is True:
+                pass
+            else:
+                if (self.options.asNts is True) or (self.options.asNtsNVU is True):
+                    retStr += "$(NTI_OBJS) "
+            retStr += "$(COMMON_OBJS)  -o $(OBJS_DIR)/gpuCode.o"
+            retStr += "\n"
         if self.options.colab is True:
             retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(NEEDED_OBJS) "
         else:
             retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) "
         # retStr = "final: $(BASE_OBJECTS) $(LENS_LIBS_EXT) $(BIN_DIR)/$(EXE_FILE) $(DCA_OBJ)/socket.o $(OBJS) $(MODULE_MKS)"
+        retStr += "$(COMMON_OBJS) "
+        if self.options.withGpu and self.separate_compile:
+            retStr += "$(OBJS_DIR)/gpuCode.o "
         if self.options.colab is True:
             pass
         else:
             if (self.options.asNts is True) or (self.options.asNtsNVU is True):
                 retStr += "$(NTI_OBJS) "
-        retStr += "$(COMMON_OBJS) $(LDFLAGS) $(LIBS) -o $(BIN_DIR)/$(EXE_FILE) "
+        retStr += "$(LDFLAGS) $(LIBS) -o $(BIN_DIR)/$(EXE_FILE) "
         return retStr
 
     def getDependfileTarget(self):
@@ -2236,7 +2327,8 @@ clean:
                     if fnmatch.fnmatch(name, pattern):
                         result.append(name)
             return result
-        libs_found = find("libpython*.so", os.environ["PYTHON_LIB"])
+        # NOTE: must match the one requested from set_env script
+        libs_found = find("libpython3.6*.so", os.environ["MGS_PYTHON_LIB"])
         if not libs_found:
             self.pythonLibName = "python2.7"
         else:

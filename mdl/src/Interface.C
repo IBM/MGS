@@ -69,11 +69,53 @@ void Interface::addProducerMethods(Class& c)
    MemberContainer<DataType>::const_iterator end = _members.end();
    MemberContainer<DataType>::const_iterator it;
    for (it = _members.begin(); it != end; it ++) {
-      std::auto_ptr<Method> producer(
-	 new Method(PREFIX + "get_" + _name + "_" + it->second->getName()
-		    , it->second->getTypeString()));
-      producer->setPureVirtual();
-      c.addMethod(producer);
+      if (it->second->isArray())
+      {
+	 //to support new CPU-GPU design
+	 //create 2 methods [one used in HAVE_GPU and one is not]
+	 {
+	    //#if defined(HAVE_GPU)
+	    // convert ShallowArray< double >* 
+	    // into 
+	    // ShallowArray_Flat< double, Array_Flat<int>::MemLocation::UNIFIED_MEM>*
+	    std::string  type = it->second->getTypeString(); 
+	    std::string from = "ShallowArray<";
+	    std::string to = "ShallowArray_Flat<";
+	    type = type.replace(type.find(from),from.length(),to);
+	    std::size_t start = type.find_first_of("<");
+	    std::size_t last = type.find_first_of(">");
+	    std::string element_datatype = type.substr(start+1, last-start-1);
+	    type = type.replace(start+1, last-start-1, element_datatype + ", " + MEMORY_LOCATION);
+
+	    std::auto_ptr<Method> producer(
+		  new Method(PREFIX + "get_" + _name + "_" + it->second->getName()
+		     , type));
+
+	    MacroConditional gpuConditional(GPUCONDITIONAL);
+	    producer->setMacroConditional(gpuConditional);
+	    producer->setPureVirtual();
+	    c.addMethod(producer);
+
+	 }
+	 {
+	    std::auto_ptr<Method> producer(
+		  new Method(PREFIX + "get_" + _name + "_" + it->second->getName()
+		     , it->second->getTypeString()));
+
+	    MacroConditional gpuConditional(GPUCONDITIONAL);
+	    gpuConditional.setNegateCondition();
+	    producer->setMacroConditional(gpuConditional);
+	    producer->setPureVirtual();
+	    c.addMethod(producer);
+	 }
+
+      }else{
+	 std::auto_ptr<Method> producer(
+	       new Method(PREFIX + "get_" + _name + "_" + it->second->getName()
+		  , it->second->getTypeString()));
+	 producer->setPureVirtual();
+	 c.addMethod(producer);
+      }
    }
 }
 

@@ -196,7 +196,7 @@ RUN apt-get update -y && \
         nvidia-cuda-gdb \
         libreadline6-dev \
         texinfo \
-         libncurses5-dev \
+        libncurses5-dev \
         cgdb && \
     rm -rf /var/lib/apt/lists/*
 

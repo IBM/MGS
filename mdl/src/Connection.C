@@ -226,7 +226,7 @@ std::string Connection::getCommonConnectionCodeAlternativeInterfaceSet(const std
 	 for (it2 = _interfaces.begin(); it2 != end2; ++it2) {
 	    for (auto it = it2->second->getMappings().begin(); it != it2->second->getMappings().end(); ++it) {
 	       if (it->getDataType()->isArray())
-	       os << tab << TAB <<  "bool sizeIncreased_" << PREFIX_MEMBERNAME << it->getDataType()->getName() << " = false; \n";
+		  os << tab << TAB <<  "bool sizeIncreased_" << PREFIX_MEMBERNAME << it->getDataType()->getName() << " = false; \n";
 	    }
 	 }
       }

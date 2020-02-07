@@ -11,6 +11,7 @@ class DNEdgeSetCompCategory : public CG_DNEdgeSetCompCategory
 {
    public:
       DNEdgeSetCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
+      void initializeShared(RNG& rng);
 };
 
 #endif

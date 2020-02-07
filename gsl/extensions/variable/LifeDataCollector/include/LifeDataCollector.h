@@ -25,6 +25,7 @@
 class LifeDataCollector : public CG_LifeDataCollector
 {
    public:
+      using CG_LifeDataCollector::initialize;
       void initialize(RNG& rng);
       void finalize(RNG& rng);
       virtual void dataCollection(Trigger* trigger, NDPairList* ndPairList);
