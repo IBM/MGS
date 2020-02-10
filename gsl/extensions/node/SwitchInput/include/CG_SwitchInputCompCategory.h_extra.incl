@@ -1,0 +1,2 @@
+// Please add any extra data member that you add to  CG_SwitchInputCompCategory
+ShallowArray_Flat<double, Array_Flat<int>::MemLocation::UNIFIED_MEM> um_drivinp_gpu;

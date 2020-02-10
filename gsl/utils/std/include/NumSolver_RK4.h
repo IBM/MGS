@@ -13,14 +13,26 @@
 //
 // =================================================================
 
+#ifndef NUMSOLVER_RK4_H
+#define NUMSOLVER_RK4_H
+
 #include <iostream>
 #include <vector>
+#include <tuple>
+
+#if defined(HAVE_THRUST)
+#include <thrust/system_error.h>
+#include <thrust/system/cuda/error.h>
+
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 #include <thrust/generate.h>
 #include <thrust/sort.h>
 #include <thrust/copy.h>
+#endif
+
 #include <algorithm>
+#include "rndm.h"
 
 /* helper utilities */
 template<class StateType, class DerivedType = StateType>
@@ -103,6 +115,43 @@ struct default_operations
     };
 };
 
+#if defined(HAVE_THRUST)
+template<class T>
+class managed_allocator : public thrust::device_malloc_allocator<T>
+{
+  public:
+    using value_type = T;
+
+    typedef thrust::device_ptr<T>  pointer;
+    inline pointer allocate(size_t n)
+    {
+      value_type* result = nullptr;
+
+      cudaError_t error = cudaMallocManaged(&result, n*sizeof(T), cudaMemAttachGlobal);
+
+      if(error != cudaSuccess)
+      {
+        throw thrust::system_error(error, thrust::cuda_category(), "managed_allocator::allocate(): cudaMallocManaged");
+      }
+
+      return thrust::device_pointer_cast(result);
+    }
+
+    inline void deallocate(pointer ptr, size_t)
+    {
+      cudaError_t error = cudaFree(thrust::raw_pointer_cast(ptr));
+
+      if(error != cudaSuccess)
+      {
+        throw thrust::system_error(error, thrust::cuda_category(), "managed_allocator::deallocate(): cudaFree");
+      }
+    }
+};
+template<class T>
+using managed_device_vector = thrust::device_vector<T, managed_allocator<T>>;
+//example using:
+//managed_device_vector myDeviceVector ( first, last);
+
 struct thrust_algebra 
 {
   template<class S1, class S2, class S3, class Op> 
@@ -138,6 +187,7 @@ struct thrust_operations
         } 
     };
 };
+#endif
 
 /* 
  * StateType = a system of 'N' variables, each of type VarType
@@ -281,7 +331,8 @@ template<class StateType,
   private:
   size_t N; /* how many unknown time-dependent variables */
   StateType x_tmp;
-  //StateType x;
+  // x is the vector representing all unknown time-dependent variable 
+  StateType x;
   /*
    * derivatives might require a representation different from the state
    * especially if arithmetic types with dimensions are used, for example the ones from Boost.Unit
@@ -312,6 +363,128 @@ template<class StateType,
 };
 typedef NumSolver_RK4< std::vector<double> > RK4_CPU_stepper_double;
 typedef NumSolver_RK4< std::vector<float> > RK4_CPU_stepper_float;
-//typedef NumSolver_RK4< ShallowArray_Flat<double, Array_Flat<int>::MemLocation::UNIFIED_MEM>,
-//       GpuAlgebra, GpuOperations > RK4_GPU;
 
+
+/*
+ * This is the solver for the CompCat-level
+ * N = number of variable per node
+ * P = number of nodes
+ *
+ * Data is layout in that 
+ * x1-n1 x1-n2, ..., x1-nP, x2-n1, x2-n2,  ..., x2-nP, ...
+ */
+template<class StateType,
+  class DerivedType = StateType,
+  class VarType = double,
+  class TimeType = VarType
+  //class Algebra = container_algebra_gpu,
+  //class Operations = default_operations
+  >
+  class NumSolverCompCat_RK4
+{
+  public:
+  NumSolverCompCat_RK4(): N(0){}
+  inline size_t get_stride() { return stride; }
+  inline size_t get_total_element() const{ return P*stride; }
+  void initialize(size_t _P, size_t _N, VarType default_value){
+  /* 
+   _N = num_nodes 
+   _P = num variables per node
+  */
+    N = _N;
+    P = _P;
+    stride = ceil(float(N)*sizeof(VarType)/256)*256/sizeof(VarType);
+    std::cout << "  stride = " << stride << "; while N = " << N <<std::endl;
+    //x.resize(N, default_value); //don't use this yes as Array_GPU.h not supported
+    //x.resize(N);
+    resize(P*stride, x);
+    resize(P*stride, x_tmp);
+    resize(P*stride, k1);
+    resize(P*stride, k2);
+    resize(P*stride, k3);
+    resize(P*stride, k4);
+  }
+  /* System refers to the system function which can be
+   *    function pointers
+   *    function object
+   *    generalized functions objects (std::function, boost::function)
+   *    C++11 lambdas
+   * as long as it defines a function call operator that accepts 3 arguments
+   * System{
+   *   operator()(StateType &x, StateType &dxdt, TimeType t)
+   * }
+   */
+    inline TimeType get_dT(const TimeType& dt, const int& ii)
+    {
+      const TimeType dt2 = dt/2;
+      const TimeType dt3 = dt/3;
+      const TimeType dt6 = dt/6;
+      switch (ii)
+      {
+        case 1: return 0;
+        case 2: return dt2;
+        case 3: return 0;
+        case 4: return dt-dt2;
+        default: return 0;
+      }
+    }
+  //std::tuple<StateType&, StateType&,
+  //      DerivedType&, DerivedType&, DerivedType&, DerivedType&, DerivedType&> 
+  //   get_vars(){
+  //   return std::make_tuple(x, dx, k1, k2, k3, k4);
+  //}
+  StateType& get_state(){return x;}
+  StateType& get_state_tmp(){return x_tmp;}
+  void get_x_dx(const int& ii, StateType* &_x, DerivedType* &_dx){
+     if (ii==1) { _x = &x;     _dx = &k1;  }
+else if (ii==2) { _x = &x_tmp; _dx = &k2;  }
+else if (ii==3) { _x = &x_tmp; _dx = &k3;  }
+else if (ii==4) { _x = &x_tmp; _dx = &k4;  }
+  }
+  DerivedType& get_k(const int& ii){
+     DerivedType* k=nullptr;
+     if (ii==1) { k = &k1;  }
+else if (ii==2) { k = &k2;  }
+else if (ii==3) { k = &k3;  }
+else if (ii==4) { k = &k4;  }
+     return *k;
+  }
+  private:
+  size_t N; /* total number of nodes */
+  size_t P; /* how many unknown time-dependent variables per node */
+  size_t stride; //row-length (in terms of #elements) that ensure 256-byte-aligned memory address beginning each row
+  StateType x_tmp;
+  // x is the vector representing all unknown time-dependent variable 
+  StateType x;
+  /*
+   * derivatives might require a representation different from the state
+   * especially if arithmetic types with dimensions are used, for example the ones from Boost.Unit
+   */
+  DerivedType k1, k2, k3, k4;
+  protected:
+  /* adjust size of the system using the size value N */
+  //void adjust_size(const size_t& _N, size_t& _P)
+  //{
+  //  N = _N;
+  //  N = _N;
+  //  P = _P;
+  //  stride = ceil(N*sizeof(VarType)/256)*256;
+  //  resize(N, x_tmp);
+  //  resize(N, k1);
+  //  resize(N, k2);
+  //  resize(N, k3);
+  //  resize(N, k4);
+  //};
+  /* adjust size of the system using information from another StateType --> not supported */
+  //void adjust_size(const StateType &x)
+  //{
+  //  resize(x, x_tmp);
+  //  resize(x, k1);
+  //  resize(x, k2);
+  //  resize(x, k3);
+  //  resize(x, k4);
+  //  N = x.size();
+  //};
+};
+
+#endif

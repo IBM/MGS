@@ -203,7 +203,7 @@ RUN apt-get update -y && \
         nvidia-cuda-gdb \
         libreadline6-dev \
         texinfo \
-         libncurses5-dev \
+        libncurses5-dev \
         cgdb && \
     rm -rf /var/lib/apt/lists/*
 
@@ -268,62 +268,72 @@ WORKDIR /home/mgs
 ########################################
 # Make build image
 ########################################
-FROM devel-base as devel
-
-#RUN useradd mgs 
-#USER mgs
-ADD . $MGSROOT
-WORKDIR /mgs
-
-ENV PYTHON_LIB=/usr/lib/python2.7/config-x86_64-linux-gnu/
-ENV LD_LIBRARY_PATH=${PYTHON_LIB}:$LD_LIBRARY_PATH \
-    LD_RUN_PATH=${PYTHON_LIB}:${LD_RUN_PATH} \
-    LIBRARY_PATH=${PYTHON_LIB}:${LIBRARY_PATH}
-
-COPY --from=mgs_baseimage /mgs/gsl/obj /mgs/gsl/obj
-COPY --from=mgs_baseimage /mgs/common/obj /mgs/common/obj
-COPY --from=mgs_baseimage /mgs/nti/obj /mgs/nti/obj
-COPY --from=mgs_baseimage /mgs/nti/include/Model2Use.h /mgs/nti/include/
-COPY --from=mgs_baseimage /mgs/.built /mgs/
-#ENV GPU="--gpu"
-RUN /bin/bash -c  "source ./set_env && source ./set_env && ./build_script -p LINUX --release ${GPU} -c common"
-RUN /bin/bash -c  "source ./set_env && source ./set_env && ./build_script -p LINUX --release ${GPU} -c nti"
-RUN /bin/bash -c  "source ./set_env && source ./set_env && ./build_script -p LINUX --release ${GPU} -c gsl"
-#RUN /bin/bash -c  "source ./set_env && source ./set_env && ./build_script -p LINUX --release"
-#RUN cd /mgs; source ./set_env; source  ./get_bison.sh
-#RUN cd /mgs; source ./set_env; ./build_script -p LINUX
-#RUN ["/bin/bash", "-c", "echo hello all in one string"].
-#RUN echo "source ~/google-cloud-sdk/path.bash.inc" >> ~/.bashrc
-#RUN source ~/.bashrc
+# FROM devel-base as devel
+# 
+# #RUN useradd mgs 
+# #USER mgs
+# # ADD . $MGSROOT
+# WORKDIR /mgs
+# 
+# ENV PYTHON_LIB=/usr/lib/python2.7/config-x86_64-linux-gnu/
+# ENV LD_LIBRARY_PATH=${PYTHON_LIB}:$LD_LIBRARY_PATH \
+#     LD_RUN_PATH=${PYTHON_LIB}:${LD_RUN_PATH} \
+#     LIBRARY_PATH=${PYTHON_LIB}:${LIBRARY_PATH}
+# 
+# #COPY ./gsl/bin/gslparser /mgs/
+# #
+# #COPY --from=mgs_baseimage /mgs/gsl/obj /mgs/gsl/obj
+# #COPY --from=mgs_baseimage /mgs/common/obj /mgs/common/obj
+# #COPY --from=mgs_baseimage /mgs/nti/obj /mgs/nti/obj
+# #COPY --from=mgs_baseimage /mgs/nti/include/Model2Use.h /mgs/nti/include/
+# #COPY --from=mgs_baseimage /mgs/.built /mgs/
+# # COPY --from=devel-base /home/mgs/gsl/bin/gslparser /mgs/
+# #COPY --from=devel-base /mgs/gsl/obj /mgs/gsl/obj
+# #COPY --from=devel-base /mgs/common/obj /mgs/common/obj
+# #COPY --from=devel-base /mgs/nti/obj /mgs/nti/obj
+# #COPY --from=devel-base /mgs/nti/include/Model2Use.h /mgs/nti/include/
+# #COPY --from=devel-base /mgs/.built /mgs/
+# #ENV GPU="--gpu"
+# #RUN /bin/bash -c  "source ./set_env && source ./set_env && ./build_script -p LINUX --release ${GPU} -c common"
+# #RUN /bin/bash -c  "source ./set_env && source ./set_env && ./build_script -p LINUX --release ${GPU} -c nti"
+# #RUN /bin/bash -c  "source ./set_env && source ./set_env && ./build_script -p LINUX --release ${GPU} -c gsl"
+# #RUN /bin/bash -c  "source ./set_env && source ./set_env && ./build_script -p LINUX --release"
+# #RUN cd /mgs; source ./set_env; source  ./get_bison.sh
+# #RUN cd /mgs; source ./set_env; ./build_script -p LINUX
+# #RUN ["/bin/bash", "-c", "echo hello all in one string"].
+# #RUN echo "source ~/google-cloud-sdk/path.bash.inc" >> ~/.bashrc
+# #RUN source ~/.bashrc
 
 ########################################
 # Make runtime image
 ########################################
-#FROM nvidia/cuda:9.0-runtime-ubuntu16.04
-FROM nvidia/cuda:10.0-runtime-ubuntu16.04
+#FROM nvidia/cuda-ppc64le:9.0-runtime-ubuntu18.04 AS runtime
+FROM nvidia/cuda-ppc64le:10.0-base-ubuntu18.04 AS runtime
+#FROM nvidia/cuda-ppc64le:10.0-runtime-ubuntu18.04 AS runtime
 
 # Python
 RUN apt-get update -y && \
-DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-python \
-python3 && \
-rm -rf /var/lib/apt/lists/*
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    python \
+    curl \
+    python3 && \
+    rm -rf /var/lib/apt/lists/*
 
 # GNU compiler runtime
 RUN apt-get update -y && \
-DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-libgfortran3 \
-libgomp1 && \
-rm -rf /var/lib/apt/lists/*
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    libgfortran3 \
+    libgomp1 && \
+    rm -rf /var/lib/apt/lists/*
 
 # Mellanox OFED version 3.4-1.0.0.0
 RUN apt-get update -y && \
-DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-libnl-3-200 \
-libnl-route-3-200 \
-libnuma1 \
-wget && \
-rm -rf /var/lib/apt/lists/*
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    libnl-3-200 \
+    libnl-route-3-200 \
+    libnuma1 \
+    wget && \
+    rm -rf /var/lib/apt/lists/*
 RUN MLNX_FOLDER=MLNX_OFED-4.7-1.0.0.1 && MLNX_FILE=MLNX_OFED_LINUX-4.7-1.0.0.1-ubuntu18.04-ppc64le && mkdir -p /var/tmp && wget -q -nc --no-check-certificate -P /var/tmp http://content.mellanox.com/ofed/${MLNX_FOLDER}/${MLNX_FILE}.tgz && \
     mkdir -p /var/tmp && tar -x -f /var/tmp/${MLNX_FILE}.tgz -C /var/tmp -z && \
     MLNX_SUBPATH=DEBS/MLNX_LIBS && \
@@ -332,27 +342,79 @@ RUN MLNX_FOLDER=MLNX_OFED-4.7-1.0.0.1 && MLNX_FILE=MLNX_OFED_LINUX-4.7-1.0.0.1-u
 
 # OpenMPI
 RUN apt-get update -y && \
-DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-hwloc \
-openssh-client && \
-rm -rf /var/lib/apt/lists/*
-COPY --from=devel /usr/local/openmpi /usr/local/openmpi
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    hwloc \
+    openssh-client && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=mgs_baseimage /usr/local/openmpi /usr/local/openmpi
 ENV LD_LIBRARY_PATH=/usr/local/openmpi/lib:$LD_LIBRARY_PATH \
 PATH=/usr/local/openmpi/bin:$PATH
 
 # HDF5
+# RUN apt-get update -y && \
+# DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+# zlib1g && \
+# rm -rf /var/lib/apt/lists/*
+# COPY --from=mgs_baseimage /usr/local/hdf5 /usr/local/hdf5
+# ENV HDF5_DIR=/usr/local/hdf5 \
+# LD_LIBRARY_PATH=/usr/local/hdf5/lib:$LD_LIBRARY_PATH \
+# PATH=/usr/local/hdf5/bin:$PATH
+
+RUN for server in ha.pool.sks-keyservers.net \
+              hkp://p80.pool.sks-keyservers.net:80 \
+              keyserver.ubuntu.com \
+              hkp://keyserver.ubuntu.com:80 \
+              pgp.mit.edu; do \
+    gpg --keyserver "$server" --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 && break || echo "Trying new server..."; done
+RUN curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/1.7/gosu-$(dpkg --print-architecture)" \
+    && curl -o /usr/local/bin/gosu.asc -SL "https://github.com/tianon/gosu/releases/download/1.7/gosu-$(dpkg --print-architecture).asc" \
+    && gpg --verify /usr/local/bin/gosu.asc \
+    && rm /usr/local/bin/gosu.asc \
+    && chmod +x /usr/local/bin/gosu
+
+# GNU compiler
 RUN apt-get update -y && \
-DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-zlib1g && \
-rm -rf /var/lib/apt/lists/*
-COPY --from=devel /usr/local/hdf5 /usr/local/hdf5
-ENV HDF5_DIR=/usr/local/hdf5 \
-LD_LIBRARY_PATH=/usr/local/hdf5/lib:$LD_LIBRARY_PATH \
-PATH=/usr/local/hdf5/bin:$PATH
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        gcc && \
+    rm -rf /var/lib/apt/lists/*
 
+ENV CUDA_HOME /usr/local/cuda
+ENV PATH=${CUDA_HOME}/bin:${PATH} \
+    LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH} \
+    LD_RUN_PATH=${CUDA_HOME}/lib64:${LD_RUN_PATH} \
+    LIBRARY_PATH=${CUDA_HOME}/lib64:${LIBRARY_PATH} \
+    CPATH=${CUDA_HOME}/include:${CPATH} \
+    C_INCLUDE_PATH=${CUDA_HOME}/include \
+    CPLUS_INCLUDE_PATH=${CUDA_HOME}/include \
+    INCLUDE=${CUDA_HOME}/include 
+
+ENV MPI_HOME /usr/local/openmpi
+ENV PATH=${MPI_HOME}/bin:${PATH} \
+    LD_LIBRARY_PATH=${MPI_HOME}/lib:${LD_LIBRARY_PATH} \
+    LD_RUN_PATH=${MPI_HOME}/lib:${LD_RUN_PATH} \
+    LIBRARY_PATH=${MPI_HOME}/lib:${LIBRARY_PATH} \
+    CPATH=${MPI_HOME}/include:${CPATH} \
+    C_INCLUDE_PATH=${MPI_HOME}/include:${C_INCLUDE_PATH} \
+    INCLUDE_PATH=${MPI_HOME}/include:${INCLUDE_PATH} \
+    CPLUS_INCLUDE_PATH=${MPI_HOME}/include:${CPLUS_INCLUDE_PATH}
+
+COPY --from=mgs_baseimage $CUDA_HOME/lib64/stubs/libcuda.so $CUDA_HOME/lib64/
+#COPY --from=mgs_baseimage /usr/bin/cpp /usr/bin
+# COPY --from=mgs_baseimage /usr/lib/gcc/powerpc64le-linux-gnu/7/cc1plus /usr/lib/gcc/powerpc64le-linux-gnu/7/
+RUN ln -s $CUDA_HOME/lib64/libcuda.so $CUDA_HOME/lib64/libcuda.so.1
+
+ENV OMPI_MCA_btl_base_warn_component_unused 0 
+ENV PATH=/mgs/:$PATH
+
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+VOLUME /home/mgs
+WORKDIR /home/mgs
 # MGS binary
-COPY --from=devel /mgs/gsl/bin /mgs/gsl/bin
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh && /mgs/gsl/bin/gslparser"]
+#VOLUME /home/mgs
+#COPY --from=devel /mgs/gsl/bin /mgs/gsl/bin
+COPY ./gsl/bin/gslparser /mgs/
+#ENTRYPOINT ["/usr/local/bin/entrypoint.sh", "gslparser"]
+#CMD [ "/mgs/model.gsl" ]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 #ENTRYPOINT ["/mgs/gsl/bin/gslparser"]
-
-

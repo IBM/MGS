@@ -1012,7 +1012,7 @@ void Class::generateClassDefinition(std::ostringstream& os)
        getClassInfoSubType() == SubType::BaseCompCategory)
    {
      std::string extra_inc_file(_name + ".h_header.incl");
-     os << "#if __has_include(\"" << extra_inc_file << "\")\n"
+     os << "#if __has_include(\"" << extra_inc_file << "\") && defined(HAVE_GPU)\n"
        << "      #include \"" << extra_inc_file << "\"\n" 
        << "#endif\n";
      std::string gen_file(extra_inc_file + ".gen");
@@ -1067,7 +1067,7 @@ void Class::generateClassDefinition(std::ostringstream& os)
        getClassInfoSubType() == SubType::BaseCompCategory)
    {
      std::string extra_inc_file(_name + ".h_extra.incl");
-     os << "#if __has_include(\"" << extra_inc_file << "\")\n"
+     os << "#if __has_include(\"" << extra_inc_file << "\") && defined(HAVE_GPU)\n"
        << "      #include \"" << extra_inc_file << "\"\n" 
        << "#endif\n";
      std::string gen_file(extra_inc_file + ".gen");
@@ -1336,8 +1336,8 @@ void Class::addConstructor()
      fb << STR_GPU_CHECK_START;
      for (it = _attributes_gpu.begin(); it != end; ++it) {
        std::string attName = (*it)->getName();
-       if ((*it)->isPointer()) {
-	 fb << tab << attName  << " = new_memory<" << (*it)->getType() << ">();\n";
+       if ((*it)->isPointer() and (*it)->getType().find("ShallowArray") != std::string::npos) {
+	 fb << tab << attName  << " = new_memory_array<" << (*it)->getType() << ">();\n";
        }
      }
      fb << STR_GPU_CHECK_END;
@@ -1455,7 +1455,7 @@ void Class::addDestructor()
        fb << STR_GPU_CHECK_START;
        for (it = _attributes_gpu.begin(); it != end; ++it) {
 	 std::string attName = (*it)->getName();
-	 if ((*it)->isPointer()) {
+	 if ((*it)->isPointer() and (*it)->getType().find("ShallowArray") != std::string::npos) {
 	   fb << tab << "delete_memory(" << attName << ");\n";
 	 }
        }

@@ -2,6 +2,9 @@
 #include "SwitchInputCompCategory.h"
 #include "NDPairList.h"
 #include "CG_SwitchInputCompCategory.h"
+#include <fstream>
+#include <sstream>
+#include <iostream>
 
 #define ITER getSimulation().getIteration()
 #define SHD getSharedMembers()
@@ -31,7 +34,11 @@ void SwitchInputCompCategory::initializeShared(RNG& rng)
   //SHD.stateseq[0] = 0;
   //SHD.stateseq[1] = 1;
 
+#ifdef HAVE_GPU
+  ShallowArray_Flat<double, Array_Flat<int>::MemLocation::UNIFIED_MEM> tvals ;
+#else
   ShallowArray<double> tvals ;
+#endif
   tvals.push_back(600);
   tvals.push_back(1050);
   tvals.push_back(1260);
@@ -43,12 +50,29 @@ void SwitchInputCompCategory::initializeShared(RNG& rng)
 
   SHD.stateswitchtimes.increaseSizeTo(NUMSWITCHTIMES);
 
+  std::string output_dir(SHD.directory.c_str());
+  {
+    std::ostringstream sysCall;
+
+    if (output_dir.length() == 0)
+      output_dir = "./";
+    if (output_dir.back() != '/')
+      output_dir.append("/");
+    try {
+      sysCall<<"mkdir -p "<<SHD.directory.c_str()<<" > /dev/null;";
+      int systemRet = system(sysCall.str().c_str());
+      if (systemRet == -1)
+        throw;
+    } catch(...) {};
+  }
+  std::ostringstream os1;
+    os1<< output_dir << "switchtimes.dat";
   std::ofstream ofs;
-  ofs.open ("switchtimes.dat");
+  ofs.open (os1.str());
   ofs << std::fixed;
 
-  ShallowArray<double>::iterator it = SHD.stateswitchtimes.begin();
-  ShallowArray<double>::iterator end = SHD.stateswitchtimes.end();
+  auto it = SHD.stateswitchtimes.begin();
+  auto end = SHD.stateswitchtimes.end();
   unsigned count = 0;
   double tot = 0.0;
   for (; it != end; ++it)

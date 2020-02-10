@@ -40,6 +40,9 @@ class SupervisorNodeCompCategory : public CG_SupervisorNodeCompCategory
       ShallowArray<unsigned> _shuffledDeck;
       unsigned count_train;
       unsigned count_test;
+      //DEBUG purpose
+      bool loaded_train_image = false;
+      bool loaded_test_image = false;
 };
 
 #endif

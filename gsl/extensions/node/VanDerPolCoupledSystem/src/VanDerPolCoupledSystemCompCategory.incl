@@ -1,0 +1,594 @@
+#if  defined(HAVE_GPU)
+void CG_VanDerPolCoupledSystemCompCategory::CG_host_initializeNode(NodePartitionItem* arg, CG_VanDerPolCoupledSystemWorkUnitInstance* wu) 
+{
+   //int BLOCKS= _nodes.size();
+   //int THREADS_PER_BLOCK = 1;
+   int THREADS_PER_BLOCK= 256;
+   int BLOCKS= ceil((float)_nodes.size() / THREADS_PER_BLOCK);
+   VanDerPolCoupledSystem_kernel_initializeNode<<< BLOCKS, THREADS_PER_BLOCK >>> (
+      um_m.getDataRef()
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_x1.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_x1.getDataRef()
+      , um_x1_start_offset.getDataRef()
+      , um_x1_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_x1.getDataRef()
+      , um_x1_max_elements
+      , um_x1_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_x1.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_x2.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_x2.getDataRef()
+      , um_x2_start_offset.getDataRef()
+      , um_x2_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_x2.getDataRef()
+      , um_x2_max_elements
+      , um_x2_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_x2.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_alpha1.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_alpha1.getDataRef()
+      , um_alpha1_start_offset.getDataRef()
+      , um_alpha1_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_alpha1.getDataRef()
+      , um_alpha1_max_elements
+      , um_alpha1_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_alpha1.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_alpha2.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_alpha2.getDataRef()
+      , um_alpha2_start_offset.getDataRef()
+      , um_alpha2_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_alpha2.getDataRef()
+      , um_alpha2_max_elements
+      , um_alpha2_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_alpha2.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_W.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_W.getDataRef()
+      , um_W_start_offset.getDataRef()
+      , um_W_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_W.getDataRef()
+      , um_W_max_elements
+      , um_W_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_W.getDataRef()
+      //need more info here
+      #endif
+
+      , um_u.getDataRef()
+      , _nodes.size()
+      , getSharedMembers().saveBinary
+      , getSharedMembers().collectWeightsNext
+      , getSharedMembers().collectWeightsOn.getDataRef()
+      , getSharedMembers().sharedFileExt
+      , getSharedMembers().sharedDirectory
+      , getSharedMembers().json_file
+      , getSharedMembers().predictionFactor
+      , getSharedMembers().dT
+   );
+   gpuErrorCheck( cudaPeekAtLastError() );
+}
+#endif
+
+#if  defined(HAVE_GPU)
+void CG_VanDerPolCoupledSystemCompCategory::CG_host_initializeSolver(NodePartitionItem* arg, CG_VanDerPolCoupledSystemWorkUnitInstance* wu) 
+{
+   //int BLOCKS= _nodes.size();
+   //int THREADS_PER_BLOCK = 1;
+   int THREADS_PER_BLOCK= 256;
+   int BLOCKS= ceil((float)_nodes.size() / THREADS_PER_BLOCK);
+   VanDerPolCoupledSystem_kernel_initializeSolver<<< BLOCKS, THREADS_PER_BLOCK >>> (
+      um_m.getDataRef()
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_x1.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_x1.getDataRef()
+      , um_x1_start_offset.getDataRef()
+      , um_x1_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_x1.getDataRef()
+      , um_x1_max_elements
+      , um_x1_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_x1.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_x2.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_x2.getDataRef()
+      , um_x2_start_offset.getDataRef()
+      , um_x2_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_x2.getDataRef()
+      , um_x2_max_elements
+      , um_x2_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_x2.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_alpha1.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_alpha1.getDataRef()
+      , um_alpha1_start_offset.getDataRef()
+      , um_alpha1_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_alpha1.getDataRef()
+      , um_alpha1_max_elements
+      , um_alpha1_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_alpha1.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_alpha2.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_alpha2.getDataRef()
+      , um_alpha2_start_offset.getDataRef()
+      , um_alpha2_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_alpha2.getDataRef()
+      , um_alpha2_max_elements
+      , um_alpha2_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_alpha2.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_W.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_W.getDataRef()
+      , um_W_start_offset.getDataRef()
+      , um_W_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_W.getDataRef()
+      , um_W_max_elements
+      , um_W_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_W.getDataRef()
+      //need more info here
+      #endif
+
+      , um_u.getDataRef()
+      , _nodes.size()
+      , getSharedMembers().saveBinary
+      , getSharedMembers().collectWeightsNext
+      , getSharedMembers().collectWeightsOn.getDataRef()
+      , getSharedMembers().sharedFileExt
+      , getSharedMembers().sharedDirectory
+      , getSharedMembers().json_file
+      , getSharedMembers().predictionFactor
+      , getSharedMembers().dT
+   );
+   gpuErrorCheck( cudaPeekAtLastError() );
+}
+#endif
+
+#if  defined(HAVE_GPU)
+void CG_VanDerPolCoupledSystemCompCategory::CG_host_update1(NodePartitionItem* arg, CG_VanDerPolCoupledSystemWorkUnitInstance* wu) 
+{
+   //int BLOCKS= _nodes.size();
+   //int THREADS_PER_BLOCK = 1;
+   int THREADS_PER_BLOCK= 256;
+   int BLOCKS= ceil((float)_nodes.size() / THREADS_PER_BLOCK);
+   VanDerPolCoupledSystem_kernel_update1<<< BLOCKS, THREADS_PER_BLOCK >>> (
+      um_m.getDataRef()
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_x1.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_x1.getDataRef()
+      , um_x1_start_offset.getDataRef()
+      , um_x1_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_x1.getDataRef()
+      , um_x1_max_elements
+      , um_x1_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_x1.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_x2.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_x2.getDataRef()
+      , um_x2_start_offset.getDataRef()
+      , um_x2_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_x2.getDataRef()
+      , um_x2_max_elements
+      , um_x2_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_x2.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_alpha1.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_alpha1.getDataRef()
+      , um_alpha1_start_offset.getDataRef()
+      , um_alpha1_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_alpha1.getDataRef()
+      , um_alpha1_max_elements
+      , um_alpha1_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_alpha1.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_alpha2.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_alpha2.getDataRef()
+      , um_alpha2_start_offset.getDataRef()
+      , um_alpha2_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_alpha2.getDataRef()
+      , um_alpha2_max_elements
+      , um_alpha2_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_alpha2.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_W.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_W.getDataRef()
+      , um_W_start_offset.getDataRef()
+      , um_W_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_W.getDataRef()
+      , um_W_max_elements
+      , um_W_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_W.getDataRef()
+      //need more info here
+      #endif
+
+      , um_u.getDataRef()
+      , _nodes.size()
+      , getSharedMembers().saveBinary
+      , getSharedMembers().collectWeightsNext
+      , getSharedMembers().collectWeightsOn.getDataRef()
+      , getSharedMembers().sharedFileExt
+      , getSharedMembers().sharedDirectory
+      , getSharedMembers().json_file
+      , getSharedMembers().predictionFactor
+      , getSharedMembers().dT
+   );
+   gpuErrorCheck( cudaPeekAtLastError() );
+}
+#endif
+
+#if  defined(HAVE_GPU)
+void CG_VanDerPolCoupledSystemCompCategory::CG_host_update2(NodePartitionItem* arg, CG_VanDerPolCoupledSystemWorkUnitInstance* wu) 
+{
+   //int BLOCKS= _nodes.size();
+   //int THREADS_PER_BLOCK = 1;
+   int THREADS_PER_BLOCK= 256;
+   int BLOCKS= ceil((float)_nodes.size() / THREADS_PER_BLOCK);
+   VanDerPolCoupledSystem_kernel_update2<<< BLOCKS, THREADS_PER_BLOCK >>> (
+      um_m.getDataRef()
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_x1.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_x1.getDataRef()
+      , um_x1_start_offset.getDataRef()
+      , um_x1_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_x1.getDataRef()
+      , um_x1_max_elements
+      , um_x1_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_x1.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_x2.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_x2.getDataRef()
+      , um_x2_start_offset.getDataRef()
+      , um_x2_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_x2.getDataRef()
+      , um_x2_max_elements
+      , um_x2_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_x2.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_alpha1.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_alpha1.getDataRef()
+      , um_alpha1_start_offset.getDataRef()
+      , um_alpha1_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_alpha1.getDataRef()
+      , um_alpha1_max_elements
+      , um_alpha1_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_alpha1.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_alpha2.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_alpha2.getDataRef()
+      , um_alpha2_start_offset.getDataRef()
+      , um_alpha2_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_alpha2.getDataRef()
+      , um_alpha2_max_elements
+      , um_alpha2_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_alpha2.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_W.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_W.getDataRef()
+      , um_W_start_offset.getDataRef()
+      , um_W_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_W.getDataRef()
+      , um_W_max_elements
+      , um_W_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_W.getDataRef()
+      //need more info here
+      #endif
+
+      , um_u.getDataRef()
+      , _nodes.size()
+      , getSharedMembers().saveBinary
+      , getSharedMembers().collectWeightsNext
+      , getSharedMembers().collectWeightsOn.getDataRef()
+      , getSharedMembers().sharedFileExt
+      , getSharedMembers().sharedDirectory
+      , getSharedMembers().json_file
+      , getSharedMembers().predictionFactor
+      , getSharedMembers().dT
+   );
+   gpuErrorCheck( cudaPeekAtLastError() );
+}
+#endif
+
+#if  defined(HAVE_GPU)
+void CG_VanDerPolCoupledSystemCompCategory::CG_host_update3(NodePartitionItem* arg, CG_VanDerPolCoupledSystemWorkUnitInstance* wu) 
+{
+   //int BLOCKS= _nodes.size();
+   //int THREADS_PER_BLOCK = 1;
+   int THREADS_PER_BLOCK= 256;
+   int BLOCKS= ceil((float)_nodes.size() / THREADS_PER_BLOCK);
+   VanDerPolCoupledSystem_kernel_update3<<< BLOCKS, THREADS_PER_BLOCK >>> (
+      um_m.getDataRef()
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_x1.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_x1.getDataRef()
+      , um_x1_start_offset.getDataRef()
+      , um_x1_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_x1.getDataRef()
+      , um_x1_max_elements
+      , um_x1_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_x1.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_x2.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_x2.getDataRef()
+      , um_x2_start_offset.getDataRef()
+      , um_x2_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_x2.getDataRef()
+      , um_x2_max_elements
+      , um_x2_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_x2.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_alpha1.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_alpha1.getDataRef()
+      , um_alpha1_start_offset.getDataRef()
+      , um_alpha1_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_alpha1.getDataRef()
+      , um_alpha1_max_elements
+      , um_alpha1_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_alpha1.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_alpha2.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_alpha2.getDataRef()
+      , um_alpha2_start_offset.getDataRef()
+      , um_alpha2_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_alpha2.getDataRef()
+      , um_alpha2_max_elements
+      , um_alpha2_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_alpha2.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_W.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_W.getDataRef()
+      , um_W_start_offset.getDataRef()
+      , um_W_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_W.getDataRef()
+      , um_W_max_elements
+      , um_W_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_W.getDataRef()
+      //need more info here
+      #endif
+
+      , um_u.getDataRef()
+      , _nodes.size()
+      , getSharedMembers().saveBinary
+      , getSharedMembers().collectWeightsNext
+      , getSharedMembers().collectWeightsOn.getDataRef()
+      , getSharedMembers().sharedFileExt
+      , getSharedMembers().sharedDirectory
+      , getSharedMembers().json_file
+      , getSharedMembers().predictionFactor
+      , getSharedMembers().dT
+   );
+   gpuErrorCheck( cudaPeekAtLastError() );
+}
+#endif
+
+#if  defined(HAVE_GPU)
+void CG_VanDerPolCoupledSystemCompCategory::CG_host_update4(NodePartitionItem* arg, CG_VanDerPolCoupledSystemWorkUnitInstance* wu) 
+{
+   //int BLOCKS= _nodes.size();
+   //int THREADS_PER_BLOCK = 1;
+   int THREADS_PER_BLOCK= 256;
+   int BLOCKS= ceil((float)_nodes.size() / THREADS_PER_BLOCK);
+   VanDerPolCoupledSystem_kernel_update4<<< BLOCKS, THREADS_PER_BLOCK >>> (
+      um_m.getDataRef()
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_x1.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_x1.getDataRef()
+      , um_x1_start_offset.getDataRef()
+      , um_x1_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_x1.getDataRef()
+      , um_x1_max_elements
+      , um_x1_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_x1.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_x2.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_x2.getDataRef()
+      , um_x2_start_offset.getDataRef()
+      , um_x2_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_x2.getDataRef()
+      , um_x2_max_elements
+      , um_x2_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_x2.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_alpha1.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_alpha1.getDataRef()
+      , um_alpha1_start_offset.getDataRef()
+      , um_alpha1_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_alpha1.getDataRef()
+      , um_alpha1_max_elements
+      , um_alpha1_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_alpha1.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_alpha2.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_alpha2.getDataRef()
+      , um_alpha2_start_offset.getDataRef()
+      , um_alpha2_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_alpha2.getDataRef()
+      , um_alpha2_max_elements
+      , um_alpha2_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_alpha2.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_W.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_W.getDataRef()
+      , um_W_start_offset.getDataRef()
+      , um_W_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_W.getDataRef()
+      , um_W_max_elements
+      , um_W_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_W.getDataRef()
+      //need more info here
+      #endif
+
+      , um_u.getDataRef()
+      , _nodes.size()
+      , getSharedMembers().saveBinary
+      , getSharedMembers().collectWeightsNext
+      , getSharedMembers().collectWeightsOn.getDataRef()
+      , getSharedMembers().sharedFileExt
+      , getSharedMembers().sharedDirectory
+      , getSharedMembers().json_file
+      , getSharedMembers().predictionFactor
+      , getSharedMembers().dT
+   );
+   gpuErrorCheck( cudaPeekAtLastError() );
+}
+#endif
+

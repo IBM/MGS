@@ -11,18 +11,18 @@
 
 #ifdef HAVE_GPU
 
-#define g_out  (_container->um_g_out[index])
-#define var1  (_container->um_var1[index])
-#define var2  (_container->um_var2[index])
-#define var3  (_container->um_var3[index])
-#define MSNNetInps  (_container->um_MSNNetInps[index])
-#define V_init  (_container->um_V_init[index])
-#define g_init  (_container->um_g_init[index])
-#define drivinp  (_container->um_drivinp[index])
-#define spike  (_container->um_spike[index])
-#define injCur  (_container->um_injCur[index])
-#define connectionSeed  (_container->um_connectionSeed[index])
-#define synb  (_container->um_synb[index])
+#define g_out  (_container->um_g_out[__index__])
+#define var1  (_container->um_var1[__index__])
+#define var2  (_container->um_var2[__index__])
+#define var3  (_container->um_var3[__index__])
+#define MSNNetInps  (_container->um_MSNNetInps[__index__])
+#define V_init  (_container->um_V_init[__index__])
+#define g_init  (_container->um_g_init[__index__])
+#define drivinp  (_container->um_drivinp[__index__])
+#define spike  (_container->um_spike[__index__])
+#define injCur  (_container->um_injCur[__index__])
+#define connectionSeed  (_container->um_connectionSeed[__index__])
+#define synb  (_container->um_synb[__index__])
 #endif
 
 
@@ -31,159 +31,6 @@
 #define TIME ITER*getSharedMembers().deltaT
 #define RANK getSimulation().getRank()
 #define NUMVARS 12
-
-template <typename T>
-bool Threshold(T val, T thresh)
-{
-  return val>thresh;
-}
-
-template <typename T>
-T sigmoid(const T & V, const T Vb, const T k) 
-{
-return 1.0/(1.0 + exp(-1.0*(V - Vb)/k));
-}
-
-template <typename T>
-T pow(const T & val, const int & q)
-{
-  int i = 0;
-  T retval = 1.0;
-  while(i<q) {retval*=val;i++;}
-  return val;
-}
-
-
-template <typename T>
-T IonChannel(const T & V, const T & m, const T & h, const T g, const T Vb, 
-	     const int p, const int q) 
-{
-  return g*pow(m,p)*pow(h,q)*(V-Vb);
-}
-
-template <typename T>
-T IonChannel31(const T & V, const T & m, const T & h, const T g, const T Vb) 
-{
-  return g*m*m*m*h*(V-Vb);
-}
-
-template <typename T>
-T IonChannel4(const T & V, const T & m, const T g, const T Vb) 
-{
-  return g*m*m*m*m*(V-Vb);
-}
-
-template <typename T>
-T IonChannel(const T & V, const T & m, const T & h, const T g, const T Vb) 
-{
-  return g*m*h*(V-Vb);
-}
-
-template <typename T>
-T IonChannel(const T & V, const T & m, const T g, const T Vb) 
-{
-  return g*m*(V-Vb);
-}
-
-
-template <typename T>
-T IonChannel(const T & V, const T g, const T Vb) 
-{
-  return g*(V-Vb);
-}
-
-
-template <typename T>
-T ratefcn(const T & x, const T xb, const T t) 
-{
-  return (xb - x)/t;
-}
-
-
-template <typename T>
-T taufcn(const T & x, const T tau1, const T phi, const T sig0) 
-{
-  const T val1 = (x - phi)/sig0;
-  return tau1/(exp(val1) + exp(val1*-1.0));
-}
-
-
-template <typename T>
-T Ashtaufcn(const T & x)
-{
-  const T val1 = (x + 38.2)/28.0;
-  return 1790.0 + 2930.0*exp(val1*val1*-1.0)*val1;
-}
-
-
-
-
-
-template <typename T> //wang buzaki 96 V shifted 7mv
-T Kmalpha(const T & x)
-{
-  const T val1 = x + 27.0;
-  return -0.01*val1/(exp(-0.1*val1) - 1.0);
-}
-
-template <typename T> //wang buzaki 96  V shifted 7mv
-T Kmbeta(const T & x)
-{
-  return 0.125*exp((x+37.0)/-80.0);
-}
-
-template <typename T> //wang buzaki 96 V shifted 7mv
-T Namalpha(const T & x)
-{
-  const T val1 = x + 28.0;
-  return -0.1*val1/(exp(-0.1*val1) - 1.0);
-}
-
-template <typename T> //wang buzaki 96  V shifted 7mv
-T Nambeta(const T & x)
-{
-  return 4.0*exp((x+53.0)/-18.0);
-}
-
-template <typename T> //wang buzaki 96 V shifted 7mv
-T Nahalpha(const T & x)
-{
-  return 0.07*exp(-(x+51.0)/20.0);
-}
-
-template <typename T> //wang buzaki 96  V shifted 7mv
-T Nahbeta(const T & x)
-{
-  return 1.0/(exp(-0.1*(x+21.0)) + 1.0);
-}
-
-
-template <typename T> //wang buzaki 96
-T gatefcn(const T & x, const T alpha, const T beta, const T scale)
-{
-  return scale * (alpha*(1.0-x) - beta*x);
-}
-
-
-template <typename T> //wang buzaki 96
-T gatefcnInstant(const T alpha, const T beta)
-{
-  return alpha / (alpha + beta);
-}
-
-template <typename T>
-T Tadj(const T q10, const T cels, const T Etemp)
-{
-  return pow(q10, (cels-Etemp)/10.0);
-}
-
-
-
-template <typename T>
-T TadjAdj(const T x, const T tadj)
-{
-  return x/tadj;
-}
 
 #define q10 2.5
 #define CELSIUS 37
@@ -364,14 +211,11 @@ void MahonUnit::derivs(const ShallowArray< double > & x, ShallowArray< double > 
   dKm = gatefcn<double>(Km,Kmalpha<double>(V),Kmbeta<double>(V),5.0);
 
   dNah = gatefcn<double>(Nah,Nahalpha<double>(V),Nahbeta<double>(V),5.0);
-
-
 }
  
 
 void MahonUnit::initialize(RNG& rng) 
 {
-
   //s1.x.increaseSizeTo(NUMVARS);
   //nodeVars.increaseSizeTo(NUMVARS);  
   initializeIterator(NUMVARS,SHD.deltaT);
@@ -490,13 +334,11 @@ void MahonUnit::flushVars4(RNG& rng)
 
 void MahonUnit::updateOutputs(RNG& rng) 
 {
-  //ShallowArray<double> & x = Vars();
   if (x[0]>= SHD.spikethresh && var1 < SHD.spikethresh) spike = true;
   else spike = false;
   var1 = x[0];
   //var2 = x[5];
 
-  //ShallowArray<Input>::iterator iter, end=MSNNetInps.end();
   auto end=MSNNetInps.end();
   double drive=0;
   for (auto iter=MSNNetInps.begin(); iter!=end; ++iter) {
@@ -508,9 +350,6 @@ void MahonUnit::updateOutputs(RNG& rng)
   var2 = drive*(x[0] - VCL);
   //std::cout << var2 << std::endl;
 }
-
-
-
 
 bool MahonUnit::ConnectP1(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_MahonUnitInAttrPSet* CG_inAttrPset, CG_MahonUnitOutAttrPSet* CG_outAttrPset) 
 { 
@@ -554,7 +393,6 @@ bool MahonUnit::ConnectP1(const String& CG_direction, const String& CG_component
   return false;
 }
 
-
 MahonUnit::~MahonUnit() 
 {
 }
@@ -577,7 +415,7 @@ void MahonUnit::derivs(const ShallowArray< double > & x, ShallowArray< double > 
 
 
 
-  dg = (Threshold<const double &>(V,SHD.spikethresh) - g)/SHD.tau_g;
+  dg = (threshold<const double &>(V,SHD.spikethresh) - g)/SHD.tau_g;
 
   ShallowArray<Input>::iterator iter, end=MSNNetInps.end();
   double drive=0;

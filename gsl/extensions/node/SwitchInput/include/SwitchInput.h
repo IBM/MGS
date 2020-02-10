@@ -10,6 +10,7 @@
 class SwitchInput : public CG_SwitchInput
 {
    public:
+      using CG_SwitchInput::initialize;
       void initialize(RNG& rng);
       void update(RNG& rng);
       void outputDrivInp(std::ofstream &);

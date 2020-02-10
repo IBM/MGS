@@ -1,0 +1,7 @@
+// Please add any extra data member that you add to  CG_MahonUnitCompCategory
+// step 3
+//NumSolverCompCat_RK4< MahonNet_StateType, MahonNet_StateType, VarType, TimeType >* solver;
+//#if defined(__CUDA_ARCH__)
+//NumSolverCompCat_RK4< MahonNet_StateType, MahonNet_StateType, VarType, TimeType > solver;
+MahonNet_SolverType solver;
+//#endif

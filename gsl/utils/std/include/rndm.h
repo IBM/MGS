@@ -28,6 +28,8 @@
 
 #define CUDA_CALLABLE __host__ __device__
 
+#define CUDA_INLINE __forceinline__
+
 #define TEST_USING_GPU_COMPUTING
 
 //#define TEST_INITNODE_ON_CPU
@@ -252,6 +254,7 @@ class Managed
 #endif
 #else
 #define CUDA_CALLABLE
+#define CUDA_INLINE 
 #define __df__
 #endif
 
@@ -392,6 +395,150 @@ ForwardIt max_element_dereference(ForwardIt first, ForwardIt last, Compare comp)
         }
     }
     return largest;
+}
+
+///////////////////////////////
+// Used by Ion channels
+template <typename T>
+CUDA_CALLABLE bool threshold(T val, T thresh)
+{
+  return val>thresh;
+}
+
+template <typename T>
+CUDA_INLINE  CUDA_CALLABLE T sigmoid(const T & V, const T Vb, const T k) 
+{
+return 1.0/(1.0 + exp(-1.0*(V - Vb)/k));
+}
+
+template <typename T>
+CUDA_CALLABLE T pow(const T & val, const int & q)
+{
+  int i = 0;
+  T retval = 1.0;
+  while(i<q) {retval*=val;i++;}
+  return val;
+}
+
+template <typename T>
+CUDA_CALLABLE T IonChannel(const T & V, const T & m, const T & h, const T g, const T Vb, 
+	     const int p, const int q) 
+{
+  return g*pow(m,p)*pow(h,q)*(V-Vb);
+}
+
+template <typename T>
+CUDA_CALLABLE T IonChannel31(const T & V, const T & m, const T & h, const T g, const T Vb) 
+{
+  return g*m*m*m*h*(V-Vb);
+}
+
+template <typename T>
+CUDA_CALLABLE T IonChannel4(const T & V, const T & m, const T g, const T Vb) 
+{
+  return g*m*m*m*m*(V-Vb);
+}
+
+template <typename T>
+CUDA_CALLABLE T IonChannel(const T & V, const T & m, const T & h, const T g, const T Vb) 
+{
+  return g*m*h*(V-Vb);
+}
+
+template <typename T>
+CUDA_CALLABLE T IonChannel(const T & V, const T & m, const T g, const T Vb) 
+{
+  return g*m*(V-Vb);
+}
+
+
+template <typename T>
+CUDA_CALLABLE T IonChannel(const T & V, const T g, const T Vb) 
+{
+  return g*(V-Vb);
+}
+
+template <typename T>
+CUDA_CALLABLE T ratefcn(const T & x, const T xb, const T t) 
+{
+  return (xb - x)/t;
+}
+
+template <typename T>
+CUDA_CALLABLE T taufcn(const T & x, const T tau1, const T phi, const T sig0) 
+{
+  const T val1 = (x - phi)/sig0;
+  return tau1/(exp(val1) + exp(val1*-1.0));
+}
+
+template <typename T>
+CUDA_CALLABLE T Ashtaufcn(const T & x)
+{
+  const T val1 = (x + 38.2)/28.0;
+  return 1790.0 + 2930.0*exp(val1*val1*-1.0)*val1;
+}
+
+
+template <typename T> //wang buzaki 96 V shifted 7mv
+CUDA_CALLABLE T Kmalpha(const T & x)
+{
+  const T val1 = x + 27.0;
+  return -0.01*val1/(exp(-0.1*val1) - 1.0);
+}
+
+template <typename T> //wang buzaki 96  V shifted 7mv
+CUDA_CALLABLE T Kmbeta(const T & x)
+{
+  return 0.125*exp((x+37.0)/-80.0);
+}
+
+template <typename T> //wang buzaki 96 V shifted 7mv
+CUDA_CALLABLE T Namalpha(const T & x)
+{
+  const T val1 = x + 28.0;
+  return -0.1*val1/(exp(-0.1*val1) - 1.0);
+}
+
+template <typename T> //wang buzaki 96  V shifted 7mv
+CUDA_CALLABLE T Nambeta(const T & x)
+{
+  return 4.0*exp((x+53.0)/-18.0);
+}
+
+template <typename T> //wang buzaki 96 V shifted 7mv
+CUDA_CALLABLE T Nahalpha(const T & x)
+{
+  return 0.07*exp(-(x+51.0)/20.0);
+}
+
+template <typename T> //wang buzaki 96  V shifted 7mv
+CUDA_CALLABLE T Nahbeta(const T & x)
+{
+  return 1.0/(exp(-0.1*(x+21.0)) + 1.0);
+}
+
+template <typename T> //wang buzaki 96
+CUDA_CALLABLE T gatefcn(const T & x, const T alpha, const T beta, const T scale)
+{
+  return scale * (alpha*(1.0-x) - beta*x);
+}
+
+template <typename T> //wang buzaki 96
+CUDA_CALLABLE T gatefcnInstant(const T alpha, const T beta)
+{
+  return alpha / (alpha + beta);
+}
+
+template <typename T>
+CUDA_CALLABLE T Tadj(const T q10, const T cels, const T Etemp)
+{
+  return pow(q10, (cels-Etemp)/10.0);
+}
+
+template <typename T>
+CUDA_CALLABLE T TadjAdj(const T x, const T tadj)
+{
+  return x/tadj;
 }
 
 #endif

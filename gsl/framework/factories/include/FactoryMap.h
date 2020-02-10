@@ -49,6 +49,19 @@ class FactoryMap
       ~FactoryMap();
 
       static FactoryMap<T>* _factoryMap;
+      std::vector<std::string> getNamesOfSupportedType()
+      {
+	 std::vector<std::string> v;
+	 for(auto it = _fmap.begin(); it != _fmap.end(); ) {
+	    v.push_back(it->first);
+	    std::cout << it->first ;
+	    if ((++it) != _fmap.end()) 
+	       std::cout << "; ";
+	    else
+	       std::cout << ".\n";
+	 }
+	 return v;
+      }
 
    private:
       MapType _fmap;

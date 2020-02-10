@@ -79,9 +79,7 @@ class RK4 : public numInt
 {
   // public:
   //  RK4(){} 
-  
-  
-  protected:
+ protected:
   
   void initializeIterator(int, double);
   void callIterate(ShallowArray< double > &);
@@ -130,7 +128,6 @@ struct RK4PhasedVars
 
 class RK4PhasedOld
 {
-    
   protected:
   
   void initializeIterator(int, double);
@@ -254,7 +251,6 @@ class LypIntCounter : public RK4PhasedOld
 class LypInt : public RK4Phased
 {
  protected :
-
   void initializeIterator(int n, double dt);
   
   void callIteratePhase1();
@@ -265,8 +261,6 @@ class LypInt : public RK4Phased
   void prePhase2(){RK4Phased::prePhase2();flushVars(rk2.x1);}
   void prePhase3(){RK4Phased::prePhase3();flushVars(rk2.x1);}
   void prePhase4(){RK4Phased::prePhase4();flushVars(rk2.x1);}
-
-
   
   double getDiffSqr() const
   {
@@ -277,14 +271,9 @@ class LypInt : public RK4Phased
     return sum;
   }
 
-
-  
   double diffLen(){}
 
  private:
-
-
-
   double d0;
 
   void setPetVars() 
@@ -298,7 +287,6 @@ class LypInt : public RK4Phased
   RNG rng;
 
   RK4PhasedVars rk2;
-
 };
 */
 
