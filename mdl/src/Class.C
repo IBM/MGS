@@ -39,6 +39,7 @@
 #include <time.h>
 #include <cstring>
 #include <algorithm>
+#include <regex>
 
 Class::Class()
    : _name(""), _nameParentClass(""), _fileOutput(true), _userCode(false),
@@ -1333,14 +1334,20 @@ void Class::addConstructor()
        getClassInfoSubType() == SubType::SharedMembers)
    {
      std::vector<Attribute*>::const_iterator it, end = _attributes_gpu.end();
-     fb << STR_GPU_CHECK_START;
      for (it = _attributes_gpu.begin(); it != end; ++it) {
        std::string attName = (*it)->getName();
        if ((*it)->isPointer() and (*it)->getType().find("ShallowArray") != std::string::npos) {
+	 fb << STR_GPU_CHECK_START;
 	 fb << tab << attName  << " = new_memory_array<" << (*it)->getType() << ">();\n";
+	 fb << "#else\n";
+	 std::string type = (*it)->getType();
+	 type = std::regex_replace(type, std::regex("Array_Flat<int>::MemLocation::UNIFIED_MEM"), "");
+	 type = std::regex_replace(type, std::regex("_Flat"), "");
+	 type = std::regex_replace(type, std::regex(", "), "");
+	 fb << tab << attName  << " = new " << type << "();\n";       
+	 fb << STR_GPU_CHECK_END;
        }
      }
-     fb << STR_GPU_CHECK_END;
    }
    consToIns->setFunctionBody(fb.str());  
    addMethod(consToIns);
@@ -1452,14 +1459,16 @@ void Class::addDestructor()
        std::ostringstream fb; // functionBody
        std::string tab(TAB);
        std::vector<Attribute*>::const_iterator it, end = _attributes_gpu.end();
-       fb << STR_GPU_CHECK_START;
        for (it = _attributes_gpu.begin(); it != end; ++it) {
 	 std::string attName = (*it)->getName();
 	 if ((*it)->isPointer() and (*it)->getType().find("ShallowArray") != std::string::npos) {
+	   fb << STR_GPU_CHECK_START;
 	   fb << tab << "delete_memory(" << attName << ");\n";
+	   fb << "#else\n";
+	   fb << tab << "delete "<< attName << ";\n";
+	   fb << STR_GPU_CHECK_END;
 	 }
        }
-       fb << STR_GPU_CHECK_END;
        destructor->setFunctionBody(fb.str());  
      }
    }
