@@ -17,7 +17,7 @@
 #define ConnectionIncrement_H
 #include "Mdl.h"
 
-#include <values.h>
+#include <limits.h>
 
 class ConnectionIncrement
 {

@@ -391,6 +391,15 @@ Threads {
 \# { 
    skip_proc(); 
 }
+"//"[^\n]*  { 
+   /* Skip C++ style comments */
+}
+"/*"([^*]|"*"[^/])*"*/"  {
+   /* Count newlines in block comments */
+   for(int i = 0; i < yyleng; i++) {
+      if(yytext[i] == '\n') lineCount++;
+   }
+}
 . { 
    yylloc->first_line = lineCount;
    return (yytext[0]); 

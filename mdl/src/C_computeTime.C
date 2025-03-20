@@ -23,7 +23,7 @@
 
 #include <memory>
 #include <string>
-#include <values.h>
+#include <limits.h>
 #include <iostream>
 
 void C_computeTime::execute(MdlContext* context) 

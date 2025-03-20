@@ -68,16 +68,22 @@ bool Initializer::execute()
       #ifdef AIX
       command << "/usr/gnu/bin/gcpp ";
       #endif
-      command << " " << infilename << " " << temporaryName;
+      #ifdef __APPLE__
+      command << "/usr/bin/cpp -P";
+      #endif
 
+      // Add include paths first
       const std::vector<std::string>& includePath = 
-	 commandLine.getIncludePath();
+         commandLine.getIncludePath();
       std::vector<std::string>::const_iterator it, 
-	 end = includePath.end();
+         end = includePath.end();
       for (it = includePath.begin(); it != end; ++it) {
-	 command << " -I" << *it;
+         command << " -I" << *it;
       }
 
+      // Then add input and output files
+      
+      command << " " << infilename << " " << temporaryName;
       system(command.str().c_str());
       infile = new std::ifstream(temporaryName);
    }
