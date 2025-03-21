@@ -1,3 +1,4 @@
+#include <memory>
 // =================================================================
 // Licensed Materials - Property of IBM
 //
@@ -48,7 +49,7 @@ BaseClass& BaseClass::operator=(const BaseClass& rv)
    return *this;
 }
 
-void BaseClass::duplicate(std::auto_ptr<BaseClass>& dup) const
+void BaseClass::duplicate(std::unique_ptr<BaseClass>&& dup) const
 {
    dup.reset(new BaseClass(*this));
 }
@@ -78,7 +79,7 @@ const std::vector<Attribute*>& BaseClass::getAttributes() const
    return _attributes;
 }
 
-void BaseClass::addAttribute(std::auto_ptr<Attribute>& att)
+void BaseClass::addAttribute(std::unique_ptr<Attribute>&& att)
 {
    _attributes.push_back(att.release());
 }
@@ -112,8 +113,8 @@ void BaseClass::copyOwnedHeap(const BaseClass& rv)
 {
    for (std::vector<Attribute*>::const_iterator it = rv._attributes.begin();
 	it != rv._attributes.end(); it++) {
-      std::auto_ptr<Attribute> dup;
-      (*it)->duplicate(dup);
+      std::unique_ptr<Attribute> dup;
+      (*it)->duplicate(std::move(dup));
       _attributes.push_back(dup.release());
    }
 }

@@ -25,14 +25,14 @@ class C_typeClassifier;
 class DataType;
 
 class C_returnType : public C_production {
-
+   using C_production::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       C_returnType(bool v = false);
       C_returnType(C_typeClassifier* _t);
       C_returnType(const C_returnType& rv);
-      virtual void duplicate(std::auto_ptr<C_returnType>& rv) const;
-      void releaseDataType(std::auto_ptr<DataType>& dt);
+      virtual void duplicate(std::unique_ptr<C_returnType>&& rv) const;
+      void releaseDataType(std::unique_ptr<DataType>&& dt);
       virtual ~C_returnType();
 
       bool isVoid() const;

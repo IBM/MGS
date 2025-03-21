@@ -23,7 +23,7 @@
 #include <string>
 #include <sstream>
 
-void OrOp::duplicate(std::auto_ptr<Operation>& rv) const
+void OrOp::duplicate(std::unique_ptr<Operation>&& rv) const
 {
    rv.reset(new OrOp(*this));
 }

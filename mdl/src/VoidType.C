@@ -18,7 +18,7 @@
 #include <string>
 #include <memory>
 
-void VoidType::duplicate(std::auto_ptr<DataType>& rv) const
+void VoidType::duplicate(std::unique_ptr<DataType>&& rv) const
 {
    rv.reset(new VoidType(*this));
 }

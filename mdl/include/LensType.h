@@ -23,8 +23,10 @@
 #include "DataType.h"
 
 class LensType : public DataType {
+   using DataType::getServiceNameString;  // Make base class method visible
+   using DataType::getServiceDescriptionString;  // Make base class method visible
    public:
-      virtual void duplicate(std::auto_ptr<DataType>& rv) const;
+      virtual void duplicate(std::unique_ptr<DataType>&& rv) const;
       virtual ~LensType();        
       virtual void setPointer(bool pointer);
 

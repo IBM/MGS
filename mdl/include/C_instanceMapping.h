@@ -36,9 +36,9 @@ class C_instanceMapping : public C_interfaceMapping {
 			C_identifierList* dataType,
 			bool amp = false); 
       
-      virtual void duplicate(std::auto_ptr<C_instanceMapping>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_interfaceMapping>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_general>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_instanceMapping>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_interfaceMapping>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_general>&& rv) const;
       virtual ~C_instanceMapping();
 };
 

@@ -22,7 +22,7 @@
 #include <memory>
 #include <vector>
 
-void LensType::duplicate(std::auto_ptr<DataType>& rv) const
+void LensType::duplicate(std::unique_ptr<DataType>&& rv) const
 {
    rv.reset(new LensType(*this));
 }

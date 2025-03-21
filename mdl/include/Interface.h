@@ -28,15 +28,15 @@ class DataType;
 class Interface : public Generatable {
    public:
       Interface(const std::string& fileName);
-      virtual void duplicate(std::auto_ptr<Generatable>& rv) const;
-      virtual void duplicate(std::auto_ptr<Interface>& rv) const;
+      virtual void duplicate(std::unique_ptr<Generatable>&& rv) const;
+      virtual void duplicate(std::unique_ptr<Interface>&& rv) const;
       virtual void generate() const;
       virtual ~Interface();        
       const std::string& getName() const;
       void setName(const std::string& name);
       void addProducerMethods(Class& c);
 
-      void addDataTypeToMembers(std::auto_ptr<DataType>& dataType);
+      void addDataTypeToMembers(std::unique_ptr<DataType>&& dataType);
       const MemberContainer<DataType>& getMembers() {
 	 return _members;
       } 

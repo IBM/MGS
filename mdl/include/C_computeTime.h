@@ -35,8 +35,8 @@ class C_computeTime: public C_general {
       C_computeTime(const C_computeTime& rv);
       C_computeTime(double& rv);
       C_computeTime& operator=(const C_computeTime& rv);
-      virtual void duplicate(std::auto_ptr<C_computeTime>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_general>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_computeTime>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_general>&& rv) const;
       virtual ~C_computeTime();
       
    private:

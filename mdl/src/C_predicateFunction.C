@@ -38,9 +38,9 @@ void C_predicateFunction::addToList(C_generalList* gl)
    const std::vector<std::string>& ids = _identifierList->getIdentifiers();
    std::vector<std::string>::const_iterator it, end = ids.end();
    for (it = ids.begin(); it != end; ++ it) {
-      std::auto_ptr<PredicateFunction> predicateFunction(
+      std::unique_ptr<PredicateFunction> predicateFunction(
 	 new PredicateFunction(*it));
-      gl->addPredicateFunction(predicateFunction);
+      gl->addPredicateFunction(std::move(predicateFunction));
    }
 }
 
@@ -73,12 +73,12 @@ C_predicateFunction& C_predicateFunction::operator=(const C_predicateFunction& r
    return *this;
 }
 
-void C_predicateFunction::duplicate(std::auto_ptr<C_predicateFunction>& rv) const
+void C_predicateFunction::duplicate(std::unique_ptr<C_predicateFunction>&& rv) const
 {
    rv.reset(new C_predicateFunction(*this));
 }
 
-void C_predicateFunction::duplicate(std::auto_ptr<C_general>& rv) const
+void C_predicateFunction::duplicate(std::unique_ptr<C_general>&& rv) const
 {
    rv.reset(new C_predicateFunction(*this));
 }
@@ -91,8 +91,8 @@ C_predicateFunction::~C_predicateFunction()
 void C_predicateFunction::copyOwnedHeap(const C_predicateFunction& rv)
 {
    if (rv._identifierList) {
-      std::auto_ptr<C_identifierList> dup;
-      rv._identifierList->duplicate(dup);
+      std::unique_ptr<C_identifierList> dup;
+      rv._identifierList->duplicate(std::move(dup));
       _identifierList = dup.release();
    } else {
       _identifierList = 0;

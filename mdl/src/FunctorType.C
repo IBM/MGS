@@ -19,7 +19,7 @@
 #include "DataType.h"
 #include <memory>
 
-void FunctorType::duplicate(std::auto_ptr<DataType>& rv) const
+void FunctorType::duplicate(std::unique_ptr<DataType>&& rv) const
 {
    rv.reset(new FunctorType(*this));
 }

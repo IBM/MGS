@@ -46,50 +46,50 @@ class C_computeTime;
 class StructType;
 
 class C_generalList : public C_production {
-
+   using C_production::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       C_generalList();
       C_generalList(C_general* g);
       C_generalList(C_generalList* gl, C_general* g);
       C_generalList(const C_generalList& rv);
-      virtual void duplicate(std::auto_ptr<C_generalList>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_generalList>&& rv) const;
       void releaseTriggeredFunctions(
-	 std::auto_ptr<std::vector<TriggeredFunction*> >& triggeredFunctions);
-      void releasePhases(std::auto_ptr<std::vector<Phase*> >& phases);
+	 std::unique_ptr<std::vector<TriggeredFunction*> >& triggeredFunctions);
+      void releasePhases(std::unique_ptr<std::vector<Phase*> >& phases);
       void releaseUserFunctions(
-	 std::auto_ptr<std::vector<UserFunction*> >& userFunctions);
+	 std::unique_ptr<std::vector<UserFunction*> >& userFunctions);
       void releaseUserFunctionCalls(
-	 std::auto_ptr<std::vector<UserFunctionCall*> >& userFunctionCalls);
+	 std::unique_ptr<std::vector<UserFunctionCall*> >& userFunctionCalls);
       void releasePredicateFunctions(
-	 std::auto_ptr<std::vector<PredicateFunction*> >& predicateFunctions);
-      void releaseDataTypeVec(std::auto_ptr<std::vector<DataType*> >& dtv);
+	 std::unique_ptr<std::vector<PredicateFunction*> >& predicateFunctions);
+      void releaseDataTypeVec(std::unique_ptr<std::vector<DataType*> >& dtv);
       void releaseOptionalDataTypeVec(
-	 std::auto_ptr<std::vector<DataType*> >& dtv);
+	 std::unique_ptr<std::vector<DataType*> >& dtv);
       void releaseInstanceMappingVec(
-	 std::auto_ptr<std::vector<C_instanceMapping*> >& im);
+	 std::unique_ptr<std::vector<C_instanceMapping*> >& im);
       void releaseSharedMappingVec(
-	 std::auto_ptr<std::vector<C_sharedMapping*> >& sm);
+	 std::unique_ptr<std::vector<C_sharedMapping*> >& sm);
       void releaseInterfaceToInstanceVec(
-	 std::auto_ptr<std::vector<C_interfaceToInstance*> >& iti);
+	 std::unique_ptr<std::vector<C_interfaceToInstance*> >& iti);
       void releaseInterfaceToSharedVec(
-	 std::auto_ptr<std::vector<C_interfaceToShared*> >& its);
+	 std::unique_ptr<std::vector<C_interfaceToShared*> >& its);
       void releasePSetToInstanceVec(
-	 std::auto_ptr<std::vector<C_psetToInstance*> >& pti);
+	 std::unique_ptr<std::vector<C_psetToInstance*> >& pti);
       void releasePSetToSharedVec(
-	 std::auto_ptr<std::vector<C_psetToShared*> >& pts);
+	 std::unique_ptr<std::vector<C_psetToShared*> >& pts);
       void releaseConnectionVec(
-	 std::auto_ptr<std::vector<C_regularConnection*> >& con);
+	 std::unique_ptr<std::vector<C_regularConnection*> >& con);
       void releaseSharedVec(
-	 std::auto_ptr<std::vector<C_shared*> >& shared);
+	 std::unique_ptr<std::vector<C_shared*> >& shared);
       void releaseInitializeVec(
-	 std::auto_ptr<std::vector<C_initialize*> >& initialize);
-      void releaseExecuteVec(std::auto_ptr<std::vector<C_execute*> >& execute);
-      void releasePreNode(std::auto_ptr<C_edgeConnection>& con);
-      void releasePostNode(std::auto_ptr<C_edgeConnection>& con);
-      void releaseInAttrPSet(std::auto_ptr<StructType>& iaps);
-      void releaseOutAttrPSet(std::auto_ptr<StructType>& oaps);
-      void releaseComputeTime(std::auto_ptr<std::vector<C_computeTime*> >& compT);
+	 std::unique_ptr<std::vector<C_initialize*> >& initialize);
+      void releaseExecuteVec(std::unique_ptr<std::vector<C_execute*> >& execute);
+      void releasePreNode(std::unique_ptr<C_edgeConnection>&& con);
+      void releasePostNode(std::unique_ptr<C_edgeConnection>&& con);
+      void releaseInAttrPSet(std::unique_ptr<StructType>&& iaps);
+      void releaseOutAttrPSet(std::unique_ptr<StructType>&& oaps);
+      void releaseComputeTime(std::unique_ptr<std::vector<C_computeTime*> >& compT);
 
       std::vector<TriggeredFunction*>* getTriggeredFunctions() const;
       std::vector<Phase*>* getPhases() const;
@@ -115,30 +115,30 @@ class C_generalList : public C_production {
       StructType* getOutAttrPSet() const;
       
       void addTriggeredFunction(
-	 std::auto_ptr<TriggeredFunction>& triggeredFunctions);
-      void addPhase(std::auto_ptr<Phase>& phase);
-      void addUserFunction(std::auto_ptr<UserFunction>& userFunction);
+	 std::unique_ptr<TriggeredFunction>&& triggeredFunctions);
+      void addPhase(std::unique_ptr<Phase>&& phase);
+      void addUserFunction(std::unique_ptr<UserFunction>&& userFunction);
       void addUserFunctionCall(
-	 std::auto_ptr<UserFunctionCall>& userFunctionCall);
+	 std::unique_ptr<UserFunctionCall>&& userFunctionCall);
       void addPredicateFunction(
-	 std::auto_ptr<PredicateFunction>& predicateFunction);
-      void addDataType(std::auto_ptr<DataType>& dt);    
-      void addOptionalDataType(std::auto_ptr<DataType>& dt);    
-      void addInstanceMapping(std::auto_ptr<C_instanceMapping>& im);
-      void addSharedMapping(std::auto_ptr<C_sharedMapping>& sm);
-      void addInterfaceToInstance(std::auto_ptr<C_interfaceToInstance>& iti);
-      void addInterfaceToShared(std::auto_ptr<C_interfaceToShared>& its);
-      void addPSetToInstance(std::auto_ptr<C_psetToInstance>& pti);
-      void addPSetToShared(std::auto_ptr<C_psetToShared>& pts);
-      void addConnection(std::auto_ptr<C_regularConnection>& con);
-      void addShared(std::auto_ptr<C_shared>& shared);
-      void addInitialize(std::auto_ptr<C_initialize>& init);
-      void addExecute(std::auto_ptr<C_execute>& init);
-      void addPreNode(std::auto_ptr<C_edgeConnection>& con);
-      void addPostNode(std::auto_ptr<C_edgeConnection>& con);
-      void addInAttrPSet(std::auto_ptr<StructType>& iaps);
-      void addOutAttrPSet(std::auto_ptr<StructType>& oaps);
-      void addComputeTime(std::auto_ptr<C_computeTime>& computeTime);
+	 std::unique_ptr<PredicateFunction>&& predicateFunction);
+      void addDataType(std::unique_ptr<DataType>&& dt);    
+      void addOptionalDataType(std::unique_ptr<DataType>&& dt);    
+      void addInstanceMapping(std::unique_ptr<C_instanceMapping>&& im);
+      void addSharedMapping(std::unique_ptr<C_sharedMapping>&& sm);
+      void addInterfaceToInstance(std::unique_ptr<C_interfaceToInstance>&& iti);
+      void addInterfaceToShared(std::unique_ptr<C_interfaceToShared>&& its);
+      void addPSetToInstance(std::unique_ptr<C_psetToInstance>&& pti);
+      void addPSetToShared(std::unique_ptr<C_psetToShared>&& pts);
+      void addConnection(std::unique_ptr<C_regularConnection>&& con);
+      void addShared(std::unique_ptr<C_shared>&& shared);
+      void addInitialize(std::unique_ptr<C_initialize>&& init);
+      void addExecute(std::unique_ptr<C_execute>&& init);
+      void addPreNode(std::unique_ptr<C_edgeConnection>&& con);
+      void addPostNode(std::unique_ptr<C_edgeConnection>&& con);
+      void addInAttrPSet(std::unique_ptr<StructType>&& iaps);
+      void addOutAttrPSet(std::unique_ptr<StructType>&& oaps);
+      void addComputeTime(std::unique_ptr<C_computeTime>&& computeTime);
 
       virtual ~C_generalList();      
 

@@ -43,7 +43,7 @@ std::string Node::getType() const
    return "Node";
 }
 
-void Node::duplicate(std::auto_ptr<Generatable>& rv) const
+void Node::duplicate(std::unique_ptr<Generatable>&& rv) const
 {
    rv.reset(new Node(*this));
 }
@@ -109,7 +109,7 @@ void Node::generateGridLayerData()
 
    MacroConditional mpiConditional(MPICONDITIONAL);
 
-   std::auto_ptr<Class> instance(new Class(getGridLayerDataName()));
+   std::unique_ptr<Class> instance(new Class(getGridLayerDataName()));
    instance->addClass(getRelationalDataUnitName());
    instance->addClass(getCompCategoryBaseName());
    instance->addClass(getInstanceName());
@@ -120,8 +120,8 @@ void Node::generateGridLayerData()
    instance->addHeader("\"" + getInstanceProxyName() + ".h\"", MPICONDITIONAL);
    instance->addHeader("\"ShallowArray.h\"", MPICONDITIONAL);
 
-   std::auto_ptr<BaseClass> base(new BaseClass("GridLayerData"));
-   instance->addBaseClass(base);
+   std::unique_ptr<BaseClass> base(new BaseClass("GridLayerData"));
+   instance->addBaseClass(std::move(base));
 
    CustomAttribute* nodeInstanceAccessors = new CustomAttribute("_nodeInstanceAccessors", "NodeInstanceAccessor");
    nodeInstanceAccessors->setCArray();
@@ -144,7 +144,7 @@ void Node::generateGridLayerData()
    std::string deleteString(customDeleteString.str());
    nodeInstanceAccessors->setCompleteCustomDeleteString(deleteString);
    
-   std::auto_ptr<Attribute> nodeInstanceAccessorsAp(nodeInstanceAccessors);
+   std::unique_ptr<Attribute> nodeInstanceAccessorsAp(nodeInstanceAccessors);
    instance->addAttribute(nodeInstanceAccessorsAp);
 
    // !!! Important the proxy nodes should be put in a container that 
@@ -152,7 +152,7 @@ void Node::generateGridLayerData()
    // For example, we couldn't use an std::vector here...
 
    // Constructor 
-   std::auto_ptr<ConstructorMethod> constructor(
+   std::unique_ptr<ConstructorMethod> constructor(
       new ConstructorMethod(getGridLayerDataName()));
    constructor->addParameter(getCompCategoryBaseName() + "* compCategory");
    constructor->addParameter(gridLayerDescriptor + "* gridLayerDescriptor");
@@ -345,15 +345,15 @@ void Node::generateGridLayerData()
       << STR_GPU_CHECK_END;
 
    constructor->setFunctionBody(constructorFB.str());
-   std::auto_ptr<Method> consToIns(constructor.release());
-   instance->addMethod(consToIns);
+   std::unique_ptr<Method> consToIns(constructor.release());
+   instance->addMethod(std::move(consToIns));
 
    // add getNodeInstanceAccessors method
-   std::auto_ptr<Method> getNodeInstanceAccessorsMethod(new Method("getNodeInstanceAccessors", 
+   std::unique_ptr<Method> getNodeInstanceAccessorsMethod(new Method("getNodeInstanceAccessors", 
 						   "NodeInstanceAccessor*"));
    getNodeInstanceAccessorsMethod->setFunctionBody(
       TAB + "return _nodeInstanceAccessors;\n");
-   instance->addMethod(getNodeInstanceAccessorsMethod);
+   instance->addMethod(std::move(getNodeInstanceAccessorsMethod));
 
    instance->addBasicDestructor();
    _classes.push_back(instance.release());
@@ -366,72 +366,72 @@ void Node::addExtraInstanceBaseMethods(Class& instance) const
    instance.setCopyingRemoved();
 
    std::string baseName = getType() + "Base";
-   std::auto_ptr<BaseClass> base(new BaseClass(baseName));
+   std::unique_ptr<BaseClass> base(new BaseClass(baseName));
   
-   instance.addBaseClass(base);
+   instance.addBaseClass(std::move(base));
 
    // addPostVariable method
-   std::auto_ptr<Method> addPostVariableMethod(new Method("addPostVariable", 
+   std::unique_ptr<Method> addPostVariableMethod(new Method("addPostVariable", 
 							  "void"));
    addPostVariableMethod->setVirtual();
    addPostVariableMethod->addParameter("VariableDescriptor* " + PREFIX + "variable");
    addPostVariableMethod->addParameter("ParameterSet* " + PREFIX + "pset");
    addPostVariableMethod->setFunctionBody(getAddPostVariableFunctionBody());
-   instance.addMethod(addPostVariableMethod);
+   instance.addMethod(std::move(addPostVariableMethod));
 
    // addPostEdge method
-   std::auto_ptr<Method> addPostEdgeMethod(new Method("addPostEdge", "void"));
+   std::unique_ptr<Method> addPostEdgeMethod(new Method("addPostEdge", "void"));
    addPostEdgeMethod->setVirtual();
    addPostEdgeMethod->addParameter("Edge* " + PREFIX + "edge");
    addPostEdgeMethod->addParameter("ParameterSet* " + PREFIX + "pset");
    addPostEdgeMethod->setFunctionBody(getAddPostEdgeFunctionBody());
-   instance.addMethod(addPostEdgeMethod);
+   instance.addMethod(std::move(addPostEdgeMethod));
 
    // addPostNode method
-   std::auto_ptr<Method> addPostNodeMethod(new Method("addPostNode", "void"));
+   std::unique_ptr<Method> addPostNodeMethod(new Method("addPostNode", "void"));
    addPostNodeMethod->setVirtual();
    addPostNodeMethod->addParameter("NodeDescriptor* " + PREFIX + "node");
    addPostNodeMethod->addParameter("ParameterSet* " + PREFIX + "pset");
    addPostNodeMethod->setFunctionBody(getAddPostNodeFunctionBody());
-   instance.addMethod(addPostNodeMethod);
+   instance.addMethod(std::move(addPostNodeMethod));
 
    // addPreConstant method
-   std::auto_ptr<Method> addPreConstantMethod(new Method("addPreConstant", 
+   std::unique_ptr<Method> addPreConstantMethod(new Method("addPreConstant", 
 							 "void"));
    addPreConstantMethod->setVirtual();
    addPreConstantMethod->addParameter("Constant* " + PREFIX + "constant");
    addPreConstantMethod->addParameter("ParameterSet* " + PREFIX + "pset");
    addPreConstantMethod->setFunctionBody(getAddPreConstantFunctionBody());
-   instance.addMethod(addPreConstantMethod);
+   instance.addMethod(std::move(addPreConstantMethod));
 
    // addPreVariable method
-   std::auto_ptr<Method> addPreVariableMethod(new Method("addPreVariable", 
+   std::unique_ptr<Method> addPreVariableMethod(new Method("addPreVariable", 
 							 "void"));
    addPreVariableMethod->setVirtual();
    addPreVariableMethod->addParameter("VariableDescriptor* " + PREFIX + "variable");
    addPreVariableMethod->addParameter("ParameterSet* " + PREFIX + "pset");
    addPreVariableMethod->setFunctionBody(getAddPreVariableFunctionBody());
-   instance.addMethod(addPreVariableMethod);
+   instance.addMethod(std::move(addPreVariableMethod));
 
    // addPreEdge method
-   std::auto_ptr<Method> addPreEdgeMethod(new Method("addPreEdge", "void"));
+   std::unique_ptr<Method> addPreEdgeMethod(new Method("addPreEdge", "void"));
    addPreEdgeMethod->setVirtual();
    addPreEdgeMethod->addParameter("Edge* " + PREFIX + "edge");
    addPreEdgeMethod->addParameter("ParameterSet* " + PREFIX + "pset");
    addPreEdgeMethod->setFunctionBody(getAddPreEdgeFunctionBody());
-   instance.addMethod(addPreEdgeMethod);
+   instance.addMethod(std::move(addPreEdgeMethod));
 
    // addPreNode method
-   std::auto_ptr<Method> addPreNodeMethod(new Method("addPreNode", "void"));
+   std::unique_ptr<Method> addPreNodeMethod(new Method("addPreNode", "void"));
    addPreNodeMethod->setVirtual();
    addPreNodeMethod->addParameter("NodeDescriptor* " + PREFIX + "node");
    addPreNodeMethod->addParameter("ParameterSet* " + PREFIX + "pset");
    addPreNodeMethod->setFunctionBody(getAddPreNodeFunctionBody());
-   instance.addMethod(addPreNodeMethod);
+   instance.addMethod(std::move(addPreNodeMethod));
 
    // addPreNode_Dummy method
    //virtual void addPreNode_Dummy(NodeDescriptor* CG_node /*nd_for_the_incoming_node*/, ParameterSet* CG_pset, Simulation* sim, NodeDescriptor* nd_for_this_node);
-   std::auto_ptr<Method> addPreNode_DummyMethod(new Method("addPreNode_Dummy", "void"));
+   std::unique_ptr<Method> addPreNode_DummyMethod(new Method("addPreNode_Dummy", "void"));
    addPreNode_DummyMethod->setVirtual();
    addPreNode_DummyMethod->addParameter("NodeDescriptor* " + PREFIX + "node");
    addPreNode_DummyMethod->addParameter("ParameterSet* " + PREFIX + "pset");
@@ -444,16 +444,16 @@ void Node::addExtraInstanceBaseMethods(Class& instance) const
    conds.push_back(TRACK_SAS_CONDITIONAL);
    MacroConditional trackConnectionConditional(conds);
    addPreNode_DummyMethod->setMacroConditional(trackConnectionConditional);
-   instance.addMethod(addPreNode_DummyMethod);
+   instance.addMethod(std::move(addPreNode_DummyMethod));
    instance.addHeader("\"" + baseName + ".h\"");
 
    // add getComputeCost method
-   std::auto_ptr<Method> getComputeCostMethod(
+   std::unique_ptr<Method> getComputeCostMethod(
       new Method("getComputeCost", "ConnectionIncrement*"));
    getComputeCostMethod->setVirtual();
    getComputeCostMethod->setConst();
    getComputeCostMethod->setFunctionBody("#if 0\n" + TAB + "return &_computeCost;\n" + "#endif\n" + TAB + "return NULL;\n"); // modified by Jizhu Lu on 04/06/2006 to temporarilly disable computeCost-related
-   instance.addMethod(getComputeCostMethod);
+   instance.addMethod(std::move(getComputeCostMethod));
 
 }
 
@@ -464,36 +464,36 @@ void Node::addExtraInstanceProxyMethods(Class& instance) const
    instance.setCopyingRemoved();
 
    std::string baseName = getType() + "ProxyBase";
-   std::auto_ptr<BaseClass> base(new BaseClass(baseName));
+   std::unique_ptr<BaseClass> base(new BaseClass(baseName));
   
-   instance.addBaseClass(base);
+   instance.addBaseClass(std::move(base));
 
    instance.addHeader("\"" + baseName + ".h\"");
 
    // addPostVariable method
-   std::auto_ptr<Method> addPostVariableMethod(new Method("addPostVariable", 
+   std::unique_ptr<Method> addPostVariableMethod(new Method("addPostVariable", 
 							  "void"));
    addPostVariableMethod->setVirtual();
    addPostVariableMethod->addParameter("VariableDescriptor* " + PREFIX + "variable");
    addPostVariableMethod->addParameter("ParameterSet* " + PREFIX + "pset");
    addPostVariableMethod->setFunctionBody(getAddPostVariableFunctionBody());
-   instance.addMethod(addPostVariableMethod);
+   instance.addMethod(std::move(addPostVariableMethod));
 
    // addPostEdge method
-   std::auto_ptr<Method> addPostEdgeMethod(new Method("addPostEdge", "void"));
+   std::unique_ptr<Method> addPostEdgeMethod(new Method("addPostEdge", "void"));
    addPostEdgeMethod->setVirtual();
    addPostEdgeMethod->addParameter("Edge* " + PREFIX + "edge");
    addPostEdgeMethod->addParameter("ParameterSet* " + PREFIX + "pset");
    addPostEdgeMethod->setFunctionBody(getAddPostEdgeFunctionBody());
-   instance.addMethod(addPostEdgeMethod);
+   instance.addMethod(std::move(addPostEdgeMethod));
 
    // addPostNode method
-   std::auto_ptr<Method> addPostNodeMethod(new Method("addPostNode", "void"));
+   std::unique_ptr<Method> addPostNodeMethod(new Method("addPostNode", "void"));
    addPostNodeMethod->setVirtual();
    addPostNodeMethod->addParameter("NodeDescriptor* " + PREFIX + "node");
    addPostNodeMethod->addParameter("ParameterSet* " + PREFIX + "pset");
    addPostNodeMethod->setFunctionBody(getAddPostNodeFunctionBody());
-   instance.addMethod(addPostNodeMethod);
+   instance.addMethod(std::move(addPostNodeMethod));
 }
 
 void Node::addExtraInstanceMethods(Class& instance) const
@@ -503,9 +503,9 @@ void Node::addExtraInstanceMethods(Class& instance) const
    instance.setCopyingRemoved();
 
    std::string baseName = getInstanceBaseName();
-   std::auto_ptr<BaseClass> base(
+   std::unique_ptr<BaseClass> base(
       new BaseClass(baseName));
-   instance.addBaseClass(base);
+   instance.addBaseClass(std::move(base));
 
    instance.addHeader("\"" + baseName + ".h\"");
    instance.addHeader("\"rndm.h\"");
@@ -514,7 +514,7 @@ void Node::addExtraInstanceMethods(Class& instance) const
 
 void Node::_add_allocateNode_Method(Class& instance) const
 {
-   std::auto_ptr<Method> allocateNodeMethod(
+   std::unique_ptr<Method> allocateNodeMethod(
       new Method("allocateNode", "void"));
    allocateNodeMethod->addParameter(
       "NodeDescriptor* nd");
@@ -645,13 +645,13 @@ void Node::_add_allocateNode_Method(Class& instance) const
  
    allocateNodeMethod->setFunctionBody(
       allocateNodeMethodFB.str());
-   instance.addMethod(allocateNodeMethod);
+   instance.addMethod(std::move(allocateNodeMethod));
 
 }
 
 void Node::_add_allocateNodes_Method(Class& instance) const
 {
-   std::auto_ptr<Method> allocateNodesMethod(
+   std::unique_ptr<Method> allocateNodesMethod(
       new Method("allocateNodes", "void"));
    allocateNodesMethod->addParameter(
       "size_t size");
@@ -771,13 +771,13 @@ void Node::_add_allocateNodes_Method(Class& instance) const
    allocateNodesMethodFB << STR_GPU_CHECK_END;
    allocateNodesMethod->setFunctionBody(
       allocateNodesMethodFB.str());
-   instance.addMethod(allocateNodesMethod);
+   instance.addMethod(std::move(allocateNodesMethod));
 
 }
 
 void Node::_add_allocateProxies_Method(Class& instance) const
 {
-   std::auto_ptr<Method> allocateProxiesMethod(
+   std::unique_ptr<Method> allocateProxiesMethod(
       new Method("allocateProxies", "void"));
    allocateProxiesMethod->addParameter(
       "const std::vector<size_t>& sizes");
@@ -881,7 +881,7 @@ void Node::_add_allocateProxies_Method(Class& instance) const
    allocateProxiesMethodFB << STR_GPU_CHECK_END;
    allocateProxiesMethod->setFunctionBody(
       allocateProxiesMethodFB.str());
-   instance.addMethod(allocateProxiesMethod);
+   instance.addMethod(std::move(allocateProxiesMethod));
 }
 
 void Node::addExtraCompCategoryBaseMethods(Class& instance) const
@@ -896,11 +896,11 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
    instance.addHeader("\"GridLayerDescriptor.h\"");
 
    // Add getNodeAccessor method
-   std::auto_ptr<Method> getNodeAccessorMethod(
+   std::unique_ptr<Method> getNodeAccessorMethod(
       new Method("getNodeAccessor", "void"));
    getNodeAccessorMethod->setVirtual();
    getNodeAccessorMethod->addParameter(
-      "std::unique_ptr<NodeAccessor>& nodeAccessor");
+      "std::unique_ptr<NodeAccessor>&& nodeAccessor");
    getNodeAccessorMethod->addParameter(
       "GridLayerDescriptor* gridLayerDescriptor");
    std::ostringstream getNodeAccessorMethodFB;   
@@ -914,7 +914,7 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
       << TAB << "nodeAccessor.reset(new " << getNodeAccessorName() 
       << "(getSimulation(), gridLayerDescriptor, currentGridLayerData));\n";
    getNodeAccessorMethod->setFunctionBody(getNodeAccessorMethodFB.str());
-   instance.addMethod(getNodeAccessorMethod);
+   instance.addMethod(std::move(getNodeAccessorMethod));
 
    // Add allocateNode method
    this->_add_allocateNode_Method(instance);
@@ -928,49 +928,49 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
 
    // Add getNbrComputationalUnits method
    //this->_add_getNbrComputationalUnits_Method(instance);
-   std::auto_ptr<Method> getNbrComputationalUnitsMethod(
+   std::unique_ptr<Method> getNbrComputationalUnitsMethod(
       new Method("getNbrComputationalUnits", "int"));
    std::ostringstream getNbrComputationalUnitsMethodFB;   
    getNbrComputationalUnitsMethodFB
       << TAB << "return _nodes.size();\n";
    getNbrComputationalUnitsMethod->setFunctionBody(
       getNbrComputationalUnitsMethodFB.str());
-   instance.addMethod(getNbrComputationalUnitsMethod);
+   instance.addMethod(std::move(getNbrComputationalUnitsMethod));
 
    // Add getComputeCost method
-   std::auto_ptr<Method> getComputeCostMethod(
+   std::unique_ptr<Method> getComputeCostMethod(
       new Method("getComputeCost", "ConnectionIncrement*"));
    std::ostringstream getComputeCostMethodFB;   
    getComputeCostMethodFB
       << TAB << "return &_computeCost;\n";
    getComputeCostMethod->setFunctionBody(
       getComputeCostMethodFB.str());
-   instance.addMethod(getComputeCostMethod);
+   instance.addMethod(std::move(getComputeCostMethod));
 
    MacroConditional mpiConditional(MPICONDITIONAL);
 
    // added by Jizhu Lu on 04/26/2006
    CustomAttribute* demarshallerMap = new CustomAttribute("_demarshallerMap", "std::map <int, CCDemarshaller*>");
-   std::auto_ptr<Attribute> demarshallerMapAptr(demarshallerMap);
+   std::unique_ptr<Attribute> demarshallerMapAptr(demarshallerMap);
    demarshallerMap->setAccessType(AccessType::PROTECTED);   
    demarshallerMap->setMacroConditional(mpiConditional);
    instance.addAttribute(demarshallerMapAptr);
 
    CustomAttribute* demarshallerMapIter = new CustomAttribute("_demarshallerMapIter", "std::map <int, CCDemarshaller*>::iterator");
-   std::auto_ptr<Attribute> demarshallerMapIterAptr(demarshallerMapIter);
+   std::unique_ptr<Attribute> demarshallerMapIterAptr(demarshallerMapIter);
    demarshallerMapIter->setAccessType(AccessType::PROTECTED);   
    demarshallerMapIter->setMacroConditional(mpiConditional);
    instance.addAttribute(demarshallerMapIterAptr);
    /************************************/
 
    CustomAttribute* sendMap = new CustomAttribute("_sendMap", "std::map <int, ShallowArray<" + getInstanceBaseName() + "*> >");
-   std::auto_ptr<Attribute> sendMapAptr(sendMap);
+   std::unique_ptr<Attribute> sendMapAptr(sendMap);
    sendMap->setAccessType(AccessType::PROTECTED);   
    sendMap->setMacroConditional(mpiConditional);
    instance.addAttribute(sendMapAptr);
 
    CustomAttribute* sendMapIter = new CustomAttribute("_sendMapIter", "std::map <int, ShallowArray<" + getInstanceBaseName() + "*> >::iterator");
-   std::auto_ptr<Attribute> sendMapIterAptr(sendMapIter);
+   std::unique_ptr<Attribute> sendMapIterAptr(sendMapIter);
    sendMapIter->setAccessType(AccessType::PROTECTED);   
    sendMapIter->setMacroConditional(mpiConditional);
    instance.addAttribute(sendMapIterAptr);
@@ -995,7 +995,7 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
       CustomAttribute* nodes = new CustomAttribute("_nodes", "ShallowArray<" + getInstanceName() + ", 1000, 4>");
       nodes->setMacroConditional(gpuConditional);
       // QUESTION: should this shallow array be setOwned? JK, RR, DL 11/29/05
-      std::auto_ptr<Attribute> nodesAp(nodes);
+      std::unique_ptr<Attribute> nodesAp(nodes);
 
       std::ostringstream nodesDeleteString;
       nodesDeleteString << "#ifdef HAVE_MPI\n"
@@ -1018,7 +1018,7 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
       CustomAttribute* nodes = new CustomAttribute("_nodes", "ShallowArray_Flat<" + getInstanceName() + ", Array_Flat<int>::MemLocation::CPU, 1000>");
       nodes->setMacroConditional(gpuConditional);
       // QUESTION: should this shallow array be setOwned? JK, RR, DL 11/29/05
-      std::auto_ptr<Attribute> nodesAp(nodes);
+      std::unique_ptr<Attribute> nodesAp(nodes);
 
       //std::ostringstream nodesDeleteString;
       //nodesDeleteString << "#ifdef HAVE_MPI\n"
@@ -1038,7 +1038,7 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
    }
 
    CustomAttribute* compCost = new CustomAttribute("_computeCost", "ConnectionIncrement");
-   std::auto_ptr<Attribute> compCostAp(compCost);
+   std::unique_ptr<Attribute> compCostAp(compCost);
    compCost->setAccessType(AccessType::PROTECTED);
    instance.addAttribute(compCostAp);
 
@@ -1059,7 +1059,7 @@ void Node::generateWorkUnitGridLayers()
 
 void Node::generateNodeAccessor()
 {
-   std::auto_ptr<Class> instance(new Class(getNodeAccessorName()));
+   std::unique_ptr<Class> instance(new Class(getNodeAccessorName()));
    instance->addClass("Simulation");  
    instance->addClass("Node");  
    instance->addClass("GridLayerDescriptor");  
@@ -1071,14 +1071,14 @@ void Node::generateNodeAccessor()
    instance->addHeader("<string>");
    instance->addExtraSourceHeader("\"SyntaxErrorException.h\"");
 
-   std::auto_ptr<BaseClass> base(new BaseClass("NodeAccessor"));
-   instance->addBaseClass(base);
+   std::unique_ptr<BaseClass> base(new BaseClass("NodeAccessor"));
+   instance->addBaseClass(std::move(base));
 
    CustomAttribute* sim = new CustomAttribute("_sim", "Simulation");
    sim->setConstructorParameterNameExtra("sim");   
    sim->setAccessType(AccessType::PRIVATE);   
    sim->setReference();   
-   std::auto_ptr<Attribute> simAp(sim);
+   std::unique_ptr<Attribute> simAp(sim);
    instance->addAttribute(simAp);
 
    CustomAttribute* gldesc = new CustomAttribute("_gridLayerDescriptor",
@@ -1086,7 +1086,7 @@ void Node::generateNodeAccessor()
    gldesc->setPointer();   
    gldesc->setConstructorParameterNameExtra("gridLayerDescriptor");   
    gldesc->setAccessType(AccessType::PRIVATE);   
-   std::auto_ptr<Attribute> gldescAp(gldesc);
+   std::unique_ptr<Attribute> gldescAp(gldesc);
    instance->addAttribute(gldescAp);
 
    CustomAttribute* gldata = new CustomAttribute("_gridLayerData",
@@ -1094,48 +1094,48 @@ void Node::generateNodeAccessor()
    gldata->setPointer();   
    gldata->setConstructorParameterNameExtra("gridLayerData");   
    gldata->setAccessType(AccessType::PRIVATE);   
-   std::auto_ptr<Attribute> gldataAp(gldata);
+   std::unique_ptr<Attribute> gldataAp(gldata);
    instance->addAttribute(gldataAp);
 
    // add getNbrUnits method
-   std::auto_ptr<Method> getNbrUnitsMethod(
+   std::unique_ptr<Method> getNbrUnitsMethod(
       new Method("getNbrUnits", 
 		 "int"));
    getNbrUnitsMethod->setFunctionBody(
       TAB + "return _gridLayerData->getNbrUnits();\n");
    getNbrUnitsMethod->setVirtual();
-   instance->addMethod(getNbrUnitsMethod);
+   instance->addMethod(std::move(getNbrUnitsMethod));
 
    // add getGridLayerDescriptor method
-   std::auto_ptr<Method> getGridLayerDescriptorMethod(
+   std::unique_ptr<Method> getGridLayerDescriptorMethod(
       new Method("getGridLayerDescriptor", 
 		 "GridLayerDescriptor*"));
    getGridLayerDescriptorMethod->setFunctionBody(
       TAB + "return _gridLayerDescriptor;\n");
    getGridLayerDescriptorMethod->setVirtual();
-   instance->addMethod(getGridLayerDescriptorMethod);
+   instance->addMethod(std::move(getGridLayerDescriptorMethod));
 
    // add getModelName method
-   std::auto_ptr<Method> getModelNameMethod(
+   std::unique_ptr<Method> getModelNameMethod(
       new Method("getModelName", 
 		 "std::string"));
    getModelNameMethod->setFunctionBody(
       TAB + "return _gridLayerDescriptor->getModelName();\n");
    getModelNameMethod->setVirtual();
-   instance->addMethod(getModelNameMethod);
+   instance->addMethod(std::move(getModelNameMethod));
 
    // add getNodeDescriptor1 method
-   std::auto_ptr<Method> getNodeDescriptor1Method(
+   std::unique_ptr<Method> getNodeDescriptor1Method(
       new Method("getNodeDescriptor", "NodeDescriptor*"));
    getNodeDescriptor1Method->addParameter("const std::vector<int>& coords");
    getNodeDescriptor1Method->addParameter("int densityIndex");   
    getNodeDescriptor1Method->setFunctionBody(
       TAB + "return getNodeDescriptor(_gridLayerDescriptor->getGrid()->getNodeIndex(coords), densityIndex);\n");
    getNodeDescriptor1Method->setVirtual();
-   instance->addMethod(getNodeDescriptor1Method);
+   instance->addMethod(std::move(getNodeDescriptor1Method));
 
    // add getNodeDescriptor2 method
-   std::auto_ptr<Method> getNodeDescriptor2Method(
+   std::unique_ptr<Method> getNodeDescriptor2Method(
       new Method("getNodeDescriptor", "NodeDescriptor*"));
    getNodeDescriptor2Method->addParameter("int nodeIndex");
    getNodeDescriptor2Method->addParameter("int densityIndex");   
@@ -1170,7 +1170,7 @@ void Node::generateNodeAccessor()
    
    getNodeDescriptor2Method->setFunctionBody(getNodeDescriptor2MethodFB.str());
    getNodeDescriptor2Method->setVirtual();
-   instance->addMethod(getNodeDescriptor2Method);
+   instance->addMethod(std::move(getNodeDescriptor2Method));
 
    instance->addStandardMethods();   
    _classes.push_back(instance.release());
@@ -1179,7 +1179,7 @@ void Node::generateNodeAccessor()
 void Node::addCompCategoryBaseConstructorMethod(Class& instance) const
 {
    // Constructor 
-   std::auto_ptr<ConstructorMethod> constructor(
+   std::unique_ptr<ConstructorMethod> constructor(
       new ConstructorMethod(getCompCategoryBaseName()));
    constructor->addParameter("Simulation& sim");
    constructor->addParameter("const std::string& modelName");
@@ -1188,6 +1188,6 @@ void Node::addCompCategoryBaseConstructorMethod(Class& instance) const
       getFrameworkCompCategoryName() + 
       "(sim, modelName)");
    constructor->setFunctionBody(getCompCategoryBaseConstructorBody());
-   std::auto_ptr<Method> consToIns(constructor.release());
-   instance.addMethod(consToIns);
+   std::unique_ptr<Method> consToIns(constructor.release());
+   instance.addMethod(std::move(consToIns));
 }

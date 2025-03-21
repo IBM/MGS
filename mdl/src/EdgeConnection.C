@@ -29,12 +29,12 @@ EdgeConnection::EdgeConnection(DirectionType type)
 {
 }
 
-void EdgeConnection::duplicate(std::auto_ptr<EdgeConnection>& rv) const
+void EdgeConnection::duplicate(std::unique_ptr<EdgeConnection>&& rv) const
 {
    rv.reset(new EdgeConnection(*this));
 }
 
-void EdgeConnection::duplicate(std::auto_ptr<Connection>& rv) const
+void EdgeConnection::duplicate(std::unique_ptr<Connection>&& rv) const
 {
    rv.reset(new EdgeConnection(*this));
 }

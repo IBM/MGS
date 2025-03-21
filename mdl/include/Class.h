@@ -1,3 +1,4 @@
+#include <memory>
 // =================================================================
 // Licensed Materials - Property of IBM
 //
@@ -46,7 +47,7 @@ class Class
       Class();
       Class(const std::string& name);
       Class(const Class& rv);
-      void duplicate(std::auto_ptr<Class>& dup) const;
+      void duplicate(std::unique_ptr<Class>&& dup) const;
       Class& operator=(const Class& rv);
       ~Class();
 
@@ -75,7 +76,7 @@ class Class
 	 _classes.insert(IncludeClass(cl, conditional));
       }
 
-      void addMemberClass(std::auto_ptr<Class>& cl, 
+      void addMemberClass(std::unique_ptr<Class>&& cl, 
 		     AccessType accessType, const std::string& conditional = "") {
 	 cl->setMemberClass();
 	 cl->setParentClassName(_name);
@@ -83,17 +84,17 @@ class Class
 	 _memberClasses[accessType].push_back(cl.release());
       }
 
-      void addPartnerClass(std::auto_ptr<Class>& cl, 
+      void addPartnerClass(std::unique_ptr<Class>&& cl, 
 		     const std::string& conditional = "") {
 	 _partnerClasses.push_back(cl.release());
       }
 
-      void addBaseClass(std::auto_ptr<BaseClass>& bc) {
+      void addBaseClass(std::unique_ptr<BaseClass>&& bc) {
 	 _baseClasses.push_back(bc.release());
       }
 
       /* to be removed when we convert from auto_ptr to unique_ptr */
-      void addAttribute(std::auto_ptr<Attribute>& att) {
+      void addAttribute(std::unique_ptr<Attribute>&& att) {
 	 if (att->getStatic() ) _generateSourceFile=true;
 	 _attributes.push_back(att.release());
       }
@@ -107,12 +108,12 @@ class Class
 	    assert(0);
       }
 
-      void addMethod(std::auto_ptr<Method>& mt) {
+      void addMethod(std::unique_ptr<Method>&& mt) {
 	 mt->setClass(this);
 	 if (!(mt->isInline())) _generateSourceFile=true;
 	 _methods.push_back(mt.release());
       }
-      void addMethodToExternalFile(std::string external_filename, std::auto_ptr<Method>& mt) {
+      void addMethodToExternalFile(std::string external_filename, std::unique_ptr<Method>&& mt) {
 	 assert(mt->isInline() == false);
 	//if (!(mt->isInline())) _generateSourceFile=true;
 	 _methodsInDifferentFile[external_filename].push_back(mt.release());

@@ -26,7 +26,7 @@ class Generatable;
 class Node : public SharedCCBase {
    public:
       Node(const std::string& fileName);      
-      virtual void duplicate(std::auto_ptr<Generatable>& rv) const;
+      virtual void duplicate(std::unique_ptr<Generatable>&& rv) const;
       virtual ~Node();
       virtual std::string getType() const;
 

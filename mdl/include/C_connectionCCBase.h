@@ -34,8 +34,8 @@ class C_connectionCCBase : public C_compCategoryBase {
       C_connectionCCBase(const std::string& name, C_interfacePointerList* ipl
 			 , C_generalList* gl);
       C_connectionCCBase(const C_connectionCCBase& rv);
-      virtual void duplicate(std::auto_ptr<C_compCategoryBase>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_connectionCCBase>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_compCategoryBase>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_connectionCCBase>&& rv) const;
       virtual ~C_connectionCCBase();
       void executeConnectionCCBase(MdlContext* context,
 				   ConnectionCCBase* cc) const;

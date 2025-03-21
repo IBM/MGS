@@ -28,9 +28,9 @@ class C_outAttrPSet : public C_struct {
    public:
       virtual void addToList(C_generalList* gl);
       C_outAttrPSet(C_dataTypeList* dtl);
-      virtual void duplicate(std::auto_ptr<C_outAttrPSet>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_struct>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_general>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_outAttrPSet>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_struct>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_general>&& rv) const;
       virtual ~C_outAttrPSet();      
 };
 

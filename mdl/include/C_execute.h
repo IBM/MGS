@@ -36,9 +36,9 @@ class C_execute : public C_argumentToMemberMapper {
       C_execute(C_returnType* returnType, C_generalList* argumentList
 		, bool ellipsisIncluded = false);
       C_execute(const C_execute& rv);
-      virtual void duplicate(std::auto_ptr<C_execute>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_general>& rv) const;
-      void releaseDataType(std::auto_ptr<DataType>& dt);
+      virtual void duplicate(std::unique_ptr<C_execute>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_general>&& rv) const;
+      void releaseDataType(std::unique_ptr<DataType>&& dt);
       virtual ~C_execute();
 
    private:

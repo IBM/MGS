@@ -98,12 +98,13 @@ include sources.mk
 
 # Parser targets
 mdl.tab.h:  parser/mdl.y
-	cd parser; bison -v -d -b mdl mdl.y; cd ..
+	cd parser; bison -v -d -b mdl mdl.y; cd .. && mv parser/mdl.tab.c parser/mdl.tab.cpp
 	cd parser; mv mdl.tab.h ../include; cd -
 	
 
 parser/mdl.tab.c: parser/mdl.y
 	cd parser; bison -v -d -b mdl mdl.y; cd ..
+	cd parser; bison -v -d -b mdl mdl.y; cd .. && mv parser/mdl.tab.c parser/mdl.tab.cpp
 
 # Scanner targets
 ifeq ($(FLEXFIXER), True)
@@ -146,10 +147,10 @@ lib/libmdl.a: $(OBJS) | $(LIB_DIR)
 LIBS += lib/libmdl.a
 
 
-final: mdl.tab.h $(OBJS) parser/mdl.tab.c lib/libmdl.a scanner/lex.yy.cc
+final: mdl.tab.h $(OBJS) parser/mdl.tab.cpp lib/libmdl.a scanner/lex.yy.cc
 	@mkdir -p $(BIN_DIR)
 	-rm -f $(BIN_DIR)/$(EXE_FILE)
-	$(CC) $(CFLAGS) parser/mdl.tab.c scanner/lex.yy.cc $(LIBS) \
+	$(CC) $(CFLAGS) parser/mdl.tab.cpp scanner/lex.yy.cc $(LIBS) \
            $(XLINKER) -o $(BIN_DIR)/$(EXE_FILE) $(FINAL_TARGET_FLAG)
 
 .PHONY: clean

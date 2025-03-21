@@ -30,11 +30,11 @@ class InterfaceImplementorBase;
 class Phase {
 
    public:
-      Phase(const std::string& name, std::auto_ptr<PhaseType>& phaseType,
+      Phase(const std::string& name, std::unique_ptr<PhaseType>&& phaseType,
 	    const std::vector<std::string>& pvn);
       Phase(const Phase& rv);
       Phase& operator=(const Phase& rv);
-      virtual void duplicate(std::auto_ptr<Phase>& rv) const = 0;
+      virtual void duplicate(std::unique_ptr<Phase>&& rv) const = 0;
       virtual ~Phase();
      
       std::string getGenerateString() const;

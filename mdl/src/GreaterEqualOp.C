@@ -23,7 +23,7 @@
 #include <string>
 #include <sstream>
 
-void GreaterEqualOp::duplicate(std::auto_ptr<Operation>& rv) const
+void GreaterEqualOp::duplicate(std::unique_ptr<Operation>&& rv) const
 {
    rv.reset(new GreaterEqualOp(*this));
 }

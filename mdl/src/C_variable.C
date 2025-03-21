@@ -27,7 +27,7 @@ void C_variable::execute(MdlContext* context)
    executeCompCategoryBase(context, cc);
    executeConnectionCCBase(context, cc);
    cc->checkAllMemberToInterfaces();	 
-   std::auto_ptr<Generatable> conMember;
+   std::unique_ptr<Generatable> conMember;
    conMember.reset(cc);
    context->_generatables->addMember(_name, conMember);
 }
@@ -51,7 +51,7 @@ C_variable::C_variable(const C_variable& rv)
 
 }
 
-void C_variable::duplicate(std::auto_ptr<C_variable>& rv) const
+void C_variable::duplicate(std::unique_ptr<C_variable>&& rv) const
 {
    rv.reset(new C_variable(*this));
 }

@@ -33,7 +33,7 @@ void C_phaseIdentifierList::execute(MdlContext* context)
    _phaseIdentifier->execute(context);
    if (_phaseIdentifierList) {
       _phaseIdentifierList->execute(context);
-      std::auto_ptr<std::vector<C_phaseIdentifier*> > rel;
+      std::unique_ptr<std::vector<C_phaseIdentifier*> > rel;
       _phaseIdentifierList->releasePhaseIdentifiers(rel);
       _phaseIdentifiers = rel.release();
    } else {
@@ -81,7 +81,7 @@ C_phaseIdentifierList& C_phaseIdentifierList::operator=(
 }
 
 void C_phaseIdentifierList::duplicate(
-   std::auto_ptr<C_phaseIdentifierList>& rv) const
+   std::unique_ptr<C_phaseIdentifierList>&& rv) const
 {
    rv.reset(new C_phaseIdentifierList(*this));
 }
@@ -94,13 +94,13 @@ C_phaseIdentifierList::~C_phaseIdentifierList()
 void C_phaseIdentifierList::copyOwnedHeap(const C_phaseIdentifierList& rv)
 {
    if (rv._phaseIdentifier) {
-      std::auto_ptr<C_phaseIdentifier> dup;
-      rv._phaseIdentifier->duplicate(dup);
+      std::unique_ptr<C_phaseIdentifier> dup;
+      rv._phaseIdentifier->duplicate(std::move(dup));
       _phaseIdentifier = dup.release();
    }
    if (rv._phaseIdentifierList) {
-      std::auto_ptr<C_phaseIdentifierList> dup;
-      rv._phaseIdentifierList->duplicate(dup);
+      std::unique_ptr<C_phaseIdentifierList> dup;
+      rv._phaseIdentifierList->duplicate(std::move(dup));
       _phaseIdentifierList = dup.release();
    }
    if (rv._phaseIdentifiers) {
@@ -108,8 +108,8 @@ void C_phaseIdentifierList::copyOwnedHeap(const C_phaseIdentifierList& rv)
       std::vector<C_phaseIdentifier*>::const_iterator it, 
 	 end = rv._phaseIdentifiers->end();
       for(it = rv._phaseIdentifiers->begin(); it != end; ++it) {
-	 std::auto_ptr<C_phaseIdentifier> dup;
-	 (*it)->duplicate(dup);
+	 std::unique_ptr<C_phaseIdentifier> dup;
+	 (*it)->duplicate(std::move(dup));
 	 _phaseIdentifiers->push_back(dup.release());
       }
    }

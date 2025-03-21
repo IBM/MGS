@@ -39,14 +39,14 @@ class SharedCCBase : public ConnectionCCBase {
       SharedCCBase(const SharedCCBase& rv);
       SharedCCBase& operator=(const SharedCCBase& rv);
       virtual ~SharedCCBase();
-      void addSharedPhase(std::auto_ptr<Phase>& phase);
+      void addSharedPhase(std::unique_ptr<Phase>&& phase);
       void addSharedTriggeredFunction(
-	 std::auto_ptr<TriggeredFunction>& triggeredFunction);
+	 std::unique_ptr<TriggeredFunction>&& triggeredFunction);
       virtual std::string generateExtra() const;
 
-      void addDataTypeToShareds(std::auto_ptr<DataType>& dataType) {
+      void addDataTypeToShareds(std::unique_ptr<DataType>&& dataType) {
 	 checkInstanceVariableNameSpace(dataType->getName());
-	 _shareds.addMemberToFront(dataType->getName(), dataType);
+	 _shareds.addMemberToFront(dataType->getName(), std::move(dataType));
       }
       
       const MemberContainer<DataType>& getShareds() {
@@ -54,9 +54,9 @@ class SharedCCBase : public ConnectionCCBase {
       }
 
       void addDataTypeToOptioinalSharedServices(
-	 std::auto_ptr<DataType>& dataType) {
+	 std::unique_ptr<DataType>&& dataType) {
 	 checkInstanceVariableNameSpace(dataType->getName());
-	 _optionalSharedServices.addMemberToFront(dataType->getName(), dataType);
+	 _optionalSharedServices.addMemberToFront(dataType->getName(), std::move(dataType));
       }
 
 
@@ -87,9 +87,9 @@ class SharedCCBase : public ConnectionCCBase {
       }
 
       virtual void addExtraServiceHeaders(
-	 std::auto_ptr<Class>& instance) const;
+	 std::unique_ptr<Class>&& instance) const;
       virtual void addExtraOptionalServiceHeaders(
-	 std::auto_ptr<Class>& instance) const;
+	 std::unique_ptr<Class>&& instance) const;
       virtual std::string getExtraServices(const std::string& tab) const;
       virtual std::string getExtraOptionalServices(
 	 const std::string& tab) const;

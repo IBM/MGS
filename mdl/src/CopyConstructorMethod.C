@@ -1,3 +1,4 @@
+#include <memory>
 // =================================================================
 // Licensed Materials - Property of IBM
 //
@@ -36,7 +37,7 @@ CopyConstructorMethod::CopyConstructorMethod(
 {
 }
 
-void CopyConstructorMethod::duplicate(std::auto_ptr<Method>& dup) const
+void CopyConstructorMethod::duplicate(std::unique_ptr<Method>&& dup) const
 {
    dup.reset(new CopyConstructorMethod(*this));
 }

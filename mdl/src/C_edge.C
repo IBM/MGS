@@ -51,7 +51,7 @@ void C_edge::execute(MdlContext* context)
       } 
    }
    cc->checkAllMemberToInterfaces();	 
-   std::auto_ptr<Generatable> sharedMember;
+   std::unique_ptr<Generatable> sharedMember;
    sharedMember.reset(cc);
    context->_generatables->addMember(_name, sharedMember);
 }
@@ -74,7 +74,7 @@ C_edge::C_edge(const C_edge& rv)
 
 }
 
-void C_edge::duplicate(std::auto_ptr<C_edge>& rv) const
+void C_edge::duplicate(std::unique_ptr<C_edge>&& rv) const
 {
    rv.reset(new C_edge(*this));
 }

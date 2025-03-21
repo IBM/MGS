@@ -39,7 +39,7 @@ class PSetToMember {
       PSetToMember(const PSetToMember& rv);
       PSetToMember& operator=(const PSetToMember& rv);
 
-      virtual void duplicate(std::auto_ptr<PSetToMember>& rv) const;
+      virtual void duplicate(std::unique_ptr<PSetToMember>&& rv) const;
       virtual ~PSetToMember();
       void setPSet(StructType* pset) {
 	 _pset = pset;
@@ -47,7 +47,7 @@ class PSetToMember {
       StructType* getPSet() {
 	 return _pset;
       }
-      void addMapping(const std::string& name, std::auto_ptr<DataType>& data);
+      void addMapping(const std::string& name, std::unique_ptr<DataType>&& data);
 
       std::vector<elemType>& getMappings() {
 	 return _mappings;

@@ -23,7 +23,7 @@
 
 class CharType : public SignedType {
    public:
-      virtual void duplicate(std::auto_ptr<DataType>& rv) const;
+      virtual void duplicate(std::unique_ptr<DataType>&& rv) const;
       virtual ~CharType();        
 
       virtual std::string getDescriptor() const;

@@ -26,15 +26,15 @@ class C_array;
 class DataType;
 
 class C_typeClassifier : public C_production {
-
+   using C_production::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       C_typeClassifier();
       C_typeClassifier(C_typeCore* tc, bool pointer = false);
       C_typeClassifier(C_array* a, bool pointer = false);
       C_typeClassifier(const C_typeClassifier& rv);
-      virtual void duplicate(std::auto_ptr<C_typeClassifier>& rv) const;
-      void releaseDataType(std::auto_ptr<DataType>& dt);
+      virtual void duplicate(std::unique_ptr<C_typeClassifier>&& rv) const;
+      void releaseDataType(std::unique_ptr<DataType>&& dt);
       virtual ~C_typeClassifier();
 
    private:

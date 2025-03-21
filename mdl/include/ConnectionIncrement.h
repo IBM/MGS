@@ -1,3 +1,4 @@
+#include <memory>
 // =================================================================
 // Licensed Materials - Property of IBM
 //
@@ -34,7 +35,7 @@ class ConnectionIncrement
          _communicationBytes = cb;
       }
 
-      void duplicate(std::auto_ptr<ConnectionIncrement>& rv) const
+      void duplicate(std::unique_ptr<ConnectionIncrement>&& rv) const
       {
          rv.reset(new ConnectionIncrement(*this));
       }

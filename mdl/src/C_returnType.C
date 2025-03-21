@@ -27,8 +27,8 @@ void C_returnType::execute(MdlContext* context)
       _dataType = new VoidType();
    } else {
       _type->execute(context);
-      std::auto_ptr<DataType> dt;
-      _type->releaseDataType(dt);
+      std::unique_ptr<DataType> dt;
+      _type->releaseDataType(std::move(dt));
       delete _dataType;
       _dataType = dt.release();      
    }
@@ -49,18 +49,18 @@ C_returnType::C_returnType(const C_returnType& rv)
    : C_production(), _void(rv._void), _type(0), _dataType(0)
 {
    if (rv._type) {
-      std::auto_ptr<C_typeClassifier> dup;
-      rv._type->duplicate(dup);
+      std::unique_ptr<C_typeClassifier> dup;
+      rv._type->duplicate(std::move(dup));
       _type = dup.release();
    }
    if (rv._dataType) {
-      std::auto_ptr<DataType> dup;
-      rv._dataType->duplicate(dup);
+      std::unique_ptr<DataType> dup;
+      rv._dataType->duplicate(std::move(dup));
       _dataType = dup.release();
    }
 }
 
-void C_returnType::duplicate(std::auto_ptr<C_returnType>& rv) const
+void C_returnType::duplicate(std::unique_ptr<C_returnType>&& rv) const
 {
    rv.reset(new C_returnType(*this));
 }
@@ -75,7 +75,7 @@ C_typeClassifier* C_returnType::getType() const
    return _type;
 }
 
-void C_returnType::releaseDataType(std::auto_ptr<DataType>& dt) 
+void C_returnType::releaseDataType(std::unique_ptr<DataType>&& dt) 
 {
    dt.reset(_dataType);
    _dataType = 0;

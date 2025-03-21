@@ -26,15 +26,15 @@ class C_dataType;
 class DataType;
 
 class C_dataTypeList : public C_production {
-
+   using C_production::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       C_dataTypeList();
       C_dataTypeList(C_dataType* dt);
       C_dataTypeList(C_dataTypeList* dtl, C_dataType* dt);
       C_dataTypeList(const C_dataTypeList& rv);
-      virtual void duplicate(std::auto_ptr<C_dataTypeList>& rv) const;
-      void releaseDataTypeVec(std::auto_ptr<std::vector<DataType*> >& dtv);
+      virtual void duplicate(std::unique_ptr<C_dataTypeList>&& rv) const;
+      void releaseDataTypeVec(std::unique_ptr<std::vector<DataType*> >& dtv);
       virtual ~C_dataTypeList();
 
    private:

@@ -57,12 +57,12 @@ C_sharedCCBase::C_sharedCCBase(const C_sharedCCBase& rv)
 {
 }
 
-void C_sharedCCBase::duplicate(std::auto_ptr<C_compCategoryBase>& rv) const
+void C_sharedCCBase::duplicate(std::unique_ptr<C_compCategoryBase>&& rv) const
 {
    rv.reset(new C_sharedCCBase(*this));
 }
 
-void C_sharedCCBase::duplicate(std::auto_ptr<C_sharedCCBase>& rv) const
+void C_sharedCCBase::duplicate(std::unique_ptr<C_sharedCCBase>&& rv) const
 {
    rv.reset(new C_sharedCCBase(*this));
 }
@@ -71,14 +71,14 @@ void C_sharedCCBase::executeSharedCCBase(MdlContext* context,
 					 SharedCCBase* cc) const
 {
    if (_generalList->getSharedVec()) {
-      std::auto_ptr<std::vector<C_shared*> > sharedVec;
+      std::unique_ptr<std::vector<C_shared*> > sharedVec;
       _generalList->releaseSharedVec(sharedVec);
       std::vector<C_shared*>::iterator it; 
       std::vector<C_shared*>::iterator end = sharedVec->end();
       for (it = sharedVec->begin(); it != end; it++) {
 	 C_shared* shared = *it;
  	 if (shared->getPhases()) {
-	    std::auto_ptr<std::vector<Phase*> > phases;
+	    std::unique_ptr<std::vector<Phase*> > phases;
 	    shared->releasePhases(phases);
 	    std::vector<Phase*>::iterator it, end = phases->end();
 	    for (it = phases->begin(); it != end; ++it) {
@@ -90,8 +90,8 @@ void C_sharedCCBase::executeSharedCCBase(MdlContext* context,
 	       }
 
 	       try {
-		  std::auto_ptr<Phase> cup(*it);
-		  cc->addSharedPhase(cup);
+		  std::unique_ptr<Phase> cup(*it);
+		  cc->addSharedPhase(std::move(cup));
 	       } catch (DuplicateException& e) {
 		  std::cerr 
 		     << "In " << cc->getName() << ", " 
@@ -103,14 +103,14 @@ void C_sharedCCBase::executeSharedCCBase(MdlContext* context,
 	    }
 	 }
  	 if (shared->getTriggeredFunctions()) {
-	    std::auto_ptr<std::vector<TriggeredFunction*> > triggeredFunctions;
+	    std::unique_ptr<std::vector<TriggeredFunction*> > triggeredFunctions;
 	    shared->releaseTriggeredFunctions(triggeredFunctions);
 	    std::vector<TriggeredFunction*>::iterator it, 
 	       end = triggeredFunctions->end();
 	    for (it = triggeredFunctions->begin(); it != end; ++it) {
 	       try {
-		  std::auto_ptr<TriggeredFunction> cup(*it);
-		  cc->addSharedTriggeredFunction(cup);
+		  std::unique_ptr<TriggeredFunction> cup(*it);
+		  cc->addSharedTriggeredFunction(std::move(cup));
 	       } catch (DuplicateException& e) {
 		  std::cerr 
 		     << "In " << cc->getName() << ", " 
@@ -122,16 +122,16 @@ void C_sharedCCBase::executeSharedCCBase(MdlContext* context,
 	    }
 	 }
  	 if (shared->getDataTypeVec()) {
-	    std::auto_ptr<std::vector<DataType*> > dtv;
+	    std::unique_ptr<std::vector<DataType*> > dtv;
 	    shared->releaseDataTypeVec(dtv);
 	    std::vector<DataType*>::iterator it;
 	    std::vector<DataType*>::iterator end = dtv->end();
 	    for (it = dtv->begin(); it != end; it++) {
 	       try {
-		  std::auto_ptr<DataType> dataType;
+		  std::unique_ptr<DataType> dataType;
 		  dataType.reset(*it);
 		  dataType->setShared(true);
-		  cc->addDataTypeToShareds(dataType);
+		  cc->addDataTypeToShareds(std::move(dataType));
 	       } catch (DuplicateException& e) {
 		  std::cerr << "In " << cc->getName() << ", "  << e.getError() 
 			    << "." << std::endl;
@@ -141,15 +141,15 @@ void C_sharedCCBase::executeSharedCCBase(MdlContext* context,
 	    }
 	 }
  	 if (shared->getOptionalDataTypeVec()) {
-	    std::auto_ptr<std::vector<DataType*> > odtv;
+	    std::unique_ptr<std::vector<DataType*> > odtv;
 	    shared->releaseOptionalDataTypeVec(odtv);
 	    std::vector<DataType*>::iterator it, end = odtv->end();
 	    for (it = odtv->begin(); it != end; it++) {
 	       try {
-		  std::auto_ptr<DataType> dataType;
+		  std::unique_ptr<DataType> dataType;
 		  dataType.reset(*it);
 		  dataType->setShared(true);
-		  cc->addDataTypeToOptioinalSharedServices(dataType);
+		  cc->addDataTypeToOptioinalSharedServices(std::move(dataType));
 	       } catch (DuplicateException& e) {
 		  std::cerr << "In " << cc->getName() << ", "  << e.getError() 
 			    << "." << std::endl;
@@ -162,16 +162,16 @@ void C_sharedCCBase::executeSharedCCBase(MdlContext* context,
       }
    }
    if (_generalList->getSharedMappingVec()) {
-      std::auto_ptr<std::vector<C_sharedMapping*> > smVec;
+      std::unique_ptr<std::vector<C_sharedMapping*> > smVec;
       _generalList->releaseSharedMappingVec(smVec);
       std::vector<C_sharedMapping*>::iterator it; 
       std::vector<C_sharedMapping*>::iterator end = smVec->end();
       for (it = smVec->begin(); it != end; it++) {
 	 const DataType* curDt;
-	 std::auto_ptr<DataType> dtToInsert;
+	 std::unique_ptr<DataType> dtToInsert;
 	 try {
 	    curDt = cc->getShareds().getMember((*it)->getMember());
-	    curDt->duplicate(dtToInsert);
+	    curDt->duplicate(std::move(dtToInsert));
 	    if((*it)->getSubAttributePathExists()) {
 	       dtToInsert->setSubAttributePath((*it)->getSubAttributePath());
 	    }
@@ -182,7 +182,7 @@ void C_sharedCCBase::executeSharedCCBase(MdlContext* context,
 	    throw;
 	 }
 	 cc->addMappingToInterface((*it)->getInterface(), 
-				   (*it)->getInterfaceMember(), dtToInsert,
+				   (*it)->getInterfaceMember(), std::move(dtToInsert),
 				   (*it)->getAmpersand());
 	 delete *it;
       }

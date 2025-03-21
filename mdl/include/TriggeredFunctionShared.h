@@ -28,7 +28,7 @@ class TriggeredFunctionShared : public TriggeredFunction {
    public:
       TriggeredFunctionShared(const std::string& name, RunType runType);
       virtual void duplicate(
-	 std::auto_ptr<TriggeredFunction>& rv) const;
+	 std::unique_ptr<TriggeredFunction>&& rv) const;
       virtual ~TriggeredFunctionShared();
       
    protected:

@@ -30,7 +30,7 @@ class DataType {
    public:
       // Standard functions
       DataType();
-      virtual void duplicate(std::auto_ptr<DataType>& rv) const =0;
+      virtual void duplicate(std::unique_ptr<DataType>&& rv) const =0;
       virtual ~DataType();        
 
       // Getter & Setter functions    
@@ -260,7 +260,7 @@ class DataType {
 	 const std::string& tab) const;
 
       // This function will add this dataType to a Class as a proxy attribute.
-      virtual void addProxyAttribute(std::auto_ptr<Class>& instance) const;
+      virtual void addProxyAttribute(std::unique_ptr<Class>&& instance) const;
 
       // This function will add a method to the given class to send this
       // dataType in a distributed environment.

@@ -948,94 +948,94 @@ phaseIdentifierList: phaseIdentifier {
 ;
 
 edgeInstancePhase: INITPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeInstance());
-   $$ = new C_initPhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
+   $$ = new C_initPhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 | RUNTIMEPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeInstance());
-   $$ = new C_runtimePhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
+   $$ = new C_runtimePhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 | FINALPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeInstance());
-   $$ = new C_finalPhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
+   $$ = new C_finalPhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 | LOADPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeInstance());
-   $$ = new C_loadPhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
+   $$ = new C_loadPhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 ;
 
 variableInstancePhase: INITPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeInstance());
-   $$ = new C_initPhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
+   $$ = new C_initPhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 | RUNTIMEPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeInstance());
-   $$ = new C_runtimePhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
+   $$ = new C_runtimePhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 | FINALPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeInstance());
-   $$ = new C_finalPhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
+   $$ = new C_finalPhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 | LOADPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeInstance());
-   $$ = new C_loadPhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
+   $$ = new C_loadPhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 ;
 
 nodeInstancePhase: INITPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeInstance());
-   $$ = new C_initPhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
+   $$ = new C_initPhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 | RUNTIMEPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeInstance());
-   $$ = new C_runtimePhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
+   $$ = new C_runtimePhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 | RUNTIMEPHASE GRIDLAYERS phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeGridLayers());
-   $$ = new C_runtimePhase($3, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeGridLayers());
+   $$ = new C_runtimePhase($3, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 | FINALPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeInstance());
-   $$ = new C_finalPhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
+   $$ = new C_finalPhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 | LOADPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeInstance());
-   $$ = new C_loadPhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
+   $$ = new C_loadPhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 ;
 
 sharedPhase: INITPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeShared());
-   $$ = new C_initPhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeShared());
+   $$ = new C_initPhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 | RUNTIMEPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeShared());
-   $$ = new C_runtimePhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeShared());
+   $$ = new C_runtimePhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 | FINALPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeShared());
-   $$ = new C_finalPhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeShared());
+   $$ = new C_finalPhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 | LOADPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeShared());
-   $$ = new C_loadPhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeShared());
+   $$ = new C_loadPhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 ;

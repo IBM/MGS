@@ -35,8 +35,8 @@ class C_phaseIdentifier : public C_production {
 			C_identifierList* identifierList); 
       C_phaseIdentifier(const C_phaseIdentifier& rv);
       C_phaseIdentifier& operator=(const C_phaseIdentifier& rv);
-      virtual void duplicate(std::auto_ptr<C_phaseIdentifier>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_production>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_phaseIdentifier>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_production>&& rv) const;
       virtual ~C_phaseIdentifier();
 
       const std::string& getName() const {

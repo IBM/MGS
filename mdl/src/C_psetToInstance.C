@@ -28,9 +28,9 @@ void C_psetToInstance::execute(MdlContext* context)
 
 void C_psetToInstance::addToList(C_generalList* gl) 
 {  
-   std::auto_ptr<C_psetToInstance> im;
+   std::unique_ptr<C_psetToInstance> im;
    im.reset(new C_psetToInstance(*this));
-   gl->addPSetToInstance(im);
+   gl->addPSetToInstance(std::move(im));
 }
 
 C_psetToInstance::C_psetToInstance() 
@@ -45,18 +45,18 @@ C_psetToInstance::C_psetToInstance(const std::string& psetMember,
 } 
 
 void C_psetToInstance::duplicate(
-   std::auto_ptr<C_psetToInstance>& rv) const
+   std::unique_ptr<C_psetToInstance>&& rv) const
 {
    rv.reset(new C_psetToInstance(*this));
 }
 
 void C_psetToInstance::duplicate(
-   std::auto_ptr<C_psetMapping>& rv) const
+   std::unique_ptr<C_psetMapping>&& rv) const
 {
    rv.reset(new C_psetToInstance(*this));
 }
 
-void C_psetToInstance::duplicate(std::auto_ptr<C_general>& rv) const
+void C_psetToInstance::duplicate(std::unique_ptr<C_general>&& rv) const
 {
    rv.reset(new C_psetToInstance(*this));
 }

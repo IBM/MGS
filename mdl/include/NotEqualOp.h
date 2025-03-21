@@ -26,7 +26,7 @@ class Predicate;
 class NotEqualOp : public AllValidOp {
 
    public:
-      virtual void duplicate(std::auto_ptr<Operation>& rv) const;
+      virtual void duplicate(std::unique_ptr<Operation>&& rv) const;
       virtual ~NotEqualOp();
       virtual std::string getOp() const;
 

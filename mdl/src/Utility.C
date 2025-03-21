@@ -87,9 +87,9 @@ namespace mdl {
    {
       MemberContainer<DataType>::iterator it, end = services.end();
       DataType* cur;
-      std::auto_ptr<Attribute> attCup;
+      std::unique_ptr<Attribute> attCup;
       CustomAttribute* cusAtt;
-      std::auto_ptr<Method> methodCup;
+      std::unique_ptr<Method> methodCup;
       std::string methodName;
       std::string returnType;
 
@@ -108,7 +108,7 @@ namespace mdl {
 	 methodCup.reset(new Method(methodName, returnType, 
 				    functionBody.str()));
       
-	 instance.addMethod(methodCup);
+	 instance.addMethod(std::move(methodCup));
 
 	 cusAtt = new CustomAttribute(cur->getName(), cur->getDescriptor());
 	 cusAtt->setPointer();

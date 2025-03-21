@@ -1,3 +1,4 @@
+#include <memory>
 // =================================================================
 // Licensed Materials - Property of IBM
 //
@@ -19,7 +20,7 @@
 #include <string>
 #include <vector>
 
-DataTypeAttribute::DataTypeAttribute(std::auto_ptr<DataType>& data,
+DataTypeAttribute::DataTypeAttribute(std::unique_ptr<DataType>&& data,
 				     AccessType accessType)
    : Attribute(accessType)
 {
@@ -32,7 +33,7 @@ DataTypeAttribute::DataTypeAttribute(const DataTypeAttribute& rv)
    copyOwnedHeap(rv);
 }
 
-void DataTypeAttribute::duplicate(std::auto_ptr<Attribute>& dup)const
+void DataTypeAttribute::duplicate(std::unique_ptr<Attribute>&& dup)const
 {
    dup.reset(new DataTypeAttribute(*this));
 }
@@ -83,13 +84,13 @@ const DataType* DataTypeAttribute::getDataType() const
    return _dataType;
 }
 
-void DataTypeAttribute::releaseDataType(std::auto_ptr<DataType>& rv)
+void DataTypeAttribute::releaseDataType(std::unique_ptr<DataType>&& rv)
 {
    rv.reset(_dataType);
    _dataType = 0;
 }
 
-void DataTypeAttribute::setDataType(std::auto_ptr<DataType>& rv)
+void DataTypeAttribute::setDataType(std::unique_ptr<DataType>&& rv)
 {
    delete _dataType;
    _dataType = rv.release();
@@ -103,8 +104,8 @@ void DataTypeAttribute::destructOwnedHeap()
 void DataTypeAttribute::copyOwnedHeap(const DataTypeAttribute& rv)
 {   
    if (rv._dataType) {
-      std::auto_ptr<DataType> dup;
-      rv._dataType->duplicate(dup);
+      std::unique_ptr<DataType> dup;
+      rv._dataType->duplicate(std::move(dup));
       _dataType = dup.release();
    } else {
       _dataType = 0;

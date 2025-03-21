@@ -19,7 +19,7 @@
 #include <memory>
 #include <string>
 
-void Operation::duplicate(std::auto_ptr<Operation>& rv) const
+void Operation::duplicate(std::unique_ptr<Operation>&& rv) const
 {
    rv.reset(new Operation(*this));
 }

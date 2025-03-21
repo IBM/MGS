@@ -32,7 +32,7 @@ InstancePredicate::InstancePredicate(Operation* op, const std::string& name)
 {
 }
 
-void InstancePredicate::duplicate(std::auto_ptr<Predicate>& rv) const
+void InstancePredicate::duplicate(std::unique_ptr<Predicate>&& rv) const
 {
    rv.reset(new InstancePredicate(*this));
 }

@@ -35,7 +35,7 @@ std::string ComputeTimeType::getInstanceComputeTimeMethodName(
 }
 
 void ComputeTimeType::getInternalInstanceComputeTimeMethod(
-   std::auto_ptr<Method>& method, const std::string& name, 
+   std::unique_ptr<Method>&& method, const std::string& name, 
    const std::string& componentType) const
 {
    method.reset(new Method(getInstanceComputeTimeMethodName(name), "void"));

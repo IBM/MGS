@@ -26,7 +26,7 @@ class MdlContext;
 class C_phaseIdentifier;
 
 class C_phaseIdentifierList : public C_production {
-
+   using C_production::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       C_phaseIdentifierList();
@@ -34,13 +34,13 @@ class C_phaseIdentifierList : public C_production {
       C_phaseIdentifierList(C_phaseIdentifierList* dtl, C_phaseIdentifier* dt);
       C_phaseIdentifierList(const C_phaseIdentifierList& rv);
       C_phaseIdentifierList& operator=(const C_phaseIdentifierList& rv);
-      virtual void duplicate(std::auto_ptr<C_phaseIdentifierList>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_phaseIdentifierList>&& rv) const;
       virtual ~C_phaseIdentifierList();
       const std::vector<C_phaseIdentifier*>& getPhaseIdentifiers() {
 	 return *_phaseIdentifiers;
       }
       void releasePhaseIdentifiers(
-	 std::auto_ptr<std::vector<C_phaseIdentifier*> >& pis) {
+	 std::unique_ptr<std::vector<C_phaseIdentifier*> >& pis) {
 	 pis.reset(_phaseIdentifiers);
 	 _phaseIdentifiers = 0;
       }

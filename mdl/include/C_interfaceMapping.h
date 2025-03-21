@@ -38,8 +38,8 @@ class C_interfaceMapping : public C_general {
       C_interfaceMapping(const C_interfaceMapping& rv);
       C_interfaceMapping& operator=(const C_interfaceMapping& rv);
 
-      virtual void duplicate(std::auto_ptr<C_interfaceMapping>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_general>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_interfaceMapping>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_general>&& rv) const;
       virtual ~C_interfaceMapping();
 
       const std::string& getInterface() const {

@@ -1,3 +1,4 @@
+#include <memory>
 // =================================================================
 // Licensed Materials - Property of IBM
 //
@@ -23,7 +24,7 @@ TriggeredFunctionShared::TriggeredFunctionShared(
 }
 
 void TriggeredFunctionShared::duplicate(
-   std::auto_ptr<TriggeredFunction>& rv) const
+   std::unique_ptr<TriggeredFunction>&& rv) const
 {
    rv.reset(new TriggeredFunctionShared(*this));
 }

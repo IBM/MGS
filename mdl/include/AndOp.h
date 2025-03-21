@@ -26,7 +26,7 @@ class Predicate;
 class AndOp : public BValidOp {
 
    public:
-      virtual void duplicate(std::auto_ptr<Operation>& rv) const;
+      virtual void duplicate(std::unique_ptr<Operation>&& rv) const;
       virtual ~AndOp();
       virtual std::string getOp() const;
 };

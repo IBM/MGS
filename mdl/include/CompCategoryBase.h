@@ -35,14 +35,14 @@ class CompCategoryBase : public InterfaceImplementorBase {
       CompCategoryBase(const std::string& fileName);
       CompCategoryBase(const CompCategoryBase& rv);
       CompCategoryBase& operator=(const CompCategoryBase& rv);
-      virtual void duplicate(std::auto_ptr<Generatable>& rv) const =0;
+      virtual void duplicate(std::unique_ptr<Generatable>&& rv) const =0;
       virtual std::string generateExtra() const;
       virtual std::string getType() const =0;
       virtual ~CompCategoryBase();
-      void releaseInAttrPSet(std::auto_ptr<StructType>& iap);
-      void setInAttrPSet(std::auto_ptr<StructType>& iap);
+      void releaseInAttrPSet(std::unique_ptr<StructType>&& iap);
+      void setInAttrPSet(std::unique_ptr<StructType>&& iap);
       void setTriggeredFunctions(
-	 std::auto_ptr<std::vector<TriggeredFunction*> >& triggeredfunction);
+	 std::unique_ptr<std::vector<TriggeredFunction*> >& triggeredfunction);
 
       StructType* getInAttrPSet() {
 	 return _inAttrPSet;

@@ -27,15 +27,16 @@ class C_interfacePointerList;
 class SharedCCBase;
 
 class C_sharedCCBase : public C_connectionCCBase {
-
+   protected:
+   using C_connectionCCBase::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       C_sharedCCBase();
       C_sharedCCBase(const std::string& name, C_interfacePointerList* ipl,
 		     C_generalList* gl);
       C_sharedCCBase(const C_sharedCCBase& rv);
-      virtual void duplicate(std::auto_ptr<C_compCategoryBase>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_sharedCCBase>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_compCategoryBase>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_sharedCCBase>&& rv) const;
       virtual ~C_sharedCCBase();
       void executeSharedCCBase(MdlContext* context, SharedCCBase* cc) const;
 

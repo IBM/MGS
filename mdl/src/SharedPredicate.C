@@ -32,7 +32,7 @@ SharedPredicate::SharedPredicate(Operation* op, const std::string& name)
 {
 }
 
-void SharedPredicate::duplicate(std::auto_ptr<Predicate>& rv) const
+void SharedPredicate::duplicate(std::unique_ptr<Predicate>&& rv) const
 {
    rv.reset(new SharedPredicate(*this));
 }

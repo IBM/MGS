@@ -24,14 +24,14 @@
 class MdlContext;
 
 class C_functor : public C_toolBase {
-
+   using C_toolBase::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       C_functor();
       C_functor(const std::string& name, C_generalList* gl,
 		std::string category = "FUNCTOR");
       C_functor(const C_functor& rv);
-      virtual void duplicate(std::auto_ptr<C_functor>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_functor>&& rv) const;
       virtual ~C_functor();
       void setFrameWorkElement(bool val = true) {
 	 _frameWorkElement = val;

@@ -19,7 +19,7 @@
 #include <string>
 #include <memory>
 
-void ShortType::duplicate(std::auto_ptr<DataType>& rv) const
+void ShortType::duplicate(std::unique_ptr<DataType>&& rv) const
 {
    rv.reset(new ShortType(*this));
 }

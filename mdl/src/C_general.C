@@ -40,7 +40,7 @@ C_general::C_general(const C_general& rv)
 
 }
 
-void C_general::duplicate(std::auto_ptr<C_general>& rv) const
+void C_general::duplicate(std::unique_ptr<C_general>&& rv) const
 {
    rv.reset(new C_general(*this));
 }

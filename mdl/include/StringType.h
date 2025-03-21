@@ -24,7 +24,7 @@
 
 class StringType : public DataType {
    public:
-      virtual void duplicate(std::auto_ptr<DataType>& rv) const;
+      virtual void duplicate(std::unique_ptr<DataType>&& rv) const;
       virtual ~StringType();        
       
       virtual std::string getDescriptor() const;

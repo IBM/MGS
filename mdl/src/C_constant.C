@@ -25,7 +25,7 @@ void C_constant::execute(MdlContext* context)
    Constant* cc = new Constant(getFileName());
    executeInterfaceImplementorBase(context, cc);
    cc->checkAllMemberToInterfaces();	 
-   std::auto_ptr<Generatable> conMember;
+   std::unique_ptr<Generatable> conMember;
    conMember.reset(cc);
    context->_generatables->addMember(_name, conMember);
 }
@@ -47,7 +47,7 @@ C_constant::C_constant(const C_constant& rv)
 {
 }
 
-void C_constant::duplicate(std::auto_ptr<C_constant>& rv) const
+void C_constant::duplicate(std::unique_ptr<C_constant>&& rv) const
 {
    rv.reset(new C_constant(*this));
 }

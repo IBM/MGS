@@ -27,7 +27,7 @@ class ComputeTimeType {
 
    public:
       ComputeTimeType();
-      virtual void duplicate(std::auto_ptr<ComputeTimeType>& rv) const = 0;
+      virtual void duplicate(std::unique_ptr<ComputeTimeType>&& rv) const = 0;
       virtual ~ComputeTimeType();
 
       virtual std::string getType() const =0;
@@ -45,7 +45,7 @@ class ComputeTimeType {
 
    protected:
       void getInternalInstanceComputeTimeMethod(
-	 std::auto_ptr<Method>& method, const std::string& name, 
+	 std::unique_ptr<Method>&& method, const std::string& name, 
 	 const std::string& componentType) const;
 };
 

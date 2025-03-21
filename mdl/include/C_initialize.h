@@ -34,8 +34,8 @@ class C_initialize : public C_argumentToMemberMapper {
       C_initialize(bool ellipsisIncluded = false);
       C_initialize(C_generalList* argumentList, bool ellipsisIncluded = false);
       C_initialize(const C_initialize& rv);
-      virtual void duplicate(std::auto_ptr<C_initialize>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_general>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_initialize>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_general>&& rv) const;
       virtual ~C_initialize();
 };
 

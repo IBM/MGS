@@ -34,13 +34,13 @@ class ConnectionCCBase : public CompCategoryBase {
       ConnectionCCBase(const ConnectionCCBase& rv);
       ConnectionCCBase& operator=(const ConnectionCCBase& rv);
       virtual ~ConnectionCCBase();
-      void addConnection(std::auto_ptr<RegularConnection>& con);
+      void addConnection(std::unique_ptr<RegularConnection>&& con);
       virtual std::string generateExtra() const;
       void setUserFunctions(
-	 std::auto_ptr<std::vector<UserFunction*> >& userFunction);
+	 std::unique_ptr<std::vector<UserFunction*> >& userFunction);
       bool userFunctionCallExists(const std::string& name) const;
       void setPredicateFunctions(
-	 std::auto_ptr<std::vector<PredicateFunction*> >& predicateFunction);
+	 std::unique_ptr<std::vector<PredicateFunction*> >& predicateFunction);
       bool predicateFunctionCallExists(const std::string& name) const;
 
       std::vector<PredicateFunction*>* getPredicateFunctions() {

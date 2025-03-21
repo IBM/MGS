@@ -27,7 +27,7 @@ class Constant : public InterfaceImplementorBase {
 
    public:
       Constant(const std::string& fileName);
-      virtual void duplicate(std::auto_ptr<Generatable>& rv) const;
+      virtual void duplicate(std::unique_ptr<Generatable>&& rv) const;
       virtual ~Constant();
       virtual std::string getType() const;
    protected:

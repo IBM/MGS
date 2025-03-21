@@ -27,7 +27,7 @@ PhaseTypeInstance::PhaseTypeInstance()
 {
 }
 
-void PhaseTypeInstance::duplicate(std::auto_ptr<PhaseType>& rv) const
+void PhaseTypeInstance::duplicate(std::unique_ptr<PhaseType>&& rv) const
 {
    rv.reset(new PhaseTypeInstance(*this));
 }
@@ -54,8 +54,8 @@ void PhaseTypeInstance::generateInstancePhaseMethod(
 {
    {//the same for all class (default is CPU machine-type)
       std::ostringstream os;
-      std::auto_ptr<Method> method;
-      getInternalInstancePhaseMethod(method, name, componentType, workUnitName);
+      std::unique_ptr<Method> method;
+      getInternalInstancePhaseMethod(std::move(method), name, componentType, workUnitName);
 
       std::string insBaseType = PREFIX + instanceType;
 
@@ -99,13 +99,13 @@ void PhaseTypeInstance::generateInstancePhaseMethod(
 
       }
       method->setFunctionBody(os.str());
-      c.addMethod(method);
+      c.addMethod(std::move(method));
    }
    {//special treatment, i.e. get phases for different machine type
       std::ostringstream os;
       //Here is for GPU machine-type
-      std::auto_ptr<Method> method;
-      getInternalInstancePhaseMethod(method, name, componentType, workUnitName, MachineType::GPU);
+      std::unique_ptr<Method> method;
+      getInternalInstancePhaseMethod(std::move(method), name, componentType, workUnitName, MachineType::GPU);
       std::string gpuKernelName(instanceType + "_kernel_" + name);
       method->setGPUName(gpuKernelName);
 
@@ -130,7 +130,7 @@ void PhaseTypeInstance::generateInstancePhaseMethod(
           << TAB << "gpuErrorCheck( cudaPeekAtLastError() );\n";
 
 	 method->setFunctionBody(os.str());
-	 c.addMethodToExternalFile(instanceType + COMPCATEGORY + ".incl", method);
+	 c.addMethodToExternalFile(instanceType + COMPCATEGORY + ".incl", std::move(method));
       } else if (componentType == "Variable") {
 	 //nothing
       } else if (componentType == "Edge") 

@@ -1,3 +1,4 @@
+#include <memory>
 // =================================================================
 // Licensed Materials - Property of IBM
 //
@@ -26,16 +27,16 @@
 class DataTypeAttribute : public Attribute
 {
    public:
-      DataTypeAttribute(std::auto_ptr<DataType>& data, 
+      DataTypeAttribute(std::unique_ptr<DataType>&& data, 
 			AccessType accessType = AccessType::PUBLIC);
       DataTypeAttribute(const DataTypeAttribute& rv);
-      void duplicate(std::auto_ptr<Attribute>& dup) const;
+      void duplicate(std::unique_ptr<Attribute>&& dup) const;
       DataTypeAttribute& operator=(const DataTypeAttribute& rv);
       virtual ~DataTypeAttribute();
       
       const DataType* getDataType() const;
-      void releaseDataType(std::auto_ptr<DataType>& rv);
-      void setDataType(std::auto_ptr<DataType>& rv);
+      void releaseDataType(std::unique_ptr<DataType>&& rv);
+      void setDataType(std::unique_ptr<DataType>&& rv);
 
       virtual std::string getName() const;
       virtual std::string getType() const;

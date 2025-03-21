@@ -34,8 +34,8 @@ class C_nameComment : public C_production {
       C_nameComment(const std::string& name,
 		    int blockSize, int incrementSize = 0); 
       C_nameComment(const C_nameComment& rv);
-      virtual void duplicate(std::auto_ptr<C_nameComment>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_production>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_nameComment>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_production>&& rv) const;
       virtual ~C_nameComment();
 
       const std::string& getName() const {

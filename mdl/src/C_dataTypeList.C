@@ -30,13 +30,13 @@ void C_dataTypeList::execute(MdlContext* context)
    if (_dataTypeList) {
       _dataTypeList->execute(context);
       deleteVector();
-      std::auto_ptr<std::vector<DataType*> > dtv;
+      std::unique_ptr<std::vector<DataType*> > dtv;
       _dataTypeList->releaseDataTypeVec(dtv);
       _dataTypeVec = dtv.release();      
    } else {
       _dataTypeVec = new std::vector<DataType*>();
    }
-   std::auto_ptr<std::vector<DataType*> > dtVec;
+   std::unique_ptr<std::vector<DataType*> > dtVec;
    _dataType->releaseDataTypeVec(dtVec);
    _dataTypeVec->insert(_dataTypeVec->end(), dtVec->begin(), dtVec->end());
 }
@@ -63,25 +63,25 @@ C_dataTypeList::C_dataTypeList(const C_dataTypeList& rv)
    : C_production(rv), _dataType(0), _dataTypeList(0), _dataTypeVec(0) 
 {
    if (rv._dataType) {
-      std::auto_ptr<C_dataType> dup;
-      rv._dataType->duplicate(dup);
+      std::unique_ptr<C_dataType> dup;
+      rv._dataType->duplicate(std::move(dup));
       _dataType = dup.release();
    }
    if (rv._dataTypeList) {
-      std::auto_ptr<C_dataTypeList> dup;
-      rv._dataTypeList->duplicate(dup);
+      std::unique_ptr<C_dataTypeList> dup;
+      rv._dataTypeList->duplicate(std::move(dup));
       _dataTypeList = dup.release();
    }
    deepCopyVector(rv);
 }
 
-void C_dataTypeList::duplicate(std::auto_ptr<C_dataTypeList>& rv) const
+void C_dataTypeList::duplicate(std::unique_ptr<C_dataTypeList>&& rv) const
 {
    rv.reset(new C_dataTypeList(*this));
 }
 
 void C_dataTypeList::releaseDataTypeVec(
-   std::auto_ptr<std::vector<DataType*> >& dtv) 
+   std::unique_ptr<std::vector<DataType*> >& dtv) 
 {
    dtv.reset(_dataTypeVec);
    _dataTypeVec = 0;
@@ -113,9 +113,9 @@ void C_dataTypeList::deepCopyVector(const C_dataTypeList& rv)
       _dataTypeVec = new std::vector<DataType*>();
       std::vector<DataType*>::const_iterator end = rv._dataTypeVec->end();
       std::vector<DataType*>::const_iterator it;
-      std::auto_ptr<DataType> dup;   
+      std::unique_ptr<DataType> dup;   
       for (it = rv._dataTypeVec->begin(); it != end; it++) {
-	 (*it)->duplicate(dup);
+	 (*it)->duplicate(std::move(dup));
 	 _dataTypeVec->push_back(dup.release());
       }
    }

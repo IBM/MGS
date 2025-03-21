@@ -28,17 +28,17 @@ void C_execute::execute(MdlContext* context)
 {
    assert(_returnType != 0);
    _returnType->execute(context);
-   std::auto_ptr<DataType> dt;
-   _returnType->releaseDataType(dt);
+   std::unique_ptr<DataType> dt;
+   _returnType->releaseDataType(std::move(dt));
    delete _dataType;
    _dataType = dt.release();      
 }
 
 void C_execute::addToList(C_generalList* gl) 
 {
-   std::auto_ptr<C_execute> init;
+   std::unique_ptr<C_execute> init;
    init.reset(new C_execute(*this));
-   gl->addExecute(init);
+   gl->addExecute(std::move(init));
 }
 
 std::string C_execute::getType() const
@@ -67,28 +67,28 @@ C_execute::C_execute(const C_execute& rv)
    : C_argumentToMemberMapper(rv), _returnType(0), _dataType(0)
 {
    if (rv._returnType) {
-      std::auto_ptr<C_returnType> dup;
-      rv._returnType->duplicate(dup);
+      std::unique_ptr<C_returnType> dup;
+      rv._returnType->duplicate(std::move(dup));
       _returnType = dup.release();
    }
    if (rv._dataType) {
-      std::auto_ptr<DataType> dup;
-      rv._dataType->duplicate(dup);
+      std::unique_ptr<DataType> dup;
+      rv._dataType->duplicate(std::move(dup));
       _dataType = dup.release();
    }
 }
 
-void C_execute::duplicate(std::auto_ptr<C_execute>& rv) const
+void C_execute::duplicate(std::unique_ptr<C_execute>&& rv) const
 {
    rv.reset(new C_execute(*this));
 }
 
-void C_execute::duplicate(std::auto_ptr<C_general>& rv) const
+void C_execute::duplicate(std::unique_ptr<C_general>&& rv) const
 {
    rv.reset(new C_execute(*this));
 }
 
-void C_execute::releaseDataType(std::auto_ptr<DataType>& dt) 
+void C_execute::releaseDataType(std::unique_ptr<DataType>&& dt) 
 {
    dt.reset(_dataType);
    _dataType = 0;

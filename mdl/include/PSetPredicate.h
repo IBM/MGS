@@ -29,7 +29,7 @@ class PSetPredicate : public Predicate{
    public:
       PSetPredicate();
       PSetPredicate(Operation* op, const std::string& name);
-      virtual void duplicate(std::auto_ptr<Predicate>& rv) const;
+      virtual void duplicate(std::unique_ptr<Predicate>&& rv) const;
       virtual ~PSetPredicate();
       virtual void setPSet(StructType& type);
       

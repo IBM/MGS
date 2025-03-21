@@ -30,11 +30,11 @@ class InterfaceImplementorBase;
 class ComputeTime {
 
    public:
-      ComputeTime(const std::string& name, std::auto_ptr<ComputeTimeType>& computeTimeType,
+      ComputeTime(const std::string& name, std::unique_ptr<ComputeTimeType>&& computeTimeType,
 	    const std::vector<std::string>& pvn);
       ComputeTime(const ComputeTime& rv);
       ComputeTime& operator=(const ComputeTime& rv);
-      virtual void duplicate(std::auto_ptr<ComputeTime>& rv) const = 0;
+      virtual void duplicate(std::unique_ptr<ComputeTime>&& rv) const = 0;
       virtual ~ComputeTime();
      
       std::string getGenerateString() const;

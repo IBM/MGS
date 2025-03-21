@@ -34,7 +34,7 @@ class Method
       Method();
       Method(const std::string& name, const std::string& returnStr = ""
 	     , const std::string& functionBody = "");
-      virtual void duplicate(std::auto_ptr<Method>& dup) const;
+      virtual void duplicate(std::unique_ptr<Method>&& dup) const;
       virtual ~Method();
 
       /* return the Class object upon which this Method object holds 

@@ -34,8 +34,8 @@ class C_predicateFunction : public C_general {
       C_predicateFunction(C_identifierList* identifierList); 
       C_predicateFunction(const C_predicateFunction& rv);
       C_predicateFunction& operator=(const C_predicateFunction& rv);
-      virtual void duplicate(std::auto_ptr<C_predicateFunction>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_general>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_predicateFunction>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_general>&& rv) const;
       virtual ~C_predicateFunction();
       
    private:

@@ -11,7 +11,7 @@ class C_X1 {
       void execute(MdlContext* context);
       C_X1();
       C_X1(C_X1* rv);
-      virtual void duplicate(std::auto_ptr<C_X1>& rv);
+      virtual void duplicate(std::unique_ptr<C_X1>&& rv);
       virtual ~C_X1();
 
 };

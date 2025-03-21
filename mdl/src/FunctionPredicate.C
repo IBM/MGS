@@ -35,7 +35,7 @@ FunctionPredicate::FunctionPredicate(Operation* op, const std::string& name)
 {
 }
 
-void FunctionPredicate::duplicate(std::auto_ptr<Predicate>& rv) const
+void FunctionPredicate::duplicate(std::unique_ptr<Predicate>&& rv) const
 {
    rv.reset(new FunctionPredicate(*this));
 }

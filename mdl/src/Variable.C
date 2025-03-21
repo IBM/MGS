@@ -50,7 +50,7 @@ Variable Variable::operator=(const Variable& rv)
    return *this;
 }
 
-void Variable::duplicate(std::auto_ptr<Generatable>& rv) const
+void Variable::duplicate(std::unique_ptr<Generatable>&& rv) const
 {
    rv.reset(new Variable(*this));
 }
@@ -104,14 +104,14 @@ void Variable::internalGenerateFiles()
 void Variable::addCompCategoryBaseConstructorMethod(Class& instance) const
 {
    // Constructor 
-   std::auto_ptr<ConstructorMethod> constructor(
+   std::unique_ptr<ConstructorMethod> constructor(
       new ConstructorMethod(getCompCategoryBaseName()));
    constructor->addParameter("Simulation& sim");
    constructor->setInitializationStr(
       getFrameworkCompCategoryName() + "(sim)");
    constructor->setFunctionBody(getCompCategoryBaseConstructorBody());
-   std::auto_ptr<Method> consToIns(constructor.release());   
-   instance.addMethod(consToIns);
+   std::unique_ptr<Method> consToIns(constructor.release());   
+   instance.addMethod(std::move(consToIns));
 }
 
 std::string Variable::getLoadedInstanceTypeName()
@@ -129,78 +129,78 @@ void Variable::addExtraInstanceBaseMethods(Class& instance) const
    ConnectionCCBase::addExtraInstanceBaseMethods(instance);
 
    std::string baseName = getType() + "Base";
-   std::auto_ptr<BaseClass> base(new BaseClass(baseName));
+   std::unique_ptr<BaseClass> base(new BaseClass(baseName));
   
-   instance.addBaseClass(base);
+   instance.addBaseClass(std::move(base));
 
    instance.addHeader("\"" + baseName + ".h\"");   
 
    // addPostVariable method
-   std::auto_ptr<Method> addPostVariableMethod(new Method("addPostVariable", 
+   std::unique_ptr<Method> addPostVariableMethod(new Method("addPostVariable", 
 							  "void"));
    addPostVariableMethod->setVirtual();
    addPostVariableMethod->addParameter("VariableDescriptor* " + PREFIX + "variable");
    addPostVariableMethod->addParameter("ParameterSet* " + PREFIX + "pset");
    addPostVariableMethod->setFunctionBody(getAddPostVariableFunctionBody());
-   instance.addMethod(addPostVariableMethod);
+   instance.addMethod(std::move(addPostVariableMethod));
 
    // addPostEdge method
-   std::auto_ptr<Method> addPostEdgeMethod(new Method("addPostEdge", "void"));
+   std::unique_ptr<Method> addPostEdgeMethod(new Method("addPostEdge", "void"));
    addPostEdgeMethod->setVirtual();
    addPostEdgeMethod->addParameter("Edge* " + PREFIX + "edge");
    addPostEdgeMethod->addParameter("ParameterSet* " + PREFIX + "pset");
    addPostEdgeMethod->setFunctionBody(getAddPostEdgeFunctionBody());
-   instance.addMethod(addPostEdgeMethod);
+   instance.addMethod(std::move(addPostEdgeMethod));
 
    // addPostNode method
-   std::auto_ptr<Method> addPostNodeMethod(new Method("addPostNode", "void"));
+   std::unique_ptr<Method> addPostNodeMethod(new Method("addPostNode", "void"));
    addPostNodeMethod->setVirtual();
    addPostNodeMethod->addParameter("NodeDescriptor* " + PREFIX + "node");
    addPostNodeMethod->addParameter("ParameterSet* " + PREFIX + "pset");
    addPostNodeMethod->setFunctionBody(getAddPostNodeFunctionBody());
-   instance.addMethod(addPostNodeMethod);
+   instance.addMethod(std::move(addPostNodeMethod));
 
    // addPreConstant method
-   std::auto_ptr<Method> addPreConstantMethod(new Method("addPreConstant", 
+   std::unique_ptr<Method> addPreConstantMethod(new Method("addPreConstant", 
 							 "void"));
    addPreConstantMethod->setVirtual();
    addPreConstantMethod->addParameter("Constant* " + PREFIX + "constant");
    addPreConstantMethod->addParameter("ParameterSet* " + PREFIX + "pset");
    addPreConstantMethod->setFunctionBody(getAddPreConstantFunctionBody());
-   instance.addMethod(addPreConstantMethod);
+   instance.addMethod(std::move(addPreConstantMethod));
 
    // addPreVariable method
-   std::auto_ptr<Method> addPreVariableMethod(new Method("addPreVariable", 
+   std::unique_ptr<Method> addPreVariableMethod(new Method("addPreVariable", 
 							 "void"));
    addPreVariableMethod->setVirtual();
    addPreVariableMethod->addParameter("VariableDescriptor* " + PREFIX + "variable");
    addPreVariableMethod->addParameter("ParameterSet* " + PREFIX + "pset");
    addPreVariableMethod->setFunctionBody(getAddPreVariableFunctionBody());
-   instance.addMethod(addPreVariableMethod);
+   instance.addMethod(std::move(addPreVariableMethod));
 
    // addPreEdge method
-   std::auto_ptr<Method> addPreEdgeMethod(new Method("addPreEdge", "void"));
+   std::unique_ptr<Method> addPreEdgeMethod(new Method("addPreEdge", "void"));
    addPreEdgeMethod->setVirtual();
    addPreEdgeMethod->addParameter("Edge* " + PREFIX + "edge");
    addPreEdgeMethod->addParameter("ParameterSet* " + PREFIX + "pset");
    addPreEdgeMethod->setFunctionBody(getAddPreEdgeFunctionBody());
-   instance.addMethod(addPreEdgeMethod);
+   instance.addMethod(std::move(addPreEdgeMethod));
 
    // addPreNode method
-   std::auto_ptr<Method> addPreNodeMethod(new Method("addPreNode", "void"));
+   std::unique_ptr<Method> addPreNodeMethod(new Method("addPreNode", "void"));
    addPreNodeMethod->setVirtual();
    addPreNodeMethod->addParameter("NodeDescriptor* " + PREFIX + "node");
    addPreNodeMethod->addParameter("ParameterSet* " + PREFIX + "pset");
    addPreNodeMethod->setFunctionBody(getAddPreNodeFunctionBody());
-   instance.addMethod(addPreNodeMethod);
+   instance.addMethod(std::move(addPreNodeMethod));
 
    // add getComputeCost method
-   std::auto_ptr<Method> getComputeCostMethod(
+   std::unique_ptr<Method> getComputeCostMethod(
       new Method("getComputeCost", "ConnectionIncrement*"));
    getComputeCostMethod->setVirtual();
    getComputeCostMethod->setConst();
    getComputeCostMethod->setFunctionBody("#if 0\n" + TAB + "return &_computeCost;\n" + "#endif\n" + TAB + "return NULL;\n");
-   instance.addMethod(getComputeCostMethod);
+   instance.addMethod(std::move(getComputeCostMethod));
 
    addDoInitializeMethods(instance, getInstances());
 }
@@ -210,43 +210,43 @@ void Variable::addExtraInstanceProxyMethods(Class& instance) const
    ConnectionCCBase::addExtraInstanceProxyMethods(instance);
 
    std::string baseName = getType() + "ProxyBase";
-   std::auto_ptr<BaseClass> base(new BaseClass(baseName));
+   std::unique_ptr<BaseClass> base(new BaseClass(baseName));
   
-   instance.addBaseClass(base);
+   instance.addBaseClass(std::move(base));
    instance.addHeader("\"" + baseName + ".h\"");   
 
    // addPostVariable method
-   std::auto_ptr<Method> addPostVariableMethod(new Method("addPostVariable", 
+   std::unique_ptr<Method> addPostVariableMethod(new Method("addPostVariable", 
 							  "void"));
    addPostVariableMethod->setVirtual();
    addPostVariableMethod->addParameter("VariableDescriptor* " + PREFIX + "variable");
    addPostVariableMethod->addParameter("ParameterSet* " + PREFIX + "pset");
    addPostVariableMethod->setFunctionBody(getAddPostVariableFunctionBody());
-   instance.addMethod(addPostVariableMethod);
+   instance.addMethod(std::move(addPostVariableMethod));
 
    // addPostEdge method
-   std::auto_ptr<Method> addPostEdgeMethod(new Method("addPostEdge", "void"));
+   std::unique_ptr<Method> addPostEdgeMethod(new Method("addPostEdge", "void"));
    addPostEdgeMethod->setVirtual();
    addPostEdgeMethod->addParameter("Edge* " + PREFIX + "edge");
    addPostEdgeMethod->addParameter("ParameterSet* " + PREFIX + "pset");
    addPostEdgeMethod->setFunctionBody(getAddPostEdgeFunctionBody());
-   instance.addMethod(addPostEdgeMethod);
+   instance.addMethod(std::move(addPostEdgeMethod));
 
    // addPostNode method
-   std::auto_ptr<Method> addPostNodeMethod(new Method("addPostNode", "void"));
+   std::unique_ptr<Method> addPostNodeMethod(new Method("addPostNode", "void"));
    addPostNodeMethod->setVirtual();
    addPostNodeMethod->addParameter("NodeDescriptor* " + PREFIX + "node");
    addPostNodeMethod->addParameter("ParameterSet* " + PREFIX + "pset");
    addPostNodeMethod->setFunctionBody(getAddPostNodeFunctionBody());
-   instance.addMethod(addPostNodeMethod);
+   instance.addMethod(std::move(addPostNodeMethod));
 
    // add getComputeCost method
-   std::auto_ptr<Method> getComputeCostMethod(
+   std::unique_ptr<Method> getComputeCostMethod(
       new Method("getComputeCost", "ConnectionIncrement*"));
    getComputeCostMethod->setVirtual();
    getComputeCostMethod->setConst();
    getComputeCostMethod->setFunctionBody("#if 0\n" + TAB + "return &_computeCost;\n" + "#endif\n" + TAB + "return NULL;\n");
-   instance.addMethod(getComputeCostMethod);
+   instance.addMethod(std::move(getComputeCostMethod));
 
    // add duplicate method
    instance.addDuplicateType("Variable");
@@ -259,8 +259,8 @@ void Variable::addExtraInstanceMethods(Class& instance) const
    ConnectionCCBase::addExtraInstanceMethods(instance);
 
    std::string baseName = getInstanceBaseName();
-   std::auto_ptr<BaseClass> base(new BaseClass(baseName));
-   instance.addBaseClass(base);
+   std::unique_ptr<BaseClass> base(new BaseClass(baseName));
+   instance.addBaseClass(std::move(base));
 
    // add duplicate method
    instance.addDuplicateType("Variable");
@@ -276,32 +276,32 @@ void Variable::addExtraCompCategoryBaseMethods(Class& instance) const
    instance.addHeader("<cassert>");
 
    // add getModelName Method
-   std::auto_ptr<Method> getModelNameMethod(
+   std::unique_ptr<Method> getModelNameMethod(
       new Method("getModelName", "std::string"));
    getModelNameMethod->setVirtual();
    getModelNameMethod->setConst();
    getModelNameMethod->setFunctionBody(
       TAB + "return \"" + getName() + "\";\n");
-   instance.addMethod(getModelNameMethod);
+   instance.addMethod(std::move(getModelNameMethod));
 
    // add getName Method
-   std::auto_ptr<Method> getNameMethod(
+   std::unique_ptr<Method> getNameMethod(
       new Method("getName", "std::string"));
    getNameMethod->setVirtual();
    getNameMethod->setFunctionBody(
       TAB + "return \"" + getName() + "\";\n");
-   instance.addMethod(getNameMethod);
+   instance.addMethod(std::move(getNameMethod));
 
    // add getDescription Method
-   std::auto_ptr<Method> getDescriptionMethod(
+   std::unique_ptr<Method> getDescriptionMethod(
       new Method("getDescription", "std::string"));
    getDescriptionMethod->setVirtual();
    getDescriptionMethod->setFunctionBody(
       TAB + "return \"" + getName() + "\";\n");
-   instance.addMethod(getDescriptionMethod);
+   instance.addMethod(std::move(getDescriptionMethod));
 
    // add allocateVariable Method
-   std::auto_ptr<Method> allocateVariableMethod(
+   std::unique_ptr<Method> allocateVariableMethod(
       new Method("allocateVariable", "Variable*") );
    allocateVariableMethod->setVirtual(true);
    std::ostringstream allocateVariableMethodFunctionBody;
@@ -311,33 +311,33 @@ void Variable::addExtraCompCategoryBaseMethods(Class& instance) const
       << TAB << "return v;\n";
    allocateVariableMethod->setFunctionBody(
       allocateVariableMethodFunctionBody.str());
-   instance.addMethod(allocateVariableMethod);
+   instance.addMethod(std::move(allocateVariableMethod));
 
    /* added by Jizhu Lu on 12/07/2005 */
    MacroConditional mpiConditional(MPICONDITIONAL);
 
    // added by Jizhu Lu on 04/27/2006
    CustomAttribute* demarshallerMap = new CustomAttribute("_demarshallerMap", "std::map <int, CCDemarshaller*>");
-   std::auto_ptr<Attribute> demarshallerMapAptr(demarshallerMap);
+   std::unique_ptr<Attribute> demarshallerMapAptr(demarshallerMap);
    demarshallerMap->setAccessType(AccessType::PROTECTED);
    demarshallerMap->setMacroConditional(mpiConditional);
    instance.addAttribute(demarshallerMapAptr);
 
    CustomAttribute* demarshallerMapIter = new CustomAttribute("_demarshallerMapIter", "std::map <int, CCDemarshaller*>::iterator");
-   std::auto_ptr<Attribute> demarshallerMapIterAptr(demarshallerMapIter);
+   std::unique_ptr<Attribute> demarshallerMapIterAptr(demarshallerMapIter);
    demarshallerMapIter->setAccessType(AccessType::PROTECTED);
    demarshallerMapIter->setMacroConditional(mpiConditional);
    instance.addAttribute(demarshallerMapIterAptr);
    /************************************/
 
    CustomAttribute* sendMap = new CustomAttribute("_sendMap", "std::map <int, ShallowArray<" + getInstanceBaseName() + "*> >");
-   std::auto_ptr<Attribute> sendMapAptr(sendMap);
+   std::unique_ptr<Attribute> sendMapAptr(sendMap);
    sendMap->setAccessType(AccessType::PROTECTED);   
    sendMap->setMacroConditional(mpiConditional);
    instance.addAttribute(sendMapAptr);
 
    CustomAttribute* sendMapIter = new CustomAttribute("_sendMapIter", "std::map <int, ShallowArray<" + getInstanceBaseName() + "*> >::iterator");
-   std::auto_ptr<Attribute> sendMapIterAptr(sendMapIter);
+   std::unique_ptr<Attribute> sendMapIterAptr(sendMapIter);
    sendMapIter->setAccessType(AccessType::PROTECTED);   
    sendMapIter->setMacroConditional(mpiConditional);
    instance.addAttribute(sendMapIterAptr);

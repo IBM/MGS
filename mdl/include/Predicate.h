@@ -36,7 +36,7 @@ class Predicate {
       Predicate(Operation* op, const std::string& name, 
 		const std::string& type = "");
       Predicate(const Predicate& rv);
-      virtual void duplicate(std::auto_ptr<Predicate>& rv) const;
+      virtual void duplicate(std::unique_ptr<Predicate>&& rv) const;
       virtual ~Predicate();
       std::string getResult();
       virtual void setPSet(StructType& type);

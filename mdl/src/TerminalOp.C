@@ -21,7 +21,7 @@
 #include <string>
 #include <sstream>
 
-void TerminalOp::duplicate(std::auto_ptr<Operation>& rv) const
+void TerminalOp::duplicate(std::unique_ptr<Operation>&& rv) const
 {
    rv.reset(new TerminalOp(*this));
 }

@@ -23,7 +23,7 @@
 #include <string>
 #include <sstream>
 
-void NotEqualOp::duplicate(std::auto_ptr<Operation>& rv) const
+void NotEqualOp::duplicate(std::unique_ptr<Operation>&& rv) const
 {
    rv.reset(new NotEqualOp(*this));
 }

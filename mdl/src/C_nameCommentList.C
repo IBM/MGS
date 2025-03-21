@@ -64,18 +64,18 @@ C_nameCommentList::C_nameCommentList(const C_nameCommentList& rv)
      _nameCommentVec(0) 
 {
    if (rv._nameComment) {
-      std::auto_ptr<C_nameComment> dup;
-      rv._nameComment->duplicate(dup);
+      std::unique_ptr<C_nameComment> dup;
+      rv._nameComment->duplicate(std::move(dup));
       _nameComment = dup.release();
    }
    if (rv._nameCommentList) {
-      std::auto_ptr<C_nameCommentList> dup;
-      rv._nameCommentList->duplicate(dup);
+      std::unique_ptr<C_nameCommentList> dup;
+      rv._nameCommentList->duplicate(std::move(dup));
       _nameCommentList = dup.release();
    }
 }
 
-void C_nameCommentList::duplicate(std::auto_ptr<C_nameCommentList>& rv) const
+void C_nameCommentList::duplicate(std::unique_ptr<C_nameCommentList>&& rv) const
 {
    rv.reset(new C_nameCommentList(*this));
 }

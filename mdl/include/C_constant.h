@@ -23,14 +23,14 @@
 class MdlContext;
 
 class C_constant : public C_interfaceImplementorBase {
-
+   using C_interfaceImplementorBase::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       C_constant();
       C_constant(const std::string& name, C_interfacePointerList* ipl,
 		 C_generalList* gl);
       C_constant(const C_constant& rv);
-      virtual void duplicate(std::auto_ptr<C_constant>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_constant>&& rv) const;
       virtual ~C_constant();
 };
 

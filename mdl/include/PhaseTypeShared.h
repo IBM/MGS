@@ -25,7 +25,7 @@ class PhaseTypeShared : public PhaseType {
 
    public:
       PhaseTypeShared();
-      virtual void duplicate(std::auto_ptr<PhaseType>& rv) const;
+      virtual void duplicate(std::unique_ptr<PhaseType>&& rv) const;
       virtual ~PhaseTypeShared();
       virtual std::string getType() const;
       virtual std::string getParameter(const std::string& componentType) const;

@@ -39,12 +39,12 @@ C_noop::C_noop(const C_noop& rv)
 {
 }
 
-void C_noop::duplicate(std::auto_ptr<C_noop>& rv) const
+void C_noop::duplicate(std::unique_ptr<C_noop>&& rv) const
 {
    rv.reset(new C_noop(*this));
 }
 
-void C_noop::duplicate(std::auto_ptr<C_general>& rv) const
+void C_noop::duplicate(std::unique_ptr<C_general>&& rv) const
 {
    rv.reset(new C_noop(*this));
 }

@@ -32,7 +32,7 @@ class InterfaceMapping {
       typedef std::vector<InterfaceMappingElement>::iterator iterator;
 
       InterfaceMapping(Interface* interface = 0);
-      virtual void duplicate(std::auto_ptr<InterfaceMapping>& rv) const = 0;
+      virtual void duplicate(std::unique_ptr<InterfaceMapping>&& rv) const = 0;
       virtual ~InterfaceMapping();
       void setInterface(Interface* interface) {
 	 _interface = interface;
@@ -40,7 +40,7 @@ class InterfaceMapping {
       const Interface* getInterface() const {
 	 return _interface;
       }
-      void addMapping(const std::string& name, std::auto_ptr<DataType>& data, 
+      void addMapping(const std::string& name, std::unique_ptr<DataType>&& data, 
 		      bool amp = false);
 
       std::vector<InterfaceMappingElement>& getMappings() {

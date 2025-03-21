@@ -55,12 +55,12 @@ C_psetMapping& C_psetMapping::operator=(const C_psetMapping& rv)
    return *this;
 }
 
-void C_psetMapping::duplicate(std::auto_ptr<C_psetMapping>& rv) const
+void C_psetMapping::duplicate(std::unique_ptr<C_psetMapping>&& rv) const
 {
    rv.reset(new C_psetMapping(*this));
 }
 
-void C_psetMapping::duplicate(std::auto_ptr<C_general>& rv) const
+void C_psetMapping::duplicate(std::unique_ptr<C_general>&& rv) const
 {
    rv.reset(new C_psetMapping(*this));
 }
@@ -78,8 +78,8 @@ void C_psetMapping::destructOwnedHeap()
 void C_psetMapping::copyOwnedHeap(const C_psetMapping& rv)
 {
    if (rv._member) {
-      std::auto_ptr<C_identifierList> dup;
-      rv._member->duplicate(dup);
+      std::unique_ptr<C_identifierList> dup;
+      rv._member->duplicate(std::move(dup));
       _member = dup.release();
    } else {
       _member = 0;

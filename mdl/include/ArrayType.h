@@ -28,13 +28,13 @@ class ArrayType : public DataType {
       ArrayType(DataType* dt);
       ArrayType(const ArrayType& rv);
       ArrayType& operator=(const ArrayType& rv);
-      virtual void duplicate(std::auto_ptr<DataType>& rv) const;
+      virtual void duplicate(std::unique_ptr<DataType>&& rv) const;
       virtual ~ArrayType();        
 
       const DataType* getType() const {
 	 return _type;
       }
-      void setType(std::auto_ptr<DataType>& type) {
+      void setType(std::unique_ptr<DataType>&& type) {
 	 delete _type;
 	 _type = type.release();	 
       }
@@ -69,7 +69,7 @@ class ArrayType : public DataType {
       virtual bool isSuitableForInterface() const;
 
       // This function will add this dataType to a Class as a proxy attribute.
-      virtual void addProxyAttribute(std::auto_ptr<Class>& instance) const;
+      virtual void addProxyAttribute(std::unique_ptr<Class>&& instance) const;
 
       // This function sets the characteristics of the array container.
       virtual void setArrayCharacteristics(

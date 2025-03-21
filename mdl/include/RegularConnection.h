@@ -34,13 +34,13 @@ class RegularConnection : public Connection {
 			DirectionType directionType);
       RegularConnection(const RegularConnection& rv);
       RegularConnection& operator=(const RegularConnection& rv);
-      virtual void duplicate(std::auto_ptr<RegularConnection>& rv) const;
-      virtual void duplicate(std::auto_ptr<Connection>& rv) const;
+      virtual void duplicate(std::unique_ptr<RegularConnection>&& rv) const;
+      virtual void duplicate(std::unique_ptr<Connection>&& rv) const;
       virtual ~RegularConnection();
       Predicate* getPredicate();
-      void setPredicate(std::auto_ptr<Predicate>& pre);
+      void setPredicate(std::unique_ptr<Predicate>&& pre);
       void setUserFunctionCalls(
-	 std::auto_ptr<std::vector<UserFunctionCall*> > userFunctionCall);
+	 std::unique_ptr<std::vector<UserFunctionCall*> > userFunctionCall);
 
       virtual std::string getConnectionCode(
 	 const std::string& name, const std::string& functionParameters) const;

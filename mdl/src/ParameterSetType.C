@@ -19,7 +19,7 @@
 #include <string>
 #include <memory>
 
-void ParameterSetType::duplicate(std::auto_ptr<DataType>& rv) const
+void ParameterSetType::duplicate(std::unique_ptr<DataType>&& rv) const
 {
    rv.reset(new ParameterSetType(*this));
 }

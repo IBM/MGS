@@ -28,9 +28,9 @@ void C_sharedMapping::execute(MdlContext* context)
 
 void C_sharedMapping::addToList(C_generalList* gl) 
 {  
-   std::auto_ptr<C_sharedMapping> sm;
+   std::unique_ptr<C_sharedMapping> sm;
    sm.reset(new C_sharedMapping(*this));
-   gl->addSharedMapping(sm);
+   gl->addSharedMapping(std::move(sm));
 }
 
 
@@ -47,17 +47,17 @@ C_sharedMapping::C_sharedMapping(const std::string& interface,
 {
 } 
 
-void C_sharedMapping::duplicate(std::auto_ptr<C_sharedMapping>& rv) const
+void C_sharedMapping::duplicate(std::unique_ptr<C_sharedMapping>&& rv) const
 {
    rv.reset(new C_sharedMapping(*this));
 }
 
-void C_sharedMapping::duplicate(std::auto_ptr<C_interfaceMapping>& rv) const
+void C_sharedMapping::duplicate(std::unique_ptr<C_interfaceMapping>&& rv) const
 {
    rv.reset(new C_sharedMapping(*this));
 }
 
-void C_sharedMapping::duplicate(std::auto_ptr<C_general>& rv) const
+void C_sharedMapping::duplicate(std::unique_ptr<C_general>&& rv) const
 {
    rv.reset(new C_sharedMapping(*this));
 }

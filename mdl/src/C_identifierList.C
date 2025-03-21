@@ -55,15 +55,15 @@ C_identifierList::C_identifierList(const C_identifierList& rv)
      _identifiers(rv._identifiers)
 {
    if (rv._identifierList) {
-      std::auto_ptr<C_identifierList> dup;
-      rv._identifierList->duplicate(dup);
+      std::unique_ptr<C_identifierList> dup;
+      rv._identifierList->duplicate(std::move(dup));
       _identifierList = dup.release();
    } else {
       _identifierList = 0;
    }
 }
 
-void C_identifierList::duplicate(std::auto_ptr<C_identifierList>& rv) const
+void C_identifierList::duplicate(std::unique_ptr<C_identifierList>&& rv) const
 {
    rv.reset(new C_identifierList(*this));
 }

@@ -44,12 +44,12 @@ C_nameComment::C_nameComment(const C_nameComment& rv)
 {
 }
 
-void C_nameComment::duplicate(std::auto_ptr<C_nameComment>& rv) const
+void C_nameComment::duplicate(std::unique_ptr<C_nameComment>&& rv) const
 {
    rv.reset(new C_nameComment(*this));
 }
 
-void C_nameComment::duplicate(std::auto_ptr<C_production>& rv) const
+void C_nameComment::duplicate(std::unique_ptr<C_production>&& rv) const
 {
    rv.reset(new C_nameComment(*this));
 }

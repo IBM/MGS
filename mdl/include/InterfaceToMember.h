@@ -27,8 +27,8 @@ class InterfaceToMember : public InterfaceMapping {
    public:
       enum MappingType {ONETOONE, ONETOMANY};
       InterfaceToMember(Interface* interface = 0);
-      virtual void duplicate(std::auto_ptr<InterfaceToMember>& rv) const;
-      virtual void duplicate(std::auto_ptr<InterfaceMapping>& rv) const;
+      virtual void duplicate(std::unique_ptr<InterfaceToMember>&& rv) const;
+      virtual void duplicate(std::unique_ptr<InterfaceMapping>&& rv) const;
       virtual ~InterfaceToMember();
 
       std::string getInterfaceToMemberCode(

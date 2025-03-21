@@ -57,7 +57,7 @@ ArrayType& ArrayType::operator=(const ArrayType& rv)
    return *this;
 }
 
-void ArrayType::duplicate(std::auto_ptr<DataType>& rv) const
+void ArrayType::duplicate(std::unique_ptr<DataType>&& rv) const
 {
    rv.reset(new ArrayType(*this));
 }
@@ -188,8 +188,8 @@ ArrayType::~ArrayType()
 void ArrayType::copyOwnedHeap(const ArrayType& rv)
 {
    if (rv._type) {
-      std::auto_ptr<DataType> dup;
-      rv._type->duplicate(dup);
+      std::unique_ptr<DataType> dup;
+      rv._type->duplicate(std::move(dup));
       _type = dup.release();
    }
 }
@@ -199,22 +199,23 @@ void ArrayType::destructOwnedHeap()
    delete _type;
 }
 
-void ArrayType::addProxyAttribute(std::auto_ptr<Class>& instance) const
+void ArrayType::addProxyAttribute(std::unique_ptr<Class>&& instance) const
 {
-   std::auto_ptr<DataType> dup;
-   duplicate(dup);
+   std::unique_ptr<DataType> dup;
+   duplicate(std::move(dup));
    dup->setPointer(false);
    if (_type->isPointer()) {
       ArrayType* dup2 = new ArrayType(*this);
       dup2->setPointer(false);
       dup2->_type->setPointer(false);
       dup2->setName(PREFIX + getName());
-      std::auto_ptr<DataType> dup2Ins(dup2);
-      std::auto_ptr<Attribute> att(new DataTypeAttribute(dup2Ins));
+      
+      std::unique_ptr<DataType> dup2ptr(dup2);
+      std::unique_ptr<Attribute> att(new DataTypeAttribute(std::move(dup2ptr)));
       att->setAccessType(AccessType::PROTECTED);
-      instance->addAttribute(att);
+      instance->addAttribute(std::move(att));
    }
-   std::auto_ptr<Attribute> att(new DataTypeAttribute(dup));
+   std::unique_ptr<Attribute> att(new DataTypeAttribute(std::move(dup)));
    att->setAccessType(AccessType::PROTECTED);
    instance->addAttribute(att);
 }

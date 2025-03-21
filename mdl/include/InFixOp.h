@@ -25,7 +25,7 @@ class Predicate;
 class InFixOp : public Operation {
 
    public:
-      virtual void duplicate(std::auto_ptr<Operation>& rv) const;
+      virtual void duplicate(std::unique_ptr<Operation>&& rv) const;
       virtual ~InFixOp();
       virtual void operate(Predicate* p1, Predicate* p2,  Predicate* cur);
       virtual std::string getOp() const;

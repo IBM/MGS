@@ -40,7 +40,7 @@ std::string PhaseType::getInstancePhaseMethodName(
 }
 
 void PhaseType::getInternalInstancePhaseMethod(
-   std::auto_ptr<Method>& method, const std::string& name, 
+   std::unique_ptr<Method>&& method, const std::string& name, 
    const std::string& componentType, const std::string& workUnitName,
    MachineType mach_type) const
 {

@@ -25,7 +25,7 @@ class InterfaceMappingElement {
 
    public:
       InterfaceMappingElement(const std::string& name, 
-			      std::auto_ptr<DataType>& type, 
+			      std::unique_ptr<DataType>&& type, 
 			      const std::string& typeString,
 			      bool amp = false);
       

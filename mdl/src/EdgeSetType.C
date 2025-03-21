@@ -19,7 +19,7 @@
 #include <string>
 #include <memory>
 
-void EdgeSetType::duplicate(std::auto_ptr<DataType>& rv) const
+void EdgeSetType::duplicate(std::unique_ptr<DataType>&& rv) const
 {
    rv.reset(new EdgeSetType(*this));
 }

@@ -23,7 +23,7 @@
 
 class RepertoireType : public LensType {
    public:
-      virtual void duplicate(std::auto_ptr<DataType>& rv) const;
+      virtual void duplicate(std::unique_ptr<DataType>&& rv) const;
       virtual ~RepertoireType();        
 
       virtual std::string getDescriptor() const;

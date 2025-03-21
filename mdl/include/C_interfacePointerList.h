@@ -26,7 +26,7 @@ class C_interfacePointer;
 class Interface;
 
 class C_interfacePointerList : public C_production {
-
+   using C_production::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       C_interfacePointerList();
@@ -34,8 +34,8 @@ class C_interfacePointerList : public C_production {
       C_interfacePointerList(C_interfacePointerList* ipl, 
 			     C_interfacePointer* ip);
       C_interfacePointerList(const C_interfacePointerList& rv);
-      virtual void duplicate(std::auto_ptr<C_interfacePointerList>& rv) const;
-      void releaseInterfaceVec(std::auto_ptr<std::vector<Interface*> >& ipv);
+      virtual void duplicate(std::unique_ptr<C_interfacePointerList>&& rv) const;
+      void releaseInterfaceVec(std::unique_ptr<std::vector<Interface*> >& ipv);
       virtual ~C_interfacePointerList();
 
    private:

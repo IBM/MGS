@@ -26,7 +26,7 @@ class Operation {
 
    public:
       enum _Type {_String, _Bool, _General, _Invalid};
-      virtual void duplicate(std::auto_ptr<Operation>& rv) const;
+      virtual void duplicate(std::unique_ptr<Operation>&& rv) const;
       virtual ~Operation();
       virtual void operate(Predicate* p1, Predicate* p2, Predicate* cur);
 

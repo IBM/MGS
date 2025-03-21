@@ -24,7 +24,7 @@ SignedType::SignedType()
 
 }
 
-void SignedType::duplicate(std::auto_ptr<DataType>& rv) const
+void SignedType::duplicate(std::unique_ptr<DataType>&& rv) const
 {
    rv.reset(new SignedType(*this));
 }

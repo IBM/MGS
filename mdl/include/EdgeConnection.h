@@ -31,8 +31,8 @@ class EdgeConnection : public Connection {
    public:
       EdgeConnection();
       EdgeConnection(DirectionType type);
-      virtual void duplicate(std::auto_ptr<EdgeConnection>& rv) const;
-      virtual void duplicate(std::auto_ptr<Connection>& rv) const;
+      virtual void duplicate(std::unique_ptr<EdgeConnection>&& rv) const;
+      virtual void duplicate(std::unique_ptr<Connection>&& rv) const;
       virtual ~EdgeConnection();
 
       virtual std::string getConnectionCode(

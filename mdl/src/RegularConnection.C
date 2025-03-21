@@ -54,24 +54,24 @@ RegularConnection& RegularConnection::operator=(const RegularConnection& rv)
    return *this;
 }
 
-void RegularConnection::duplicate(std::auto_ptr<RegularConnection>& rv) const
+void RegularConnection::duplicate(std::unique_ptr<RegularConnection>&& rv) const
 {
    rv.reset(new RegularConnection(*this));
 }
 
-void RegularConnection::duplicate(std::auto_ptr<Connection>& rv) const
+void RegularConnection::duplicate(std::unique_ptr<Connection>&& rv) const
 {
    rv.reset(new RegularConnection(*this));
 }
 
-void RegularConnection::setPredicate(std::auto_ptr<Predicate>& pre) 
+void RegularConnection::setPredicate(std::unique_ptr<Predicate>&& pre) 
 {
    delete _predicate;
    _predicate = pre.release();
 }
 
 void RegularConnection::setUserFunctionCalls(
-   std::auto_ptr<std::vector<UserFunctionCall*> > userFunctionCall) 
+   std::unique_ptr<std::vector<UserFunctionCall*> > userFunctionCall) 
 {
    delete _userFunctionCalls;
    _userFunctionCalls = userFunctionCall.release();
@@ -85,8 +85,8 @@ RegularConnection::~RegularConnection()
 void RegularConnection::copyOwnedHeap(const RegularConnection& rv)
 {
    if (rv._predicate) {
-      std::auto_ptr<Predicate> dup;
-      rv._predicate->duplicate(dup);
+      std::unique_ptr<Predicate> dup;
+      rv._predicate->duplicate(std::move(dup));
       _predicate = dup.release();
    } else {
       _predicate = 0;
@@ -96,9 +96,9 @@ void RegularConnection::copyOwnedHeap(const RegularConnection& rv)
       _userFunctionCalls = new std::vector<UserFunctionCall*>();
       std::vector<UserFunctionCall*>::const_iterator it
 	 , end = rv._userFunctionCalls->end();
-      std::auto_ptr<UserFunctionCall> dup;   
+      std::unique_ptr<UserFunctionCall> dup;   
       for (it = rv._userFunctionCalls->begin(); it != end; ++it) {
-	 (*it)->duplicate(dup);
+	 (*it)->duplicate(std::move(dup));
 	 _userFunctionCalls->push_back(dup.release());
       }
    } else {

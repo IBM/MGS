@@ -28,7 +28,8 @@ class C_interfacePointerList;
 class Edge;
 
 class C_edgeConnection : public C_connection {
-
+   using C_connection::duplicate;  // Make base class method visible
+   using C_production::execute;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context,
 			   Edge* edge);
@@ -36,9 +37,9 @@ class C_edgeConnection : public C_connection {
       C_edgeConnection();
       C_edgeConnection(C_interfacePointerList* ipl, C_generalList* gl,
 		   Connection::DirectionType type);
-      virtual void duplicate(std::auto_ptr<C_edgeConnection>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_connection>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_general>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_edgeConnection>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_connection>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_general>&& rv) const;
       virtual ~C_edgeConnection();
 
    protected:

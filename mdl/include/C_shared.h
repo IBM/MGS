@@ -36,17 +36,17 @@ class C_shared : public C_general {
       C_shared();
       C_shared(C_generalList* generalList); 
       C_shared(const C_shared& rv);
-      virtual void duplicate(std::auto_ptr<C_shared>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_general>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_shared>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_general>&& rv) const;
       virtual ~C_shared();
       void setGeneral(C_general* general);
 
-      void releasePhases(std::auto_ptr<std::vector<Phase*> >& phases);
+      void releasePhases(std::unique_ptr<std::vector<Phase*> >& phases);
       void releaseTriggeredFunctions(
-	 std::auto_ptr<std::vector<TriggeredFunction*> >& triggeredFunctions);
-      void releaseDataTypeVec(std::auto_ptr<std::vector<DataType*> >& dtv);
+	 std::unique_ptr<std::vector<TriggeredFunction*> >& triggeredFunctions);
+      void releaseDataTypeVec(std::unique_ptr<std::vector<DataType*> >& dtv);
       void releaseOptionalDataTypeVec(
-	 std::auto_ptr<std::vector<DataType*> >& dtv);
+	 std::unique_ptr<std::vector<DataType*> >& dtv);
 
       std::vector<Phase*>* getPhases();
       std::vector<TriggeredFunction*>* getTriggeredFunctions();

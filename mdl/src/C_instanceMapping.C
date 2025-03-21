@@ -28,9 +28,9 @@ void C_instanceMapping::execute(MdlContext* context)
 
 void C_instanceMapping::addToList(C_generalList* gl) 
 {  
-   std::auto_ptr<C_instanceMapping> im;
+   std::unique_ptr<C_instanceMapping> im;
    im.reset(new C_instanceMapping(*this));
-   gl->addInstanceMapping(im);
+   gl->addInstanceMapping(std::move(im));
 }
 
 
@@ -47,17 +47,17 @@ C_instanceMapping::C_instanceMapping(const std::string& interface,
 {
 } 
 
-void C_instanceMapping::duplicate(std::auto_ptr<C_instanceMapping>& rv) const
+void C_instanceMapping::duplicate(std::unique_ptr<C_instanceMapping>&& rv) const
 {
    rv.reset(new C_instanceMapping(*this));
 }
 
-void C_instanceMapping::duplicate(std::auto_ptr<C_interfaceMapping>& rv) const
+void C_instanceMapping::duplicate(std::unique_ptr<C_interfaceMapping>&& rv) const
 {
    rv.reset(new C_instanceMapping(*this));
 }
 
-void C_instanceMapping::duplicate(std::auto_ptr<C_general>& rv) const
+void C_instanceMapping::duplicate(std::unique_ptr<C_general>&& rv) const
 {
    rv.reset(new C_instanceMapping(*this));
 }

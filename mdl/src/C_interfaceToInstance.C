@@ -28,9 +28,9 @@ void C_interfaceToInstance::execute(MdlContext* context)
 
 void C_interfaceToInstance::addToList(C_generalList* gl) 
 {  
-   std::auto_ptr<C_interfaceToInstance> im;
+   std::unique_ptr<C_interfaceToInstance> im;
    im.reset(new C_interfaceToInstance(*this));
-   gl->addInterfaceToInstance(im);
+   gl->addInterfaceToInstance(std::move(im));
 }
 
 C_interfaceToInstance::C_interfaceToInstance() 
@@ -46,18 +46,18 @@ C_interfaceToInstance::C_interfaceToInstance(
 } 
 
 void C_interfaceToInstance::duplicate(
-   std::auto_ptr<C_interfaceToInstance>& rv) const
+   std::unique_ptr<C_interfaceToInstance>&& rv) const
 {
    rv.reset(new C_interfaceToInstance(*this));
 }
 
 void C_interfaceToInstance::duplicate(
-   std::auto_ptr<C_interfaceMapping>& rv) const
+   std::unique_ptr<C_interfaceMapping>&& rv) const
 {
    rv.reset(new C_interfaceToInstance(*this));
 }
 
-void C_interfaceToInstance::duplicate(std::auto_ptr<C_general>& rv) const
+void C_interfaceToInstance::duplicate(std::unique_ptr<C_general>&& rv) const
 {
    rv.reset(new C_interfaceToInstance(*this));
 }

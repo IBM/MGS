@@ -38,9 +38,9 @@ void C_userFunction::addToList(C_generalList* gl)
    const std::vector<std::string>& ids = _identifierList->getIdentifiers();
    std::vector<std::string>::const_iterator it, end = ids.end();
    for (it = ids.begin(); it != end; ++ it) {
-      std::auto_ptr<UserFunction> userFunction(
+      std::unique_ptr<UserFunction> userFunction(
 	 new UserFunction(*it));
-      gl->addUserFunction(userFunction);
+      gl->addUserFunction(std::move(userFunction));
    }
 }
 
@@ -73,12 +73,12 @@ C_userFunction& C_userFunction::operator=(const C_userFunction& rv)
    return *this;
 }
 
-void C_userFunction::duplicate(std::auto_ptr<C_userFunction>& rv) const
+void C_userFunction::duplicate(std::unique_ptr<C_userFunction>&& rv) const
 {
    rv.reset(new C_userFunction(*this));
 }
 
-void C_userFunction::duplicate(std::auto_ptr<C_general>& rv) const
+void C_userFunction::duplicate(std::unique_ptr<C_general>&& rv) const
 {
    rv.reset(new C_userFunction(*this));
 }
@@ -91,8 +91,8 @@ C_userFunction::~C_userFunction()
 void C_userFunction::copyOwnedHeap(const C_userFunction& rv)
 {
    if (rv._identifierList) {
-      std::auto_ptr<C_identifierList> dup;
-      rv._identifierList->duplicate(dup);
+      std::unique_ptr<C_identifierList> dup;
+      rv._identifierList->duplicate(std::move(dup));
       _identifierList = dup.release();
    } else {
       _identifierList = 0;

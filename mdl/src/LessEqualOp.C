@@ -23,7 +23,7 @@
 #include <string>
 #include <sstream>
 
-void LessEqualOp::duplicate(std::auto_ptr<Operation>& rv) const
+void LessEqualOp::duplicate(std::unique_ptr<Operation>&& rv) const
 {
    rv.reset(new LessEqualOp(*this));
 }

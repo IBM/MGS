@@ -23,7 +23,7 @@
 
 class TriggerType : public LensType {
    public:
-      virtual void duplicate(std::auto_ptr<DataType>& rv) const;
+      virtual void duplicate(std::unique_ptr<DataType>&& rv) const;
       virtual ~TriggerType();        
 
       virtual std::string getDescriptor() const;

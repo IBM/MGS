@@ -19,7 +19,7 @@
 #include <string>
 #include <memory>
 
-void NDPairListType::duplicate(std::auto_ptr<DataType>& rv) const
+void NDPairListType::duplicate(std::unique_ptr<DataType>&& rv) const
 {
    rv.reset(new NDPairListType(*this));
 }

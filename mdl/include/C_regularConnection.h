@@ -29,7 +29,7 @@ class Predicate;
 class ConnectionCCBase;
 
 class C_regularConnection : public C_connection {
-
+   using C_connection::execute;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context,
 			   ConnectionCCBase* connectionBase);
@@ -40,9 +40,9 @@ class C_regularConnection : public C_connection {
 			  Connection::DirectionType directionType,
 			  Predicate* predicate = 0);
       C_regularConnection(const C_regularConnection& rv);
-      virtual void duplicate(std::auto_ptr<C_regularConnection>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_connection>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_general>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_regularConnection>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_connection>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_general>&& rv) const;
       virtual ~C_regularConnection();
 
    protected:

@@ -29,9 +29,9 @@ class StructType : public DataType, public Generatable {
       // Structtype is not always only generatable so the filename 
       // can be == "" for some instantiations.
       StructType(const std::string& fileName = "");
-      virtual void duplicate(std::auto_ptr<StructType>& rv) const;
-      virtual void duplicate(std::auto_ptr<DataType>& rv) const;
-      virtual void duplicate(std::auto_ptr<Generatable>& rv) const;
+      virtual void duplicate(std::unique_ptr<StructType>&& rv) const;
+      virtual void duplicate(std::unique_ptr<DataType>&& rv) const;
+      virtual void duplicate(std::unique_ptr<Generatable>&& rv) const;
       virtual void generate() const;
       std::string getInAttrPSetStr() const;
       std::string getOutAttrPSetStr() const;

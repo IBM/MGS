@@ -29,7 +29,7 @@ class PhaseTypeGridLayers : public PhaseType {
 
    public:
       PhaseTypeGridLayers();
-      virtual void duplicate(std::auto_ptr<PhaseType>& rv) const;
+      virtual void duplicate(std::unique_ptr<PhaseType>&& rv) const;
       virtual ~PhaseTypeGridLayers();
       virtual std::string getType() const;
       virtual std::string getParameter(const std::string& componentType) const;

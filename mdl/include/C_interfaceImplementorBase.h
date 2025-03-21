@@ -27,7 +27,8 @@ class C_interfacePointerList;
 class InterfaceImplementorBase;
 
 class C_interfaceImplementorBase : public C_production {
-
+   protected:
+   using C_production::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       C_interfaceImplementorBase();
@@ -36,7 +37,7 @@ class C_interfaceImplementorBase : public C_production {
 				 , C_generalList* gl);
       C_interfaceImplementorBase(const C_interfaceImplementorBase& rv);
       virtual void duplicate(
-	 std::auto_ptr<C_interfaceImplementorBase>& rv) const;
+	 std::unique_ptr<C_interfaceImplementorBase>&& rv) const;
       virtual ~C_interfaceImplementorBase();
       void executeInterfaceImplementorBase(MdlContext* context,
 					   InterfaceImplementorBase* cc) const;

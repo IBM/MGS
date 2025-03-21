@@ -21,7 +21,7 @@
 #include <string>
 #include <sstream>
 
-void ParanthesisOp::duplicate(std::auto_ptr<Operation>& rv) const
+void ParanthesisOp::duplicate(std::unique_ptr<Operation>&& rv) const
 {
    rv.reset(new ParanthesisOp(*this));
 }

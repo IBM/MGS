@@ -25,13 +25,14 @@ class MdlContext;
 class C_generalList;
 
 class C_general : public C_production {
-
+   protected:
+   using C_production::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       virtual void addToList(C_generalList* gl);
       C_general();
       C_general(const C_general& rv);
-      virtual void duplicate(std::auto_ptr<C_general>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_general>&& rv) const;
       virtual ~C_general();
 
 };

@@ -42,9 +42,9 @@ void C_computeTime::addToList(C_generalList* gl)
    const std::vector<std::string>& ids = _identifierList->getIdentifiers();
    std::vector<std::string>::const_iterator it, end = ids.end();
    for (it = ids.begin(); it != end; ++ it) {
-      std::auto_ptr<UserFunction> computeTime(
+      std::unique_ptr<UserFunction> computeTime(
 	 new UserFunction(*it));
-      gl->addUserFunction(computeTime);
+      gl->addUserFunction(std::move(computeTime));
    }
 }
 
@@ -83,12 +83,12 @@ C_computeTime& C_computeTime::operator=(const C_computeTime& rv)
    return *this;
 }
 
-void C_computeTime::duplicate(std::auto_ptr<C_computeTime>& rv) const
+void C_computeTime::duplicate(std::unique_ptr<C_computeTime>&& rv) const
 {
    rv.reset(new C_computeTime(*this));
 }
 
-void C_computeTime::duplicate(std::auto_ptr<C_general>& rv) const
+void C_computeTime::duplicate(std::unique_ptr<C_general>&& rv) const
 {
    rv.reset(new C_computeTime(*this));
 }
@@ -101,8 +101,8 @@ C_computeTime::~C_computeTime()
 void C_computeTime::copyOwnedHeap(const C_computeTime& rv)
 {
    if (rv._identifierList) {
-      std::auto_ptr<C_identifierList> dup;
-      rv._identifierList->duplicate(dup);
+      std::unique_ptr<C_identifierList> dup;
+      rv._identifierList->duplicate(std::move(dup));
       _identifierList = dup.release();
    } else {
       _identifierList = 0;

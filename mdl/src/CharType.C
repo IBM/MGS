@@ -19,7 +19,7 @@
 #include <string>
 #include <memory>
 
-void CharType::duplicate(std::auto_ptr<DataType>& rv) const
+void CharType::duplicate(std::unique_ptr<DataType>&& rv) const
 {
    rv.reset(new CharType(*this));
 }

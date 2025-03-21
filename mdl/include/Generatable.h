@@ -40,7 +40,7 @@ class Generatable {
       Generatable(const std::string& fileName);
       Generatable(const Generatable& rv);
       Generatable& operator=(const Generatable& rv);
-      virtual void duplicate(std::auto_ptr<Generatable>& rv) const = 0;
+      virtual void duplicate(std::unique_ptr<Generatable>&& rv) const = 0;
       virtual ~Generatable();        
 
       //void addSupportForMachineType(MachineType mach){ _supportedMachineTypes.insert(mach) };

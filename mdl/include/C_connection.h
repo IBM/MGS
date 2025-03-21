@@ -30,14 +30,16 @@ class ConnectionCCBase;
 class Connection;
 
 class C_connection : public C_general {
-
+   protected:
+   using C_general::duplicate;  // Make base class method visible
+   using C_general::execute;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       virtual void addToList(C_generalList* gl) = 0;
       C_connection();
       C_connection(C_interfacePointerList* ipl, C_generalList* gl);
       C_connection(const C_connection& rv);
-      virtual void duplicate(std::auto_ptr<C_connection>& rv) const = 0;
+      virtual void duplicate(std::unique_ptr<C_connection>&& rv) const = 0;
       virtual ~C_connection();
 
    protected:

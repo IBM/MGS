@@ -26,13 +26,14 @@ class C_generalList;
 class ToolBase;
 
 class C_toolBase : public C_production {
-
+   protected:
+   using C_production::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       C_toolBase();
       C_toolBase(const std::string& name, C_generalList* gl);
       C_toolBase(const C_toolBase& rv);
-      virtual void duplicate(std::auto_ptr<C_toolBase>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_toolBase>&& rv) const;
       virtual ~C_toolBase();
       void executeToolBase(MdlContext* context, ToolBase* tb) const;
    protected:

@@ -36,8 +36,8 @@ class C_struct : public C_general {
       C_struct(const std::string& name, C_dataTypeList* dtl, 
 	       bool frameWorkElement = false);
       C_struct(const C_struct& rv);
-      virtual void duplicate(std::auto_ptr<C_struct>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_general>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_struct>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_general>&& rv) const;
       virtual ~C_struct();
       
    protected:

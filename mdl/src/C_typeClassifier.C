@@ -24,14 +24,14 @@
 void C_typeClassifier::execute(MdlContext* context) 
 {
    if (_typeCore != 0) {
-      std::auto_ptr<DataType> dt;
+      std::unique_ptr<DataType> dt;
       _typeCore->execute(context);
-      _typeCore->releaseDataType(dt);
+      _typeCore->releaseDataType(std::move(dt));
       _dataType = dt.release();
    } else if (_array != 0) {
-      std::auto_ptr<DataType> dt;
+      std::unique_ptr<DataType> dt;
       _array->execute(context);
-      _array->releaseDataType(dt);
+      _array->releaseDataType(std::move(dt));
       _dataType = dt.release();
    } else {
       throw InternalException
@@ -69,28 +69,28 @@ C_typeClassifier::C_typeClassifier(const C_typeClassifier& rv)
    , _dataType(0) 
 {
    if (rv._typeCore) {
-      std::auto_ptr<C_typeCore> dup;
-      rv._typeCore->duplicate(dup);
+      std::unique_ptr<C_typeCore> dup;
+      rv._typeCore->duplicate(std::move(dup));
       _typeCore = dup.release();
    }
    if (rv._array) {
-      std::auto_ptr<C_array> dup;
-      rv._array->duplicate(dup);
+      std::unique_ptr<C_array> dup;
+      rv._array->duplicate(std::move(dup));
       _array = dup.release();
    }
    if (rv._dataType) {
-      std::auto_ptr<DataType> dup;
-      rv._dataType->duplicate(dup);
+      std::unique_ptr<DataType> dup;
+      rv._dataType->duplicate(std::move(dup));
       _dataType = dup.release();
    }
 }
 
-void C_typeClassifier::duplicate(std::auto_ptr<C_typeClassifier>& rv) const
+void C_typeClassifier::duplicate(std::unique_ptr<C_typeClassifier>&& rv) const
 {
    rv.reset(new C_typeClassifier(*this));
 }
 
-void C_typeClassifier::releaseDataType(std::auto_ptr<DataType>& dt) 
+void C_typeClassifier::releaseDataType(std::unique_ptr<DataType>&& dt) 
 {
    dt.reset(_dataType);
    _dataType = 0;

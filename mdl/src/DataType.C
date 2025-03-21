@@ -589,21 +589,21 @@ std::string DataType::getNotLegitimateDataItemString(
    return os.str();
 }
 
-void DataType::addProxyAttribute(std::auto_ptr<Class>& instance) const
+void DataType::addProxyAttribute(std::unique_ptr<Class>&& instance) const
 {
-   std::auto_ptr<DataType> dup;
-   duplicate(dup);
+   std::unique_ptr<DataType> dup;
+   duplicate(std::move(dup));
    dup->setPointer(false);
    instance->addDataTypeHeader(dup.get());
    instance->addDataTypeDataItemHeader(dup.get());
-   std::auto_ptr<Attribute> att(new DataTypeAttribute(dup));
+   std::unique_ptr<Attribute> att(new DataTypeAttribute(std::move(dup)));
    att->setAccessType(AccessType::PROTECTED);
    instance->addAttribute(att);
 }
 
 void DataType::addSenderMethod(Class& instance) const
 {
-   std::auto_ptr<Method> sender(
+   std::unique_ptr<Method> sender(
       new Method(getSenderMethodName(), "void"));
    sender->setAccessType(AccessType::PROTECTED);
    MacroConditional mpiConditional(MPICONDITIONAL);
@@ -617,7 +617,7 @@ void DataType::addSenderMethod(Class& instance) const
    }
    funBody += _name + ";\n";
    sender->setFunctionBody(funBody);
-   instance.addMethod(sender);
+   instance.addMethod(std::move(sender));
 }
 
 std::string DataType::getSenderMethodName() const

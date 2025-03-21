@@ -30,31 +30,31 @@ void C_loadPhase::execute(MdlContext* context)
 
 void C_loadPhase::addToList(C_generalList* gl) 
 {
-   std::auto_ptr<PhaseType> dup;
+   std::unique_ptr<PhaseType> dup;
    const std::vector<C_phaseIdentifier*>& 
       ids = _phaseIdentifierList->getPhaseIdentifiers();
 
    std::vector<C_phaseIdentifier*>::const_iterator it, end = ids.end();
    for (it = ids.begin(); it != end; ++it) {   
-      _phaseType->duplicate(dup);
-      std::auto_ptr<Phase> phase(
-	 new LoadPhase((*it)->getName(), dup, (*it)->getIdentifiers()));
-      gl->addPhase(phase);
+      _phaseType->duplicate(std::move(dup));
+      std::unique_ptr<Phase> phase(
+	 new LoadPhase((*it)->getName(), std::move(dup), (*it)->getIdentifiers()));
+      gl->addPhase(std::move(phase));
    }
 }
 
 C_loadPhase::C_loadPhase(C_phaseIdentifierList* phaseIdentifierList, 
-			 std::auto_ptr<PhaseType>& phaseType) 
-   : C_phase(phaseIdentifierList, phaseType)
+			 std::unique_ptr<PhaseType>&& phaseType) 
+   : C_phase(phaseIdentifierList, std::move(phaseType))
 {
 } 
 
-void C_loadPhase::duplicate(std::auto_ptr<C_phase>& rv) const
+void C_loadPhase::duplicate(std::unique_ptr<C_phase>&& rv) const
 {
    rv.reset(new C_loadPhase(*this));
 }
 
-void C_loadPhase::duplicate(std::auto_ptr<C_general>& rv) const
+void C_loadPhase::duplicate(std::unique_ptr<C_general>&& rv) const
 {
    rv.reset(new C_loadPhase(*this));
 }

@@ -57,12 +57,12 @@ C_phaseIdentifier& C_phaseIdentifier::operator=(const C_phaseIdentifier& rv)
    return *this;
 }
 
-void C_phaseIdentifier::duplicate(std::auto_ptr<C_phaseIdentifier>& rv) const
+void C_phaseIdentifier::duplicate(std::unique_ptr<C_phaseIdentifier>&& rv) const
 {
    rv.reset(new C_phaseIdentifier(*this));
 }
 
-void C_phaseIdentifier::duplicate(std::auto_ptr<C_production>& rv) const
+void C_phaseIdentifier::duplicate(std::unique_ptr<C_production>&& rv) const
 {
    rv.reset(new C_phaseIdentifier(*this));
 }
@@ -75,8 +75,8 @@ C_phaseIdentifier::~C_phaseIdentifier()
 void C_phaseIdentifier::copyOwnedHeap(const C_phaseIdentifier& rv)
 {
    if (rv._identifierList) {
-      std::auto_ptr<C_identifierList> dup;
-      rv._identifierList->duplicate(dup);
+      std::unique_ptr<C_identifierList> dup;
+      rv._identifierList->duplicate(std::move(dup));
       _identifierList = dup.release();
    } else {
       _identifierList = 0;

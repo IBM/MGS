@@ -26,9 +26,9 @@ class PhaseType;
 class InitPhase : public Phase {
 
    public:
-      InitPhase(const std::string& name, std::auto_ptr<PhaseType>& phaseType,
+      InitPhase(const std::string& name, std::unique_ptr<PhaseType>&& phaseType,
 		const std::vector<std::string>& pvn);
-      virtual void duplicate(std::auto_ptr<Phase>& rv) const;
+      virtual void duplicate(std::unique_ptr<Phase>&& rv) const;
       virtual ~InitPhase();    
    protected:
       virtual std::string getInternalType() const;

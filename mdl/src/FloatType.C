@@ -18,7 +18,7 @@
 #include <string>
 #include <memory>
 
-void FloatType::duplicate(std::auto_ptr<DataType>& rv) const
+void FloatType::duplicate(std::unique_ptr<DataType>&& rv) const
 {
    rv.reset(new FloatType(*this));
 }

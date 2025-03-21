@@ -32,9 +32,9 @@ void C_userFunctionCall::execute(MdlContext* context)
 
 void C_userFunctionCall::addToList(C_generalList* gl) 
 {
-   std::auto_ptr<UserFunctionCall> userFunctionCall(
+   std::unique_ptr<UserFunctionCall> userFunctionCall(
       new UserFunctionCall(_userFunctionCall));
-   gl->addUserFunctionCall(userFunctionCall);
+   gl->addUserFunctionCall(std::move(userFunctionCall));
 }
 
 
@@ -56,12 +56,12 @@ C_userFunctionCall::C_userFunctionCall(const C_userFunctionCall& rv)
 
 }
 
-void C_userFunctionCall::duplicate(std::auto_ptr<C_userFunctionCall>& rv) const
+void C_userFunctionCall::duplicate(std::unique_ptr<C_userFunctionCall>&& rv) const
 {
    rv.reset(new C_userFunctionCall(*this));
 }
 
-void C_userFunctionCall::duplicate(std::auto_ptr<C_general>& rv) const
+void C_userFunctionCall::duplicate(std::unique_ptr<C_general>&& rv) const
 {
    rv.reset(new C_userFunctionCall(*this));
 }

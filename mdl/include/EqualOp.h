@@ -26,7 +26,7 @@ class Predicate;
 class EqualOp : public AllValidOp {
 
    public:
-      virtual void duplicate(std::auto_ptr<Operation>& rv) const;
+      virtual void duplicate(std::unique_ptr<Operation>&& rv) const;
       virtual ~EqualOp();
       virtual std::string getOp() const;
 

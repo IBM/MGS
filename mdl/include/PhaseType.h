@@ -28,7 +28,7 @@ class PhaseType {
 
    public:
       PhaseType();
-      virtual void duplicate(std::auto_ptr<PhaseType>& rv) const = 0;
+      virtual void duplicate(std::unique_ptr<PhaseType>&& rv) const = 0;
       virtual ~PhaseType();
 
       virtual std::string getType() const =0;
@@ -48,7 +48,7 @@ class PhaseType {
 
    protected:
       void getInternalInstancePhaseMethod(
-	 std::auto_ptr<Method>& method, const std::string& name, 
+	 std::unique_ptr<Method>&& method, const std::string& name, 
 	 const std::string& componentType,
 	 const std::string& workUnitName,
 	 MachineType mach_type = MachineType::CPU) const;

@@ -25,15 +25,15 @@
 class MdlContext;
 
 class C_typeCore : public C_production {
-
+   using C_production::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       C_typeCore();
       C_typeCore(DataType* dt);
       C_typeCore(const std::string& s);
       C_typeCore(const C_typeCore& rv);
-      virtual void duplicate(std::auto_ptr<C_typeCore>& rv) const;
-      void releaseDataType(std::auto_ptr<DataType>& dt);
+      virtual void duplicate(std::unique_ptr<C_typeCore>&& rv) const;
+      void releaseDataType(std::unique_ptr<DataType>&& dt);
       virtual ~C_typeCore();
       
    private:

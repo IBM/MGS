@@ -27,7 +27,7 @@ class PredicateFunction {
 
    public:
       PredicateFunction(const std::string& name);
-      virtual void duplicate(std::auto_ptr<PredicateFunction>& rv) const;
+      virtual void duplicate(std::unique_ptr<PredicateFunction>&& rv) const;
       virtual ~PredicateFunction();
      
       std::string getName() const {

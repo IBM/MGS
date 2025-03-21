@@ -19,7 +19,7 @@
 #include <string>
 #include <memory>
 
-void GridType::duplicate(std::auto_ptr<DataType>& rv) const
+void GridType::duplicate(std::unique_ptr<DataType>&& rv) const
 {
    rv.reset(new GridType(*this));
 }

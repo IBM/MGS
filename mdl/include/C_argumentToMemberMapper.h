@@ -39,7 +39,7 @@ class C_argumentToMemberMapper : public C_general {
       C_argumentToMemberMapper(C_generalList* argumentList,
 			       bool ellipsisIncluded = false);
       C_argumentToMemberMapper(const C_argumentToMemberMapper& rv);
-      virtual void duplicate(std::auto_ptr<C_general>& rv) const =0;
+      virtual void duplicate(std::unique_ptr<C_general>&& rv) const =0;
       virtual ~C_argumentToMemberMapper();
       
    private:

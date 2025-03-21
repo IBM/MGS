@@ -25,7 +25,7 @@ class UserFunctionCall {
 
    public:
       UserFunctionCall(const std::string& name);
-      virtual void duplicate(std::auto_ptr<UserFunctionCall>& rv) const;
+      virtual void duplicate(std::unique_ptr<UserFunctionCall>&& rv) const;
       virtual ~UserFunctionCall();
      
       std::string getName() const {

@@ -25,14 +25,14 @@
 class MdlContext;
 
 class C_identifierList : public C_production {
-
+   using C_production::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       C_identifierList();
       C_identifierList(const std::string& id);
       C_identifierList(C_identifierList* ids, const std::string& id);
       C_identifierList(const C_identifierList& rv);
-      virtual void duplicate(std::auto_ptr<C_identifierList>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_identifierList>&& rv) const;
       virtual ~C_identifierList();
       const std::vector<std::string>& getIdentifiers() {
 	 return _identifiers;

@@ -34,7 +34,7 @@ PSetToMember::PSetToMember(StructType* pset)
 }
 
 void PSetToMember::addMapping(const std::string& name, 
-			      std::auto_ptr<DataType>& data) 
+			      std::unique_ptr<DataType>&& data) 
 {
    iterator it = find(name);
    if (it != _mappings.end()) {
@@ -107,7 +107,7 @@ std::string PSetToMember::getPSetToMemberString() const
    return os.str();
 }
 
-void PSetToMember::duplicate(std::auto_ptr<PSetToMember>& rv) const
+void PSetToMember::duplicate(std::unique_ptr<PSetToMember>&& rv) const
 {
    rv.reset(new PSetToMember(*this));
 }
@@ -535,8 +535,8 @@ void PSetToMember::copyOwnedHeap(const PSetToMember& rv)
       for (it = _mappings.begin(); it != end; ++it) {
 	 elemType elem;
 	 elem.first = it->first;
-	 std::auto_ptr<DataType> dup;
-	 it->second->duplicate(dup);
+	 std::unique_ptr<DataType> dup;
+	 it->second->duplicate(std::move(dup));
 	 elem.second = dup.release();
 	 _mappings.push_back(elem);
       }      

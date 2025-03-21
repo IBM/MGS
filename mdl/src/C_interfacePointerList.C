@@ -31,7 +31,7 @@ void C_interfacePointerList::execute(MdlContext* context)
    if (_interfacePointerList) {
       _interfacePointerList->execute(context);
       delete _interfacePointerVec;
-      std::auto_ptr<std::vector<Interface*> > dtv;
+      std::unique_ptr<std::vector<Interface*> > dtv;
       _interfacePointerList->releaseInterfaceVec(dtv);
       _interfacePointerVec = dtv.release();      
    } else {
@@ -67,25 +67,25 @@ C_interfacePointerList::C_interfacePointerList(
    , _interfacePointerVec(rv._interfacePointerVec) 
 {
    if (rv._interfacePointer) {
-      std::auto_ptr<C_interfacePointer> dup;
-      rv._interfacePointer->duplicate(dup);
+      std::unique_ptr<C_interfacePointer> dup;
+      rv._interfacePointer->duplicate(std::move(dup));
       _interfacePointer = dup.release();
    }
    if (rv._interfacePointerList) {
-      std::auto_ptr<C_interfacePointerList> dup;
-      rv._interfacePointerList->duplicate(dup);
+      std::unique_ptr<C_interfacePointerList> dup;
+      rv._interfacePointerList->duplicate(std::move(dup));
       _interfacePointerList = dup.release();
    }
 }
 
 void C_interfacePointerList::duplicate(
-   std::auto_ptr<C_interfacePointerList>& rv) const
+   std::unique_ptr<C_interfacePointerList>&& rv) const
 {
    rv.reset(new C_interfacePointerList(*this));
 }
 
 void C_interfacePointerList::releaseInterfaceVec(
-   std::auto_ptr<std::vector<Interface*> >& dtv) 
+   std::unique_ptr<std::vector<Interface*> >& dtv) 
 {
    dtv.reset(_interfacePointerVec);
    _interfacePointerVec = 0;

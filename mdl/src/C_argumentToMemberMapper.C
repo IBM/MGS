@@ -39,12 +39,12 @@ void C_argumentToMemberMapper::executeMapper(
    if (_argumentList) {
       _argumentList->execute(context);
       if (_argumentList->getDataTypeVec()) {
-	 std::auto_ptr<std::vector<DataType*> > dataTypeVec;
+	 std::unique_ptr<std::vector<DataType*> > dataTypeVec;
 	 _argumentList->releaseDataTypeVec(dataTypeVec);
 	 std::vector<DataType*>::iterator it; 
 	 std::vector<DataType*>::iterator end = dataTypeVec->end();
 	 for (it = dataTypeVec->begin(); it != end; it++) {
-	    std::auto_ptr<DataType> dataType;
+	    std::unique_ptr<DataType> dataType;
 	    dataType.reset(*it);
 	    if (!dataType->isLegitimateDataItem()) {
 	       SyntaxErrorException e(
@@ -84,8 +84,8 @@ C_argumentToMemberMapper::C_argumentToMemberMapper(
    : C_general(rv), _argumentList(0), _ellipsisIncluded(rv._ellipsisIncluded)
 {
    if (rv._argumentList) {
-      std::auto_ptr<C_generalList> dup;
-      rv._argumentList->duplicate(dup);
+      std::unique_ptr<C_generalList> dup;
+      rv._argumentList->duplicate(std::move(dup));
       _argumentList = dup.release();
    }
 }

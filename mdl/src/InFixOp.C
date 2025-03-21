@@ -21,7 +21,7 @@
 #include <string>
 #include <sstream>
 
-void InFixOp::duplicate(std::auto_ptr<Operation>& rv) const
+void InFixOp::duplicate(std::unique_ptr<Operation>&& rv) const
 {
    rv.reset(new InFixOp(*this));
 }

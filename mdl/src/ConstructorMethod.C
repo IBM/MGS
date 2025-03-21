@@ -1,3 +1,4 @@
+#include <memory>
 // =================================================================
 // Licensed Materials - Property of IBM
 //
@@ -38,7 +39,7 @@ ConstructorMethod::ConstructorMethod(const std::string& name,
 {
 }
 
-void ConstructorMethod::duplicate(std::auto_ptr<Method>& dup) const
+void ConstructorMethod::duplicate(std::unique_ptr<Method>&& dup) const
 {
    dup.reset(new ConstructorMethod(*this));
 }

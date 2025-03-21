@@ -26,7 +26,7 @@ class C_production {
       virtual void execute(MdlContext* context);
       C_production();
       C_production(const C_production& rv);
-      virtual void duplicate(std::auto_ptr<C_production>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_production>&& rv) const;
       virtual ~C_production();
       int getLineNumber() const;
       void setLineNumber(int lineNumber);

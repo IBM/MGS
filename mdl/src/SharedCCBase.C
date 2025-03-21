@@ -62,18 +62,18 @@ void SharedCCBase::copyOwnedHeap(const SharedCCBase& rv)
 {
    if (rv._sharedPhases.size() > 0) {
       std::vector<Phase*>::const_iterator it, end = rv._sharedPhases.end();
-      std::auto_ptr<Phase> dup;   
+      std::unique_ptr<Phase> dup;   
       for (it = rv._sharedPhases.begin(); it != end; ++it) {
-	 (*it)->duplicate(dup);
+	 (*it)->duplicate(std::move(dup));
 	 _sharedPhases.push_back(dup.release());
       }
    } 
    if (rv._sharedTriggeredFunctions.size() > 0) {
       std::vector<TriggeredFunction*>::const_iterator it, 
 	 end = rv._sharedTriggeredFunctions.end();
-      std::auto_ptr<TriggeredFunction> dup;   
+      std::unique_ptr<TriggeredFunction> dup;   
       for (it = rv._sharedTriggeredFunctions.begin(); it != end; ++it) {
-	 (*it)->duplicate(dup);
+	 (*it)->duplicate(std::move(dup));
 	 _sharedTriggeredFunctions.push_back(dup.release());
       }
    } 
@@ -98,7 +98,7 @@ void SharedCCBase::destructOwnedHeap()
    }
 }
 
-void SharedCCBase::addSharedPhase(std::auto_ptr<Phase>& phase)
+void SharedCCBase::addSharedPhase(std::unique_ptr<Phase>&& phase)
 {
    // For instance phases.
    isDuplicatePhase(phase.get());
@@ -115,7 +115,7 @@ void SharedCCBase::addSharedPhase(std::auto_ptr<Phase>& phase)
 }
 
 void SharedCCBase::addSharedTriggeredFunction(
-   std::auto_ptr<TriggeredFunction>& triggeredFunction)
+   std::unique_ptr<TriggeredFunction>&& triggeredFunction)
 {
    // For instance triggered functions.
    isDuplicateTriggeredFunction(triggeredFunction->getName());
@@ -180,13 +180,13 @@ SharedCCBase::~SharedCCBase()
 }
 
 void SharedCCBase::addExtraServiceHeaders(
-   std::auto_ptr<Class>& instance) const
+   std::unique_ptr<Class>&& instance) const
 {
    instance->addDataTypeHeaders(_shareds);
 }
 
 void SharedCCBase::addExtraOptionalServiceHeaders(
-   std::auto_ptr<Class>& instance) const
+   std::unique_ptr<Class>&& instance) const
 {
    instance->addDataTypeHeaders(_optionalSharedServices);
 }
@@ -260,22 +260,22 @@ void SharedCCBase::addExtraInstanceBaseMethods(Class& instance) const
    instance.addFriendDeclaration(compCategoryFriend);
 
    // getSharedMembers method
-   std::auto_ptr<Method> getSharedMembersMethod(
+   std::unique_ptr<Method> getSharedMembersMethod(
       new Method("getSharedMembers", "const " + getSharedMembersName() + "&"));
    getSharedMembersMethod->setConst();
    getSharedMembersMethod->setFunctionBody(
       TAB + "return *" + getCompCategoryBaseName() + "::"
       + getSharedMembersAttName() + ";\n");
-   instance.addMethod(getSharedMembersMethod);
+   instance.addMethod(std::move(getSharedMembersMethod));
 
    // getNonConstSharedMembers method
-   std::auto_ptr<Method> getNonConstSharedMembersMethod(
+   std::unique_ptr<Method> getNonConstSharedMembersMethod(
       new Method("getNonConstSharedMembers", getSharedMembersName() + "&"));
    getNonConstSharedMembersMethod->setAccessType(AccessType::PRIVATE);
    getNonConstSharedMembersMethod->setFunctionBody(
       TAB + "return *" + getCompCategoryBaseName() + "::"
       + getSharedMembersAttName() + ";\n");
-   instance.addMethod(getNonConstSharedMembersMethod);
+   instance.addMethod(std::move(getNonConstSharedMembersMethod));
 }
 
 void SharedCCBase::addExtraInstanceProxyMethods(Class& instance) const
@@ -289,21 +289,21 @@ void SharedCCBase::addExtraInstanceProxyMethods(Class& instance) const
    instance.addFriendDeclaration(compCategoryFriend);
 
    // getSharedMembers method
-   std::auto_ptr<Method> getSharedMembersMethod(
+   std::unique_ptr<Method> getSharedMembersMethod(
       new Method("getSharedMembers", "const " + getSharedMembersName() + "&"));
    getSharedMembersMethod->setFunctionBody(
       TAB + "return *" + getCompCategoryBaseName() + "::"
       + getSharedMembersAttName() + ";\n");
-   instance.addMethod(getSharedMembersMethod);
+   instance.addMethod(std::move(getSharedMembersMethod));
 
    // getNonConstSharedMembers method
-   std::auto_ptr<Method> getNonConstSharedMembersMethod(
+   std::unique_ptr<Method> getNonConstSharedMembersMethod(
       new Method("getNonConstSharedMembers", getSharedMembersName() + "&"));
    getNonConstSharedMembersMethod->setAccessType(AccessType::PRIVATE);
    getNonConstSharedMembersMethod->setFunctionBody(
       TAB + "return *" + getCompCategoryBaseName() + "::"
       + getSharedMembersAttName() + ";\n");
-   instance.addMethod(getNonConstSharedMembersMethod);
+   instance.addMethod(std::move(getNonConstSharedMembersMethod));
 }
 
 void SharedCCBase::addExtraInstanceMethods(Class& instance) const
@@ -323,7 +323,7 @@ void SharedCCBase::addExtraCompCategoryBaseMethods(Class& instance) const
    instance.addHeader("\"" + getWorkUnitSharedName() + ".h\"");
    instance.addExtraSourceHeader("\"" + getCompCategoryName() + ".h\"");
 
-   std::auto_ptr<Attribute> attCup;
+   std::unique_ptr<Attribute> attCup;
    CustomAttribute* shared = new CustomAttribute(getSharedMembersAttName(), 
 						 getSharedMembersName(), 
 						 AccessType::PUBLIC);
@@ -333,11 +333,11 @@ void SharedCCBase::addExtraCompCategoryBaseMethods(Class& instance) const
    instance.addAttribute(attCup);
 
    // getSharedMembers method
-   std::auto_ptr<Method> getSharedMembersMethod(
+   std::unique_ptr<Method> getSharedMembersMethod(
       new Method("getSharedMembers", getSharedMembersName() + "&"));
    getSharedMembersMethod->setFunctionBody(
       TAB + "return *" + getSharedMembersAttName() + ";\n");
-   instance.addMethod(getSharedMembersMethod);
+   instance.addMethod(std::move(getSharedMembersMethod));
 }
 
 void SharedCCBase::addExtraCompCategoryMethods(Class& instance) const
@@ -351,23 +351,23 @@ void SharedCCBase::addExtraCompCategoryMethods(Class& instance) const
 
 void SharedCCBase::generateSharedMembers()
 {
-   std::auto_ptr<Class> instance(new Class(getSharedMembersName()));
+   std::unique_ptr<Class> instance(new Class(getSharedMembersName()));
 
    instance->addHeader("<memory>");
    instance->addHeader("<sstream>");
    instance->addExtraSourceHeader("\"SyntaxErrorException.h\"");
    instance->addClass("NDPairList");
 
-   addExtraOptionalServiceHeaders(instance);
+   addExtraOptionalServiceHeaders(std::move(instance));
 
    // Add the instances.
    instance->addAttributes(_shareds, AccessType::PUBLIC);
 
-   std::auto_ptr<Method> setUpMethod(new Method("setUp", "void") );
+   std::unique_ptr<Method> setUpMethod(new Method("setUp", "void") );
    setUpMethod->addParameter("const NDPairList& ndplist");
    setUpMethod->setVirtual();
    setUpMethod->setFunctionBody(getSetupFromNDPairListMethodBody(_shareds));
-   instance->addMethod(setUpMethod);
+   instance->addMethod(std::move(setUpMethod));
 
    mdl::addOptionalServicesToClass(*(instance.get()), 
 				   _optionalSharedServices);
@@ -397,12 +397,12 @@ void SharedCCBase::generateWorkUnitShared()
 {
    std::string compCatName = getCompCategoryName();
    std::string fullName = getWorkUnitCommonName("Shared");
-   std::auto_ptr<Class> instance(new Class(fullName));
+   std::unique_ptr<Class> instance(new Class(fullName));
 
    std::string baseName = "WorkUnit";
-   std::auto_ptr<BaseClass> base(
+   std::unique_ptr<BaseClass> base(
       new BaseClass(baseName));
-   instance->addBaseClass(base);
+   instance->addBaseClass(std::move(base));
 
    std::string computeStateAttName = 
       "(" + compCatName + "::*_computeState) (RNG&)"; 
@@ -415,7 +415,7 @@ void SharedCCBase::generateWorkUnitShared()
    instance->addClass(getCompCategoryBaseName());
    instance->addHeader("\"rndm.h\"");
    
-   std::auto_ptr<Attribute> attCup;
+   std::unique_ptr<Attribute> attCup;
 
    CustomAttribute* compCategoryAtt = new CustomAttribute(
       "_compCategory", compCatName, AccessType::PRIVATE);
@@ -436,7 +436,7 @@ void SharedCCBase::generateWorkUnitShared()
    instance->addAttribute(attCup);
 
    // Constructor 
-   std::auto_ptr<ConstructorMethod> constructor(
+   std::unique_ptr<ConstructorMethod> constructor(
       new ConstructorMethod(fullName));
    constructor->addParameter("void " + computeStatePar);
    constructor->addParameter(getCompCategoryBaseName() + "* compCategory");
@@ -449,11 +449,11 @@ void SharedCCBase::generateWorkUnitShared()
       << compCatName << "*>(compCategory);\n"
       << TAB << "_rng.reSeedShared(urandom(_compCategory->getSimulation().getSharedWorkUnitRandomSeedGenerator()));\n";   
    constructor->setFunctionBody(constructorFB.str());
-   std::auto_ptr<Method> consToIns(constructor.release());
-   instance->addMethod(consToIns);
+   std::unique_ptr<Method> consToIns(constructor.release());
+   instance->addMethod(std::move(consToIns));
 
    // execute 
-   std::auto_ptr<Method> executeMethod(
+   std::unique_ptr<Method> executeMethod(
       new Method("execute", "void"));
    executeMethod->setVirtual();
    std::ostringstream executeMethodFB;   
@@ -464,7 +464,7 @@ void SharedCCBase::generateWorkUnitShared()
    executeMethodFB
       << ");\n";
    executeMethod->setFunctionBody(executeMethodFB.str());
-   instance->addMethod(executeMethod);
+   instance->addMethod(std::move(executeMethod));
 
    // Don't add the standard methods
    instance->addBasicDestructor();

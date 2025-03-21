@@ -19,7 +19,7 @@
 #include <string>
 #include <memory>
 
-void LongType::duplicate(std::auto_ptr<DataType>& rv) const
+void LongType::duplicate(std::unique_ptr<DataType>&& rv) const
 {
    rv.reset(new LongType(*this));
 }

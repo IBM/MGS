@@ -31,11 +31,11 @@ class C_phase : public C_general {
    public:
       virtual void execute(MdlContext* context);
       C_phase(C_phaseIdentifierList* phaseIdentifierList, 
-	      std::auto_ptr<PhaseType>& phaseType); 
+	      std::unique_ptr<PhaseType>&& phaseType); 
       C_phase(const C_phase& rv);
       C_phase& operator=(const C_phase& rv);
-      virtual void duplicate(std::auto_ptr<C_phase>& rv) const = 0;
-      virtual void duplicate(std::auto_ptr<C_general>& rv) const = 0;
+      virtual void duplicate(std::unique_ptr<C_phase>&& rv) const = 0;
+      virtual void duplicate(std::unique_ptr<C_general>&& rv) const = 0;
       virtual ~C_phase();
       
    protected:

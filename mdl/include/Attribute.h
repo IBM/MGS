@@ -1,3 +1,4 @@
+#include <memory>
 // =================================================================
 // Licensed Materials - Property of IBM
 //
@@ -29,7 +30,7 @@ class Attribute
 {
    public:
       Attribute(AccessType accessType = AccessType::PUBLIC);
-      virtual void duplicate(std::auto_ptr<Attribute>& dup) const = 0;
+      virtual void duplicate(std::unique_ptr<Attribute>&& dup) const = 0;
       virtual ~Attribute();
       virtual std::string getName() const = 0;
       virtual std::string getType() const = 0;

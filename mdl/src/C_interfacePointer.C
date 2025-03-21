@@ -63,7 +63,7 @@ C_interfacePointer::C_interfacePointer(const C_interfacePointer& rv)
 
 }
 
-void C_interfacePointer::duplicate(std::auto_ptr<C_interfacePointer>& rv) const
+void C_interfacePointer::duplicate(std::unique_ptr<C_interfacePointer>&& rv) const
 {
    rv.reset(new C_interfacePointer(*this));
 }

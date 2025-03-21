@@ -30,11 +30,11 @@ class Functor : public ToolBase {
       Functor(const std::string& fileName);
       Functor(const Functor& rv);
       Functor& operator=(const Functor& rv);
-      virtual void duplicate(std::auto_ptr<Generatable>& rv) const;
+      virtual void duplicate(std::unique_ptr<Generatable>&& rv) const;
       virtual std::string getType() const;
       virtual std::string generateExtra() const;
       virtual std::string generateTitleExtra() const;
-      void setReturnType(std::auto_ptr<DataType>& ret);
+      void setReturnType(std::unique_ptr<DataType>&& ret);
       const std::string& getCategory() const;
       void setCategory(const std::string& category);
       virtual ~Functor();        
@@ -54,12 +54,12 @@ class Functor : public ToolBase {
       void generateInstance();
 
    private:
-      void createInitMethod(std::auto_ptr<Method>& method, 
+      void createInitMethod(std::unique_ptr<Method>&& method, 
 			    const MemberContainer<DataType>& args,
 			    const std::string& funcName, 
 			    const std::string& attName,
 			    bool userInit, bool hasRetVal);
-      void createUserMethod(std::auto_ptr<Method>& method, 
+      void createUserMethod(std::unique_ptr<Method>&& method, 
 			    const MemberContainer<DataType>& args,
 			    const std::string& funcName, 
 			    const std::string& retType,

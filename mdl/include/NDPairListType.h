@@ -23,7 +23,7 @@
 
 class NDPairListType : public LensType {
    public:
-      virtual void duplicate(std::auto_ptr<DataType>& rv) const;
+      virtual void duplicate(std::unique_ptr<DataType>&& rv) const;
       virtual ~NDPairListType();        
 
       virtual std::string getDescriptor() const;

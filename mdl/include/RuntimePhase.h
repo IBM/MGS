@@ -27,9 +27,9 @@ class RuntimePhase : public Phase {
 
    public:
       RuntimePhase(const std::string& name, 
-		   std::auto_ptr<PhaseType>& phaseType,
+		   std::unique_ptr<PhaseType>&& phaseType,
 		   const std::vector<std::string>& pvn);
-      virtual void duplicate(std::auto_ptr<Phase>& rv) const;
+      virtual void duplicate(std::unique_ptr<Phase>&& rv) const;
       virtual ~RuntimePhase();    
    protected:
       virtual std::string getInternalType() const;

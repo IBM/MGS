@@ -1,3 +1,4 @@
+#include <memory>
 // =================================================================
 // Licensed Materials - Property of IBM
 //
@@ -22,7 +23,7 @@ TriggeredFunctionInstance::TriggeredFunctionInstance(
 }
 
 void TriggeredFunctionInstance::duplicate(
-   std::auto_ptr<TriggeredFunction>& rv) const
+   std::unique_ptr<TriggeredFunction>&& rv) const
 {
    rv.reset(new TriggeredFunctionInstance(*this));
 }

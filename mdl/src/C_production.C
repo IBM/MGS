@@ -32,7 +32,7 @@ C_production::C_production(const C_production& rv)
 {
 }
 
-void C_production::duplicate(std::auto_ptr<C_production>& rv)const
+void C_production::duplicate(std::unique_ptr<C_production>&& rv)const
 {
    rv.reset(new C_production(*this));
 }

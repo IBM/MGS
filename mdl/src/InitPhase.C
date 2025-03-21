@@ -20,13 +20,13 @@
 #include <string>
 
 InitPhase::InitPhase(const std::string& name, 
-		     std::auto_ptr<PhaseType>& phaseType,
+		     std::unique_ptr<PhaseType>&& phaseType,
 		     const std::vector<std::string>& pvn)
-   : Phase(name, phaseType, pvn)
+   : Phase(name, std::move(phaseType), pvn)
 {
 }
 
-void InitPhase::duplicate(std::auto_ptr<Phase>& rv) const
+void InitPhase::duplicate(std::unique_ptr<Phase>&& rv) const
 {
    rv.reset(new InitPhase(*this));
 }

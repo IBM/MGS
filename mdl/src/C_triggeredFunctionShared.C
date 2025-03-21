@@ -31,9 +31,9 @@ void C_triggeredFunctionShared::addToList(C_generalList* gl)
    const std::vector<std::string>& ids = _identifierList->getIdentifiers();
    std::vector<std::string>::const_iterator it, end = ids.end();
    for (it = ids.begin(); it != end; ++it) {   
-      std::auto_ptr<TriggeredFunction> phase(
+      std::unique_ptr<TriggeredFunction> phase(
 	 new TriggeredFunctionShared(*it, _runType));
-      gl->addTriggeredFunction(phase);
+      gl->addTriggeredFunction(std::move(phase));
    }
 }
 
@@ -44,12 +44,12 @@ C_triggeredFunctionShared::C_triggeredFunctionShared(
 } 
 
 void C_triggeredFunctionShared::duplicate(
-   std::auto_ptr<C_triggeredFunction>& rv) const
+   std::unique_ptr<C_triggeredFunction>&& rv) const
 {
    rv.reset(new C_triggeredFunctionShared(*this));
 }
 
-void C_triggeredFunctionShared::duplicate(std::auto_ptr<C_general>& rv) const
+void C_triggeredFunctionShared::duplicate(std::unique_ptr<C_general>&& rv) const
 {
    rv.reset(new C_triggeredFunctionShared(*this));
 }

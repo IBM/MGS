@@ -34,13 +34,13 @@ class BaseClass
       BaseClass(const std::string& name);
       BaseClass(const BaseClass& rv);
       BaseClass& operator=(const BaseClass& rv);
-      void duplicate(std::auto_ptr<BaseClass>& dup) const;
+      void duplicate(std::unique_ptr<BaseClass>&& dup) const;
       ~BaseClass();
       const std::string& getName() const ;
       const std::string& getConditional() const ;
       void setName(const std::string name);
       const std::vector<Attribute*>& getAttributes() const;
-      void addAttribute(std::auto_ptr<Attribute>& att);     
+      void addAttribute(std::unique_ptr<Attribute>&& att);     
       std::string getInitString() const;
 
    private:

@@ -28,7 +28,7 @@ class Variable : public ConnectionCCBase {
       Variable(const std::string& fileName);
       Variable(const Variable& rv);
       Variable operator=(const Variable& rv);
-      virtual void duplicate(std::auto_ptr<Generatable>& rv) const;
+      virtual void duplicate(std::unique_ptr<Generatable>&& rv) const;
       virtual ~Variable();
       virtual std::string getType() const;
    protected:

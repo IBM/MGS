@@ -26,7 +26,7 @@ class Predicate;
 class GreaterOp : public GSValidOp {
 
    public:
-      virtual void duplicate(std::auto_ptr<Operation>& rv) const;
+      virtual void duplicate(std::unique_ptr<Operation>&& rv) const;
       virtual ~GreaterOp();
       virtual std::string getOp() const;
 

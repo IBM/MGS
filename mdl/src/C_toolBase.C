@@ -53,13 +53,13 @@ C_toolBase::C_toolBase(const C_toolBase& rv)
    : C_production(rv), _name(rv._name), _generalList(0)  
 {
    if (rv._generalList) {
-      std::auto_ptr<C_generalList> dup;
-      rv._generalList->duplicate(dup);
+      std::unique_ptr<C_generalList> dup;
+      rv._generalList->duplicate(std::move(dup));
       _generalList = dup.release();
    }
 }
 
-void C_toolBase::duplicate(std::auto_ptr<C_toolBase>& rv) const
+void C_toolBase::duplicate(std::unique_ptr<C_toolBase>&& rv) const
 {
    rv.reset(new C_toolBase(*this));
 }

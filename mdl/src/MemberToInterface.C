@@ -37,12 +37,12 @@ MemberToInterface::MemberToInterface(Interface* interface)
 {
 }
 
-void MemberToInterface::duplicate(std::auto_ptr<MemberToInterface>& rv) const
+void MemberToInterface::duplicate(std::unique_ptr<MemberToInterface>&& rv) const
 {
    rv.reset(new MemberToInterface(*this));
 }
 
-void MemberToInterface::duplicate(std::auto_ptr<InterfaceMapping>& rv) const
+void MemberToInterface::duplicate(std::unique_ptr<InterfaceMapping>&& rv) const
 {
    rv.reset(new MemberToInterface(*this));
 }
@@ -174,7 +174,7 @@ void MemberToInterface::setupAccessorMethods(Class& instance) const
 	 path += "." + *sit;
       }
 
-      std::auto_ptr<Method> method(
+      std::unique_ptr<Method> method(
 	 new Method(PREFIX + "get_" + _interface->getName() + "_" + 
 		    it->getName(),
 		    it->getTypeString()));
@@ -221,7 +221,7 @@ void MemberToInterface::setupAccessorMethods(Class& instance) const
 	       );
       }
       method->setVirtual();
-      instance.addMethod(method);
+      instance.addMethod(std::move(method));
    }      
 }
 
@@ -239,7 +239,7 @@ void MemberToInterface::setupProxyAccessorMethods(Class& instance) const
 	 path += "." + *sit;
       }
 
-      std::auto_ptr<Method> method(
+      std::unique_ptr<Method> method(
 	 new Method(PREFIX + "get_" + _interface->getName() + "_" + 
 		    it->getName(),
 		    it->getTypeString()));
@@ -287,7 +287,7 @@ void MemberToInterface::setupProxyAccessorMethods(Class& instance) const
       }
       method->setVirtual();
 
-      instance.addMethod(method);
+      instance.addMethod(std::move(method));
    }      
 }
 

@@ -31,8 +31,8 @@ class C_noop : public C_general {
       virtual void addToList(C_generalList* gl);
       C_noop();
       C_noop(const C_noop& rv);
-      virtual void duplicate(std::auto_ptr<C_noop>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_general>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_noop>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_general>&& rv) const;
       virtual ~C_noop();
       
 };

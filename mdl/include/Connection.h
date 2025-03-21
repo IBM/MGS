@@ -36,14 +36,14 @@ class Connection {
       Connection(DirectionType directionType = _PRE,
 		 ComponentType componentType = _EDGE, 		 
 		 bool graph = false);
-      virtual void duplicate(std::auto_ptr<Connection>& rv) const = 0;
+      virtual void duplicate(std::unique_ptr<Connection>&& rv) const = 0;
       virtual ~Connection();
       bool getGraph() const;
       void setGraph(bool graph);
 
       std::string getString() const;
 
-      void addInterfaceToMember(std::auto_ptr<InterfaceToMember>& im);
+      void addInterfaceToMember(std::unique_ptr<InterfaceToMember>&& im);
 
       const MemberContainer<InterfaceToMember>& getInterfaces() {
 	 return _interfaces;
@@ -91,7 +91,7 @@ class Connection {
 
       void addMappingToInterface(
 	 const std::string& interface, const std::string& interfaceMember,
-	 const std::string& typeStr, std::auto_ptr<DataType>& dtToInsert);
+	 const std::string& typeStr, std::unique_ptr<DataType>&& dtToInsert);
 
    protected:
       MemberContainer<InterfaceToMember> _interfaces;    

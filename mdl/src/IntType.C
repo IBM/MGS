@@ -19,7 +19,7 @@
 #include <string>
 #include <memory>
 
-void IntType::duplicate(std::auto_ptr<DataType>& rv) const
+void IntType::duplicate(std::unique_ptr<DataType>&& rv) const
 {
    rv.reset(new IntType(*this));
 }

@@ -36,9 +36,9 @@ class C_dataType : public C_general {
       C_dataType(C_typeClassifier* tc, C_nameCommentList* ncl, 
 		 bool derived = false, bool optional = false); 
       C_dataType(const C_dataType& rv);
-      virtual void duplicate(std::auto_ptr<C_dataType>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_general>& rv) const;
-      void releaseDataTypeVec(std::auto_ptr<std::vector<DataType*> >& dtv);
+      virtual void duplicate(std::unique_ptr<C_dataType>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_general>&& rv) const;
+      void releaseDataTypeVec(std::unique_ptr<std::vector<DataType*> >& dtv);
       virtual ~C_dataType();
       
    private:

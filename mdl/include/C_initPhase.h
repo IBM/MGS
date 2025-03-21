@@ -31,9 +31,9 @@ class C_initPhase : public C_phase {
       virtual void execute(MdlContext* context);
       virtual void addToList(C_generalList* gl);
       C_initPhase(C_phaseIdentifierList* phaseIdentifierList, 
-		  std::auto_ptr<PhaseType>& phaseType); 
-      virtual void duplicate(std::auto_ptr<C_phase>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_general>& rv) const;
+		  std::unique_ptr<PhaseType>&& phaseType); 
+      virtual void duplicate(std::unique_ptr<C_phase>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_general>&& rv) const;
       virtual ~C_initPhase();      
 };
 

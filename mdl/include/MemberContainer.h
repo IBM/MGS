@@ -46,7 +46,7 @@ class MemberContainer {
 	 copyOwnedHeap(rv);
 	 return *this;
       }
-      void duplicate(std::auto_ptr<MemberContainer<T> >& rv) const {
+      void duplicate(std::unique_ptr<MemberContainer<T> >& rv) const {
 	 rv.reset(new MemberContainer<T>(*this));
       }
       inline bool containsMember(const std::string& name) {
@@ -105,7 +105,7 @@ class MemberContainer {
 	 _members.push_back(type(name, member.release()));
 	 return (_members.rbegin())->second;
       } 
-      inline T* addMember(const std::string& name, std::auto_ptr<T>& member) {
+      inline T* addMember(const std::string& name, std::unique_ptr<T>&& member) {
 	 const_iterator it, end = _members.end();
 	 for (it = _members.begin(); it != end; it++) {
 	    if (it->first == name) {
@@ -119,7 +119,7 @@ class MemberContainer {
 	 return (_members.rbegin())->second;
       } 
       inline T* addMemberToFront(const std::string& name, 
-				 std::auto_ptr<T>& member) {
+				 std::unique_ptr<T>&& member) {
 	 const_iterator it, end = _members.end();
 	 for (it = _members.begin(); it != end; it++) {
 	    if (it->first == name) {
@@ -163,8 +163,8 @@ class MemberContainer {
       void copyOwnedHeap(const MemberContainer<T>& rv) {
 	 const_iterator it, end = rv._members.end();
 	 for (it = rv._members.begin(); it != end; it++) {
-	    std::auto_ptr<T> dup;
-	    it->second->duplicate(dup);
+	    std::unique_ptr<T> dup;
+	    it->second->duplicate(std::move(dup));
 	    _members.push_back(type(it->first, dup.release()));
 	 }
       }

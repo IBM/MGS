@@ -18,7 +18,7 @@
 #include <string>
 #include <memory>
 
-void LongDoubleType::duplicate(std::auto_ptr<DataType>& rv) const
+void LongDoubleType::duplicate(std::unique_ptr<DataType>&& rv) const
 {
    rv.reset(new LongDoubleType(*this));
 }

@@ -62,8 +62,8 @@ C_triggeredFunction::~C_triggeredFunction()
 void C_triggeredFunction::copyOwnedHeap(const C_triggeredFunction& rv)
 {
    if (rv._identifierList) {
-      std::auto_ptr<C_identifierList> dup;
-      rv._identifierList->duplicate(dup);
+      std::unique_ptr<C_identifierList> dup;
+      rv._identifierList->duplicate(std::move(dup));
       _identifierList = dup.release();
    } else {
       _identifierList = 0;

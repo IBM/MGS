@@ -44,23 +44,23 @@ Predicate::Predicate(const Predicate& rv)
      _operation(0)
 {
    if (rv._predicate1) {
-      std::auto_ptr<Predicate> dup;
-      rv._predicate1->duplicate(dup);
+      std::unique_ptr<Predicate> dup;
+      rv._predicate1->duplicate(std::move(dup));
       _predicate1 = dup.release();
    }
    if (rv._predicate2) {
-      std::auto_ptr<Predicate> dup;
-      rv._predicate2->duplicate(dup);
+      std::unique_ptr<Predicate> dup;
+      rv._predicate2->duplicate(std::move(dup));
       _predicate2 = dup.release();
    }
    if (rv._operation) {
-      std::auto_ptr<Operation> dup;
-      rv._operation->duplicate(dup);
+      std::unique_ptr<Operation> dup;
+      rv._operation->duplicate(std::move(dup));
       _operation = dup.release();
    }
 }
 
-void Predicate::duplicate(std::auto_ptr<Predicate>& rv) const
+void Predicate::duplicate(std::unique_ptr<Predicate>&& rv) const
 {
    rv.reset(new Predicate(*this));
 }

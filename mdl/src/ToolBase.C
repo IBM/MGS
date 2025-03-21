@@ -95,7 +95,7 @@ void ToolBase::generateInitializer(const std::string& type
 				   , bool userInit) 
 {
    std::string fullName = PREFIX + getModuleName() + type;
-   std::auto_ptr<Class> instance(new Class(fullName));
+   std::unique_ptr<Class> instance(new Class(fullName));
 
    instance->addHeader("\"SyntaxErrorException.h\"");
    instance->addHeader("\"DataItem.h\"");
@@ -104,7 +104,7 @@ void ToolBase::generateInitializer(const std::string& type
 
    instance->addAttributes(members);
 
-   std::auto_ptr<Method> doInitMethod(
+   std::unique_ptr<Method> doInitMethod(
       new Method("initialize", "std::vector<DataItem*>::const_iterator") );
    doInitMethod->addParameter("const std::vector<DataItem*>& args");
    std::ostringstream doInitFunctionBody;
@@ -136,7 +136,7 @@ void ToolBase::generateInitializer(const std::string& type
    doInitFunctionBody 
       << TAB << "return " + PREFIX + "currentDI;\n"; 
    doInitMethod->setFunctionBody(doInitFunctionBody.str());
-   instance->addMethod(doInitMethod);
+   instance->addMethod(std::move(doInitMethod));
 
    instance->addStandardMethods();
    _classes.push_back(instance.release());

@@ -28,9 +28,9 @@ void C_psetToShared::execute(MdlContext* context)
 
 void C_psetToShared::addToList(C_generalList* gl) 
 {  
-   std::auto_ptr<C_psetToShared> im;
+   std::unique_ptr<C_psetToShared> im;
    im.reset(new C_psetToShared(*this));
-   gl->addPSetToShared(im);
+   gl->addPSetToShared(std::move(im));
 }
 
 C_psetToShared::C_psetToShared() 
@@ -45,18 +45,18 @@ C_psetToShared::C_psetToShared(const std::string& psetMember,
 } 
 
 void C_psetToShared::duplicate(
-   std::auto_ptr<C_psetToShared>& rv) const
+   std::unique_ptr<C_psetToShared>&& rv) const
 {
    rv.reset(new C_psetToShared(*this));
 }
 
 void C_psetToShared::duplicate(
-   std::auto_ptr<C_psetMapping>& rv) const
+   std::unique_ptr<C_psetMapping>&& rv) const
 {
    rv.reset(new C_psetToShared(*this));
 }
 
-void C_psetToShared::duplicate(std::auto_ptr<C_general>& rv) const
+void C_psetToShared::duplicate(std::unique_ptr<C_general>&& rv) const
 {
    rv.reset(new C_psetToShared(*this));
 }

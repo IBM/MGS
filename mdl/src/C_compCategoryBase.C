@@ -51,7 +51,7 @@ C_compCategoryBase::C_compCategoryBase(const std::string& name,
 {
 }
 
-void C_compCategoryBase::duplicate(std::auto_ptr<C_compCategoryBase>& rv) const
+void C_compCategoryBase::duplicate(std::unique_ptr<C_compCategoryBase>&& rv) const
 {
    rv.reset(new C_compCategoryBase(*this));
 }
@@ -60,7 +60,7 @@ void C_compCategoryBase::executeCompCategoryBase(
    MdlContext* context, CompCategoryBase* cc) const
 {
    if (_generalList->getPhases()) {
-      std::auto_ptr<std::vector<Phase*> > phases;
+      std::unique_ptr<std::vector<Phase*> > phases;
       _generalList->releasePhases(phases);
                                                                                    
       std::vector<Phase*>::iterator it, end = phases->end();
@@ -70,16 +70,16 @@ void C_compCategoryBase::executeCompCategoryBase(
       cc->setInstancePhases(phases);
    }
 
-   std::auto_ptr<StructType> inAttr;
+   std::unique_ptr<StructType> inAttr;
    if (_generalList->getInAttrPSet()) {
-      _generalList->releaseInAttrPSet(inAttr);
+      _generalList->releaseInAttrPSet(std::move(inAttr));
    } else {
       inAttr.reset(new StructType());
    }
    inAttr->setName(INATTRPSETNAME);
-   cc->setInAttrPSet(inAttr);
+   cc->setInAttrPSet(std::move(inAttr));
    if (_generalList->getTriggeredFunctions()) { 
-      std::auto_ptr<std::vector<TriggeredFunction*> > triggeredFunctions;
+      std::unique_ptr<std::vector<TriggeredFunction*> > triggeredFunctions;
       _generalList->releaseTriggeredFunctions(triggeredFunctions);
       cc->setTriggeredFunctions(triggeredFunctions);
    }

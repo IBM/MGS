@@ -24,7 +24,7 @@
 class SignedType : public DataType {
    public:
       SignedType();
-      virtual void duplicate(std::auto_ptr<DataType>& rv) const;
+      virtual void duplicate(std::unique_ptr<DataType>&& rv) const;
       bool isSigned() const;
       void setSigned(bool sign);
       virtual bool isBasic() const;

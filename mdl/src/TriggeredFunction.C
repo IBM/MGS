@@ -1,3 +1,4 @@
+#include <memory>
 // =================================================================
 // Licensed Materials - Property of IBM
 //
@@ -78,7 +79,7 @@ std::string TriggeredFunction::getReturnString() const
 void TriggeredFunction::addEventMethodToClass(Class& instance, 
 					      bool pureVirtual) const
 {
-   std::auto_ptr<Method> eventMethod(
+   std::unique_ptr<Method> eventMethod(
       new Method(getName(), "void"));
    eventMethod->addParameter("Trigger* trigger");
    eventMethod->addParameter("NDPairList* ndPairList");
@@ -87,5 +88,5 @@ void TriggeredFunction::addEventMethodToClass(Class& instance,
    } else {
       eventMethod->setVirtual();
    }
-   instance.addMethod(eventMethod);   
+   instance.addMethod(std::move(eventMethod));   
 }

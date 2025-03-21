@@ -31,7 +31,7 @@ class FunctionPredicate : public Predicate
    public:
       FunctionPredicate();
       FunctionPredicate(Operation* op, const std::string& name);
-      virtual void duplicate(std::auto_ptr<Predicate>& rv) const;
+      virtual void duplicate(std::unique_ptr<Predicate>&& rv) const;
       virtual ~FunctionPredicate();
       virtual void setFunctionPredicateName(
 	 std::vector<PredicateFunction*>* functions);

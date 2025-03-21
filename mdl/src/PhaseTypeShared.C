@@ -25,7 +25,7 @@ PhaseTypeShared::PhaseTypeShared()
 {
 }
 
-void PhaseTypeShared::duplicate(std::auto_ptr<PhaseType>& rv) const
+void PhaseTypeShared::duplicate(std::unique_ptr<PhaseType>&& rv) const
 {
    rv.reset(new PhaseTypeShared(*this));
 }

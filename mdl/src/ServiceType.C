@@ -19,7 +19,7 @@
 #include <string>
 #include <memory>
 
-void ServiceType::duplicate(std::auto_ptr<DataType>& rv) const
+void ServiceType::duplicate(std::unique_ptr<DataType>&& rv) const
 {
    rv.reset(new ServiceType(*this));
 }

@@ -26,7 +26,7 @@ UserFunction::UserFunction(const std::string& name)
 
 }
 
-void UserFunction::duplicate(std::auto_ptr<UserFunction>& rv) const
+void UserFunction::duplicate(std::unique_ptr<UserFunction>&& rv) const
 {
    rv.reset(new UserFunction(*this));
 }
@@ -40,7 +40,7 @@ void UserFunction::generateInstanceMethod(Class& instance,
 					  bool pureVirtual,
 					  const ConnectionCCBase& ccBase) const
 {
-   std::auto_ptr<Method> method(
+   std::unique_ptr<Method> method(
       new Method(_name, "void"));
    method->setVirtual();
    method->setPureVirtual(pureVirtual);
@@ -55,7 +55,7 @@ void UserFunction::generateInstanceMethod(Class& instance,
 			"* " + PREFIX + "inAttrPset");
    method->addParameter(ccBase.getOutAttrPSetName() + 
 			"* " + PREFIX + "outAttrPset");
-   instance.addMethod(method);         
+   instance.addMethod(std::move(method));         
 }
 
 std::string UserFunction::getString() const

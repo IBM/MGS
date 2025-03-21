@@ -1,3 +1,4 @@
+#include <memory>
 // =================================================================
 // Licensed Materials - Property of IBM
 //
@@ -41,7 +42,7 @@ Method::Method(const std::string& name, const std::string& returnStr
   _classObj = 0;
 }
 
-void Method::duplicate(std::auto_ptr<Method>& dup) const
+void Method::duplicate(std::unique_ptr<Method>&& dup) const
 {
    dup.reset(new Method(*this));
 }

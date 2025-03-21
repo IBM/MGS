@@ -18,7 +18,7 @@
 #include <string>
 #include <memory>
 
-void UnsignedType::duplicate(std::auto_ptr<DataType>& rv) const
+void UnsignedType::duplicate(std::unique_ptr<DataType>&& rv) const
 {
    rv.reset(new UnsignedType(*this));
 }

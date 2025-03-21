@@ -35,12 +35,12 @@ InterfaceToMember::InterfaceToMember(Interface* interface)
 {
 }
 
-void InterfaceToMember::duplicate(std::auto_ptr<InterfaceToMember>& rv) const
+void InterfaceToMember::duplicate(std::unique_ptr<InterfaceToMember>&& rv) const
 {
    rv.reset(new InterfaceToMember(*this));
 }
 
-void InterfaceToMember::duplicate(std::auto_ptr<InterfaceMapping>& rv) const
+void InterfaceToMember::duplicate(std::unique_ptr<InterfaceMapping>&& rv) const
 {
    rv.reset(new InterfaceToMember(*this));
 }

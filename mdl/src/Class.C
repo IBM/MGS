@@ -1,3 +1,4 @@
+#include <memory>
 // =================================================================
 // Licensed Materials - Property of IBM
 //
@@ -77,7 +78,7 @@ Class::Class(const Class& rv)
    copyOwnedHeap(rv);
 }
 
-void Class::duplicate(std::auto_ptr<Class>& dup) const
+void Class::duplicate(std::unique_ptr<Class>&& dup) const
 {
    dup.reset(new Class(*this));
 }
@@ -175,8 +176,8 @@ void Class::addAttributes(const MemberContainer<DataType>& members
       addDataTypeDataItemHeaders(members);
       MemberContainer<DataType>::const_iterator it, end = members.end();
       for (it = members.begin(); it != end; ++it) {
-	 std::auto_ptr<DataType> dup;
-	 it->second->duplicate(dup);
+	 std::unique_ptr<DataType> dup;
+	 it->second->duplicate(std::move(dup));
 	 if (dup->isPointer() && suppressPointers) dup->setPointer(false);
 	 if (add_gpu_attributes)
 	 {//make these data members 'disappear' in GPU
@@ -216,11 +217,11 @@ void Class::addAttributes(const MemberContainer<DataType>& members
       if (add_gpu_attributes and compcat_ptr)
 	compcat_ptr->addDataNameMapping(STR_GPU_CHECK_START); 
       for (it = members.begin(); it != end; ++it) {
-	 std::auto_ptr<DataType> dup;
-	 it->second->duplicate(dup);
+	 std::unique_ptr<DataType> dup;
+	 it->second->duplicate(std::move(dup));
 	 if (dup->isPointer() && suppressPointers) dup->setPointer(false);
- 	 //std::auto_ptr<Attribute> att(new DataTypeAttribute(dup));
- 	 std::unique_ptr<Attribute> att(new DataTypeAttribute(dup));
+ 	 //std::unique_ptr<Attribute> att(new DataTypeAttribute(dup));
+ 	 std::unique_ptr<Attribute> att(new DataTypeAttribute(std::move(dup)));
 	 att->setAccessType(accessType);
 	 if (add_gpu_attributes)
 	 {//make these data members 'disappear' in GPU
@@ -425,7 +426,7 @@ void Class::addAttributes(const MemberContainer<DataType>& members
      //  static CG_"name"CompCategory* REF_CC_OBJECT;
      //std::unique_ptr<DataType> dup;
      //dup(new IntType());
-     //std::auto_ptr<Attribute> att_index(new DataTypeAttribute(dup));
+     //std::unique_ptr<Attribute> att_index(new DataTypeAttribute(dup));
      //CustomAttribute* att_index= new CustomAttribute(REF_INDEX, "int*");
      {
        MacroConditional gpuConditional(GPUCONDITIONAL);
@@ -525,26 +526,26 @@ void Class::copyOwnedHeap(const Class& rv)
 {   
    for (std::vector<BaseClass*>::const_iterator it = rv._baseClasses.begin();
 	it != rv._baseClasses.end(); ++it) {
-      std::auto_ptr<BaseClass> dup;
-      (*it)->duplicate(dup);
+      std::unique_ptr<BaseClass> dup;
+      (*it)->duplicate(std::move(dup));
       _baseClasses.push_back(dup.release());
    }
    for (std::vector<Attribute*>::const_iterator it = rv._attributes.begin();
 	it != rv._attributes.end(); ++it) {
-      std::auto_ptr<Attribute> dup;
-      (*it)->duplicate(dup);
+      std::unique_ptr<Attribute> dup;
+      (*it)->duplicate(std::move(dup));
       _attributes.push_back(dup.release());
    }
    for (std::vector<Attribute*>::const_iterator it = rv._attributes_gpu.begin();
 	it != rv._attributes_gpu.end(); ++it) {
-      std::auto_ptr<Attribute> dup;
-      (*it)->duplicate(dup);
+      std::unique_ptr<Attribute> dup;
+      (*it)->duplicate(std::move(dup));
       _attributes_gpu.push_back(dup.release());
    }
    for (std::vector<Method*>::const_iterator it = rv._methods.begin();
 	it != rv._methods.end(); ++it) {
-      std::auto_ptr<Method> dup;
-      (*it)->duplicate(dup);
+      std::unique_ptr<Method> dup;
+      (*it)->duplicate(std::move(dup));
       _methods.push_back(dup.release());
    }
 }
@@ -1078,7 +1079,7 @@ void Class::addStandardMethods()
 
 void Class::addBasicDestructor() 
 {
-   std::auto_ptr<Method> destructor(new Method("~" + getName()));
+   std::unique_ptr<Method> destructor(new Method("~" + getName()));
    std::ostringstream fb; // functionBody
    if (_attributes.size() > 0) {
       std::vector<Attribute*>::const_iterator it, end = _attributes.end();
@@ -1090,12 +1091,12 @@ void Class::addBasicDestructor()
    if (_baseClasses.size() > 0) {
       destructor->setVirtual();
    }
-   addMethod(destructor);
+   addMethod(std::move(destructor));
 }
 
 void Class::addBasicInlineDestructor(bool isVirtual) 
 {
-   std::auto_ptr<Method> destructor(new Method("~" + getName()));
+   std::unique_ptr<Method> destructor(new Method("~" + getName()));
    std::ostringstream fb; // functionBody
    if (_attributes.size() > 0) {
       std::vector<Attribute*>::const_iterator it, end = _attributes.end();
@@ -1108,7 +1109,7 @@ void Class::addBasicInlineDestructor(bool isVirtual)
    if (_baseClasses.size() > 0 || isVirtual) {
       destructor->setVirtual();
    }
-   addMethod(destructor);
+   addMethod(std::move(destructor));
 }
 
 void Class::prepareBaseString(std::string& bases, const std::string& arg)
@@ -1137,7 +1138,7 @@ void Class::prepareBaseString(std::string& bases, const std::string& arg)
 
 void Class::addConstructor()
 {
-   std::auto_ptr<DefaultConstructorMethod> constructor(
+   std::unique_ptr<DefaultConstructorMethod> constructor(
       new DefaultConstructorMethod(getName()));
    /* need this so that it adds proper parameter initializers */
    constructor->setClass(this);
@@ -1154,8 +1155,8 @@ void Class::addConstructor()
    constructor->addDefaultConstructorParameters(_attributes);
    constructor->addDefaultConstructorInitializers(_attributes, bases);
 
-   std::auto_ptr<Method> consToIns(constructor.release());
-   addMethod(consToIns);
+   std::unique_ptr<Method> consToIns(constructor.release());
+   addMethod(std::move(consToIns));
 }
 
 void Class::addCopyConstructor()
@@ -1163,7 +1164,7 @@ void Class::addCopyConstructor()
    std::string bases = "";
    prepareBaseString(bases, "rv");
 
-   std::auto_ptr<CopyConstructorMethod> constructor(
+   std::unique_ptr<CopyConstructorMethod> constructor(
       new CopyConstructorMethod(getName()));
    constructor->addCopyConstructorInitializers(_attributes, bases, "rv.");
    constructor->addParameter("const " + getName() + "& rv"); 
@@ -1173,13 +1174,13 @@ void Class::addCopyConstructor()
    } else {   
       constructor->setFunctionBody(TAB + "copyOwnedHeap(rv);\n");
    }
-   std::auto_ptr<Method> consToIns(constructor.release());
-   addMethod(consToIns);
+   std::unique_ptr<Method> consToIns(constructor.release());
+   addMethod(std::move(consToIns));
 }
 
 void Class::addEqualOperator()
 {
-   std::auto_ptr<Method> equalOperator(
+   std::unique_ptr<Method> equalOperator(
       new Method("operator=", getName() + "&"));
    equalOperator->addParameter("const " + getName() + "& rv"); 
    std::ostringstream fb; // functionBody
@@ -1208,14 +1209,14 @@ void Class::addEqualOperator()
    }
    fb << TAB << "return *this;\n";
    equalOperator->setFunctionBody(fb.str());
-   addMethod(equalOperator);
+   addMethod(std::move(equalOperator));
 
 }
 
 void Class::addCopyOwnedHeap()
 {
    addHeader("<memory>");
-   std::auto_ptr<Method> copyOwnedHeap(new Method("copyOwnedHeap", "void"));
+   std::unique_ptr<Method> copyOwnedHeap(new Method("copyOwnedHeap", "void"));
    copyOwnedHeap->addParameter("const " + getName() + "& rv"); 
    std::ostringstream fb; // functionBody
    if (_copyingDisabled) {
@@ -1232,12 +1233,12 @@ void Class::addCopyOwnedHeap()
    }
    copyOwnedHeap->setFunctionBody(fb.str());
    copyOwnedHeap->setAccessType(AccessType::PRIVATE);
-   addMethod(copyOwnedHeap);
+   addMethod(std::move(copyOwnedHeap));
 }
 
 void Class::addDestructOwnedHeap()
 {
-   std::auto_ptr<Method> destructOwnedHeap(
+   std::unique_ptr<Method> destructOwnedHeap(
       new Method("destructOwnedHeap", "void"));
    std::ostringstream fb; // functionBody
    if (_attributes.size() > 0) {
@@ -1248,17 +1249,17 @@ void Class::addDestructOwnedHeap()
    }
    destructOwnedHeap->setFunctionBody(fb.str());  
    destructOwnedHeap->setAccessType(AccessType::PRIVATE);
-   addMethod(destructOwnedHeap);
+   addMethod(std::move(destructOwnedHeap));
 }
 
 void Class::addDestructor()
 {
-   std::auto_ptr<Method> destructor(new Method("~" + getName()));
+   std::unique_ptr<Method> destructor(new Method("~" + getName()));
    if (hasOwnedHeapData() && !getCopyingRemoved()) {
       destructor->setFunctionBody(TAB + "destructOwnedHeap();\n");  
    }
    destructor->setVirtual();
-   addMethod(destructor);
+   addMethod(std::move(std::move(destructor)));
 }
 
 
@@ -1284,36 +1285,36 @@ void Class::addDuplicate()
 
    if (!pureVirtualExists) {
       // duplicate for self
-      std::auto_ptr<Method> dupSelf(new Method("duplicate", "void"));
-      dupSelf->addParameter("std::unique_ptr<" + getName() + ">& dup");
+      std::unique_ptr<Method> dupSelf(new Method("duplicate", "void"));
+      dupSelf->addParameter("std::unique_ptr<" + getName() + ">&& dup");
       dupSelf->setFunctionBody(commonBody);
       dupSelf->setVirtual();
       dupSelf->setConst();
-      addMethod(dupSelf);
+      addMethod(std::move(dupSelf));
 
       // duplicate for the indicated
       std::vector<std::string>::iterator sit, send = _duplicateTypes.end();
       for (sit = _duplicateTypes.begin(); sit != send; ++sit) {
-	 std::auto_ptr<Method> dupInd(new Method("duplicate", "void"));
+	 std::unique_ptr<Method> dupInd(new Method("duplicate", "void"));
 	 dupInd->addParameter(
-	    "std::unique_ptr<" + *sit + ">& dup");
+	    "std::unique_ptr<" + *sit + ">&& dup");
 	 dupInd->setFunctionBody(commonBody);
 	 dupInd->setVirtual();
 	 dupInd->setConst();
-	 addMethod(dupInd);
+	 addMethod(std::move(dupInd));
       }
 
       // duplicate for the base classes
       if (_baseClasses.size() > 0) {
 	 for (std::vector<BaseClass*>::const_iterator 
 		 it = _baseClasses.begin(); it != _baseClasses.end(); ++it) {
-	    std::auto_ptr<Method> dupBase(new Method("duplicate", "void"));
+	    std::unique_ptr<Method> dupBase(new Method("duplicate", "void"));
 	    dupBase->addParameter("std::unique_ptr<" 
 				   + (*it)->getName() + ">& dup");
 	    dupBase->setFunctionBody(commonBody);
 	    dupBase->setVirtual();
 	    dupBase->setConst();
-	    addMethod(dupBase);
+	    addMethod(std::move(dupBase));
 	 }
       }
    }

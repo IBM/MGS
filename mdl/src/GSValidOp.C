@@ -23,7 +23,7 @@
 #include <string>
 #include <sstream>
 
-void GSValidOp::duplicate(std::auto_ptr<Operation>& rv) const
+void GSValidOp::duplicate(std::unique_ptr<Operation>&& rv) const
 {
    rv.reset(new GSValidOp(*this));
 }

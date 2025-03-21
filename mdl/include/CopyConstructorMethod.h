@@ -1,3 +1,4 @@
+#include <memory>
 // =================================================================
 // Licensed Materials - Property of IBM
 //
@@ -31,7 +32,7 @@ class CopyConstructorMethod : public ConstructorMethod
 			    const std::string& returnStr = "",
 			    const std::string& functionBody = "",
 			    const std::string& initializationStr = "");
-      virtual void duplicate(std::auto_ptr<Method>& dup) const;
+      virtual void duplicate(std::unique_ptr<Method>&& dup) const;
       virtual ~CopyConstructorMethod();
       void addCopyConstructorInitializers(
 	 const std::vector<Attribute*>& attributes,

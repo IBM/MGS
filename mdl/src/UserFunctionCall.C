@@ -25,7 +25,7 @@ UserFunctionCall::UserFunctionCall(const std::string& name)
 
 }
 
-void UserFunctionCall::duplicate(std::auto_ptr<UserFunctionCall>& rv) const
+void UserFunctionCall::duplicate(std::unique_ptr<UserFunctionCall>&& rv) const
 {
    rv.reset(new UserFunctionCall(*this));
 }

@@ -19,7 +19,7 @@
 #include <string>
 #include <memory>
 
-void NodeSetType::duplicate(std::auto_ptr<DataType>& rv) const
+void NodeSetType::duplicate(std::unique_ptr<DataType>&& rv) const
 {
    rv.reset(new NodeSetType(*this));
 }

@@ -30,9 +30,9 @@
 void C_inAttrPSet::addToList(C_generalList* gl)
 {
    assert(_struct != 0);
-   std::auto_ptr<StructType> iaps(_struct);
+   std::unique_ptr<StructType> iaps(_struct);
    _struct = 0;
-   gl->addInAttrPSet(iaps);
+   gl->addInAttrPSet(std::move(iaps));
 }
 
 C_inAttrPSet::C_inAttrPSet(C_dataTypeList* dtl) 
@@ -41,17 +41,17 @@ C_inAttrPSet::C_inAttrPSet(C_dataTypeList* dtl)
 
 }
 
-void C_inAttrPSet::duplicate(std::auto_ptr<C_inAttrPSet>& rv) const
+void C_inAttrPSet::duplicate(std::unique_ptr<C_inAttrPSet>&& rv) const
 {
    rv.reset(new C_inAttrPSet(*this));
 }
 
-void C_inAttrPSet::duplicate(std::auto_ptr<C_struct>& rv) const
+void C_inAttrPSet::duplicate(std::unique_ptr<C_struct>&& rv) const
 {
    rv.reset(new C_inAttrPSet(*this));
 }
 
-void C_inAttrPSet::duplicate(std::auto_ptr<C_general>& rv)const
+void C_inAttrPSet::duplicate(std::unique_ptr<C_general>&& rv)const
 {
    rv.reset(new C_inAttrPSet(*this));
 }

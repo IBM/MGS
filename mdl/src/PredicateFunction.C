@@ -26,7 +26,7 @@ PredicateFunction::PredicateFunction(const std::string& name)
 
 }
 
-void PredicateFunction::duplicate(std::auto_ptr<PredicateFunction>& rv) const
+void PredicateFunction::duplicate(std::unique_ptr<PredicateFunction>&& rv) const
 {
    rv.reset(new PredicateFunction(*this));
 }
@@ -39,7 +39,7 @@ PredicateFunction::~PredicateFunction()
 void PredicateFunction::generateInstanceMethod(
    Class& instance, bool pureVirtual, const ConnectionCCBase& ccBase) const
 {
-   std::auto_ptr<Method> method(
+   std::unique_ptr<Method> method(
       new Method(_name, "bool"));
    method->setVirtual();
    method->setPureVirtual(pureVirtual);
@@ -53,7 +53,7 @@ void PredicateFunction::generateInstanceMethod(
 			"* " + PREFIX + "inAttrPset");
    method->addParameter(ccBase.getOutAttrPSetName() + 
 			"* " + PREFIX + "outAttrPset");
-   instance.addMethod(method);         
+   instance.addMethod(std::move(method));         
 }
 
 std::string PredicateFunction::getString() const

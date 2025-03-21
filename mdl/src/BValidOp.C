@@ -23,7 +23,7 @@
 #include <string>
 #include <sstream>
 
-void BValidOp::duplicate(std::auto_ptr<Operation>& rv) const
+void BValidOp::duplicate(std::unique_ptr<Operation>&& rv) const
 {
    rv.reset(new BValidOp(*this));
 }

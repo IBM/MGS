@@ -23,14 +23,14 @@
 class MdlContext;
 
 class C_edge : public C_sharedCCBase {
-
+   using C_sharedCCBase::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       C_edge();
       C_edge(const std::string& name, C_interfacePointerList* ipl
 			 , C_generalList* gl);
       C_edge(const C_edge& rv);
-      virtual void duplicate(std::auto_ptr<C_edge>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_edge>&& rv) const;
       virtual ~C_edge();
 };
 

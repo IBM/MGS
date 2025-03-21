@@ -32,8 +32,8 @@ class C_triggeredFunctionInstance : public C_triggeredFunction {
       virtual void addToList(C_generalList* gl);
       C_triggeredFunctionInstance(C_identifierList* identifierList, 
 				  TriggeredFunction::RunType runType);
-      virtual void duplicate(std::auto_ptr<C_triggeredFunction>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_general>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_triggeredFunction>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_general>&& rv) const;
       virtual ~C_triggeredFunctionInstance();      
 };
 

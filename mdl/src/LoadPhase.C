@@ -20,13 +20,13 @@
 #include <string>
 
 LoadPhase::LoadPhase(const std::string& name, 
-		     std::auto_ptr<PhaseType>& phaseType,
+		     std::unique_ptr<PhaseType>&& phaseType,
 		     const std::vector<std::string>& pvn)
-   : Phase(name, phaseType, pvn)
+   : Phase(name, std::move(phaseType), pvn)
 {
 }
 
-void LoadPhase::duplicate(std::auto_ptr<Phase>& rv) const
+void LoadPhase::duplicate(std::unique_ptr<Phase>&& rv) const
 {
    rv.reset(new LoadPhase(*this));
 }

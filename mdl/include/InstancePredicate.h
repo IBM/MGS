@@ -29,7 +29,7 @@ class InstancePredicate : public Predicate{
    public:
       InstancePredicate();
       InstancePredicate(Operation* op, const std::string& name);
-      virtual void duplicate(std::auto_ptr<Predicate>& rv) const;
+      virtual void duplicate(std::unique_ptr<Predicate>&& rv) const;
       virtual ~InstancePredicate();
       virtual void setInstances(const MemberContainer<DataType>& instances);
       

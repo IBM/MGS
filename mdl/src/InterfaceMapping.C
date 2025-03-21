@@ -33,7 +33,7 @@ InterfaceMapping::InterfaceMapping(Interface* interface)
 }
 
 void InterfaceMapping::addMapping(const std::string& name, 
-				  std::auto_ptr<DataType>& data,
+				  std::unique_ptr<DataType>&& data,
 				  bool amp) 
 {
    iterator it = find(name);
@@ -56,7 +56,7 @@ void InterfaceMapping::addMapping(const std::string& name,
       throw;
    }
    checkAndExtraWork(name, data.get(), type, amp);
-   InterfaceMappingElement elem(name, data, type->getTypeString(), amp);
+   InterfaceMappingElement elem(name, std::move(data), type->getTypeString(), amp);
    _mappings.push_back(elem);
 }
 

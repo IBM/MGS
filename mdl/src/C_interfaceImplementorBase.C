@@ -57,19 +57,19 @@ C_interfaceImplementorBase::C_interfaceImplementorBase(
      _generalList(0)  
 {
    if (rv._interfacePointerList) {
-      std::auto_ptr<C_interfacePointerList> dup;
-      rv._interfacePointerList->duplicate(dup);
+      std::unique_ptr<C_interfacePointerList> dup;
+      rv._interfacePointerList->duplicate(std::move(dup));
       _interfacePointerList = dup.release();
    }
    if (rv._generalList) {
-      std::auto_ptr<C_generalList> dup;
-      rv._generalList->duplicate(dup);
+      std::unique_ptr<C_generalList> dup;
+      rv._generalList->duplicate(std::move(dup));
       _generalList = dup.release();
    }
 }
 
 void C_interfaceImplementorBase::duplicate(
-   std::auto_ptr<C_interfaceImplementorBase>& rv) const
+   std::unique_ptr<C_interfaceImplementorBase>&& rv) const
 {
    rv.reset(new C_interfaceImplementorBase(*this));
 }
@@ -91,46 +91,46 @@ void C_interfaceImplementorBase::executeInterfaceImplementorBase(
    cc->setName(_name);
    if (_interfacePointerList) {
       _interfacePointerList->execute(context);
-      std::auto_ptr<std::vector<Interface*> > interfaceVec;
+      std::unique_ptr<std::vector<Interface*> > interfaceVec;
       _interfacePointerList->releaseInterfaceVec(interfaceVec);
       std::vector<Interface*>::iterator it, end = interfaceVec->end();
       for (it = interfaceVec->begin(); it != end; it++) {
-	 std::auto_ptr<MemberToInterface> mti;
+	 std::unique_ptr<MemberToInterface> mti;
 	 mti.reset(new MemberToInterface(*it));
-	 cc->addMemberToInterfaceMapping(mti);
+	 cc->addMemberToInterfaceMapping(std::move(mti));
       }
    }
 
    if (_generalList->getDataTypeVec()) {
-      std::auto_ptr<std::vector<DataType*> > dataTypeVec;
+      std::unique_ptr<std::vector<DataType*> > dataTypeVec;
       _generalList->releaseDataTypeVec(dataTypeVec);
       std::vector<DataType*>::iterator it, end = dataTypeVec->end();
       for (it = dataTypeVec->begin(); it != end; it++) {
-	 std::auto_ptr<DataType> dataType;
+	 std::unique_ptr<DataType> dataType;
 	 dataType.reset(*it);
-	 cc->addDataTypeToInstances(dataType);
+	 cc->addDataTypeToInstances(std::move(dataType));
       }
    }
    if (_generalList->getOptionalDataTypeVec()) {
-      std::auto_ptr<std::vector<DataType*> > optionalDataTypeVec;
+      std::unique_ptr<std::vector<DataType*> > optionalDataTypeVec;
       _generalList->releaseOptionalDataTypeVec(optionalDataTypeVec);
       std::vector<DataType*>::iterator it, end = optionalDataTypeVec->end();
       for (it = optionalDataTypeVec->begin(); it != end; it++) {
-	 std::auto_ptr<DataType> dataType;
+	 std::unique_ptr<DataType> dataType;
 	 dataType.reset(*it);
-	 cc->addDataTypeToOptionalServices(dataType);
+	 cc->addDataTypeToOptionalServices(std::move(dataType));
       }
    }
    if (_generalList->getInstanceMappingVec()) {
-      std::auto_ptr<std::vector<C_instanceMapping*> > imVec;
+      std::unique_ptr<std::vector<C_instanceMapping*> > imVec;
       _generalList->releaseInstanceMappingVec(imVec);
       std::vector<C_instanceMapping*>::iterator it, end = imVec->end();
       for (it = imVec->begin(); it != end; it++) {
 	 const DataType* curDt;
-	 std::auto_ptr<DataType> dtToInsert;
+	 std::unique_ptr<DataType> dtToInsert;
 	 try {
 	    curDt = cc->getInstances().getMember((*it)->getMember());
-	    curDt->duplicate(dtToInsert);
+	    curDt->duplicate(std::move(dtToInsert));
 	    if((*it)->getSubAttributePathExists()) {
 	       dtToInsert->setSubAttributePath((*it)->getSubAttributePath());
 	    }
@@ -141,19 +141,19 @@ void C_interfaceImplementorBase::executeInterfaceImplementorBase(
 	    throw;
 	 }
 	 cc->addMappingToInterface((*it)->getInterface(), 
-				   (*it)->getInterfaceMember(), dtToInsert,
+				   (*it)->getInterfaceMember(), std::move(dtToInsert),
 				   (*it)->getAmpersand());
 	 delete *it;
       }
    }
-   std::auto_ptr<StructType> outAttr;
+   std::unique_ptr<StructType> outAttr;
    if (_generalList->getOutAttrPSet()) {
-      _generalList->releaseOutAttrPSet(outAttr);
+      _generalList->releaseOutAttrPSet(std::move(outAttr));
    } else {
       outAttr.reset(new StructType());
    }
    outAttr->setName(OUTATTRPSETNAME);
-   cc->setOutAttrPSet(outAttr);
+   cc->setOutAttrPSet(std::move(outAttr));
    cc->setInterfaceImplementors();
 }
 

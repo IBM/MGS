@@ -39,14 +39,14 @@ class InterfaceImplementorBase : public Generatable {
       InterfaceImplementorBase(const std::string& fileName);
       InterfaceImplementorBase(const InterfaceImplementorBase& rv);
       InterfaceImplementorBase& operator=(const InterfaceImplementorBase& rv);
-      virtual void duplicate(std::auto_ptr<Generatable>& rv) const =0;
+      virtual void duplicate(std::unique_ptr<Generatable>&& rv) const =0;
       virtual void generate() const;
       virtual std::string generateExtra() const;
       virtual std::string getType() const =0;
-      virtual void setInstancePhases(std::auto_ptr<std::vector<Phase*> >& phases);
+      virtual void setInstancePhases(std::unique_ptr<std::vector<Phase*> >& phases);
       virtual ~InterfaceImplementorBase();
-      void releaseOutAttrPSet(std::auto_ptr<StructType>& oap);
-      void setOutAttrPSet(std::auto_ptr<StructType>& oap);
+      void releaseOutAttrPSet(std::unique_ptr<StructType>&& oap);
+      void setOutAttrPSet(std::unique_ptr<StructType>&& oap);
       void checkAllMemberToInterfaces();
 
       const std::string& getName() const {
@@ -61,7 +61,7 @@ class InterfaceImplementorBase : public Generatable {
 	 return _outAttrPSet;
       }
 
-      void addDataTypeToInstances(std::auto_ptr<DataType>& dataType) {
+      void addDataTypeToInstances(std::unique_ptr<DataType>&& dataType) {
 	 checkInstanceVariableNameSpace(dataType->getName());
 	 _instances.addMember(dataType->getName(), dataType);
       }
@@ -70,19 +70,19 @@ class InterfaceImplementorBase : public Generatable {
 	 return _instances;
       }
 
-      void addMemberToInterfaceMapping(std::auto_ptr<MemberToInterface>& mti) {
-	 _interfaces.addMemberToFront(mti->getInterface()->getName(), mti);
+      void addMemberToInterfaceMapping(std::unique_ptr<MemberToInterface>&& mti) {
+	 _interfaces.addMemberToFront(mti->getInterface()->getName(), std::move(mti));
       }
 
       void addMappingToInterface(
 	 const std::string& interfaceName, const std::string& interfaceMemberName, 
-	 std::auto_ptr<DataType>& dtToInsert, bool ampersand);
+	 std::unique_ptr<DataType>&& dtToInsert, bool ampersand);
 
       const MemberContainer<MemberToInterface>& getInterfaces() const {
 	 return _interfaces;
       }
 
-      void addDataTypeToOptionalServices(std::auto_ptr<DataType>& dataType) {
+      void addDataTypeToOptionalServices(std::unique_ptr<DataType>&& dataType) {
 	 checkInstanceVariableNameSpace(dataType->getName());
 	 _optionalInstanceServices.addMember(dataType->getName(), dataType);
       }
@@ -126,10 +126,10 @@ class InterfaceImplementorBase : public Generatable {
    protected:
       virtual std::string getModuleName() const;
 
-      void createPSetClass(std::auto_ptr<Class>& instance
+      void createPSetClass(std::unique_ptr<Class>&& instance
 			   , const MemberContainer<DataType>& members
 			   , const std::string& name = "") const; 
-      void createPSetClass(std::auto_ptr<Class>& instance
+      void createPSetClass(std::unique_ptr<Class>&& instance
 			   , const MemberContainer<DataType>& members
 			   , bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType
 			   , const std::string& name = ""
@@ -141,13 +141,13 @@ class InterfaceImplementorBase : public Generatable {
       void generateInstanceProxy();
       void generateInstanceProxy(bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType);
       
-      void addInstanceServiceHeaders(std::auto_ptr<Class>& instance) const;
+      void addInstanceServiceHeaders(std::unique_ptr<Class>&& instance) const;
       void addOptionalInstanceServiceHeaders(
-	 std::auto_ptr<Class>& instance) const;
+	 std::unique_ptr<Class>&& instance) const;
       virtual void addExtraServiceHeaders(
-	 std::auto_ptr<Class>& instance) const;
+	 std::unique_ptr<Class>&& instance) const;
       virtual void addExtraOptionalServiceHeaders(
-	 std::auto_ptr<Class>& instance) const;
+	 std::unique_ptr<Class>&& instance) const;
       std::string getInstanceServices(const std::string& tab) const;
       std::string getOptionalInstanceServices(const std::string& tab) const;
       virtual std::string getExtraServices(const std::string& tab) const;
@@ -216,12 +216,12 @@ class InterfaceImplementorBase : public Generatable {
 	 const MemberContainer<DataType>& members, 
 	 const std::string& tab) const;
 
-      void setupInstanceInterfaces(std::auto_ptr<Class>& instance);
+      void setupInstanceInterfaces(std::unique_ptr<Class>&& instance);
 
-      void setupProxyInterfaces(std::auto_ptr<Class>& instance);
+      void setupProxyInterfaces(std::unique_ptr<Class>&& instance);
 
       // Will be implemented in derived classes.
-      virtual void setupExtraInterfaces(std::auto_ptr<Class>& instance) {
+      virtual void setupExtraInterfaces(std::unique_ptr<Class>&& instance) {
 	 return;
       }
 

@@ -1,3 +1,4 @@
+#include <memory>
 // =================================================================
 // Licensed Materials - Property of IBM
 //
@@ -38,7 +39,7 @@ CustomAttribute::CustomAttribute(const std::string& name,
 {
 }
 
-void CustomAttribute::duplicate(std::auto_ptr<Attribute>& dup) const
+void CustomAttribute::duplicate(std::unique_ptr<Attribute>&& dup) const
 {
    dup.reset(new CustomAttribute(*this));
 }

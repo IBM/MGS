@@ -1,3 +1,4 @@
+#include <memory>
 // =================================================================
 // Licensed Materials - Property of IBM
 //
@@ -29,7 +30,7 @@ class CustomAttribute : public Attribute
       CustomAttribute();
       CustomAttribute(const std::string& name, const std::string& type,
 		      AccessType accessType = AccessType::PUBLIC);
-      void duplicate(std::auto_ptr<Attribute>& dup) const;
+      void duplicate(std::unique_ptr<Attribute>&& dup) const;
       virtual ~CustomAttribute();
 
       virtual std::string getName() const;

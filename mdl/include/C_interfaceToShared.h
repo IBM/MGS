@@ -34,9 +34,9 @@ class C_interfaceToShared : public C_interfaceMapping {
       C_interfaceToShared(const std::string& interface, 
 			  const std::string& interfaceMember,
 			  C_identifierList* member); 
-      virtual void duplicate(std::auto_ptr<C_interfaceToShared>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_interfaceMapping>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_general>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_interfaceToShared>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_interfaceMapping>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_general>&& rv) const;
       virtual ~C_interfaceToShared();
 };
 

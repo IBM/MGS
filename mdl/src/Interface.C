@@ -33,12 +33,12 @@ Interface::Interface(const std::string& fileName)
 {
 }
 
-void Interface::duplicate(std::auto_ptr<Generatable>& rv) const
+void Interface::duplicate(std::unique_ptr<Generatable>&& rv) const
 {
    rv.reset(new Interface(*this));
 }
 
-void Interface::duplicate(std::auto_ptr<Interface>& rv) const
+void Interface::duplicate(std::unique_ptr<Interface>&& rv) const
 {
    rv.reset(new Interface(*this));
 }
@@ -69,11 +69,11 @@ void Interface::addProducerMethods(Class& c)
    MemberContainer<DataType>::const_iterator end = _members.end();
    MemberContainer<DataType>::const_iterator it;
    for (it = _members.begin(); it != end; it ++) {
-      std::auto_ptr<Method> producer(
+      std::unique_ptr<Method> producer(
 	 new Method(PREFIX + "get_" + _name + "_" + it->second->getName()
 		    , it->second->getTypeString()));
       producer->setPureVirtual();
-      c.addMethod(producer);
+      c.addMethod(std::move(producer));
    }
 }
 
@@ -100,13 +100,13 @@ void Interface::internalGenerateFiles()
 
 void Interface::generateInstance() 
 {
-   std::auto_ptr<Class> instance(new Class(getName()));
+   std::unique_ptr<Class> instance(new Class(getName()));
    instance->addDataTypeHeaders(_members);
    instance->addBasicInlineDestructor(true);
    addProducerMethods(*instance);
    _classes.push_back(instance.release());
 }
 
-void Interface::addDataTypeToMembers(std::auto_ptr<DataType>& dataType) {
-   _members.addMemberToFront(dataType->getName(), dataType);
+void Interface::addDataTypeToMembers(std::unique_ptr<DataType>&& dataType) {
+   _members.addMemberToFront(dataType->getName(), std::move(dataType));
 }

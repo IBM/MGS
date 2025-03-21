@@ -23,14 +23,14 @@
 class MdlContext;
 
 class C_node : public C_sharedCCBase {
-
+   using C_sharedCCBase::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       C_node();
       C_node(const std::string& name, C_interfacePointerList* ipl,
 	     C_generalList* gl);
       C_node(const C_node& rv);
-      virtual void duplicate(std::auto_ptr<C_node>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_node>&& rv) const;
       virtual ~C_node();
 };
 

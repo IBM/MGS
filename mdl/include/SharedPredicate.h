@@ -29,7 +29,7 @@ class SharedPredicate : public Predicate{
    public:
       SharedPredicate();
       SharedPredicate(Operation* op, const std::string& name);
-      virtual void duplicate(std::auto_ptr<Predicate>& rv) const;
+      virtual void duplicate(std::unique_ptr<Predicate>&& rv) const;
       virtual ~SharedPredicate();
       virtual void setShareds(const MemberContainer<DataType>& shareds);
       virtual bool checkShareds();

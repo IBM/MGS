@@ -26,13 +26,13 @@ class Interface;
 class C_dataTypeList;
 
 class C_interface : public C_production {
-
+   using C_production::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       C_interface();
       C_interface(const std::string& name, C_dataTypeList* dtl);
       C_interface(const C_interface& rv);
-      virtual void duplicate(std::auto_ptr<C_interface>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_interface>&& rv) const;
       virtual ~C_interface();
       
    protected:

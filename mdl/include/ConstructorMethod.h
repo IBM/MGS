@@ -33,7 +33,7 @@ class ConstructorMethod : public Method
 			const std::string& returnStr = "",
 			const std::string& functionBody = "",
 			const std::string& initializationStr = "");
-      virtual void duplicate(std::auto_ptr<Method>& dup) const;
+      virtual void duplicate(std::unique_ptr<Method>&& dup) const;
       virtual ~ConstructorMethod();
       const std::string& getInitializationStr() const;
       void setInitializationStr(const std::string& constructorStr);

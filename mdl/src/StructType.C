@@ -1,4 +1,4 @@
-// =================================================================
+   // =================================================================
 // Licensed Materials - Property of IBM
 //
 // "Restricted Materials of IBM"
@@ -35,17 +35,17 @@ StructType::StructType(const std::string& fileName)
 {
 }
 
-void StructType::duplicate(std::auto_ptr<StructType>& rv) const
+void StructType::duplicate(std::unique_ptr<StructType>&& rv) const
 {
    rv.reset(new StructType(*this));
 }
 
-void StructType::duplicate(std::auto_ptr<DataType>& rv) const
+void StructType::duplicate(std::unique_ptr<DataType>&& rv) const
 {
    rv.reset(new StructType(*this));
 }
 
-void StructType::duplicate(std::auto_ptr<Generatable>& rv) const
+void StructType::duplicate(std::unique_ptr<Generatable>&& rv) const
 {
    rv.reset(new StructType(*this));
 }
@@ -178,11 +178,11 @@ std::string StructType::getDataFromVariable(const std::string& name) const
 
 void StructType::generateInstance() 
 {
-   std::auto_ptr<Class> instance(new Class(getTypeName()));
+   std::unique_ptr<Class> instance(new Class(getTypeName()));
    
-   std::auto_ptr<BaseClass> structBase(new BaseClass("Struct"));
+   std::unique_ptr<BaseClass> structBase(new BaseClass("Struct"));
 
-   instance->addBaseClass(structBase);
+   instance->addBaseClass(std::move(structBase));
    instance->addHeader("\"OutputStream.h\"",MPICONDITIONAL);
    instance->addHeader("\"Struct.h\"");
    instance->addHeader("\"SyntaxErrorException.h\"");
@@ -193,7 +193,7 @@ void StructType::generateInstance()
    //   instance->addExtraSourceHeader("\"CG_" + getDescriptor() + "MarshallerInstance.h\"");
    instance->addAttributes(_members);
 
-   std::auto_ptr<Method> ostreamOpMethod(new Method("operator<<", 
+   std::unique_ptr<Method> ostreamOpMethod(new Method("operator<<", 
 						    "std::ostream&") );
    ostreamOpMethod->setExternCPP();
    ostreamOpMethod->addParameter("std::ostream& os");
@@ -201,9 +201,9 @@ void StructType::generateInstance()
    ostreamOpMethod->setFunctionBody(
       TAB + "os << \"N/A\";\n" +
       TAB + "return os;\n");
-   instance->addMethod(ostreamOpMethod);
+   instance->addMethod(std::move(ostreamOpMethod));
 
-   std::auto_ptr<Method> istreamOpMethod(new Method("operator>>", 
+   std::unique_ptr<Method> istreamOpMethod(new Method("operator>>", 
 						    "std::istream&") );
    istreamOpMethod->setExternCPP();
    istreamOpMethod->addParameter("std::istream& is");
@@ -211,7 +211,7 @@ void StructType::generateInstance()
    istreamOpMethod->setFunctionBody(
       TAB + FALSEASSERT +
       TAB + "return is;\n");
-   instance->addMethod(istreamOpMethod);
+   instance->addMethod(std::move(istreamOpMethod));
 
    addDoInitializeMethods(*(instance.get()), _members);
 
@@ -222,64 +222,64 @@ void StructType::generateInstance()
 void StructType::generateFlatDemarshaller() 
 {
    MacroConditional mpiConditional(MPICONDITIONAL);
-   std::auto_ptr<Class> demarshallerInstance(new Class("CG_" + getTypeName() + "Demarshaller")); 
+   std::unique_ptr<Class> demarshallerInstance(new Class("CG_" + getTypeName() + "Demarshaller")); 
    demarshallerInstance->setAlternateFileName("CG_" + getTypeName() + "Demarshaller");
    demarshallerInstance->setMacroConditional(mpiConditional);
    demarshallerInstance->addHeader("\"DemarshallerInstance.h\"");
    demarshallerInstance->addHeader("\"" + getTypeName() + ".h\"");
-   std::auto_ptr<BaseClass> demarshallerBase(new BaseClass("Demarshaller"));
-   demarshallerInstance->addBaseClass(demarshallerBase);
+   std::unique_ptr<BaseClass> demarshallerBase(new BaseClass("Demarshaller"));
+   demarshallerInstance->addBaseClass(std::move(demarshallerBase));
 
    // Add member class for flat data structure
-   std::auto_ptr<Class> flatDataInstance(new Class(getTypeName()+"Data_LensReserved")); 
+   std::unique_ptr<Class> flatDataInstance(new Class(getTypeName()+"Data_LensReserved")); 
    flatDataInstance->addAttributes(_members);
-   demarshallerInstance->addMemberClass(flatDataInstance, AccessType::PRIVATE);
+   demarshallerInstance->addMemberClass(std::move(flatDataInstance), AccessType::PRIVATE);
 
    // Constructors
 
    std::ostringstream constructorFB;
    std::ostringstream base2InitString;
 
-   std::auto_ptr<ConstructorMethod> baseConstructor1(new ConstructorMethod("CG_" + getTypeName() + "Demarshaller"));
-   std::auto_ptr<ConstructorMethod> baseConstructor2(new ConstructorMethod("CG_" + getTypeName() + "Demarshaller"));
+   std::unique_ptr<ConstructorMethod> baseConstructor1(new ConstructorMethod("CG_" + getTypeName() + "Demarshaller"));
+   std::unique_ptr<ConstructorMethod> baseConstructor2(new ConstructorMethod("CG_" + getTypeName() + "Demarshaller"));
    baseConstructor1->setInitializationStr("_destination(0)");
    baseConstructor2->setInitializationStr("_destination(reinterpret_cast<char*>(&s->"+_members.begin()->second->getName()+"))");
    baseConstructor2->addParameter(getTypeName() + "* s");
 
-   std::auto_ptr<Method> baseConsToIns1(baseConstructor1.release());
-   std::auto_ptr<Method> baseConsToIns2(baseConstructor2.release());
+   std::unique_ptr<Method> baseConsToIns1(baseConstructor1.release());
+   std::unique_ptr<Method> baseConsToIns2(baseConstructor2.release());
    baseConsToIns1->setInline();
    baseConsToIns2->setInline();
 
    baseConsToIns1->setFunctionBody(constructorFB.str());
    baseConsToIns2->setFunctionBody(constructorFB.str());
-   demarshallerInstance->addMethod(baseConsToIns1);
-   demarshallerInstance->addMethod(baseConsToIns2); 
+   demarshallerInstance->addMethod(std::move(baseConsToIns1));
+   demarshallerInstance->addMethod(std::move(baseConsToIns2)); 
    
-   std::auto_ptr<Method> setDestinationMethod(new Method("setDestination", "void"));
+   std::unique_ptr<Method> setDestinationMethod(new Method("setDestination", "void"));
    setDestinationMethod->setInline();
    setDestinationMethod->addParameter(getTypeName()+" *s");
    std::ostringstream setDestinationMethodFB;
    setDestinationMethodFB << TAB << TAB << TAB << "_destination=reinterpret_cast<char*>(&s->"+_members.begin()->second->getName()+");\n";
    setDestinationMethodFB << TAB << TAB << TAB << "reset();\n";
    setDestinationMethod->setFunctionBody(setDestinationMethodFB.str());
-   demarshallerInstance->addMethod(setDestinationMethod);
+   demarshallerInstance->addMethod(std::move(setDestinationMethod));
 
-   std::auto_ptr<Method> resetMethod(new Method("reset", "void"));
+   std::unique_ptr<Method> resetMethod(new Method("reset", "void"));
    resetMethod->setInline();
    std::ostringstream resetMethodFB;
    resetMethodFB << TAB << TAB << TAB << "_offset = 0;\n";
    resetMethod->setFunctionBody(resetMethodFB.str());
-   demarshallerInstance->addMethod(resetMethod);
+   demarshallerInstance->addMethod(std::move(resetMethod));
 
-   std::auto_ptr<Method> doneMethod(new Method("done", "bool"));
+   std::unique_ptr<Method> doneMethod(new Method("done", "bool"));
    doneMethod->setInline();
    std::ostringstream doneMethodFB;
    doneMethodFB << TAB << TAB << TAB << "return (_offset == sizeof("+getTypeName()+"Data_LensReserved));\n";
    doneMethod->setFunctionBody(doneMethodFB.str());
-   demarshallerInstance->addMethod(doneMethod);
+   demarshallerInstance->addMethod(std::move(doneMethod));
 
-   std::auto_ptr<Method> getBlocksMethod(new Method("getBlocks", "void"));
+   std::unique_ptr<Method> getBlocksMethod(new Method("getBlocks", "void"));
    getBlocksMethod->setInline();
    getBlocksMethod->addParameter("std::vector<int>& blengths");
    getBlocksMethod->addParameter("std::vector<MPI_Aint>& blocs");
@@ -289,9 +289,9 @@ void StructType::generateFlatDemarshaller()
    getBlocksMethodFB << TAB << TAB << TAB << "MPI_Get_address(_destination, &blockAddress);\n"
 		     << TAB << TAB << TAB << "blocs.push_back(blockAddress);\n";
    getBlocksMethod->setFunctionBody(getBlocksMethodFB.str());
-   demarshallerInstance->addMethod(getBlocksMethod);
+   demarshallerInstance->addMethod(std::move(getBlocksMethod));
 
-   std::auto_ptr<Method> demarshallMethod(new Method("demarshall", "int"));
+   std::unique_ptr<Method> demarshallMethod(new Method("demarshall", "int"));
    demarshallMethod->setInline();
    demarshallMethod->addParameter("const char * buffer");
    demarshallMethod->addParameter("int size");
@@ -308,13 +308,13 @@ void StructType::generateFlatDemarshaller()
    demarshallMethodFB << TAB << TAB << TAB << "}\n";
    demarshallMethodFB << TAB << TAB << TAB << "return retval;\n";
    demarshallMethod->setFunctionBody(demarshallMethodFB.str());
-   demarshallerInstance->addMethod(demarshallMethod);
+   demarshallerInstance->addMethod(std::move(demarshallMethod));
 
    CustomAttribute* offsetAttr = new CustomAttribute("_offset", "int", AccessType::PRIVATE);
    CustomAttribute* destinationAttr = new CustomAttribute("_destination", "char", AccessType::PRIVATE);
    destinationAttr->setPointer();   
-   std::auto_ptr<Attribute> offsetAttrAp(offsetAttr);
-   std::auto_ptr<Attribute> destinationAttrAp(destinationAttr);
+   std::unique_ptr<Attribute> offsetAttrAp(offsetAttr);
+   std::unique_ptr<Attribute> destinationAttrAp(destinationAttr);
    demarshallerInstance->addAttribute(offsetAttrAp);
    demarshallerInstance->addAttribute(destinationAttrAp);
 
@@ -326,14 +326,14 @@ void StructType::generateFlatDemarshaller()
 void StructType::generateDemarshaller() 
 {
    MacroConditional mpiConditional(MPICONDITIONAL);
-   std::auto_ptr<Class> demarshallerInstance(new Class("CG_" + getTypeName() + "Demarshaller")); 
+   std::unique_ptr<Class> demarshallerInstance(new Class("CG_" + getTypeName() + "Demarshaller")); 
    demarshallerInstance->setAlternateFileName("CG_" + getTypeName() + "Demarshaller");
    demarshallerInstance->setMacroConditional(mpiConditional);
    demarshallerInstance->addHeader("\"DemarshallerInstance.h\"");
    demarshallerInstance->addHeader("\"StructDemarshallerBase.h\"");
    demarshallerInstance->addHeader("\"" + getTypeName() + ".h\"");
-   std::auto_ptr<BaseClass> structDemarshallerBase(new BaseClass("StructDemarshallerBase"));
-   demarshallerInstance->addBaseClass(structDemarshallerBase);
+   std::unique_ptr<BaseClass> structDemarshallerBase(new BaseClass("StructDemarshallerBase"));
+   demarshallerInstance->addBaseClass(std::move(structDemarshallerBase));
 
    // Constructors
 
@@ -354,37 +354,37 @@ void StructType::generateDemarshaller()
 							   "DemarshallerInstance< " + varType + " >", AccessType::PRIVATE);
      else demarshaller = new CustomAttribute(varName + "Demarshaller", 
 					     "CG_" + varType + "Demarshaller", AccessType::PRIVATE);
-     std::auto_ptr<Attribute> demarshallerAp(demarshaller);
+     std::unique_ptr<Attribute> demarshallerAp(demarshaller);
      demarshallerInstance->addAttribute(demarshallerAp);
      base2InitString<<",\n" << TAB << TAB << varName << "Demarshaller(&(s->" << varName <<"))";
    }
    setDestinationMethodFB << TAB << TAB << TAB << "reset();\n";
 
-   std::auto_ptr<ConstructorMethod> baseConstructor1(new ConstructorMethod("CG_" + getTypeName() + "Demarshaller"));
-   std::auto_ptr<ConstructorMethod> baseConstructor2(new ConstructorMethod("CG_" + getTypeName() + "Demarshaller"));
+   std::unique_ptr<ConstructorMethod> baseConstructor1(new ConstructorMethod("CG_" + getTypeName() + "Demarshaller"));
+   std::unique_ptr<ConstructorMethod> baseConstructor2(new ConstructorMethod("CG_" + getTypeName() + "Demarshaller"));
    baseConstructor1->setInitializationStr("_struct(0)");
    baseConstructor2->setInitializationStr(base2InitString.str());
    baseConstructor2->addParameter(getTypeName() + "* s");
 
-   std::auto_ptr<Method> baseConsToIns1(baseConstructor1.release());
-   std::auto_ptr<Method> baseConsToIns2(baseConstructor2.release());
+   std::unique_ptr<Method> baseConsToIns1(baseConstructor1.release());
+   std::unique_ptr<Method> baseConsToIns2(baseConstructor2.release());
    baseConsToIns1->setInline();
    baseConsToIns2->setInline();
 
    baseConsToIns1->setFunctionBody(constructorFB.str());
    baseConsToIns2->setFunctionBody(constructorFB.str());
-   demarshallerInstance->addMethod(baseConsToIns1);
-   demarshallerInstance->addMethod(baseConsToIns2); 
+   demarshallerInstance->addMethod(std::move(baseConsToIns1));
+   demarshallerInstance->addMethod(std::move(baseConsToIns2)); 
    
-   std::auto_ptr<Method> setDestinationMethod(new Method("setDestination", "void"));
+   std::unique_ptr<Method> setDestinationMethod(new Method("setDestination", "void"));
    setDestinationMethod->setInline();
    setDestinationMethod->addParameter(getTypeName()+" *s");
    setDestinationMethod->setFunctionBody(setDestinationMethodFB.str());
-   demarshallerInstance->addMethod(setDestinationMethod);
+   demarshallerInstance->addMethod(std::move(setDestinationMethod));
 
    CustomAttribute* structDestination = new CustomAttribute("_struct", getTypeName(), AccessType::PRIVATE);
    structDestination->setPointer();   
-   std::auto_ptr<Attribute> structDestinationAp(structDestination);
+   std::unique_ptr<Attribute> structDestinationAp(structDestination);
    demarshallerInstance->addAttribute(structDestinationAp);
 
    demarshallerInstance->addBasicInlineDestructor();
@@ -395,7 +395,7 @@ void StructType::generateDemarshaller()
 void StructType::generateFlatMarshaller() 
 {
    MacroConditional mpiConditional(MPICONDITIONAL);
-   std::auto_ptr<Class> marshallerInstance(new Class("CG_" + getDescriptor() + "MarshallerInstance")); 
+   std::unique_ptr<Class> marshallerInstance(new Class("CG_" + getDescriptor() + "MarshallerInstance")); 
    marshallerInstance->setAlternateFileName("CG_" + getDescriptor() + "MarshallerInstance");
    marshallerInstance->setMacroConditional(mpiConditional);
    marshallerInstance->addHeader("\"Marshall.h\"");
@@ -405,11 +405,11 @@ void StructType::generateFlatMarshaller()
 
    if (_members.size() != 0) {
      // Add member class for flat data structure
-     std::auto_ptr<Class> flatDataInstance(new Class(getTypeName()+"Data_LensReserved")); 
+     std::unique_ptr<Class> flatDataInstance(new Class(getTypeName()+"Data_LensReserved")); 
      flatDataInstance->addAttributes(_members);
-     marshallerInstance->addMemberClass(flatDataInstance, AccessType::PRIVATE);
+     marshallerInstance->addMemberClass(std::move(flatDataInstance), AccessType::PRIVATE);
 
-     std::auto_ptr<Method> marshallMethod(new Method("marshall", "void"));
+     std::unique_ptr<Method> marshallMethod(new Method("marshall", "void"));
      marshallMethod->setInline();
      marshallMethod->addParameter("OutputStream* stream");
      marshallMethod->addParameter(getDescriptor() + " const& data");
@@ -420,9 +420,9 @@ void StructType::generateFlatMarshaller()
 	<< _members.begin()->second->getName() << ")));\n";
      
      marshallMethod->setFunctionBody(os.str());
-     marshallerInstance->addMethod(marshallMethod);
+     marshallerInstance->addMethod(std::move(marshallMethod));
      
-     std::auto_ptr<Method> getBlocksMethod(new Method("getBlocks", "void"));
+     std::unique_ptr<Method> getBlocksMethod(new Method("getBlocks", "void"));
      getBlocksMethod->setInline();
      getBlocksMethod->addParameter("std::vector<int>& blengths");
      getBlocksMethod->addParameter("std::vector<MPI_Aint>& blocs");
@@ -436,7 +436,7 @@ void StructType::generateFlatMarshaller()
 	<< _members.begin()->second->getName() << "), &blockAddress);\n"
         << TAB << TAB << TAB << "blocs.push_back(blockAddress);\n";
      getBlocksMethod->setFunctionBody(os.str());
-     marshallerInstance->addMethod(getBlocksMethod);
+     marshallerInstance->addMethod(std::move(getBlocksMethod));
    }
 
    _classes.push_back(marshallerInstance.release());  
@@ -445,7 +445,7 @@ void StructType::generateFlatMarshaller()
 void StructType::generateMarshaller() 
 {
    MacroConditional mpiConditional(MPICONDITIONAL);
-   std::auto_ptr<Class> marshallerInstance(new Class("MarshallerInstance")); 
+   std::unique_ptr<Class> marshallerInstance(new Class("MarshallerInstance")); 
    marshallerInstance->setAlternateFileName("CG_" + getDescriptor() + "MarshallerInstance");
    marshallerInstance->setMacroConditional(mpiConditional);
    marshallerInstance->addHeader("\"Marshall.h\"");
@@ -455,20 +455,20 @@ void StructType::generateMarshaller()
    marshallerInstance->setTemplateClass();
    marshallerInstance->addTemplateClassSpecialization(getDescriptor());
 
-   std::auto_ptr<Method> marshallMethod(new Method("marshall", "void"));
+   std::unique_ptr<Method> marshallMethod(new Method("marshall", "void"));
    marshallMethod->setInline();
    marshallMethod->addParameter("OutputStream* stream");
    marshallMethod->addParameter(getDescriptor() + " const& data");
    marshallMethod->setFunctionBody(getMarshallMethodFunctionBody());
-   marshallerInstance->addMethod(marshallMethod);
+   marshallerInstance->addMethod(std::move(marshallMethod));
 
-   std::auto_ptr<Method> getBlocksMethod(new Method("getBlocks", "void"));
+   std::unique_ptr<Method> getBlocksMethod(new Method("getBlocks", "void"));
    getBlocksMethod->setInline();
    getBlocksMethod->addParameter("std::vector<int>& blengths");
    getBlocksMethod->addParameter("std::vector<MPI_Aint>& blocs");
    getBlocksMethod->addParameter(getDescriptor() + " const& data");
    getBlocksMethod->setFunctionBody(getGetBlocksMethodFunctionBody());
-   marshallerInstance->addMethod(getBlocksMethod);
+   marshallerInstance->addMethod(std::move(getBlocksMethod));
 
    _classes.push_back(marshallerInstance.release());  
 }

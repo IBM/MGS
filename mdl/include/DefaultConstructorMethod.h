@@ -1,3 +1,4 @@
+#include <memory>
 // =================================================================
 // Licensed Materials - Property of IBM
 //
@@ -31,7 +32,7 @@ class DefaultConstructorMethod : public ConstructorMethod
 	 const std::string& name, const std::string& returnStr = "",
 	 const std::string& functionBody = "", 
 	 const std::string& initializationStr = "");
-      virtual void duplicate(std::auto_ptr<Method>& dup) const;
+      virtual void duplicate(std::unique_ptr<Method>&& dup) const;
       virtual ~DefaultConstructorMethod();      
       void addDefaultConstructorParameters(
 	 const std::vector<Attribute*>& attributes,

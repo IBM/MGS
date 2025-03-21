@@ -34,8 +34,8 @@ class C_userFunction : public C_general {
       C_userFunction(C_identifierList* identifierList); 
       C_userFunction(const C_userFunction& rv);
       C_userFunction& operator=(const C_userFunction& rv);
-      virtual void duplicate(std::auto_ptr<C_userFunction>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_general>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_userFunction>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_general>&& rv) const;
       virtual ~C_userFunction();
       
    private:

@@ -25,7 +25,7 @@ class Predicate;
 class ParanthesisOp : public Operation {
 
    public:
-      virtual void duplicate(std::auto_ptr<Operation>& rv) const;
+      virtual void duplicate(std::unique_ptr<Operation>&& rv) const;
       virtual ~ParanthesisOp();
       virtual void operate(Predicate* p1, Predicate* p2, Predicate* cur);
 };

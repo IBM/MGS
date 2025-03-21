@@ -28,14 +28,14 @@ class C_nameComment;
 class DataType;
 
 class C_nameCommentList : public C_production {
-
+   using C_production::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       C_nameCommentList();
       C_nameCommentList(C_nameComment* dt);
       C_nameCommentList(C_nameCommentList* dtl, C_nameComment* dt);
       C_nameCommentList(const C_nameCommentList& rv);
-      virtual void duplicate(std::auto_ptr<C_nameCommentList>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_nameCommentList>&& rv) const;
       virtual ~C_nameCommentList();
       const std::vector<NameComment>& getNameCommentVec() {
 	 return _nameCommentVec;

@@ -32,8 +32,8 @@ class C_userFunctionCall : public C_general {
       C_userFunctionCall();
       C_userFunctionCall(const std::string& userFunctionCall); 
       C_userFunctionCall(const C_userFunctionCall& rv);
-      virtual void duplicate(std::auto_ptr<C_userFunctionCall>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_general>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_userFunctionCall>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_general>&& rv) const;
       virtual ~C_userFunctionCall();
       
    private:

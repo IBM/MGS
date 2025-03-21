@@ -28,9 +28,9 @@ void C_initialize::execute(MdlContext* context)
 
 void C_initialize::addToList(C_generalList* gl) 
 {
-   std::auto_ptr<C_initialize> init;
+   std::unique_ptr<C_initialize> init;
    init.reset(new C_initialize(*this));
-   gl->addInitialize(init);
+   gl->addInitialize(std::move(init));
 }
 
 std::string C_initialize::getType() const
@@ -56,12 +56,12 @@ C_initialize::C_initialize(const C_initialize& rv)
 {
 }
 
-void C_initialize::duplicate(std::auto_ptr<C_initialize>& rv) const
+void C_initialize::duplicate(std::unique_ptr<C_initialize>&& rv) const
 {
    rv.reset(new C_initialize(*this));
 }
 
-void C_initialize::duplicate(std::auto_ptr<C_general>& rv) const
+void C_initialize::duplicate(std::unique_ptr<C_general>&& rv) const
 {
    rv.reset(new C_initialize(*this));
 }

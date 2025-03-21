@@ -28,7 +28,7 @@ class TriggeredFunction {
       enum RunType {_SERIAL, _PARALLEL};
 
       TriggeredFunction(const std::string& name, RunType runType);
-      virtual void duplicate(std::auto_ptr<TriggeredFunction>& rv) const = 0;
+      virtual void duplicate(std::unique_ptr<TriggeredFunction>&& rv) const = 0;
       virtual ~TriggeredFunction();
 
       std::string getNameToCallerCodeString(

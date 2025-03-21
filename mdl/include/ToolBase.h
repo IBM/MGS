@@ -28,7 +28,7 @@ class DataType;
 class ToolBase : public Generatable {
    public:
       ToolBase(const std::string& fileName);
-      virtual void duplicate(std::auto_ptr<Generatable>& rv) const =0;
+      virtual void duplicate(std::unique_ptr<Generatable>&& rv) const =0;
       virtual std::string getType() const =0;
       virtual void generate() const;
       virtual std::string generateExtra() const;

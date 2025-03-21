@@ -52,7 +52,7 @@ ConnectionCCBase& ConnectionCCBase::operator=(const ConnectionCCBase& rv)
    return *this;
 }
 
-void ConnectionCCBase::addConnection(std::auto_ptr<RegularConnection>& con) 
+void ConnectionCCBase::addConnection(std::unique_ptr<RegularConnection>&& con) 
 {
    _connections.push_back(con.release());
 }
@@ -124,18 +124,18 @@ void ConnectionCCBase::copyOwnedHeap(const ConnectionCCBase& rv)
 {
    std::vector<RegularConnection*>::const_iterator it, 
       end = rv._connections.end();
-   std::auto_ptr<RegularConnection> dup;   
+   std::unique_ptr<RegularConnection> dup;   
    for (it = rv._connections.begin(); it != end; it++) {
-      (*it)->duplicate(dup);
+      (*it)->duplicate(std::move(dup));
       _connections.push_back(dup.release());
    }
    if (rv._userFunctions) {
       _userFunctions = new std::vector<UserFunction*>();
       std::vector<UserFunction*>::const_iterator it
 	 , end = rv._userFunctions->end();
-      std::auto_ptr<UserFunction> dup;   
+      std::unique_ptr<UserFunction> dup;   
       for (it = rv._userFunctions->begin(); it != end; ++it) {
-	 (*it)->duplicate(dup);
+	 (*it)->duplicate(std::move(dup));
 	 _userFunctions->push_back(dup.release());
       }
    } else {
@@ -145,9 +145,9 @@ void ConnectionCCBase::copyOwnedHeap(const ConnectionCCBase& rv)
       _predicateFunctions = new std::vector<PredicateFunction*>();
       std::vector<PredicateFunction*>::const_iterator it
 	 , end = rv._predicateFunctions->end();
-      std::auto_ptr<PredicateFunction> dup;   
+      std::unique_ptr<PredicateFunction> dup;   
       for (it = rv._predicateFunctions->begin(); it != end; ++it) {
-	 (*it)->duplicate(dup);
+	 (*it)->duplicate(std::move(dup));
 	 _predicateFunctions->push_back(dup.release());
       }
    } else {
@@ -353,18 +353,18 @@ void ConnectionCCBase::addExtraInstanceBaseMethods(Class& instance) const
    // Classes that make a connection also accept services.
    // These are connections extablished using publishers.
    // Modified, the base classes inherit from ServiceAcceptor now.
-//    std::auto_ptr<BaseClass> base(new BaseClass("ServiceAcceptor"));
+//    std::unique_ptr<BaseClass> base(new BaseClass("ServiceAcceptor"));
 //    instance.addBaseClass(base);
 //    instance.addHeader("\"ServiceAcceptor.h\"");
 
    // add acceptService method for ServiceAcceptor base class
-   std::auto_ptr<Method> acceptServiceMethod(new Method("acceptService", 
+   std::unique_ptr<Method> acceptServiceMethod(new Method("acceptService", 
 							"void"));
    acceptServiceMethod->setVirtual();
    acceptServiceMethod->addParameter("Service* service");
    acceptServiceMethod->addParameter("const std::string& name");
    acceptServiceMethod->setFunctionBody(getAcceptServiceBody());
-   instance.addMethod(acceptServiceMethod);
+   instance.addMethod(std::move(acceptServiceMethod));
 
    addExtraInstanceMethodsCommon(instance, true);
 
@@ -385,7 +385,7 @@ void ConnectionCCBase::addExtraInstanceProxyMethods(Class& instance) const
 
    // @TODO Implement acceptService method
    // add acceptService method for ServiceAcceptor base class
-//    std::auto_ptr<Method> acceptServiceMethod(new Method("acceptService", 
+//    std::unique_ptr<Method> acceptServiceMethod(new Method("acceptService", 
 // 							"void"));
 //    acceptServiceMethod->setVirtual();
 //    acceptServiceMethod->addParameter("Service* service");
@@ -397,7 +397,7 @@ void ConnectionCCBase::addExtraInstanceProxyMethods(Class& instance) const
 
 #if 0
    // add acceptService method for ServiceAcceptor base class
-   std::auto_ptr<Method> acceptServiceMethod(new Method("acceptService", 
+   std::unique_ptr<Method> acceptServiceMethod(new Method("acceptService", 
 							"void"));
    acceptServiceMethod->setVirtual();
    acceptServiceMethod->addParameter("Service* service");
@@ -461,14 +461,14 @@ bool ConnectionCCBase::predicateFunctionCallExists(
 }
 
 void ConnectionCCBase::setUserFunctions(
-   std::auto_ptr<std::vector<UserFunction*> >& userFunction) 
+   std::unique_ptr<std::vector<UserFunction*> >& userFunction) 
 {
    delete _userFunctions;
    _userFunctions = userFunction.release();
 }
 
 void ConnectionCCBase::setPredicateFunctions(
-   std::auto_ptr<std::vector<PredicateFunction*> >& predicateFunction) 
+   std::unique_ptr<std::vector<PredicateFunction*> >& predicateFunction) 
 {
    delete _predicateFunctions;
    _predicateFunctions = predicateFunction.release();

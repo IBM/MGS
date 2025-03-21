@@ -18,7 +18,7 @@
 #include <string>
 #include <memory>
 
-void BoolType::duplicate(std::auto_ptr<DataType>& rv) const
+void BoolType::duplicate(std::unique_ptr<DataType>&& rv) const
 {
    rv.reset(new BoolType(*this));
 }

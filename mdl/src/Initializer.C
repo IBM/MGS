@@ -44,8 +44,8 @@ Initializer::Initializer(int argc, char** argv)
 bool Initializer::execute()
 {
    CommandLine commandLine;
-   std::auto_ptr<MdlLexer> scanner;
-   std::auto_ptr<MdlContext> context;
+   std::unique_ptr<MdlLexer> scanner;
+   std::unique_ptr<MdlContext> context;
 
    if (!commandLine.parse(_argc, _argv)) {
       return false;

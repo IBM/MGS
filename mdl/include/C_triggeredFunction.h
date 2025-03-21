@@ -36,8 +36,8 @@ class C_triggeredFunction : public C_general {
 			  TriggeredFunction::RunType runType); 
       C_triggeredFunction(const C_triggeredFunction& rv);
       C_triggeredFunction& operator=(const C_triggeredFunction& rv);
-      virtual void duplicate(std::auto_ptr<C_triggeredFunction>& rv) const = 0;
-      virtual void duplicate(std::auto_ptr<C_general>& rv) const = 0;
+      virtual void duplicate(std::unique_ptr<C_triggeredFunction>&& rv) const = 0;
+      virtual void duplicate(std::unique_ptr<C_general>&& rv) const = 0;
       virtual ~C_triggeredFunction();
       
    protected:

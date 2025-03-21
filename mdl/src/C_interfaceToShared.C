@@ -28,9 +28,9 @@ void C_interfaceToShared::execute(MdlContext* context)
 
 void C_interfaceToShared::addToList(C_generalList* gl) 
 {  
-   std::auto_ptr<C_interfaceToShared> im;
+   std::unique_ptr<C_interfaceToShared> im;
    im.reset(new C_interfaceToShared(*this));
-   gl->addInterfaceToShared(im);
+   gl->addInterfaceToShared(std::move(im));
 }
 
 C_interfaceToShared::C_interfaceToShared() 
@@ -46,18 +46,18 @@ C_interfaceToShared::C_interfaceToShared(
 } 
 
 void C_interfaceToShared::duplicate(
-   std::auto_ptr<C_interfaceToShared>& rv) const
+   std::unique_ptr<C_interfaceToShared>&& rv) const
 {
    rv.reset(new C_interfaceToShared(*this));
 }
 
 void C_interfaceToShared::duplicate(
-   std::auto_ptr<C_interfaceMapping>& rv) const
+   std::unique_ptr<C_interfaceMapping>&& rv) const
 {
    rv.reset(new C_interfaceToShared(*this));
 }
 
-void C_interfaceToShared::duplicate(std::auto_ptr<C_general>& rv) const
+void C_interfaceToShared::duplicate(std::unique_ptr<C_general>&& rv) const
 {
    rv.reset(new C_interfaceToShared(*this));
 }

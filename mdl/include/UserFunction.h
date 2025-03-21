@@ -27,7 +27,7 @@ class UserFunction {
 
    public:
       UserFunction(const std::string& name);
-      virtual void duplicate(std::auto_ptr<UserFunction>& rv) const;
+      virtual void duplicate(std::unique_ptr<UserFunction>&& rv) const;
       virtual ~UserFunction();
      
       std::string getName() const {

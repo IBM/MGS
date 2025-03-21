@@ -54,12 +54,12 @@ C_connectionCCBase::C_connectionCCBase(const C_connectionCCBase& rv)
 {
 }
 
-void C_connectionCCBase::duplicate(std::auto_ptr<C_compCategoryBase>& rv) const
+void C_connectionCCBase::duplicate(std::unique_ptr<C_compCategoryBase>&& rv) const
 {
    rv.reset(new C_connectionCCBase(*this));
 }
 
-void C_connectionCCBase::duplicate(std::auto_ptr<C_connectionCCBase>& rv) const
+void C_connectionCCBase::duplicate(std::unique_ptr<C_connectionCCBase>&& rv) const
 {
    rv.reset(new C_connectionCCBase(*this));
 }
@@ -68,17 +68,17 @@ void C_connectionCCBase::executeConnectionCCBase(MdlContext* context,
 						 ConnectionCCBase* cc) const
 {
    if (_generalList->getUserFunctions()) { 
-      std::auto_ptr<std::vector<UserFunction*> > userFunctions;
+      std::unique_ptr<std::vector<UserFunction*> > userFunctions;
       _generalList->releaseUserFunctions(userFunctions);
       cc->setUserFunctions(userFunctions);
    }
    if (_generalList->getPredicateFunctions()) { 
-      std::auto_ptr<std::vector<PredicateFunction*> > predicateFunctions;
+      std::unique_ptr<std::vector<PredicateFunction*> > predicateFunctions;
       _generalList->releasePredicateFunctions(predicateFunctions);
       cc->setPredicateFunctions(predicateFunctions);
    }
    if (_generalList->getConnectionVec()) {
-      std::auto_ptr<std::vector<C_regularConnection*> > connectionVec;
+      std::unique_ptr<std::vector<C_regularConnection*> > connectionVec;
       _generalList->releaseConnectionVec(connectionVec);
       std::vector<C_regularConnection*>::iterator it, 
 	 end = connectionVec->end();

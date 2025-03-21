@@ -26,14 +26,14 @@ class DataType;
 class ArrayType;
 
 class C_array : public C_production {
-
+   using C_production::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       C_array();
       C_array(C_typeClassifier* tc);
       C_array(const C_array& rv);
-      virtual void duplicate(std::auto_ptr<C_array>& rv) const;
-      void releaseDataType(std::auto_ptr<DataType>& dt);
+      virtual void duplicate(std::unique_ptr<C_array>&& rv) const;
+      void releaseDataType(std::unique_ptr<DataType>&& dt);
       virtual ~C_array();
 
    private:

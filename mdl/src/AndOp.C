@@ -23,7 +23,7 @@
 #include <string>
 #include <sstream>
 
-void AndOp::duplicate(std::auto_ptr<Operation>& rv) const
+void AndOp::duplicate(std::unique_ptr<Operation>&& rv) const
 {
    rv.reset(new AndOp(*this));
 }

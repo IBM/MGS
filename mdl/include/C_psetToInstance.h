@@ -32,9 +32,9 @@ class C_psetToInstance : public C_psetMapping {
       C_psetToInstance();
       C_psetToInstance(const std::string& psetMember,
 		       C_identifierList* member); 
-      virtual void duplicate(std::auto_ptr<C_psetToInstance>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_psetMapping>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_general>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_psetToInstance>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_psetMapping>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_general>&& rv) const;
       virtual ~C_psetToInstance();
 };
 

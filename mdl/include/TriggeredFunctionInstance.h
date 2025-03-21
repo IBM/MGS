@@ -28,7 +28,7 @@ class TriggeredFunctionInstance : public TriggeredFunction {
    public:
       TriggeredFunctionInstance(const std::string& name, RunType runType);
       virtual void duplicate(
-	 std::auto_ptr<TriggeredFunction>& rv) const;
+	 std::unique_ptr<TriggeredFunction>&& rv) const;
       virtual ~TriggeredFunctionInstance();
       
    protected:

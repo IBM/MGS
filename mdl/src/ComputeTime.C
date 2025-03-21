@@ -26,7 +26,7 @@
 #include <string>
 #include <sstream>
 
-ComputeTime::ComputeTime(const std::string& name, std::auto_ptr<ComputeTimeType>& computeTimeType,
+ComputeTime::ComputeTime(const std::string& name, std::unique_ptr<ComputeTimeType>&& computeTimeType,
 	     const std::vector<std::string>& pvn)
    : _name(name), _packedVariableNames(pvn)
 {
@@ -92,10 +92,10 @@ void ComputeTime::generateUserMethod(Class& c) const
 
 void ComputeTime::generateInternalUserMethod(Class& c, bool pureVirtual) const
 {
-   std::auto_ptr<Method> method(new Method(_name, "void"));
+   std::unique_ptr<Method> method(new Method(_name, "void"));
    method->setVirtual();
    method->setPureVirtual(pureVirtual);
-   c.addMethod(method);
+   c.addMethod(std::move(method));
 }    
 
 void ComputeTime::generateInstanceComputeTimeMethod(
@@ -109,8 +109,8 @@ void ComputeTime::generateInstanceComputeTimeMethod(
 void ComputeTime::copyOwnedHeap(const ComputeTime& rv)
 {
    if (rv._computeTimeType) {
-      std::auto_ptr<ComputeTimeType> dup;
-      rv._computeTimeType->duplicate(dup);
+      std::unique_ptr<ComputeTimeType> dup;
+      rv._computeTimeType->duplicate(std::move(dup));
       _computeTimeType = dup.release();
    } else {
       _computeTimeType = 0;

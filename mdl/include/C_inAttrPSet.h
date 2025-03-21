@@ -28,9 +28,9 @@ class C_inAttrPSet : public C_struct {
    public:
       virtual void addToList(C_generalList* gl);
       C_inAttrPSet(C_dataTypeList* dtl);
-      virtual void duplicate(std::auto_ptr<C_inAttrPSet>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_struct>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_general>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_inAttrPSet>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_struct>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_general>&& rv) const;
       virtual ~C_inAttrPSet();      
 };
 

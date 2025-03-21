@@ -31,7 +31,7 @@ void C_node::execute(MdlContext* context)
    executeConnectionCCBase(context, cc);
    cc->checkAllMemberToInterfaces();	 
    
-   std::auto_ptr<Generatable> nodeMember;
+   std::unique_ptr<Generatable> nodeMember;
    nodeMember.reset(cc);
    context->_generatables->addMember(_name, nodeMember);
 }
@@ -54,7 +54,7 @@ C_node::C_node(const C_node& rv)
 
 }
 
-void C_node::duplicate(std::auto_ptr<C_node>& rv) const
+void C_node::duplicate(std::unique_ptr<C_node>&& rv) const
 {
    rv.reset(new C_node(*this));
 }

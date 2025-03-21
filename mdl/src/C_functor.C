@@ -51,13 +51,13 @@ void C_functor::execute(MdlContext* context)
       }      
       (*executeVec)[0]->executeMapper(context, *func->_executeArguments, 
 				      func->_userExecute);
-      std::auto_ptr<DataType> dt;
-      (*executeVec)[0]->releaseDataType(dt);
-      func->setReturnType(dt);
+      std::unique_ptr<DataType> dt;
+      (*executeVec)[0]->releaseDataType(std::move(dt));
+      func->setReturnType(std::move(dt));
    }
    func->setCategory(_category);
 
-   std::auto_ptr<Generatable> funcMember;
+   std::unique_ptr<Generatable> funcMember;
    funcMember.reset(func);
    context->_generatables->addMember(_name, funcMember);
 }
@@ -81,7 +81,7 @@ C_functor::C_functor(const C_functor& rv)
    _category = rv._category;
 }
 
-void C_functor::duplicate(std::auto_ptr<C_functor>& rv) const
+void C_functor::duplicate(std::unique_ptr<C_functor>&& rv) const
 {
    rv.reset(new C_functor(*this));
 }

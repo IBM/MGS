@@ -19,7 +19,7 @@
 #include <string>
 #include <memory>
 
-void TriggerType::duplicate(std::auto_ptr<DataType>& rv) const
+void TriggerType::duplicate(std::unique_ptr<DataType>&& rv) const
 {
    rv.reset(new TriggerType(*this));
 }

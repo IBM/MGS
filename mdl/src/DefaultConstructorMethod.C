@@ -1,3 +1,4 @@
+#include <memory>
 // =================================================================
 // Licensed Materials - Property of IBM
 //
@@ -36,7 +37,7 @@ DefaultConstructorMethod::DefaultConstructorMethod(
 {
 }
 
-void DefaultConstructorMethod::duplicate(std::auto_ptr<Method>& dup) const
+void DefaultConstructorMethod::duplicate(std::unique_ptr<Method>&& dup) const
 {
    dup.reset(new DefaultConstructorMethod(*this));
 }

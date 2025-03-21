@@ -77,14 +77,14 @@ void C_regularConnection::execute(MdlContext* context,
 	 os << "in " << getTypeStr() << ", " << e.getError();
 	 throw ConnectionException(os.str());
       }
-      std::auto_ptr<Predicate> predicate;
+      std::unique_ptr<Predicate> predicate;
       predicate.reset(_predicate);
       _predicate = 0;
-      regularConnection->setPredicate(predicate);
+      regularConnection->setPredicate(std::move(predicate));
    } 
 
    if (_generalList->getUserFunctionCalls()) { 
-      std::auto_ptr<std::vector<UserFunctionCall*> > userFunctionCalls;
+      std::unique_ptr<std::vector<UserFunctionCall*> > userFunctionCalls;
       _generalList->releaseUserFunctionCalls(userFunctionCalls);
       std::vector<UserFunctionCall*>::const_iterator it, 
 	 end = userFunctionCalls->end();
@@ -96,12 +96,12 @@ void C_regularConnection::execute(MdlContext* context,
 	    throw ConnectionException(os.str());	    
 	 }
       }
-      regularConnection->setUserFunctionCalls(userFunctionCalls);
+      regularConnection->setUserFunctionCalls(std::move(userFunctionCalls));
    }
-   std::auto_ptr<RegularConnection> aConnection;
+   std::unique_ptr<RegularConnection> aConnection;
    aConnection.reset(regularConnection);
    
-   connectionBase->addConnection(aConnection);
+   connectionBase->addConnection(std::move(aConnection));
 }
 
 
@@ -126,24 +126,24 @@ C_regularConnection::C_regularConnection(const C_regularConnection& rv)
      _componentType(rv._componentType), _directionType(rv._directionType)  
 {
    if (rv._predicate) {
-      std::auto_ptr<Predicate> dup;
-      rv._predicate->duplicate(dup);
+      std::unique_ptr<Predicate> dup;
+      rv._predicate->duplicate(std::move(dup));
       _predicate = dup.release();
    }
 }
 
 void C_regularConnection::duplicate(
-   std::auto_ptr<C_regularConnection>& rv) const
+   std::unique_ptr<C_regularConnection>&& rv) const
 {
    rv.reset(new C_regularConnection(*this));
 }
 
-void C_regularConnection::duplicate(std::auto_ptr<C_connection>& rv) const
+void C_regularConnection::duplicate(std::unique_ptr<C_connection>&& rv) const
 {
    rv.reset(new C_regularConnection(*this));
 }
 
-void C_regularConnection::duplicate(std::auto_ptr<C_general>& rv) const
+void C_regularConnection::duplicate(std::unique_ptr<C_general>&& rv) const
 {
    rv.reset(new C_regularConnection(*this));
 }
@@ -155,9 +155,9 @@ C_regularConnection::~C_regularConnection()
 
 void C_regularConnection::addToList(C_generalList* gl) 
 {
-   std::auto_ptr<C_regularConnection> con;
+   std::unique_ptr<C_regularConnection> con;
    con.reset(new C_regularConnection(*this));
-   gl->addConnection(con);
+   gl->addConnection(std::move(con));
 }
 
 std::string C_regularConnection::getTypeStr() const

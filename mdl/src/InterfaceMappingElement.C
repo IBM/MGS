@@ -1,3 +1,4 @@
+#include <memory>
 // =================================================================
 // Licensed Materials - Property of IBM
 //
@@ -19,7 +20,7 @@
 #include <sstream>
 
 InterfaceMappingElement::InterfaceMappingElement(
-   const std::string& name, std::auto_ptr<DataType>& type, 
+   const std::string& name, std::unique_ptr<DataType>&& type, 
    const std::string& typeString, bool amp)
    : _name(name), _type(0), _needsAmpersand(amp), _typeString(typeString)
 {
@@ -55,8 +56,8 @@ void InterfaceMappingElement::destructOwnedHeap()
 void InterfaceMappingElement::copyOwnedHeap(const InterfaceMappingElement& rv)
 {
    if (rv._type) {
-      std::auto_ptr<DataType> dup;
-      rv._type->duplicate(dup);
+      std::unique_ptr<DataType> dup;
+      rv._type->duplicate(std::move(dup));
       _type = dup.release();
    } else {
       _type = 0;

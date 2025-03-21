@@ -26,8 +26,8 @@ class MemberToInterface : public InterfaceMapping {
 
    public:
       MemberToInterface(Interface* interface = 0);
-      virtual void duplicate(std::auto_ptr<MemberToInterface>& rv) const;
-      virtual void duplicate(std::auto_ptr<InterfaceMapping>& rv) const;
+      virtual void duplicate(std::unique_ptr<MemberToInterface>&& rv) const;
+      virtual void duplicate(std::unique_ptr<InterfaceMapping>&& rv) const;
       virtual ~MemberToInterface();
       bool checkAllMapped();
 
