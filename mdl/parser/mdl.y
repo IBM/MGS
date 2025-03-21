@@ -134,7 +134,7 @@ using namespace std;
    }
 %}
 
-%pure-parser
+%define api.pure
 %locations
 %parse-param       {void * YYPARSE_PARAM}
 %lex-param       {void * YYLEX_PARAM}

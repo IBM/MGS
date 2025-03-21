@@ -11,7 +11,11 @@ cc_yellow="${esc}[0;33m"
 cc_blue="${esc}[0;34m"
 cc_normal=`echo -en "${esc}[m\017"`
 
-NPROCS=$((`cat /proc/cpuinfo | grep processor | wc -l`))
+if [ "$(uname)" == "Darwin" ]; then
+  NPROCS=$(sysctl -n hw.ncpu)
+else
+  NPROCS=$((`cat /proc/cpuinfo | grep processor | wc -l 2>/dev/null || echo 4`))
+fi
 if [ $NPROCS -gt 2 ]; then
   NPROCS=$(( $NPROCS*2/3 ))
 fi
@@ -350,7 +354,7 @@ while getopts "$optspec" optchar; do
       ;;
   esac
 done
-SUPPORTED_PLATFORMS="LINUX BGL BGP BGQ SMP"
+SUPPORTED_PLATFORMS="LINUX BGL BGP BGQ SMP MACOS"
 [[ $SUPPORTED_PLATFORMS =~ (^|[[:space:]])"$PLATFORM"($|[[:space:]]) ]] && : || { echoerr "wrong-platform $PLATFORM"; print_help; exit 1; }
 
 SUPPORTED_COMPONENTS="all common mdl gsl nti"
@@ -476,7 +480,7 @@ fi
 ## 6. CUDA [optional]
 ## 7. Armadillo [optional]
 #{{{
-if [ "$PLATFORM" == "LINUX" ]; then
+if [ "$PLATFORM" == "LINUX" ] || [ "$PLATFORM" == "MACOS" ]; then
   if which mpiCC | grep -q1 /\mpiCC; then
     echoerr mpi found...; else echoerr -e "${cc_red}mpi not found! please either install through your distributions package manager or from source${cc_normal}"; 
     echoerr "... or run: source ./get_ompi.sh"
@@ -523,7 +527,7 @@ fi
 
 VALID_FLEX_VERSION=2.6.4
 #{{{
-FLEX_VERSION=`flex --version 2>&1 | awk 'NR==1{ gsub(/"/,""); print $NF }'`
+FLEX_VERSION=`flex --version 2>&1 | awk 'NR==1{ gsub(/"/,""); print $2 }' | sed 's/Apple(flex-[0-9]*)$//'`
 echo version $FLEX_VERSION...
 read c_major c_minor c_rev << EOF
 `echo ${VALID_FLEX_VERSION} | tr "." " "`
@@ -558,7 +562,7 @@ fi
 if [ $FLEX_FAILED -eq 1 ]; then
   echo flex version $VALID_FLEX_VERSION required: flex.sourceforge.net!
   Yes_No_InstallFlex
-  if [ "$PLATFORM" == "LINUX" ]; then 
+  if [ "$PLATFORM" == "LINUX" ] || [ "$PLATFORM" == "MACOS" ]; then
     exit;
   fi
 fi
@@ -569,9 +573,20 @@ if which python | grep -q1 /\python; then
   exit 1;
 fi
 
-if ldconfig -p | grep libgmp; then
-  echoerr "libgmp found..."; else echoerr -e "${cc_red}libgmp not found! please either install through your distributions package manager or from source (https://gmplib.org)${cc_normal}";
-  exit 1;
+if [ "$(uname)" == "Darwin" ]; then
+  if [ -d "$(brew --prefix gmp)" ] && [ -f "$(brew --prefix gmp)/lib/libgmp.dylib" ]; then
+    echoerr "libgmp found..."; 
+  else 
+    echoerr -e "${cc_red}libgmp not found! please install with 'brew install gmp'${cc_normal}";
+    exit 1;
+  fi
+else
+  if ldconfig -p | grep libgmp; then
+    echoerr "libgmp found..."; 
+  else 
+    echoerr -e "${cc_red}libgmp not found! please either install through your distributions package manager or from source (https://gmplib.org)${cc_normal}";
+    exit 1;
+  fi
 fi
 
 if [ "$GPU" == "--gpu" ]; then
@@ -582,10 +597,21 @@ if [ "$GPU" == "--gpu" ]; then
 fi
 
 if [ "$ARMA" == "--arma" ]; then
-  if `ldconfig -p | grep -q armadillo`; then
-    echoerr "Armadillo probably found..."; else echoerr -e "${cc_red}Armadillo potentially not found! (install from http://arma.sourceforge.net/download.html)${cc_normal}";
-    exit 1
-  fi
+  if [ "$(uname)" == "Darwin" ]; then
+    if brew list | grep -q armadillo; then
+      echoerr "Armadillo probably found..."; 
+    else 
+      echoerr -e "${cc_red}Armadillo potentially not found! (install from http://arma.sourceforge.net/download.html)${cc_normal}";
+      exit 1
+    fi
+  else
+    if `ldconfig -p | grep -q armadillo`; then
+      echoerr "Armadillo probably found..."; 
+    else 
+      echoerr -e "${cc_red}Armadillo potentially not found! (install from http://arma.sourceforge.net/download.html)${cc_normal}";
+      exit 1
+    fi
+  fi 
 fi
 #}}}
 #{{{ 
@@ -596,15 +622,27 @@ if [[ -z "${PYTHON_INCLUDE_DIR}" ]]; then
   exit 1
 fi
 if [[ -z "${PYTHON_LIB}" ]]; then
-  if `ldconfig -p | grep -q libpython3.6m`; then
-    echo "libpython3.6m.so found"
-    PYTHON_LIB=$(ldconfig -p | grep libpython3.6m | awk -F"=>" '{print $2;}')
-    PYTHON_LIB=$(dirname $PYTHON_LIB | uniq)
-    export PYTHON_LIB=$PYTHON_LIB
+  if [ "$(uname)" == "Darwin" ]; then
+    if [ -d "$(brew --prefix python)" ]; then
+      PYTHON_LIB=$(brew --prefix python)/lib
+      export PYTHON_LIB=$PYTHON_LIB
+      echo "Python library found at $PYTHON_LIB"
+    else
+      echo "Please export PYTHON_LIB=/path/to/python/lib"
+      echo " e.g: export PYTHON_LIB=$(dirname $(which python))/../lib"
+      exit 1
+    fi
   else
-    echo "Please export PYTHON_LIB=/path/to/libpython3.6m.so"
-    echo " e.g: export PYTHON_LIB=/usr/lib/x86_64-linux-gnu/"
-    exit 1
+    if `ldconfig -p | grep -q libpython3.6m`; then
+      echo "libpython3.6m.so found"
+      PYTHON_LIB=$(ldconfig -p | grep libpython3.6m | awk -F"=>" '{print $2;}')
+      PYTHON_LIB=$(dirname $PYTHON_LIB | uniq)
+      export PYTHON_LIB=$PYTHON_LIB
+    else
+      echo "Please export PYTHON_LIB=/path/to/libpython3.6m.so"
+      echo " e.g: export PYTHON_LIB=/usr/lib/x86_64-linux-gnu/"
+      exit 1
+    fi
   fi
 fi
 if [ "$BUILD_TARGET" == "--as-NTS-NVU" ]; then
