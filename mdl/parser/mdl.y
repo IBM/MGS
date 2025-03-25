@@ -1,26 +1,25 @@
 %{
-// =================================================================
-// Licensed Materials - Property of IBM                             
-//                                                                 
-// "Restricted Materials of IBM"                                  
-//                                                               
-// BCM-YKT-07-18-2017                                         
-//                                                                  
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved          
-//                                                                  
-// US Government Users Restricted Rights -                         
-// Use, duplication or disclosure restricted by                    
-// GSA ADP Schedule Contract with IBM Corp.                        
-//                                                                
-// =================================================================
-%}
+/*
+Licensed Materials - Property of IBM
 
-%{
-#include "MdlLexer.h"
+"Restricted Materials of IBM"
+
+BCM-YKT
+
+(C) Copyright IBM Corp. 2005-2013  All rights reserved   
+
+US Government Users Restricted Rights -
+Use, duplication or disclosure restricted by
+GSA ADP Schedule Contract with IBM Corp.
+
+ */
+
+#include "bison_compat.h"  // adds compatibility macros
+#include "mdl_types.h"
 #include "ParserClasses.h"
+#include "MdlLexer.h"
 #include "MdlContext.h"
 #include "Initializer.h"
-
 #include "StringType.h"
 #include "BoolType.h"
 #include "CharType.h"
@@ -44,7 +43,6 @@
 #include "TriggerType.h"
 #include "ParameterSetType.h"
 #include "NDPairListType.h"
-
 #include "Operation.h"
 #include "ParanthesisOp.h"
 #include "TerminalOp.h"
@@ -60,16 +58,12 @@
 #include "BValidOp.h"
 #include "AndOp.h"
 #include "OrOp.h"
-
 #include "Connection.h"
-
 #include "PhaseType.h"
 #include "PhaseTypeInstance.h"
 #include "PhaseTypeShared.h"
 #include "PhaseTypeGridLayers.h"
-
 #include "TriggeredFunction.h"
-
 #include "SyntaxErrorException.h"
 #include "InternalException.h"
 #include <iostream>
@@ -78,74 +72,74 @@
 #include <cstring>
 #include <stdio.h>
 #include <chrono>
+#include <errno.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 using namespace std;
 
+#ifndef USABLE
 #define USABLE
-#define YYPARSE_PARAM parm
-#define YYLEX_PARAM parm
-#ifndef YYDEBUG
-#define YYDEBUG 1
 #endif
+
+// Define context access
 #define CONTEXT ((MdlContext *) parm)
-#define yyparse mdlparse
-#define yyerror mdlerror
-#define yylex   mdllex
-#define CURRENTFILE (((MdlContext *) parm)->_lexer)->currentFileName
-#define CURRENTLINE (((MdlContext *) parm)->_lexer)->lineCount
+#define CURRENTFILE (CONTEXT->_lexer)->currentFileName
+#define CURRENTLINE (CONTEXT->_lexer)->lineCount
 
+// Function declarations
+void mdlerror(const char *s);
+void mdlerror(YYLTYPE* locp, void* parm, const char* s);
+int mdllex(YYSTYPE* lvalp, YYLTYPE* locp, void* parm);
 
-   void mdlerror(const char *s);
-   void mdlerror(YYLTYPE*, void*, const char *s);
-   int mdllex(YYSTYPE *lvalp, YYLTYPE *locp, void *context);
+// Helper function for executing productions
+inline void HIGH_LEVEL_EXECUTE(void* parm, C_production* l) {
+    try {
+        l->execute(CONTEXT);
+        delete l;
+        CONTEXT->setErrorDisplayed(false);
+    } catch (SyntaxErrorException& e) {
+        cerr << "Error at file:";
+        if (e.isCaught()) {
+            cerr << e.getFileName() << ", line:" << e.getLineNumber() << ", ";
+        } else {
+            MdlLexer *li = CONTEXT->_lexer;
+            cerr << li->currentFileName << ", line:" << li->lineCount << ", ";
+        }
+        cerr << e.getError() << endl; 
+        CONTEXT->setError();
+        delete l;
+    } catch (InternalException& e) {
+        cerr << "Error at file:";      
+        MdlLexer *li = CONTEXT->_lexer;
+        cerr << li->currentFileName << ", line:" << li->lineCount << ", ";
+        cerr << e.getError() << endl; 
+        CONTEXT->setError();
+        delete l;
+    }
+}
 
-   inline void HIGH_LEVEL_EXECUTE(void* parm, C_production* l) {
-      try{
-	 l->execute(CONTEXT);
-	 delete l;
-	 CONTEXT->setErrorDisplayed(false);
-      } catch (SyntaxErrorException& e) {
-	 cerr << "Error at file:";
-	 if (e.isCaught()) {
-	    cerr << e.getFileName() << ", line:" << e.getLineNumber() << ", ";
-	 } else {
-	    MdlLexer *li = CONTEXT->_lexer;
-	    cerr << li->currentFileName << ", line:" << li->lineCount << ", ";
-	 }
-	 cerr << e.getError() << endl; 
-	 CONTEXT->setError();
-	 delete l;
-      } catch (InternalException& e) {
-	 cerr << "Error at file:";	 
-	 MdlLexer *li = CONTEXT->_lexer;
-	 cerr << li->currentFileName << ", line:" << li->lineCount << ", ";
-	 cerr << e.getError() << endl; 
-	 CONTEXT->setError();
-	 delete l;
-      } catch (...) {
-	 cerr << "Error at file:";	 
-	 MdlLexer *li = CONTEXT->_lexer;
-	 cerr << li->currentFileName << ", line:" << li->lineCount << ", ";
-	 CONTEXT->setError();
-	 delete l;
-      }
-
-   }
 %}
 
-%define api.pure
+// Modern Bison directives
+%define api.pure full
+%define api.prefix {mdl}
+%define parse.error verbose
+
+// Add this line to prevent symbol kind enum conflicts
+%define api.symbol.prefix {symbol_}
+
 %locations
-%parse-param       {void * YYPARSE_PARAM}
-%lex-param       {void * YYLEX_PARAM}
-/*%param { void * context} */
+%param { void* parm }
 
 %{
 #ifndef YYSTYPE_DEFINITION
 #define YYSTYPE_DEFINITION
 %}
 
-
+// Semantic value union definition
 %union {
       double V_double;
       int V_int;
@@ -192,7 +186,9 @@ using namespace std;
 #endif
 %}
 
-%token <V_double>  DOUBLE_CONSTANT
+// Token Declarations
+
+%token <V_double> DOUBLE_CONSTANT
 %token <V_int> INT_CONSTANT
 %token <P_string> STRING_LITERAL
 %token <P_string> IDENTIFIER
@@ -268,11 +264,10 @@ using namespace std;
 %token OPTIONAL
 %token FRAMEWORK
 
-/* types for non-terminals */
+// Type Declarations for non-terminals
+
 %type <P_general> argumentDataType
 %type <P_generalList> argumentDataTypeList
-// %type <P_general> argumentMapping
-// %type <P_generalList> argumentMappingList
 %type <P_array> array
 %type <V_connectionComponentType> connectionComponentType
 %type <P_connection> connection
@@ -345,6 +340,8 @@ using namespace std;
 
 %%
 
+// Grammar Rules
+
 mdlFile:  parserLineList {
 
 }
@@ -379,27 +376,18 @@ parserLine: struct {
 | functor {
    HIGH_LEVEL_EXECUTE(parm, $1);
 }
-/*
-| error ';' {
-   MdlLexer *l = ((MdlContext *) parm)->_lexer;
-   cerr<< "Error position: "<<l->currentFileName<<": "
-       <<l->lineCount<<endl<<endl;
-   CONTEXT->setError();
-} 
-*/
+
 | error {
    MdlContext *c = (MdlContext *) parm;
    MdlLexer *l = c->_lexer;
-   if ((c->isSameErrorLine(l->currentFileName, l->lineCount) == false) 
-       && !c->isErrorDisplayed()){
-      cerr<< "Error at file:"<<l->currentFileName<<", line:" <<l->lineCount<< ", ";
+   if (!c->isErrorDisplayed()){
+      cerr<< "Error at file:"<<c->getLastErrorFileName()<<", line:" <<c->getLastErrorLine()<< ", ";
       cerr<< "unexpected token: " << l->getToken() << endl << endl;
       c->setErrorDisplayed(true);
    }
    c->setLastError(l->currentFileName, l->lineCount);
    CONTEXT->setError();
-}
-;
+};
 
 
 /* Directives */
@@ -1520,11 +1508,20 @@ array : typeClassifier '[' ']' {
 ;
 
 %%
- 
-inline int mdllex(YYSTYPE *lvalp, YYLTYPE *locp, void *context)
+
+// Lexer implementation
+int mdllex(YYSTYPE* lvalp, YYLTYPE* locp, void* parm)
 {
-   return ((MdlContext *) context)->_lexer->lex(lvalp, locp, (MdlContext *) context);
+    return CONTEXT->_lexer->lex(lvalp, locp, CONTEXT);
 }
+
+// Error handling function
+void mdlerror(YYLTYPE* locp, void* parm, const char* s)
+{
+    fprintf(stderr, "%s\n", s);
+}
+
+// Main and Helper Functions 
 
 int main(int argc, char *argv[])
 {
@@ -1566,14 +1563,4 @@ std::cout << ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n"
    } else {
       return 1;
    }
-}
-
-void mdlerror(const char *s)
-{
-   fprintf(stderr,"%s\n",s);
-}
-
-void mdlerror(YYLTYPE*, void*, const char *s)
-{
-   fprintf(stderr, "%s\n", s);
 }

@@ -73,7 +73,8 @@
 #include "C_userFunction.h"
 #include "C_userFunctionCall.h"
 #include "C_variable.h"
-#include "C_computeTime.h" 
+#include "C_computeTime.h"                     // added by Jizhu Lu on 02/06/2006
+#include "Connection.h"
 #include "Predicate.h"
 #include "PSetPredicate.h"
 #include "InstancePredicate.h"

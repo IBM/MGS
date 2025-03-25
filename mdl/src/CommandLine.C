@@ -25,6 +25,12 @@ CommandLine::CommandLine()
 {
 }
 
+CommandLine::CommandLine(CommandLine& cl) 
+   : _fileName(cl._fileName), _static(cl._static), 
+   _printWarning(cl._printWarning), _includePath(cl._includePath)
+{
+}
+
 bool CommandLine::parse(int argc, char** argv) 
 {
    int width = 75;

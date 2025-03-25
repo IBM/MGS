@@ -18,7 +18,7 @@
 
 MdlContext::MdlContext()
    : _lexer(0), _lineNumber(0), _fileName(""), _error(false)
-   , _errorDisplayed(false), _lastErrorFileName(""), _lastErrorLine(0){
+   , _errorDisplayed(false), _lastErrorFileName(""), _lastErrorLine(0) {
 }
 
 MdlContext::MdlContext(MdlContext* c)
@@ -32,14 +32,6 @@ MdlContext::MdlContext(MdlContext* c)
 void MdlContext::synchronize() {
    _lineNumber = _lexer->lineCount;
    _fileName = _lexer->currentFileName;
-}
-
-std::string const &MdlContext::getExecutionFileName() const {
-   return _lexer->currentFileName;
-}
-
-int MdlContext::getExecutionLineNumber() const {
-   return _lexer->lineCount;
 }
 
 std::string const &MdlContext::getFileName() const {

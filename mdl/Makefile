@@ -98,13 +98,16 @@ include sources.mk
 
 # Parser targets
 mdl.tab.h:  parser/mdl.y
-	cd parser; bison -v -d -b mdl mdl.y; cd .. && mv parser/mdl.tab.c parser/mdl.tab.cpp
-	cd parser; mv mdl.tab.h ../include; cd -
+	cd parser && bison -v -d -b mdl mdl.y
+	mv parser/mdl.tab.h include/
+	# Rename .c to .cpp if needed
+	if [ -f parser/mdl.tab.c ]; then mv parser/mdl.tab.c parser/mdl.tab.cpp; fi
 	
 
-parser/mdl.tab.c: parser/mdl.y
-	cd parser; bison -v -d -b mdl mdl.y; cd ..
-	cd parser; bison -v -d -b mdl mdl.y; cd .. && mv parser/mdl.tab.c parser/mdl.tab.cpp
+parser/mdl.tab.cpp: parser/mdl.y
+	cd parser && bison -v -d -b mdl mdl.y
+	# Rename .c to .cpp if needed
+	if [ -f parser/mdl.tab.c ]; then mv parser/mdl.tab.c parser/mdl.tab.cpp; fi
 
 # Scanner targets
 ifeq ($(FLEXFIXER), True)

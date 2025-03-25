@@ -95,7 +95,8 @@ bool Initializer::execute() {
    _generatables = new MemberContainer<Generatable>();
    context->_generatables = _generatables;
    try {
-      mdlparse(context.get());
+      int result = mdlparse(context.get());
+      std::cerr << "mdlparse returned: " << result << std::endl;
    } catch (InternalException& e) {
       std::cerr << "Internal error: " << e.getError() << std::endl;
       std::cerr << "Quitting..." << std::endl;      
@@ -141,8 +142,11 @@ bool Initializer::execute() {
    }
 
    try {
+      std::cerr << "Number of generatables: " << context->_generatables->size() << std::endl;
       for (it = context->_generatables->begin(); it != end; it++) {
-         it->second->generateFiles(fileName);
+         std::cerr << "About to generate files for: " << it->first << std::endl;
+	      it->second->generateFiles(fileName);
+         std::cerr << "Successfully generated files" << std::endl;
       }
    } catch (InternalException& e) {
       std::cerr << "Internal error: " << e.getError() << std::endl;

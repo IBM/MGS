@@ -33,12 +33,12 @@ class MdlContext
       void synchronize();
       int getLineNumber() const;
       std::string const & getFileName() const;
-      int getExecutionLineNumber() const;
-      std::string const & getExecutionFileName() const;
+      std::string const & getLastErrorFileName() {return _lastErrorFileName;}  
+      int getLastErrorLine() {return _lastErrorLine;}
       void setError() { _error = true;};
       bool isError() { return _error;};
       void setErrorDisplayed(bool errorDisplayed) { 
-	 _errorDisplayed = errorDisplayed;
+	      _errorDisplayed = errorDisplayed;
       };
       bool isErrorDisplayed() { return _errorDisplayed;};
       void setLastError(std::string& fileName, int line);

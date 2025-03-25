@@ -24,6 +24,7 @@ class CommandLine {
 
    public:
       CommandLine();
+      CommandLine(CommandLine& cl);
       bool parse(int argc, char** argv);
 
       const std::string& getFileName() {
