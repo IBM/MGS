@@ -18,48 +18,35 @@
 
 MdlContext::MdlContext()
    : _lexer(0), _lineNumber(0), _fileName(""), _error(false)
-   , _errorDisplayed(false), _lastErrorFileName(""), _lastErrorLine(0)
-{
+   , _errorDisplayed(false), _lastErrorFileName(""), _lastErrorLine(0){
 }
-
 
 MdlContext::MdlContext(MdlContext* c)
    : _lexer(c->_lexer), _generatables(c->_generatables)
    , _lineNumber(c->_lineNumber), _fileName(c->_fileName)
    , _error(c->_error), _errorDisplayed(c->_errorDisplayed)
    , _lastErrorFileName(c->_lastErrorFileName)
-   , _lastErrorLine(c->_lastErrorLine)   
-{
+   , _lastErrorLine(c->_lastErrorLine) {
 }
 
-
-void MdlContext::synchronize()
-{
+void MdlContext::synchronize() {
    _lineNumber = _lexer->lineCount;
    _fileName = _lexer->currentFileName;
 }
 
-
-std::string const &MdlContext::getExecutionFileName() const
-{
+std::string const &MdlContext::getExecutionFileName() const {
    return _lexer->currentFileName;
 }
 
-
-int MdlContext::getExecutionLineNumber() const
-{
+int MdlContext::getExecutionLineNumber() const {
    return _lexer->lineCount;
 }
 
-
-std::string const &MdlContext::getFileName() const
-{
+std::string const &MdlContext::getFileName() const {
    return _fileName;
 }
 
-
-int MdlContext::getLineNumber() const
-{
+int MdlContext::getLineNumber() const {
    return  _lineNumber;
 }
 
@@ -76,7 +63,5 @@ bool MdlContext::isSameErrorLine(std::string& fileName, int line) {
    }
 }
 
-
-MdlContext::~MdlContext()
-{
+MdlContext::~MdlContext() {
 }

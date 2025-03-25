@@ -158,7 +158,7 @@ clean:
 	-rm -f $(OBJS_DIR)/*
 	-rm -f $(BIN_DIR)/$(EXE_FILE)
 	-rm -f parser/mdl.output
-	-rm -f parser/mdl.tab.c
+	-rm -f parser/mdl.tab.cpp
 	-rm -f parser/mdl.tab.h
 	-rm -f scanner/lex.yy.cc
 

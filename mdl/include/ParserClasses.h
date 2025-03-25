@@ -18,7 +18,6 @@
 #include "Mdl.h"
 
 #include "C_array.h"
-// #include "C_argumentMapping.h"
 #include "C_argumentToMemberMapper.h"
 #include "C_compCategoryBase.h"
 #include "C_connection.h"
@@ -74,9 +73,7 @@
 #include "C_userFunction.h"
 #include "C_userFunctionCall.h"
 #include "C_variable.h"
-//#include "C_resource.h"                        // added by Jizhu Lu on 02/06/2006
-#include "C_computeTime.h"                     // added by Jizhu Lu on 02/06/2006
-
+#include "C_computeTime.h" 
 #include "Predicate.h"
 #include "PSetPredicate.h"
 #include "InstancePredicate.h"
