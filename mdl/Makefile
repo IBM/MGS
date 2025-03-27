@@ -100,13 +100,11 @@ include sources.mk
 mdl.tab.h:  parser/mdl.y
 	cd parser && bison -v -d -b mdl mdl.y
 	mv parser/mdl.tab.h include/
-	# Rename .c to .cpp if needed
 	if [ -f parser/mdl.tab.c ]; then mv parser/mdl.tab.c parser/mdl.tab.cpp; fi
 	
 
 parser/mdl.tab.cpp: parser/mdl.y
 	cd parser && bison -v -d -b mdl mdl.y
-	# Rename .c to .cpp if needed
 	if [ -f parser/mdl.tab.c ]; then mv parser/mdl.tab.c parser/mdl.tab.cpp; fi
 
 # Scanner targets

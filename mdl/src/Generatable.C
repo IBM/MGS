@@ -71,7 +71,6 @@ void Generatable::generateFiles(const std::string& originalFileName)
    std::cerr << "_fileName: '" << _fileName << "'" << std::endl;
    std::cerr << "modName : '" << modName << "'" << std::endl;
    std::cerr << "_fileOutput: " << (_fileOutput ? "true" : "false") << std::endl;
-   _fileOutput = true;  // Force file output regardless of the comparison
    internalGenerateFiles();
    createDirectoryStructure();
    generateModuleMk(); // hack for MBL

@@ -67,7 +67,7 @@ bool Initializer::execute() {
       command << "/usr/gnu/bin/gcpp ";
       #endif
       #ifdef __APPLE__
-      command << "/usr/bin/cpp -P";
+      command << "/usr/bin/cpp";
       #endif
 
       // Add include paths first
