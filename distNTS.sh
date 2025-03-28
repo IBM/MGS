@@ -20,8 +20,8 @@ cp $MDLROOT/scripts/*.* $DISTROOT/mdl/scripts
 cp $MDLROOT/include/FlexLexer.h $DISTROOT/mdl/include
 cp $MDLROOT/scanner/mdl.l $DISTROOT/mdl/scanner
 
-mv $LENSROOT/utils/std/include/RNG.h $LENSROOT/utils/std/include/RNG.h.bak
-sed 's/^#include/\/\/#include/g' $LENSROOT/utils/std/include/RNG.h.bak | sed 's/^typedef/\/\/typedef/g' | sed 's/\/\/#include "MRG32k3a.h"/#include "MRG32k3a.h"/g' | sed 's/\/\/typedef MRG32k3a/typedef MRG32k3a/g'  > $LENSROOT/utils/std/include/RNG.h 
+mv $MGSROOT/utils/std/include/RNG.h $MGSROOT/utils/std/include/RNG.h.bak
+sed 's/^#include/\/\/#include/g' $MGSROOT/utils/std/include/RNG.h.bak | sed 's/^typedef/\/\/typedef/g' | sed 's/\/\/#include "MRG32k3a.h"/#include "MRG32k3a.h"/g' | sed 's/\/\/typedef MRG32k3a/typedef MRG32k3a/g'  > $MGSROOT/utils/std/include/RNG.h 
 
 sed -n '/\\/p' $DISTROOT/mdl/sources.mk | sed '/#/d' | sed 's/SRCS := //' | sed 's/ *\\$/.C $DISTROOT\/mdl\/src\//g' | sed 's/^/cp \$MDLROOT\/src\//' > tmpdist.sh
 source ./tmpdist.sh
@@ -336,7 +336,7 @@ done
 
 rm -f tmpdist.sh tmpdist2.sh
 
-mv $LENSROOT/utils/std/include/RNG.h.bak $LENSROOT/utils/std/include/RNG.h
+mv $MGSROOT/utils/std/include/RNG.h.bak $MGSROOT/utils/std/include/RNG.h
 
 cp $NTSROOT/nti/FrontLimitedSegmentSpace.cxx $DISTROOT/nti
 cp $NTSROOT/nti/InferiorOliveGlomeruliDetector.h $DISTROOT/nti

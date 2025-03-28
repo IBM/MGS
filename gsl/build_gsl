@@ -351,12 +351,12 @@ else
   make -j $NPROCS ${EXTRA_LIBS};
 fi
 
-if [ "$CLEAN" != "-clean" ] && { [ $? -gt 0 ] || [ ! `ls $LENSROOT/bin/gslparser` ];}; then 
+if [ "$CLEAN" != "-clean" ] && { [ $? -gt 0 ] || [ ! `ls $MGSROOT/bin/gslparser` ];}; then 
   echoerr -e "${cc_red}Build GSL failed ! ${cc_normal}\n";
   exit 1;
 elif [ "$CLEAN" == "-clean" ]; then 
   echoerr -e "\n\n\n${cc_blue}You have removed GSL successful.${cc_normal}\n";
-  if [ "$REBUILD" == "-rebuild" ] && { [ `ls $LENSROOT/bin/gslparser` ];}; then 
+  if [ "$REBUILD" == "-rebuild" ] && { [ `ls $MGSROOT/bin/gslparser` ];}; then 
     echoerr -e "\n\n\n${cc_blue}Build GSL successful.${cc_normal}\n";
   fi
 else

@@ -1,12 +1,11 @@
-export NTSMGSROOT=`pwd`
-export NTSROOT=`pwd`
 export MGSROOT=`pwd`
-export LENSROOT=$NTSROOT/gsl
-export MDLROOT=$NTSROOT/mdl
-export PATH=$NTSROOT/gsl/bin:$PATH
-export GSLPARSER=$NTSROOT/gsl/bin/gslparser
+export NTSROOT=$MGSROOT
+export NTSMGSROOT=$MGSROOT
+export MDLROOT=$MGSROOT/mdl
+export PATH=$MGSROOT/gsl/bin:$PATH
+export GSLPARSER=$MGSROOT/gsl/bin/gslparser
 if [ -f .built ]; then
-sed -i "1s@.*@$NTSROOT@" .built
+sed -i "1s@.*@$MGSROOT@" .built
 sed -i "2s@.*@@" .built
 fi
 #module switch gcc/7.3

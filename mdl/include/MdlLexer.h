@@ -94,6 +94,10 @@ class MdlLexer : public yyFlexLexer
       std::string gcppLine;
       int lineCount;
       const char* getToken();
+      void debugLocation() {
+      fprintf(stderr, "DEBUG: Current location is %s:%d\n", 
+         currentFileName.c_str(), lineCount);
+      }
 };
 
 inline int MdlLexer::lex(YYSTYPE *lvaluep, YYLTYPE *locp, MdlContext *c)
@@ -101,6 +105,8 @@ inline int MdlLexer::lex(YYSTYPE *lvaluep, YYLTYPE *locp, MdlContext *c)
    yylval = lvaluep;
    yylloc = locp;
    context = c;
-   return yylex();
+   int result = yylex();
+   // Optional debug: if (result == DOUBLE || result == INT) debugLocation();
+   return result;
 }
 #endif

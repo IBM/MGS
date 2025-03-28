@@ -101,21 +101,22 @@ inline void HIGH_LEVEL_EXECUTE(void* parm, C_production* l) {
         delete l;
         CONTEXT->setErrorDisplayed(false);
     } catch (SyntaxErrorException& e) {
-        cerr << "Error at file:";
+        cerr << "ERROR: [";
         if (e.isCaught()) {
-            cerr << e.getFileName() << ", line:" << e.getLineNumber() << ", ";
+            cerr << e.getFileName() << ":" << e.getLineNumber();
         } else {
-            MdlLexer *li = CONTEXT->_lexer;
-            cerr << li->currentFileName << ", line:" << li->lineCount << ", ";
+            // Use the context's stored error information
+            CONTEXT->synchronize(); // Ensure context is synced before reporting
+            cerr << CONTEXT->getLastErrorFileName() << ":" << CONTEXT->getLastErrorLine();
         }
-        cerr << e.getError() << endl; 
+        cerr << "] " << e.getError() << endl;
         CONTEXT->setError();
         delete l;
     } catch (InternalException& e) {
-        cerr << "Error at file:";      
-        MdlLexer *li = CONTEXT->_lexer;
-        cerr << li->currentFileName << ", line:" << li->lineCount << ", ";
-        cerr << e.getError() << endl; 
+        cerr << "ERROR: [";
+        CONTEXT->synchronize(); // Ensure context is synched before reporting
+        cerr << CONTEXT->getLastErrorFileName() << ":" << CONTEXT->getLastErrorLine() << "] ";
+        cerr << e.getError() << endl;
         CONTEXT->setError();
         delete l;
     }
@@ -380,15 +381,17 @@ parserLine: struct {
 | error {
    MdlContext *c = (MdlContext *) parm;
    MdlLexer *l = c->_lexer;
+   
+   // Update the error location first
+   c->setLastError(l->currentFileName, l->lineCount);
+   
    if (!c->isErrorDisplayed()){
-      cerr<< "Error at file:"<<c->getLastErrorFileName()<<", line:" <<c->getLastErrorLine()<< ", ";
-      cerr<< "unexpected token: " << l->getToken() << endl << endl;
+      cerr<< "ERROR: ["<<c->getLastErrorFileName()<<":" <<c->getLastErrorLine()<<"] ";
+      cerr<< "Unexpected token: " << l->getToken() << endl << endl;
       c->setErrorDisplayed(true);
    }
-   c->setLastError(l->currentFileName, l->lineCount);
-   CONTEXT->setError();
+   c->setError();
 };
-
 
 /* Directives */
 
@@ -1518,7 +1521,27 @@ int mdllex(YYSTYPE* lvalp, YYLTYPE* locp, void* parm)
 // Error handling function
 void mdlerror(YYLTYPE* locp, void* parm, const char* s)
 {
-    fprintf(stderr, "%s\n", s);
+    MdlContext *c = (MdlContext *) parm;
+    if (c && c->_lexer && locp) {
+        // Store the error location in the context
+        c->setLastError(c->_lexer->currentFileName, locp->first_line);
+        
+        // Optional: add more detailed diagnostics for debugging
+        if (!c->isErrorDisplayed()) {
+            fprintf(stderr, "ERROR: [%s:%d] %s\n", 
+                    c->_lexer->currentFileName.c_str(),
+                    locp->first_line, 
+                    s);
+            
+            // When encountering a "missing semicolon" error, suggest checking the previous line
+            if (strstr(s, "expecting ';'") != NULL) {
+                fprintf(stderr, "HINT: The error might be a missing semicolon at the end of line %d.\n", 
+                  locp->first_line - 1);
+            }
+        }
+    } else {
+        fprintf(stderr, "Parser error: %s (location info unavailable)\n", s);
+    }
 }
 
 // Main and Helper Functions 
@@ -1535,27 +1558,25 @@ int main(int argc, char *argv[])
   char year_format[] = "%Y";
   char year[] = "mm-dd-yyyya";
   strftime(year, strlen(year), year_format, timetm);
-
-std::cout << ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n"
-          << ".                                                           .\n"
-          << ".  Licensed Materials - Property of IBM                     .\n"
-          << ".                                                           .\n"
-          << ".  \"Restricted Materials of IBM\"                            .\n"
-          << ".                                                           .\n"
-          //<< ".  BCM-YKT-07-18-2017                                     .\n"
-	  << ".  BCM-YKT-"
-	  << time_str << "                                     .\n"
-          << ".                                                           .\n"
-          //<< ".  (C) Copyright IBM Corp. 2005-2017  All rights reserved   .\n"
-	  << ".  (C) Copyright IBM Corp. 2005-"
-	  << year << "  All rights reserved   .\n"
-          << ".                                                           .\n"
-          << ".                                                           .\n"
-          << ".                                                           .\n"
-          << ".  This product includes software developed by the          .\n"
-          << ".  University of California, Berkeley and its contributors  .\n"
-          << ".                                                           .\n"
-          << ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n\n\n";
+  std::cout << ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ." << std::endl
+            << ".                                                           ." << std::endl
+            << ".        /\\/\\/\\    ______     _                             ." << std::endl
+            << ".       /      \\  |  __  \\   | |                            ." << std::endl
+            << ".      /  /\\/\\  \\ | |  | |   | |                            ." << std::endl
+            << ".     /  /    \\  \\| |  | |   | |                            ." << std::endl
+            << ".    /  /      \\  \\ |__| |   | | ___                        ." << std::endl
+            << ".    \\/\\/      /\\/ \\____/    |_|_____\\                      ." << std::endl
+            << ".     \\  \\    /     \\   /       /                           ." << std::endl
+            << ".      \\  \\  /       \\ /       /                            ." << std::endl
+            << ".       \\  \\/         \\       /                             ." << std::endl
+            << ".        \\  \\\\        /\\      /                             ." << std::endl
+            << ".         \\  \\\\      /  \\    /                              ." << std::endl
+            << ".          \\  \\\\    /    \\  /                               ." << std::endl
+            << ".           \\  \\\\  /      \\/                                ." << std::endl
+            << ".            \\  \\\\/        *                                ." << std::endl
+            << ".             \\  \\\\       * *                               ." << std::endl
+            << ".              \\__/      * * *                              ." << std::endl
+            << ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n\n\n";
 
    Initializer init(argc, argv);
    if (init.execute()) {

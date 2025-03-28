@@ -123,9 +123,7 @@ void MdlLexer::skip_proc(void) {
    // grab required values and compute lineOffset
    std::istringstream istr(buffer);
    istr >> lineCount;
-   std::cerr<<"lineCount = "<<lineCount<<std::endl;
    istr >> currentFileName;
-   std::cerr<<"currentFileName = "<<currentFileName<<std::endl;
 }
 
 const char* MdlLexer::getToken() {

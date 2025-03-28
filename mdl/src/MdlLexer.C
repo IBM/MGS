@@ -25,6 +25,7 @@ MdlLexer::~MdlLexer() {
 }
 
 void MdlLexer::skip_proc(void) {
+   assert(0);
    // put input into a std::string
    std::string buffer;
    std::ostringstream ostr;
@@ -38,6 +39,7 @@ void MdlLexer::skip_proc(void) {
    std::istringstream istr(buffer);
    istr >> lineCount;
    istr >> currentFileName;
+   // Optional debug: debugLocation();
 }
 
 const char* MdlLexer::getToken() {

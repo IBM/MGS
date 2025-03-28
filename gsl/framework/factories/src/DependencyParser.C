@@ -30,12 +30,12 @@
 DependencyParser::DependencyParser(const std::string& fileName)
 {
 #ifndef DISABLE_DYNAMIC_LOADING
-   _lensRoot = getenv("LENSROOT");
+   _lensRoot = getenv("MGSROOT");
       // Temporary
    if (_lensRoot == "") {
-      std::cerr << "\nLENSROOT is not set in the environment...\n"
-	   << "Using " << LENSROOT << " to load shared objects.\n" << std::endl;
-      _lensRoot = LENSROOT;
+      std::cerr << "\nMGSROOT is not set in the environment...\n"
+	   << "Using " << MGSROOT << " to load shared objects.\n" << std::endl;
+      _lensRoot = MGSROOT;
    }
    _fileName = _lensRoot + fileName;
 #else

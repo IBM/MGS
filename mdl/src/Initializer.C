@@ -84,7 +84,7 @@ bool Initializer::execute() {
       infile = new std::ifstream(temporaryName);
    }
    else {
-      std::cerr << "Unable to open temporary file, cpp problem, aborting..." 
+      std::cerr << "ERROR: Unable to open temporary file, cpp problem, aborting..." 
 		<< std::endl;
       return false;
    }
@@ -96,9 +96,8 @@ bool Initializer::execute() {
    context->_generatables = _generatables;
    try {
       int result = mdlparse(context.get());
-      std::cerr << "mdlparse returned: " << result << std::endl;
    } catch (InternalException& e) {
-      std::cerr << "Internal error: " << e.getError() << std::endl;
+      std::cerr << "Internal ERROR: " << e.getError() << std::endl;
       std::cerr << "Quitting..." << std::endl;      
       return false;
    } catch (GeneralException& e) {
@@ -130,7 +129,7 @@ bool Initializer::execute() {
          it->second->generate();
       }
    } catch (InternalException& e) {
-      std::cerr << "Internal error: " << e.getError() << std::endl;
+      std::cerr << "Internal ERROR: " << e.getError() << std::endl;
       std::cerr << "Quitting..." << std::endl;
       return false;
    }
@@ -142,14 +141,11 @@ bool Initializer::execute() {
    }
 
    try {
-      std::cerr << "Number of generatables: " << context->_generatables->size() << std::endl;
       for (it = context->_generatables->begin(); it != end; it++) {
-         std::cerr << "About to generate files for: " << it->first << std::endl;
 	      it->second->generateFiles(fileName);
-         std::cerr << "Successfully generated files" << std::endl;
       }
    } catch (InternalException& e) {
-      std::cerr << "Internal error: " << e.getError() << std::endl;
+      std::cerr << "Internal ERROR: " << e.getError() << std::endl;
       std::cerr << "Quitting..." << std::endl;      
       return false;
    } catch (...) {
@@ -167,6 +163,7 @@ bool Initializer::execute() {
    
    //free memory/resources
    delete infile;
+   //remove the cpp temporary file
    unlink(temporaryName); // added by Jizhu Lu on 01/10/2006 to remove the temporary file.
    return true;
 }
@@ -201,7 +198,7 @@ void Initializer::generateMakefileExtension() {
       fs.close();
    }
    else {
-      std::cerr << "Cannot create/open Extensions.mk file" << std::endl;
+      std::cerr << "ERROR: Cannot create/open Extensions.mk file" << std::endl;
       assert(0);
    }
 }
@@ -211,7 +208,7 @@ void Initializer::generateCopyModules() {
    std::map<std::string, std::vector<std::string> >::iterator it, 
       end = _copyModules.end();
    for(it = _copyModules.begin(); it != end; ++it) {
-     os << "mkdir -p $LENSROOT/extensions/" << it->first << "\n";
+     os << "mkdir -p $MGSROOT/extensions/" << it->first << "\n";
      os << "cp -r ";
      std::vector<std::string>::iterator it2, end2 = it->second.end();
      for (it2 = it->second.begin(); it2 != end2; ++it2) {
@@ -220,13 +217,13 @@ void Initializer::generateCopyModules() {
        }
        os << *it2 << " ";
      }
-     os << " $LENSROOT/extensions/" << it->first << "> /dev/null 2>&1 || : \n";
+     os << " $MGSROOT/extensions/" << it->first << "> /dev/null 2>&1 || : \n";
    }   
    //TUAN: no need to overwrite Extensions.mk if we call mdlparser directly
    // this can be done (if needed), by calling via the ../define script
-   //os << "touch $LENSROOT/Extensions.mk\n";
-   //os << "cp $LENSROOT/Extensions.mk $LENSROOT/Extensions.mk.bak\n";
-   //os << "cp Extensions.mk $LENSROOT/\n";
+   //os << "touch $MGSROOT/Extensions.mk\n";
+   //os << "cp $MGSROOT/Extensions.mk $MGSROOT/Extensions.mk.bak\n";
+   //os << "cp Extensions.mk $MGSROOT/\n";
    std::ofstream fs("copyModules");
    if (fs.is_open()) {
      fs << os.str();
@@ -234,7 +231,7 @@ void Initializer::generateCopyModules() {
      system("sh copyModules");
    }
    else {
-     std::cerr << "Cannot create/open copyModules file" << std::endl;
+     std::cerr << "ERROR: Cannot create/open copyModules file" << std::endl;
      assert(0);
    }
 }

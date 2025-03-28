@@ -178,32 +178,33 @@ inline void HIGH_LEVEL_EXECUTE(void* parm, C_production* l) {
         delete l;
         CONTEXT->setErrorDisplayed(false);
     } catch (SyntaxErrorException& e) {
-        cerr << "Error at file:";
+        cerr << "ERROR: [";
         if (e.isCaught()) {
-            cerr << e.getFileName() << ", line:" << e.getLineNumber() << ", ";
+            cerr << e.getFileName() << ":" << e.getLineNumber();
         } else {
-            MdlLexer *li = CONTEXT->_lexer;
-            cerr << li->currentFileName << ", line:" << li->lineCount << ", ";
+            // Use the context's stored error information
+            CONTEXT->synchronize(); // Ensure context is synced before reporting
+            cerr << CONTEXT->getLastErrorFileName() << ":" << CONTEXT->getLastErrorLine();
         }
-        cerr << e.getError() << endl; 
+        cerr << "] " << e.getError() << endl;
         CONTEXT->setError();
         delete l;
     } catch (InternalException& e) {
-        cerr << "Error at file:";      
-        MdlLexer *li = CONTEXT->_lexer;
-        cerr << li->currentFileName << ", line:" << li->lineCount << ", ";
-        cerr << e.getError() << endl; 
+        cerr << "ERROR: [";
+        CONTEXT->synchronize(); // Ensure context is synched before reporting
+        cerr << CONTEXT->getLastErrorFileName() << ":" << CONTEXT->getLastErrorLine() << "] ";
+        cerr << e.getError() << endl;
         CONTEXT->setError();
         delete l;
     }
 }
 
-#line 137 "mdl.y"
+#line 138 "mdl.y"
 
 #ifndef YYSTYPE_DEFINITION
 #define YYSTYPE_DEFINITION
 
-#line 207 "mdl.tab.c"
+#line 208 "mdl.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -394,11 +395,11 @@ typedef enum yysymbol_kind_t yysymbol_kind_t;
 
 
 /* Second part of user prologue.  */
-#line 185 "mdl.y"
+#line 186 "mdl.y"
 
 #endif
 
-#line 402 "mdl.tab.c"
+#line 403 "mdl.tab.c"
 
 
 #ifdef short
@@ -791,30 +792,30 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,   345,   345,   350,   353,   358,   361,   364,   367,   370,
-     373,   376,   380,   395,   400,   407,   414,   419,   426,   430,
-     436,   440,   444,   448,   452,   456,   460,   464,   468,   472,
-     476,   480,   484,   490,   495,   502,   506,   512,   516,   520,
-     524,   528,   532,   536,   540,   544,   548,   552,   556,   560,
-     566,   572,   578,   584,   588,   595,   599,   605,   609,   613,
-     617,   621,   627,   632,   639,   643,   649,   653,   657,   661,
-     665,   669,   673,   677,   681,   685,   689,   695,   699,   703,
-     709,   717,   720,   726,   730,   736,   740,   746,   752,   760,
-     763,   766,   769,   774,   778,   784,   788,   792,   796,   802,
-     808,   816,   821,   828,   833,   840,   844,   850,   854,   858,
-     862,   868,   874,   881,   887,   892,   899,   904,   911,   916,
-     921,   928,   932,   938,   943,   948,   953,   960,   965,   970,
-     975,   982,   987,   992,   997,  1002,  1009,  1014,  1019,  1024,
-    1031,  1038,  1042,  1048,  1054,  1062,  1068,  1077,  1080,  1084,
-    1088,  1092,  1096,  1102,  1107,  1112,  1115,  1118,  1121,  1124,
-    1127,  1130,  1133,  1136,  1139,  1144,  1148,  1154,  1158,  1164,
-    1168,  1174,  1179,  1184,  1189,  1195,  1201,  1209,  1213,  1219,
-    1226,  1232,  1237,  1243,  1249,  1258,  1262,  1268,  1272,  1276,
-    1282,  1286,  1290,  1294,  1300,  1304,  1310,  1314,  1318,  1322,
-    1328,  1332,  1338,  1344,  1348,  1352,  1358,  1362,  1366,  1377,
-    1381,  1387,  1391,  1395,  1399,  1405,  1409,  1413,  1417,  1421,
-    1425,  1429,  1433,  1437,  1441,  1445,  1449,  1453,  1457,  1461,
-    1465,  1469,  1473,  1477,  1481,  1485,  1489,  1493,  1497,  1504
+       0,   346,   346,   351,   354,   359,   362,   365,   368,   371,
+     374,   377,   381,   398,   403,   410,   417,   422,   429,   433,
+     439,   443,   447,   451,   455,   459,   463,   467,   471,   475,
+     479,   483,   487,   493,   498,   505,   509,   515,   519,   523,
+     527,   531,   535,   539,   543,   547,   551,   555,   559,   563,
+     569,   575,   581,   587,   591,   598,   602,   608,   612,   616,
+     620,   624,   630,   635,   642,   646,   652,   656,   660,   664,
+     668,   672,   676,   680,   684,   688,   692,   698,   702,   706,
+     712,   720,   723,   729,   733,   739,   743,   749,   755,   763,
+     766,   769,   772,   777,   781,   787,   791,   795,   799,   805,
+     811,   819,   824,   831,   836,   843,   847,   853,   857,   861,
+     865,   871,   877,   884,   890,   895,   902,   907,   914,   919,
+     924,   931,   935,   941,   946,   951,   956,   963,   968,   973,
+     978,   985,   990,   995,  1000,  1005,  1012,  1017,  1022,  1027,
+    1034,  1041,  1045,  1051,  1057,  1065,  1071,  1080,  1083,  1087,
+    1091,  1095,  1099,  1105,  1110,  1115,  1118,  1121,  1124,  1127,
+    1130,  1133,  1136,  1139,  1142,  1147,  1151,  1157,  1161,  1167,
+    1171,  1177,  1182,  1187,  1192,  1198,  1204,  1212,  1216,  1222,
+    1229,  1235,  1240,  1246,  1252,  1261,  1265,  1271,  1275,  1279,
+    1285,  1289,  1293,  1297,  1303,  1307,  1313,  1317,  1321,  1325,
+    1331,  1335,  1341,  1347,  1351,  1355,  1361,  1365,  1369,  1380,
+    1384,  1390,  1394,  1398,  1402,  1408,  1412,  1416,  1420,  1424,
+    1428,  1432,  1436,  1440,  1444,  1448,  1452,  1456,  1460,  1464,
+    1468,  1472,  1476,  1480,  1484,  1488,  1492,  1496,  1500,  1507
 };
 #endif
 
@@ -2469,1704 +2470,1707 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* mdlFile: parserLineList  */
-#line 345 "mdl.y"
+#line 346 "mdl.y"
                          {
 
 }
-#line 2477 "mdl.tab.c"
+#line 2478 "mdl.tab.c"
     break;
 
   case 3: /* parserLineList: parserLine  */
-#line 350 "mdl.y"
+#line 351 "mdl.y"
                            {
 
 }
-#line 2485 "mdl.tab.c"
+#line 2486 "mdl.tab.c"
     break;
 
   case 4: /* parserLineList: parserLineList parserLine  */
-#line 353 "mdl.y"
+#line 354 "mdl.y"
                             {
 
 }
-#line 2493 "mdl.tab.c"
+#line 2494 "mdl.tab.c"
     break;
 
   case 5: /* parserLine: struct  */
-#line 358 "mdl.y"
+#line 359 "mdl.y"
                    {
    HIGH_LEVEL_EXECUTE(parm, (yyvsp[0].P_struct));
 }
-#line 2501 "mdl.tab.c"
+#line 2502 "mdl.tab.c"
     break;
 
   case 6: /* parserLine: interface  */
-#line 361 "mdl.y"
+#line 362 "mdl.y"
             {
    HIGH_LEVEL_EXECUTE(parm, (yyvsp[0].P_interface));
 }
-#line 2509 "mdl.tab.c"
+#line 2510 "mdl.tab.c"
     break;
 
   case 7: /* parserLine: edge  */
-#line 364 "mdl.y"
+#line 365 "mdl.y"
        {
    HIGH_LEVEL_EXECUTE(parm, (yyvsp[0].P_edge));
 }
-#line 2517 "mdl.tab.c"
+#line 2518 "mdl.tab.c"
     break;
 
   case 8: /* parserLine: node  */
-#line 367 "mdl.y"
+#line 368 "mdl.y"
        {
    HIGH_LEVEL_EXECUTE(parm, (yyvsp[0].P_node));
 }
-#line 2525 "mdl.tab.c"
+#line 2526 "mdl.tab.c"
     break;
 
   case 9: /* parserLine: variable  */
-#line 370 "mdl.y"
+#line 371 "mdl.y"
            {
    HIGH_LEVEL_EXECUTE(parm, (yyvsp[0].P_variable));
 }
-#line 2533 "mdl.tab.c"
+#line 2534 "mdl.tab.c"
     break;
 
   case 10: /* parserLine: constant  */
-#line 373 "mdl.y"
+#line 374 "mdl.y"
            {
    HIGH_LEVEL_EXECUTE(parm, (yyvsp[0].P_constant));
 }
-#line 2541 "mdl.tab.c"
+#line 2542 "mdl.tab.c"
     break;
 
   case 11: /* parserLine: functor  */
-#line 376 "mdl.y"
+#line 377 "mdl.y"
           {
    HIGH_LEVEL_EXECUTE(parm, (yyvsp[0].P_functor));
 }
-#line 2549 "mdl.tab.c"
+#line 2550 "mdl.tab.c"
     break;
 
   case 12: /* parserLine: error  */
-#line 380 "mdl.y"
+#line 381 "mdl.y"
         {
    MdlContext *c = (MdlContext *) parm;
    MdlLexer *l = c->_lexer;
+   
+   // Update the error location first
+   c->setLastError(l->currentFileName, l->lineCount);
+   
    if (!c->isErrorDisplayed()){
-      cerr<< "Error at file:"<<c->getLastErrorFileName()<<", line:" <<c->getLastErrorLine()<< ", ";
-      cerr<< "unexpected token: " << l->getToken() << endl << endl;
+      cerr<< "ERROR: ["<<c->getLastErrorFileName()<<":" <<c->getLastErrorLine()<<"] ";
+      cerr<< "Unexpected token: " << l->getToken() << endl << endl;
       c->setErrorDisplayed(true);
    }
-   c->setLastError(l->currentFileName, l->lineCount);
-   CONTEXT->setError();
+   c->setError();
 }
-#line 2565 "mdl.tab.c"
+#line 2569 "mdl.tab.c"
     break;
 
   case 13: /* struct: STRUCT IDENTIFIER '{' dataTypeList '}'  */
-#line 395 "mdl.y"
+#line 398 "mdl.y"
                                                 {
    (yyval.P_struct) = new C_struct(*(yyvsp[-3].P_string), (yyvsp[-1].P_dataTypeList));
    (yyval.P_struct)->setTokenLocation(CURRENTFILE, (yylsp[-4]).first_line);
    delete (yyvsp[-3].P_string);
 }
-#line 2575 "mdl.tab.c"
+#line 2579 "mdl.tab.c"
     break;
 
   case 14: /* struct: FRAMEWORK STRUCT IDENTIFIER '{' dataTypeList '}'  */
-#line 400 "mdl.y"
+#line 403 "mdl.y"
                                                     {
    (yyval.P_struct) = new C_struct(*(yyvsp[-3].P_string), (yyvsp[-1].P_dataTypeList), true);
    (yyval.P_struct)->setTokenLocation(CURRENTFILE, (yylsp[-5]).first_line);
    delete (yyvsp[-3].P_string);
 }
-#line 2585 "mdl.tab.c"
+#line 2589 "mdl.tab.c"
     break;
 
   case 15: /* interface: INTERFACE IDENTIFIER '{' dataTypeList '}'  */
-#line 407 "mdl.y"
+#line 410 "mdl.y"
                                                       {
    (yyval.P_interface) = new C_interface(*(yyvsp[-3].P_string), (yyvsp[-1].P_dataTypeList));
    (yyval.P_interface)->setTokenLocation(CURRENTFILE, (yylsp[-4]).first_line);
    delete (yyvsp[-3].P_string);
 }
-#line 2595 "mdl.tab.c"
+#line 2599 "mdl.tab.c"
     break;
 
   case 16: /* edge: EDGE IDENTIFIER IMPLEMENTS interfacePointerList '{' edgeStatementList '}'  */
-#line 414 "mdl.y"
+#line 417 "mdl.y"
                                                                                 {
    (yyval.P_edge) = new C_edge(*(yyvsp[-5].P_string), (yyvsp[-3].P_interfacePointerList), (yyvsp[-1].P_generalList));
    (yyval.P_edge)->setTokenLocation(CURRENTFILE, (yylsp[-6]).first_line);
    delete (yyvsp[-5].P_string);
 }
-#line 2605 "mdl.tab.c"
+#line 2609 "mdl.tab.c"
     break;
 
   case 17: /* edge: EDGE IDENTIFIER '{' edgeStatementList '}'  */
-#line 419 "mdl.y"
+#line 422 "mdl.y"
                                             {
    (yyval.P_edge) = new C_edge(*(yyvsp[-3].P_string), 0, (yyvsp[-1].P_generalList));
    (yyval.P_edge)->setTokenLocation(CURRENTFILE, (yylsp[-4]).first_line);
    delete (yyvsp[-3].P_string);
 }
-#line 2615 "mdl.tab.c"
+#line 2619 "mdl.tab.c"
     break;
 
   case 18: /* edgeStatementList: edgeStatement  */
-#line 426 "mdl.y"
+#line 429 "mdl.y"
                                  {
    (yyval.P_generalList) = new C_generalList((yyvsp[0].P_general));
    (yyval.P_generalList)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2624 "mdl.tab.c"
+#line 2628 "mdl.tab.c"
     break;
 
   case 19: /* edgeStatementList: edgeStatementList edgeStatement  */
-#line 430 "mdl.y"
+#line 433 "mdl.y"
                                   {
    (yyval.P_generalList) = new C_generalList((yyvsp[-1].P_generalList), (yyvsp[0].P_general));   
    (yyval.P_generalList)->setTokenLocation(CURRENTFILE, (yylsp[-1]).first_line);
 }
-#line 2633 "mdl.tab.c"
+#line 2637 "mdl.tab.c"
     break;
 
   case 20: /* edgeStatement: noop  */
-#line 436 "mdl.y"
+#line 439 "mdl.y"
                     {
    (yyval.P_general) = (yyvsp[0].P_noop);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2642 "mdl.tab.c"
+#line 2646 "mdl.tab.c"
     break;
 
   case 21: /* edgeStatement: dataType  */
-#line 440 "mdl.y"
+#line 443 "mdl.y"
            {
    (yyval.P_general) = (yyvsp[0].P_dataType);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2651 "mdl.tab.c"
+#line 2655 "mdl.tab.c"
     break;
 
   case 22: /* edgeStatement: optionalDataType  */
-#line 444 "mdl.y"
+#line 447 "mdl.y"
                    {
    (yyval.P_general) = (yyvsp[0].P_dataType);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2660 "mdl.tab.c"
+#line 2664 "mdl.tab.c"
     break;
 
   case 23: /* edgeStatement: edgeInstancePhase  */
-#line 448 "mdl.y"
+#line 451 "mdl.y"
                     {
    (yyval.P_general) = (yyvsp[0].P_phase);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2669 "mdl.tab.c"
+#line 2673 "mdl.tab.c"
     break;
 
   case 24: /* edgeStatement: instanceMapping  */
-#line 452 "mdl.y"
+#line 455 "mdl.y"
                   {
    (yyval.P_general) = (yyvsp[0].P_instanceMapping);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2678 "mdl.tab.c"
+#line 2682 "mdl.tab.c"
     break;
 
   case 25: /* edgeStatement: sharedMapping  */
-#line 456 "mdl.y"
+#line 459 "mdl.y"
                 {
    (yyval.P_general) = (yyvsp[0].P_sharedMapping);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2687 "mdl.tab.c"
+#line 2691 "mdl.tab.c"
     break;
 
   case 26: /* edgeStatement: edgeConnection  */
-#line 460 "mdl.y"
+#line 463 "mdl.y"
                  {
    (yyval.P_general) = (yyvsp[0].P_connection);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2696 "mdl.tab.c"
+#line 2700 "mdl.tab.c"
     break;
 
   case 27: /* edgeStatement: shared  */
-#line 464 "mdl.y"
+#line 467 "mdl.y"
          {
    (yyval.P_general) = (yyvsp[0].P_shared);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2705 "mdl.tab.c"
+#line 2709 "mdl.tab.c"
     break;
 
   case 28: /* edgeStatement: inAttrPSet  */
-#line 468 "mdl.y"
+#line 471 "mdl.y"
              {
    (yyval.P_general) = (yyvsp[0].P_general);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2714 "mdl.tab.c"
+#line 2718 "mdl.tab.c"
     break;
 
   case 29: /* edgeStatement: outAttrPSet  */
-#line 472 "mdl.y"
+#line 475 "mdl.y"
               {
    (yyval.P_general) = (yyvsp[0].P_general);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2723 "mdl.tab.c"
+#line 2727 "mdl.tab.c"
     break;
 
   case 30: /* edgeStatement: userFunction  */
-#line 476 "mdl.y"
+#line 479 "mdl.y"
                {
    (yyval.P_general) = (yyvsp[0].P_userFunction);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2732 "mdl.tab.c"
+#line 2736 "mdl.tab.c"
     break;
 
   case 31: /* edgeStatement: predicateFunction  */
-#line 480 "mdl.y"
+#line 483 "mdl.y"
                     {
    (yyval.P_general) = (yyvsp[0].P_predicateFunction);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2741 "mdl.tab.c"
+#line 2745 "mdl.tab.c"
     break;
 
   case 32: /* edgeStatement: triggeredFunctionInstance  */
-#line 484 "mdl.y"
+#line 487 "mdl.y"
                             {
    (yyval.P_general) = (yyvsp[0].P_triggeredFunction);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2750 "mdl.tab.c"
+#line 2754 "mdl.tab.c"
     break;
 
   case 33: /* node: NODE IDENTIFIER IMPLEMENTS interfacePointerList '{' nodeStatementList '}'  */
-#line 490 "mdl.y"
+#line 493 "mdl.y"
                                                                                 {
    (yyval.P_node) = new C_node(*(yyvsp[-5].P_string), (yyvsp[-3].P_interfacePointerList), (yyvsp[-1].P_generalList));
    (yyval.P_node)->setTokenLocation(CURRENTFILE, (yylsp[-6]).first_line);
    delete (yyvsp[-5].P_string);
 }
-#line 2760 "mdl.tab.c"
+#line 2764 "mdl.tab.c"
     break;
 
   case 34: /* node: NODE IDENTIFIER '{' nodeStatementList '}'  */
-#line 495 "mdl.y"
+#line 498 "mdl.y"
                                             {
    (yyval.P_node) = new C_node(*(yyvsp[-3].P_string), 0, (yyvsp[-1].P_generalList));
    (yyval.P_node)->setTokenLocation(CURRENTFILE, (yylsp[-4]).first_line);
    delete (yyvsp[-3].P_string);
 }
-#line 2770 "mdl.tab.c"
+#line 2774 "mdl.tab.c"
     break;
 
   case 35: /* nodeStatementList: nodeStatement  */
-#line 502 "mdl.y"
+#line 505 "mdl.y"
                                  {
    (yyval.P_generalList) = new C_generalList((yyvsp[0].P_general));
    (yyval.P_generalList)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2779 "mdl.tab.c"
+#line 2783 "mdl.tab.c"
     break;
 
   case 36: /* nodeStatementList: nodeStatementList nodeStatement  */
-#line 506 "mdl.y"
+#line 509 "mdl.y"
                                   {
    (yyval.P_generalList) = new C_generalList((yyvsp[-1].P_generalList), (yyvsp[0].P_general));   
    (yyval.P_generalList)->setTokenLocation(CURRENTFILE, (yylsp[-1]).first_line);
 }
-#line 2788 "mdl.tab.c"
+#line 2792 "mdl.tab.c"
     break;
 
   case 37: /* nodeStatement: noop  */
-#line 512 "mdl.y"
+#line 515 "mdl.y"
                     {
    (yyval.P_general) = (yyvsp[0].P_noop);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2797 "mdl.tab.c"
+#line 2801 "mdl.tab.c"
     break;
 
   case 38: /* nodeStatement: dataType  */
-#line 516 "mdl.y"
+#line 519 "mdl.y"
            {
    (yyval.P_general) = (yyvsp[0].P_dataType);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2806 "mdl.tab.c"
+#line 2810 "mdl.tab.c"
     break;
 
   case 39: /* nodeStatement: optionalDataType  */
-#line 520 "mdl.y"
+#line 523 "mdl.y"
                    {
    (yyval.P_general) = (yyvsp[0].P_dataType);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2815 "mdl.tab.c"
+#line 2819 "mdl.tab.c"
     break;
 
   case 40: /* nodeStatement: nodeInstancePhase  */
-#line 524 "mdl.y"
+#line 527 "mdl.y"
                     {
    (yyval.P_general) = (yyvsp[0].P_phase);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2824 "mdl.tab.c"
+#line 2828 "mdl.tab.c"
     break;
 
   case 41: /* nodeStatement: instanceMapping  */
-#line 528 "mdl.y"
+#line 531 "mdl.y"
                   {
    (yyval.P_general) = (yyvsp[0].P_instanceMapping);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2833 "mdl.tab.c"
+#line 2837 "mdl.tab.c"
     break;
 
   case 42: /* nodeStatement: sharedMapping  */
-#line 532 "mdl.y"
+#line 535 "mdl.y"
                 {
    (yyval.P_general) = (yyvsp[0].P_sharedMapping);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2842 "mdl.tab.c"
+#line 2846 "mdl.tab.c"
     break;
 
   case 43: /* nodeStatement: connection  */
-#line 536 "mdl.y"
+#line 539 "mdl.y"
              {
    (yyval.P_general) = (yyvsp[0].P_connection);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2851 "mdl.tab.c"
+#line 2855 "mdl.tab.c"
     break;
 
   case 44: /* nodeStatement: shared  */
-#line 540 "mdl.y"
+#line 543 "mdl.y"
          {
    (yyval.P_general) = (yyvsp[0].P_shared);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2860 "mdl.tab.c"
+#line 2864 "mdl.tab.c"
     break;
 
   case 45: /* nodeStatement: inAttrPSet  */
-#line 544 "mdl.y"
+#line 547 "mdl.y"
              {
    (yyval.P_general) = (yyvsp[0].P_general);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2869 "mdl.tab.c"
+#line 2873 "mdl.tab.c"
     break;
 
   case 46: /* nodeStatement: outAttrPSet  */
-#line 548 "mdl.y"
+#line 551 "mdl.y"
               {
    (yyval.P_general) = (yyvsp[0].P_general);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2878 "mdl.tab.c"
+#line 2882 "mdl.tab.c"
     break;
 
   case 47: /* nodeStatement: userFunction  */
-#line 552 "mdl.y"
+#line 555 "mdl.y"
                {
    (yyval.P_general) = (yyvsp[0].P_userFunction);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2887 "mdl.tab.c"
+#line 2891 "mdl.tab.c"
     break;
 
   case 48: /* nodeStatement: predicateFunction  */
-#line 556 "mdl.y"
+#line 559 "mdl.y"
                     {
    (yyval.P_general) = (yyvsp[0].P_predicateFunction);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2896 "mdl.tab.c"
+#line 2900 "mdl.tab.c"
     break;
 
   case 49: /* nodeStatement: triggeredFunctionInstance  */
-#line 560 "mdl.y"
+#line 563 "mdl.y"
                             {
    (yyval.P_general) = (yyvsp[0].P_triggeredFunction);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2905 "mdl.tab.c"
+#line 2909 "mdl.tab.c"
     break;
 
   case 50: /* noop: ';'  */
-#line 566 "mdl.y"
+#line 569 "mdl.y"
           {
    (yyval.P_noop) = new C_noop();
    (yyval.P_noop)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2914 "mdl.tab.c"
+#line 2918 "mdl.tab.c"
     break;
 
   case 51: /* inAttrPSet: INATTRPSET '{' dataTypeList '}'  */
-#line 572 "mdl.y"
+#line 575 "mdl.y"
                                              {
    (yyval.P_general) = new C_inAttrPSet((yyvsp[-1].P_dataTypeList));
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[-3]).first_line);
 }
-#line 2923 "mdl.tab.c"
+#line 2927 "mdl.tab.c"
     break;
 
   case 52: /* outAttrPSet: OUTATTRPSET '{' dataTypeList '}'  */
-#line 578 "mdl.y"
+#line 581 "mdl.y"
                                                {
    (yyval.P_general) = new C_outAttrPSet((yyvsp[-1].P_dataTypeList));
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[-3]).first_line);
 }
-#line 2932 "mdl.tab.c"
+#line 2936 "mdl.tab.c"
     break;
 
   case 53: /* shared: SHARED '{' sharedStatementList '}'  */
-#line 584 "mdl.y"
+#line 587 "mdl.y"
                                            {
    (yyval.P_shared) = new C_shared((yyvsp[-1].P_generalList));
    (yyval.P_shared)->setTokenLocation(CURRENTFILE, (yylsp[-3]).first_line);
 }
-#line 2941 "mdl.tab.c"
+#line 2945 "mdl.tab.c"
     break;
 
   case 54: /* shared: SHARED sharedStatement  */
-#line 588 "mdl.y"
+#line 591 "mdl.y"
                          {
    (yyval.P_shared) = new C_shared();
    (yyval.P_shared)->setTokenLocation(CURRENTFILE, (yylsp[-1]).first_line);
    (yyval.P_shared)->setGeneral((yyvsp[0].P_general));
 }
-#line 2951 "mdl.tab.c"
+#line 2955 "mdl.tab.c"
     break;
 
   case 55: /* sharedStatementList: sharedStatement  */
-#line 595 "mdl.y"
+#line 598 "mdl.y"
                                      {
    (yyval.P_generalList) = new C_generalList((yyvsp[0].P_general));
    (yyval.P_generalList)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2960 "mdl.tab.c"
+#line 2964 "mdl.tab.c"
     break;
 
   case 56: /* sharedStatementList: sharedStatementList sharedStatement  */
-#line 599 "mdl.y"
+#line 602 "mdl.y"
                                       {
    (yyval.P_generalList) = new C_generalList((yyvsp[-1].P_generalList), (yyvsp[0].P_general));   
    (yyval.P_generalList)->setTokenLocation(CURRENTFILE, (yylsp[-1]).first_line);
 }
-#line 2969 "mdl.tab.c"
+#line 2973 "mdl.tab.c"
     break;
 
   case 57: /* sharedStatement: noop  */
-#line 605 "mdl.y"
+#line 608 "mdl.y"
                       {
    (yyval.P_general) = (yyvsp[0].P_noop);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2978 "mdl.tab.c"
+#line 2982 "mdl.tab.c"
     break;
 
   case 58: /* sharedStatement: dataType  */
-#line 609 "mdl.y"
+#line 612 "mdl.y"
            {
    (yyval.P_general) = (yyvsp[0].P_dataType);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2987 "mdl.tab.c"
+#line 2991 "mdl.tab.c"
     break;
 
   case 59: /* sharedStatement: sharedPhase  */
-#line 613 "mdl.y"
+#line 616 "mdl.y"
               {
    (yyval.P_general) = (yyvsp[0].P_phase);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 2996 "mdl.tab.c"
+#line 3000 "mdl.tab.c"
     break;
 
   case 60: /* sharedStatement: triggeredFunctionShared  */
-#line 617 "mdl.y"
+#line 620 "mdl.y"
                           {
    (yyval.P_general) = (yyvsp[0].P_triggeredFunction);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3005 "mdl.tab.c"
+#line 3009 "mdl.tab.c"
     break;
 
   case 61: /* sharedStatement: optionalDataType  */
-#line 621 "mdl.y"
+#line 624 "mdl.y"
                    {
    (yyval.P_general) = (yyvsp[0].P_dataType);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3014 "mdl.tab.c"
+#line 3018 "mdl.tab.c"
     break;
 
   case 62: /* variable: VARIABLE IDENTIFIER IMPLEMENTS interfacePointerList '{' variableStatementList '}'  */
-#line 627 "mdl.y"
+#line 630 "mdl.y"
                                                                                             {
    (yyval.P_variable) = new C_variable(*(yyvsp[-5].P_string), (yyvsp[-3].P_interfacePointerList), (yyvsp[-1].P_generalList));
    (yyval.P_variable)->setTokenLocation(CURRENTFILE, (yylsp[-6]).first_line);
    delete (yyvsp[-5].P_string);
 }
-#line 3024 "mdl.tab.c"
+#line 3028 "mdl.tab.c"
     break;
 
   case 63: /* variable: VARIABLE IDENTIFIER '{' variableStatementList '}'  */
-#line 632 "mdl.y"
+#line 635 "mdl.y"
                                                     {
    (yyval.P_variable) = new C_variable(*(yyvsp[-3].P_string), 0, (yyvsp[-1].P_generalList));
    (yyval.P_variable)->setTokenLocation(CURRENTFILE, (yylsp[-4]).first_line);
    delete (yyvsp[-3].P_string);
 }
-#line 3034 "mdl.tab.c"
+#line 3038 "mdl.tab.c"
     break;
 
   case 64: /* variableStatementList: variableStatement  */
-#line 639 "mdl.y"
+#line 642 "mdl.y"
                                          {
    (yyval.P_generalList) = new C_generalList((yyvsp[0].P_general));
    (yyval.P_generalList)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3043 "mdl.tab.c"
+#line 3047 "mdl.tab.c"
     break;
 
   case 65: /* variableStatementList: variableStatementList variableStatement  */
-#line 643 "mdl.y"
+#line 646 "mdl.y"
                                           {
    (yyval.P_generalList) = new C_generalList((yyvsp[-1].P_generalList), (yyvsp[0].P_general));   
    (yyval.P_generalList)->setTokenLocation(CURRENTFILE, (yylsp[-1]).first_line);
 }
-#line 3052 "mdl.tab.c"
+#line 3056 "mdl.tab.c"
     break;
 
   case 66: /* variableStatement: noop  */
-#line 649 "mdl.y"
+#line 652 "mdl.y"
                         {
    (yyval.P_general) = (yyvsp[0].P_noop);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3061 "mdl.tab.c"
+#line 3065 "mdl.tab.c"
     break;
 
   case 67: /* variableStatement: dataType  */
-#line 653 "mdl.y"
+#line 656 "mdl.y"
            {
    (yyval.P_general) = (yyvsp[0].P_dataType);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3070 "mdl.tab.c"
+#line 3074 "mdl.tab.c"
     break;
 
   case 68: /* variableStatement: optionalDataType  */
-#line 657 "mdl.y"
+#line 660 "mdl.y"
                    {
    (yyval.P_general) = (yyvsp[0].P_dataType);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3079 "mdl.tab.c"
+#line 3083 "mdl.tab.c"
     break;
 
   case 69: /* variableStatement: variableInstancePhase  */
-#line 661 "mdl.y"
+#line 664 "mdl.y"
                         {
    (yyval.P_general) = (yyvsp[0].P_phase);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3088 "mdl.tab.c"
+#line 3092 "mdl.tab.c"
     break;
 
   case 70: /* variableStatement: instanceMapping  */
-#line 665 "mdl.y"
+#line 668 "mdl.y"
                   {
    (yyval.P_general) = (yyvsp[0].P_instanceMapping);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3097 "mdl.tab.c"
+#line 3101 "mdl.tab.c"
     break;
 
   case 71: /* variableStatement: connection  */
-#line 669 "mdl.y"
+#line 672 "mdl.y"
              {
    (yyval.P_general) = (yyvsp[0].P_connection);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3106 "mdl.tab.c"
+#line 3110 "mdl.tab.c"
     break;
 
   case 72: /* variableStatement: inAttrPSet  */
-#line 673 "mdl.y"
+#line 676 "mdl.y"
              {
    (yyval.P_general) = (yyvsp[0].P_general);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3115 "mdl.tab.c"
+#line 3119 "mdl.tab.c"
     break;
 
   case 73: /* variableStatement: outAttrPSet  */
-#line 677 "mdl.y"
+#line 680 "mdl.y"
               {
    (yyval.P_general) = (yyvsp[0].P_general);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3124 "mdl.tab.c"
+#line 3128 "mdl.tab.c"
     break;
 
   case 74: /* variableStatement: userFunction  */
-#line 681 "mdl.y"
+#line 684 "mdl.y"
                {
    (yyval.P_general) = (yyvsp[0].P_userFunction);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3133 "mdl.tab.c"
+#line 3137 "mdl.tab.c"
     break;
 
   case 75: /* variableStatement: predicateFunction  */
-#line 685 "mdl.y"
+#line 688 "mdl.y"
                     {
    (yyval.P_general) = (yyvsp[0].P_predicateFunction);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3142 "mdl.tab.c"
+#line 3146 "mdl.tab.c"
     break;
 
   case 76: /* variableStatement: triggeredFunctionInstance  */
-#line 689 "mdl.y"
+#line 692 "mdl.y"
                             {
    (yyval.P_general) = (yyvsp[0].P_triggeredFunction);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3151 "mdl.tab.c"
+#line 3155 "mdl.tab.c"
     break;
 
   case 77: /* edgeConnection: CONNECTION PRE NODE '(' ')' EXPECTS interfacePointerList '{' edgeConnectionStatementList '}'  */
-#line 695 "mdl.y"
+#line 698 "mdl.y"
                                                                                                              {
    (yyval.P_connection) = new C_edgeConnection((yyvsp[-3].P_interfacePointerList), (yyvsp[-1].P_generalList), Connection::_PRE);
    (yyval.P_connection)->setTokenLocation(CURRENTFILE, (yylsp[-9]).first_line);
 }
-#line 3160 "mdl.tab.c"
+#line 3164 "mdl.tab.c"
     break;
 
   case 78: /* edgeConnection: CONNECTION POST NODE '(' ')' EXPECTS interfacePointerList '{' edgeConnectionStatementList '}'  */
-#line 699 "mdl.y"
+#line 702 "mdl.y"
                                                                                                 {
    (yyval.P_connection) = new C_edgeConnection((yyvsp[-3].P_interfacePointerList), (yyvsp[-1].P_generalList), Connection::_POST);
    (yyval.P_connection)->setTokenLocation(CURRENTFILE, (yylsp[-9]).first_line);
 }
-#line 3169 "mdl.tab.c"
+#line 3173 "mdl.tab.c"
     break;
 
   case 79: /* edgeConnection: CONNECTION PRE edgeConnectionComponentType '(' ')' EXPECTS interfacePointerList '{' connectionStatementList '}'  */
-#line 703 "mdl.y"
+#line 706 "mdl.y"
                                                                                                                   {
    (yyval.P_connection) = new C_regularConnection((yyvsp[-3].P_interfacePointerList), (yyvsp[-1].P_generalList),
 				(yyvsp[-7].V_connectionComponentType),
 				Connection::_PRE);
    (yyval.P_connection)->setTokenLocation(CURRENTFILE, (yylsp[-9]).first_line);
 }
-#line 3180 "mdl.tab.c"
+#line 3184 "mdl.tab.c"
     break;
 
   case 80: /* edgeConnection: CONNECTION PRE edgeConnectionComponentType '(' predicate ')' EXPECTS interfacePointerList '{' connectionStatementList '}'  */
-#line 709 "mdl.y"
+#line 712 "mdl.y"
                                                                                                                             {
    (yyval.P_connection) = new C_regularConnection((yyvsp[-3].P_interfacePointerList), (yyvsp[-1].P_generalList),
 				(yyvsp[-8].V_connectionComponentType),
 				Connection::_PRE, (yyvsp[-6].P_predicate));
    (yyval.P_connection)->setTokenLocation(CURRENTFILE, (yylsp[-10]).first_line);
 }
-#line 3191 "mdl.tab.c"
+#line 3195 "mdl.tab.c"
     break;
 
   case 81: /* edgeConnectionComponentType: CONSTANT  */
-#line 717 "mdl.y"
+#line 720 "mdl.y"
                                       {
    (yyval.V_connectionComponentType) = Connection::_CONSTANT;
 }
-#line 3199 "mdl.tab.c"
+#line 3203 "mdl.tab.c"
     break;
 
   case 82: /* edgeConnectionComponentType: VARIABLE  */
-#line 720 "mdl.y"
+#line 723 "mdl.y"
            {
    (yyval.V_connectionComponentType) = Connection::_VARIABLE;
 }
-#line 3207 "mdl.tab.c"
+#line 3211 "mdl.tab.c"
     break;
 
   case 83: /* edgeConnectionStatementList: edgeConnectionStatement  */
-#line 726 "mdl.y"
+#line 729 "mdl.y"
                                                      {
    (yyval.P_generalList) = new C_generalList((yyvsp[0].P_general));
    (yyval.P_generalList)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3216 "mdl.tab.c"
+#line 3220 "mdl.tab.c"
     break;
 
   case 84: /* edgeConnectionStatementList: edgeConnectionStatementList edgeConnectionStatement  */
-#line 730 "mdl.y"
+#line 733 "mdl.y"
                                                       {
    (yyval.P_generalList) = new C_generalList((yyvsp[-1].P_generalList), (yyvsp[0].P_general));   
    (yyval.P_generalList)->setTokenLocation(CURRENTFILE, (yylsp[-1]).first_line);
 }
-#line 3225 "mdl.tab.c"
+#line 3229 "mdl.tab.c"
     break;
 
   case 85: /* edgeConnectionStatement: noop  */
-#line 736 "mdl.y"
+#line 739 "mdl.y"
                               {
    (yyval.P_general) = (yyvsp[0].P_noop);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3234 "mdl.tab.c"
+#line 3238 "mdl.tab.c"
     break;
 
   case 86: /* edgeConnectionStatement: interfaceToMember  */
-#line 740 "mdl.y"
+#line 743 "mdl.y"
                     {
    (yyval.P_general) = (yyvsp[0].P_interfaceMapping);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3243 "mdl.tab.c"
+#line 3247 "mdl.tab.c"
     break;
 
   case 87: /* connection: CONNECTION PRE connectionComponentType '(' ')' EXPECTS interfacePointerList '{' connectionStatementList '}'  */
-#line 746 "mdl.y"
+#line 749 "mdl.y"
                                                                                                                         {
    (yyval.P_connection) = new C_regularConnection((yyvsp[-3].P_interfacePointerList), (yyvsp[-1].P_generalList),
 				(yyvsp[-7].V_connectionComponentType),
 				Connection::_PRE);
    (yyval.P_connection)->setTokenLocation(CURRENTFILE, (yylsp[-9]).first_line);
 }
-#line 3254 "mdl.tab.c"
+#line 3258 "mdl.tab.c"
     break;
 
   case 88: /* connection: CONNECTION PRE connectionComponentType '(' predicate ')' EXPECTS interfacePointerList '{' connectionStatementList '}'  */
-#line 752 "mdl.y"
+#line 755 "mdl.y"
                                                                                                                         {
    (yyval.P_connection) = new C_regularConnection((yyvsp[-3].P_interfacePointerList), (yyvsp[-1].P_generalList),
 				(yyvsp[-8].V_connectionComponentType),
 				Connection::_PRE, (yyvsp[-6].P_predicate));
    (yyval.P_connection)->setTokenLocation(CURRENTFILE, (yylsp[-10]).first_line);
 }
-#line 3265 "mdl.tab.c"
+#line 3269 "mdl.tab.c"
     break;
 
   case 89: /* connectionComponentType: NODE  */
-#line 760 "mdl.y"
+#line 763 "mdl.y"
                               {
    (yyval.V_connectionComponentType) = Connection::_NODE;
 }
-#line 3273 "mdl.tab.c"
+#line 3277 "mdl.tab.c"
     break;
 
   case 90: /* connectionComponentType: EDGE  */
-#line 763 "mdl.y"
+#line 766 "mdl.y"
        {
    (yyval.V_connectionComponentType) = Connection::_EDGE;
 }
-#line 3281 "mdl.tab.c"
+#line 3285 "mdl.tab.c"
     break;
 
   case 91: /* connectionComponentType: CONSTANT  */
-#line 766 "mdl.y"
+#line 769 "mdl.y"
            {
    (yyval.V_connectionComponentType) = Connection::_CONSTANT;
 }
-#line 3289 "mdl.tab.c"
+#line 3293 "mdl.tab.c"
     break;
 
   case 92: /* connectionComponentType: VARIABLE  */
-#line 769 "mdl.y"
+#line 772 "mdl.y"
            {
    (yyval.V_connectionComponentType) = Connection::_VARIABLE;
 }
-#line 3297 "mdl.tab.c"
+#line 3301 "mdl.tab.c"
     break;
 
   case 93: /* connectionStatementList: connectionStatement  */
-#line 774 "mdl.y"
+#line 777 "mdl.y"
                                              {
    (yyval.P_generalList) = new C_generalList((yyvsp[0].P_general));
    (yyval.P_generalList)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3306 "mdl.tab.c"
+#line 3310 "mdl.tab.c"
     break;
 
   case 94: /* connectionStatementList: connectionStatementList connectionStatement  */
-#line 778 "mdl.y"
+#line 781 "mdl.y"
                                               {
    (yyval.P_generalList) = new C_generalList((yyvsp[-1].P_generalList), (yyvsp[0].P_general));   
    (yyval.P_generalList)->setTokenLocation(CURRENTFILE, (yylsp[-1]).first_line);
 }
-#line 3315 "mdl.tab.c"
+#line 3319 "mdl.tab.c"
     break;
 
   case 95: /* connectionStatement: noop  */
-#line 784 "mdl.y"
+#line 787 "mdl.y"
                           {
    (yyval.P_general) = (yyvsp[0].P_noop);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3324 "mdl.tab.c"
+#line 3328 "mdl.tab.c"
     break;
 
   case 96: /* connectionStatement: interfaceToMember  */
-#line 788 "mdl.y"
+#line 791 "mdl.y"
                     {
    (yyval.P_general) = (yyvsp[0].P_interfaceMapping);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3333 "mdl.tab.c"
+#line 3337 "mdl.tab.c"
     break;
 
   case 97: /* connectionStatement: psetToMember  */
-#line 792 "mdl.y"
+#line 795 "mdl.y"
                {
    (yyval.P_general) = (yyvsp[0].P_psetMapping);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3342 "mdl.tab.c"
+#line 3346 "mdl.tab.c"
     break;
 
   case 98: /* connectionStatement: userFunctionCall  */
-#line 796 "mdl.y"
+#line 799 "mdl.y"
                    {
    (yyval.P_general) = (yyvsp[0].P_userFunctionCall);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3351 "mdl.tab.c"
+#line 3355 "mdl.tab.c"
     break;
 
   case 99: /* interfaceToMember: IDENTIFIER DOT IDENTIFIER RIGHTSHIFT identifierDotList ';'  */
-#line 802 "mdl.y"
+#line 805 "mdl.y"
                                                                               {
    (yyval.P_interfaceMapping) = new C_interfaceToInstance(*(yyvsp[-5].P_string), *(yyvsp[-3].P_string), (yyvsp[-1].P_identifierList));
    (yyval.P_interfaceMapping)->setTokenLocation(CURRENTFILE, (yylsp[-5]).first_line);
    delete (yyvsp[-5].P_string);
    delete (yyvsp[-3].P_string);
 }
-#line 3362 "mdl.tab.c"
+#line 3366 "mdl.tab.c"
     break;
 
   case 100: /* interfaceToMember: IDENTIFIER DOT IDENTIFIER RIGHTSHIFT SHARED DOT identifierDotList ';'  */
-#line 808 "mdl.y"
+#line 811 "mdl.y"
                                                                         {
    (yyval.P_interfaceMapping) = new C_interfaceToShared(*(yyvsp[-7].P_string), *(yyvsp[-5].P_string), (yyvsp[-1].P_identifierList));
    (yyval.P_interfaceMapping)->setTokenLocation(CURRENTFILE, (yylsp[-7]).first_line);
    delete (yyvsp[-7].P_string);
    delete (yyvsp[-5].P_string);
 }
-#line 3373 "mdl.tab.c"
+#line 3377 "mdl.tab.c"
     break;
 
   case 101: /* psetToMember: PSET DOT IDENTIFIER RIGHTSHIFT identifierDotList ';'  */
-#line 816 "mdl.y"
+#line 819 "mdl.y"
                                                                    {
    (yyval.P_psetMapping) = new C_psetToInstance(*(yyvsp[-3].P_string), (yyvsp[-1].P_identifierList));
    (yyval.P_psetMapping)->setTokenLocation(CURRENTFILE, (yylsp[-5]).first_line);
    delete (yyvsp[-3].P_string);
 }
-#line 3383 "mdl.tab.c"
+#line 3387 "mdl.tab.c"
     break;
 
   case 102: /* psetToMember: PSET DOT IDENTIFIER RIGHTSHIFT SHARED DOT identifierDotList ';'  */
-#line 821 "mdl.y"
+#line 824 "mdl.y"
                                                                   {
    (yyval.P_psetMapping) = new C_psetToShared(*(yyvsp[-5].P_string), (yyvsp[-1].P_identifierList));
    (yyval.P_psetMapping)->setTokenLocation(CURRENTFILE, (yylsp[-7]).first_line);
    delete (yyvsp[-5].P_string);
 }
-#line 3393 "mdl.tab.c"
+#line 3397 "mdl.tab.c"
     break;
 
   case 103: /* constant: CONSTANT IDENTIFIER IMPLEMENTS interfacePointerList '{' constantStatementList '}'  */
-#line 828 "mdl.y"
+#line 831 "mdl.y"
                                                                                             {
    (yyval.P_constant) = new C_constant(*(yyvsp[-5].P_string), (yyvsp[-3].P_interfacePointerList), (yyvsp[-1].P_generalList));
    (yyval.P_constant)->setTokenLocation(CURRENTFILE, (yylsp[-6]).first_line);
    delete (yyvsp[-5].P_string);
 }
-#line 3403 "mdl.tab.c"
+#line 3407 "mdl.tab.c"
     break;
 
   case 104: /* constant: CONSTANT IDENTIFIER '{' constantStatementList '}'  */
-#line 833 "mdl.y"
+#line 836 "mdl.y"
                                                     {
    (yyval.P_constant) = new C_constant(*(yyvsp[-3].P_string), 0, (yyvsp[-1].P_generalList));
    (yyval.P_constant)->setTokenLocation(CURRENTFILE, (yylsp[-4]).first_line);
    delete (yyvsp[-3].P_string);
 }
-#line 3413 "mdl.tab.c"
+#line 3417 "mdl.tab.c"
     break;
 
   case 105: /* constantStatementList: constantStatement  */
-#line 840 "mdl.y"
+#line 843 "mdl.y"
                                          {
    (yyval.P_generalList) = new C_generalList((yyvsp[0].P_general));
    (yyval.P_generalList)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3422 "mdl.tab.c"
+#line 3426 "mdl.tab.c"
     break;
 
   case 106: /* constantStatementList: constantStatementList constantStatement  */
-#line 844 "mdl.y"
+#line 847 "mdl.y"
                                           {
    (yyval.P_generalList) = new C_generalList((yyvsp[-1].P_generalList), (yyvsp[0].P_general));   
    (yyval.P_generalList)->setTokenLocation(CURRENTFILE, (yylsp[-1]).first_line);
 }
-#line 3431 "mdl.tab.c"
+#line 3435 "mdl.tab.c"
     break;
 
   case 107: /* constantStatement: noop  */
-#line 850 "mdl.y"
+#line 853 "mdl.y"
                         {
    (yyval.P_general) = (yyvsp[0].P_noop);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3440 "mdl.tab.c"
+#line 3444 "mdl.tab.c"
     break;
 
   case 108: /* constantStatement: dataType  */
-#line 854 "mdl.y"
+#line 857 "mdl.y"
            {
    (yyval.P_general) = (yyvsp[0].P_dataType);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3449 "mdl.tab.c"
+#line 3453 "mdl.tab.c"
     break;
 
   case 109: /* constantStatement: instanceMapping  */
-#line 858 "mdl.y"
+#line 861 "mdl.y"
                   {
    (yyval.P_general) = (yyvsp[0].P_instanceMapping);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3458 "mdl.tab.c"
+#line 3462 "mdl.tab.c"
     break;
 
   case 110: /* constantStatement: outAttrPSet  */
-#line 862 "mdl.y"
+#line 865 "mdl.y"
               {
    (yyval.P_general) = (yyvsp[0].P_general);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3467 "mdl.tab.c"
+#line 3471 "mdl.tab.c"
     break;
 
   case 111: /* userFunction: USERFUNCTION identifierList ';'  */
-#line 868 "mdl.y"
+#line 871 "mdl.y"
                                               {
    (yyval.P_userFunction) = new C_userFunction((yyvsp[-1].P_identifierList));
    (yyval.P_userFunction)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
 }
-#line 3476 "mdl.tab.c"
+#line 3480 "mdl.tab.c"
     break;
 
   case 112: /* userFunctionCall: IDENTIFIER '(' ')' ';'  */
-#line 874 "mdl.y"
+#line 877 "mdl.y"
                                          {
    (yyval.P_userFunctionCall) = new C_userFunctionCall(*(yyvsp[-3].P_string));
    (yyval.P_userFunctionCall)->setTokenLocation(CURRENTFILE, (yylsp[-3]).first_line);
    delete (yyvsp[-3].P_string);
 }
-#line 3486 "mdl.tab.c"
+#line 3490 "mdl.tab.c"
     break;
 
   case 113: /* predicateFunction: PREDICATEFUNCTION identifierList ';'  */
-#line 881 "mdl.y"
+#line 884 "mdl.y"
                                                         {
    (yyval.P_predicateFunction) = new C_predicateFunction((yyvsp[-1].P_identifierList));
    (yyval.P_predicateFunction)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
 }
-#line 3495 "mdl.tab.c"
+#line 3499 "mdl.tab.c"
     break;
 
   case 114: /* identifierList: IDENTIFIER  */
-#line 887 "mdl.y"
+#line 890 "mdl.y"
                            {
    (yyval.P_identifierList) = new C_identifierList(*(yyvsp[0].P_string));
    (yyval.P_identifierList)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
    delete (yyvsp[0].P_string);
 }
-#line 3505 "mdl.tab.c"
+#line 3509 "mdl.tab.c"
     break;
 
   case 115: /* identifierList: identifierList ',' IDENTIFIER  */
-#line 892 "mdl.y"
+#line 895 "mdl.y"
                                 {
    (yyval.P_identifierList) = new C_identifierList((yyvsp[-2].P_identifierList), *(yyvsp[0].P_string));
    (yyval.P_identifierList)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
    delete (yyvsp[0].P_string);
 }
-#line 3515 "mdl.tab.c"
+#line 3519 "mdl.tab.c"
     break;
 
   case 116: /* identifierDotList: IDENTIFIER  */
-#line 899 "mdl.y"
+#line 902 "mdl.y"
                               {
    (yyval.P_identifierList) = new C_identifierList(*(yyvsp[0].P_string));
    (yyval.P_identifierList)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
    delete (yyvsp[0].P_string);
 }
-#line 3525 "mdl.tab.c"
+#line 3529 "mdl.tab.c"
     break;
 
   case 117: /* identifierDotList: identifierDotList DOT IDENTIFIER  */
-#line 904 "mdl.y"
+#line 907 "mdl.y"
                                    {
    (yyval.P_identifierList) = new C_identifierList((yyvsp[-2].P_identifierList), *(yyvsp[0].P_string));
    (yyval.P_identifierList)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
    delete (yyvsp[0].P_string);
 }
-#line 3535 "mdl.tab.c"
+#line 3539 "mdl.tab.c"
     break;
 
   case 118: /* phaseIdentifier: IDENTIFIER  */
-#line 911 "mdl.y"
+#line 914 "mdl.y"
                             {
    (yyval.P_phaseIdentifier) = new C_phaseIdentifier(*(yyvsp[0].P_string));
    (yyval.P_phaseIdentifier)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
    delete (yyvsp[0].P_string);
 }
-#line 3545 "mdl.tab.c"
+#line 3549 "mdl.tab.c"
     break;
 
   case 119: /* phaseIdentifier: IDENTIFIER '(' ')'  */
-#line 916 "mdl.y"
+#line 919 "mdl.y"
                      {
    (yyval.P_phaseIdentifier) = new C_phaseIdentifier(*(yyvsp[-2].P_string));
    (yyval.P_phaseIdentifier)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
    delete (yyvsp[-2].P_string);
 }
-#line 3555 "mdl.tab.c"
+#line 3559 "mdl.tab.c"
     break;
 
   case 120: /* phaseIdentifier: IDENTIFIER '(' identifierList ')'  */
-#line 921 "mdl.y"
+#line 924 "mdl.y"
                                     {
    (yyval.P_phaseIdentifier) = new C_phaseIdentifier(*(yyvsp[-3].P_string), (yyvsp[-1].P_identifierList));
    (yyval.P_phaseIdentifier)->setTokenLocation(CURRENTFILE, (yylsp[-3]).first_line);
    delete (yyvsp[-3].P_string);
 }
-#line 3565 "mdl.tab.c"
+#line 3569 "mdl.tab.c"
     break;
 
   case 121: /* phaseIdentifierList: phaseIdentifier  */
-#line 928 "mdl.y"
+#line 931 "mdl.y"
                                      {
    (yyval.P_phaseIdentifierList) = new C_phaseIdentifierList((yyvsp[0].P_phaseIdentifier));
    (yyval.P_phaseIdentifierList)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3574 "mdl.tab.c"
+#line 3578 "mdl.tab.c"
     break;
 
   case 122: /* phaseIdentifierList: phaseIdentifierList ',' phaseIdentifier  */
-#line 932 "mdl.y"
+#line 935 "mdl.y"
                                           {
    (yyval.P_phaseIdentifierList) = new C_phaseIdentifierList((yyvsp[-2].P_phaseIdentifierList), (yyvsp[0].P_phaseIdentifier));
    (yyval.P_phaseIdentifierList)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
 }
-#line 3583 "mdl.tab.c"
+#line 3587 "mdl.tab.c"
     break;
 
   case 123: /* edgeInstancePhase: INITPHASE phaseIdentifierList ';'  */
-#line 938 "mdl.y"
+#line 941 "mdl.y"
                                                      {
    std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
    (yyval.P_phase) = new C_initPhase((yyvsp[-1].P_phaseIdentifierList), std::move(pType));
    (yyval.P_phase)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
 }
-#line 3593 "mdl.tab.c"
+#line 3597 "mdl.tab.c"
     break;
 
   case 124: /* edgeInstancePhase: RUNTIMEPHASE phaseIdentifierList ';'  */
-#line 943 "mdl.y"
+#line 946 "mdl.y"
                                        {
    std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
    (yyval.P_phase) = new C_runtimePhase((yyvsp[-1].P_phaseIdentifierList), std::move(pType));
    (yyval.P_phase)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
 }
-#line 3603 "mdl.tab.c"
+#line 3607 "mdl.tab.c"
     break;
 
   case 125: /* edgeInstancePhase: FINALPHASE phaseIdentifierList ';'  */
-#line 948 "mdl.y"
+#line 951 "mdl.y"
                                      {
    std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
    (yyval.P_phase) = new C_finalPhase((yyvsp[-1].P_phaseIdentifierList), std::move(pType));
    (yyval.P_phase)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
 }
-#line 3613 "mdl.tab.c"
+#line 3617 "mdl.tab.c"
     break;
 
   case 126: /* edgeInstancePhase: LOADPHASE phaseIdentifierList ';'  */
-#line 953 "mdl.y"
+#line 956 "mdl.y"
                                     {
    std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
    (yyval.P_phase) = new C_loadPhase((yyvsp[-1].P_phaseIdentifierList), std::move(pType));
    (yyval.P_phase)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
 }
-#line 3623 "mdl.tab.c"
+#line 3627 "mdl.tab.c"
     break;
 
   case 127: /* variableInstancePhase: INITPHASE phaseIdentifierList ';'  */
-#line 960 "mdl.y"
+#line 963 "mdl.y"
                                                          {
    std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
    (yyval.P_phase) = new C_initPhase((yyvsp[-1].P_phaseIdentifierList), std::move(pType));
    (yyval.P_phase)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
 }
-#line 3633 "mdl.tab.c"
+#line 3637 "mdl.tab.c"
     break;
 
   case 128: /* variableInstancePhase: RUNTIMEPHASE phaseIdentifierList ';'  */
-#line 965 "mdl.y"
+#line 968 "mdl.y"
                                        {
    std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
    (yyval.P_phase) = new C_runtimePhase((yyvsp[-1].P_phaseIdentifierList), std::move(pType));
    (yyval.P_phase)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
 }
-#line 3643 "mdl.tab.c"
+#line 3647 "mdl.tab.c"
     break;
 
   case 129: /* variableInstancePhase: FINALPHASE phaseIdentifierList ';'  */
-#line 970 "mdl.y"
+#line 973 "mdl.y"
                                      {
    std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
    (yyval.P_phase) = new C_finalPhase((yyvsp[-1].P_phaseIdentifierList), std::move(pType));
    (yyval.P_phase)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
 }
-#line 3653 "mdl.tab.c"
+#line 3657 "mdl.tab.c"
     break;
 
   case 130: /* variableInstancePhase: LOADPHASE phaseIdentifierList ';'  */
-#line 975 "mdl.y"
+#line 978 "mdl.y"
                                     {
    std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
    (yyval.P_phase) = new C_loadPhase((yyvsp[-1].P_phaseIdentifierList), std::move(pType));
    (yyval.P_phase)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
 }
-#line 3663 "mdl.tab.c"
+#line 3667 "mdl.tab.c"
     break;
 
   case 131: /* nodeInstancePhase: INITPHASE phaseIdentifierList ';'  */
-#line 982 "mdl.y"
+#line 985 "mdl.y"
                                                      {
    std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
    (yyval.P_phase) = new C_initPhase((yyvsp[-1].P_phaseIdentifierList), std::move(pType));
    (yyval.P_phase)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
 }
-#line 3673 "mdl.tab.c"
+#line 3677 "mdl.tab.c"
     break;
 
   case 132: /* nodeInstancePhase: RUNTIMEPHASE phaseIdentifierList ';'  */
-#line 987 "mdl.y"
+#line 990 "mdl.y"
                                        {
    std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
    (yyval.P_phase) = new C_runtimePhase((yyvsp[-1].P_phaseIdentifierList), std::move(pType));
    (yyval.P_phase)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
 }
-#line 3683 "mdl.tab.c"
+#line 3687 "mdl.tab.c"
     break;
 
   case 133: /* nodeInstancePhase: RUNTIMEPHASE GRIDLAYERS phaseIdentifierList ';'  */
-#line 992 "mdl.y"
+#line 995 "mdl.y"
                                                   {
    std::unique_ptr<PhaseType> pType(new PhaseTypeGridLayers());
    (yyval.P_phase) = new C_runtimePhase((yyvsp[-1].P_phaseIdentifierList), std::move(pType));
    (yyval.P_phase)->setTokenLocation(CURRENTFILE, (yylsp[-3]).first_line);
 }
-#line 3693 "mdl.tab.c"
+#line 3697 "mdl.tab.c"
     break;
 
   case 134: /* nodeInstancePhase: FINALPHASE phaseIdentifierList ';'  */
-#line 997 "mdl.y"
+#line 1000 "mdl.y"
                                      {
    std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
    (yyval.P_phase) = new C_finalPhase((yyvsp[-1].P_phaseIdentifierList), std::move(pType));
    (yyval.P_phase)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
 }
-#line 3703 "mdl.tab.c"
+#line 3707 "mdl.tab.c"
     break;
 
   case 135: /* nodeInstancePhase: LOADPHASE phaseIdentifierList ';'  */
-#line 1002 "mdl.y"
+#line 1005 "mdl.y"
                                     {
    std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
    (yyval.P_phase) = new C_loadPhase((yyvsp[-1].P_phaseIdentifierList), std::move(pType));
    (yyval.P_phase)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
 }
-#line 3713 "mdl.tab.c"
+#line 3717 "mdl.tab.c"
     break;
 
   case 136: /* sharedPhase: INITPHASE phaseIdentifierList ';'  */
-#line 1009 "mdl.y"
+#line 1012 "mdl.y"
                                                {
    std::unique_ptr<PhaseType> pType(new PhaseTypeShared());
    (yyval.P_phase) = new C_initPhase((yyvsp[-1].P_phaseIdentifierList), std::move(pType));
    (yyval.P_phase)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
 }
-#line 3723 "mdl.tab.c"
+#line 3727 "mdl.tab.c"
     break;
 
   case 137: /* sharedPhase: RUNTIMEPHASE phaseIdentifierList ';'  */
-#line 1014 "mdl.y"
+#line 1017 "mdl.y"
                                        {
    std::unique_ptr<PhaseType> pType(new PhaseTypeShared());
    (yyval.P_phase) = new C_runtimePhase((yyvsp[-1].P_phaseIdentifierList), std::move(pType));
    (yyval.P_phase)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
 }
-#line 3733 "mdl.tab.c"
+#line 3737 "mdl.tab.c"
     break;
 
   case 138: /* sharedPhase: FINALPHASE phaseIdentifierList ';'  */
-#line 1019 "mdl.y"
+#line 1022 "mdl.y"
                                      {
    std::unique_ptr<PhaseType> pType(new PhaseTypeShared());
    (yyval.P_phase) = new C_finalPhase((yyvsp[-1].P_phaseIdentifierList), std::move(pType));
    (yyval.P_phase)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
 }
-#line 3743 "mdl.tab.c"
+#line 3747 "mdl.tab.c"
     break;
 
   case 139: /* sharedPhase: LOADPHASE phaseIdentifierList ';'  */
-#line 1024 "mdl.y"
+#line 1027 "mdl.y"
                                     {
    std::unique_ptr<PhaseType> pType(new PhaseTypeShared());
    (yyval.P_phase) = new C_loadPhase((yyvsp[-1].P_phaseIdentifierList), std::move(pType));
    (yyval.P_phase)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
 }
-#line 3753 "mdl.tab.c"
+#line 3757 "mdl.tab.c"
     break;
 
   case 140: /* interfacePointer: IDENTIFIER  */
-#line 1031 "mdl.y"
+#line 1034 "mdl.y"
                              {
    (yyval.P_interfacePointer) = new C_interfacePointer(*(yyvsp[0].P_string));
    (yyval.P_interfacePointer)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
    delete (yyvsp[0].P_string);
 }
-#line 3763 "mdl.tab.c"
+#line 3767 "mdl.tab.c"
     break;
 
   case 141: /* interfacePointerList: interfacePointer  */
-#line 1038 "mdl.y"
+#line 1041 "mdl.y"
                                        {
    (yyval.P_interfacePointerList) = new C_interfacePointerList((yyvsp[0].P_interfacePointer));
    (yyval.P_interfacePointerList)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3772 "mdl.tab.c"
+#line 3776 "mdl.tab.c"
     break;
 
   case 142: /* interfacePointerList: interfacePointerList ',' interfacePointer  */
-#line 1042 "mdl.y"
+#line 1045 "mdl.y"
                                             {
    (yyval.P_interfacePointerList) = new C_interfacePointerList((yyvsp[-2].P_interfacePointerList),(yyvsp[0].P_interfacePointer));
    (yyval.P_interfacePointerList)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
 }
-#line 3781 "mdl.tab.c"
+#line 3785 "mdl.tab.c"
     break;
 
   case 143: /* instanceMapping: IDENTIFIER DOT IDENTIFIER LEFTSHIFT identifierDotList ';'  */
-#line 1048 "mdl.y"
+#line 1051 "mdl.y"
                                                                            {
    (yyval.P_instanceMapping) = new C_instanceMapping(*(yyvsp[-5].P_string), *(yyvsp[-3].P_string), (yyvsp[-1].P_identifierList));
    (yyval.P_instanceMapping)->setTokenLocation(CURRENTFILE, (yylsp[-5]).first_line);
    delete (yyvsp[-5].P_string);
    delete (yyvsp[-3].P_string);
 }
-#line 3792 "mdl.tab.c"
+#line 3796 "mdl.tab.c"
     break;
 
   case 144: /* instanceMapping: IDENTIFIER DOT IDENTIFIER LEFTSHIFT AMPERSAND identifierDotList ';'  */
-#line 1054 "mdl.y"
+#line 1057 "mdl.y"
                                                                       {
    (yyval.P_instanceMapping) = new C_instanceMapping(*(yyvsp[-6].P_string), *(yyvsp[-4].P_string), (yyvsp[-1].P_identifierList), true);
    (yyval.P_instanceMapping)->setTokenLocation(CURRENTFILE, (yylsp[-6]).first_line);
    delete (yyvsp[-6].P_string);
    delete (yyvsp[-4].P_string);
 }
-#line 3803 "mdl.tab.c"
+#line 3807 "mdl.tab.c"
     break;
 
   case 145: /* sharedMapping: IDENTIFIER DOT IDENTIFIER LEFTSHIFT SHARED DOT identifierDotList ';'  */
-#line 1062 "mdl.y"
+#line 1065 "mdl.y"
                                                                                     {
    (yyval.P_sharedMapping) = new C_sharedMapping(*(yyvsp[-7].P_string), *(yyvsp[-5].P_string), (yyvsp[-1].P_identifierList));
    (yyval.P_sharedMapping)->setTokenLocation(CURRENTFILE, (yylsp[-7]).first_line);
    delete (yyvsp[-7].P_string);
    delete (yyvsp[-5].P_string);
 }
-#line 3814 "mdl.tab.c"
+#line 3818 "mdl.tab.c"
     break;
 
   case 146: /* sharedMapping: IDENTIFIER DOT IDENTIFIER LEFTSHIFT AMPERSAND SHARED DOT identifierDotList ';'  */
-#line 1068 "mdl.y"
+#line 1071 "mdl.y"
                                                                                  {
    (yyval.P_sharedMapping) = new C_sharedMapping(*(yyvsp[-8].P_string), *(yyvsp[-6].P_string), (yyvsp[-1].P_identifierList), true);
    (yyval.P_sharedMapping)->setTokenLocation(CURRENTFILE, (yylsp[-8]).first_line);
    delete (yyvsp[-8].P_string);
    delete (yyvsp[-6].P_string);
 }
-#line 3825 "mdl.tab.c"
+#line 3829 "mdl.tab.c"
     break;
 
   case 147: /* predicate: '(' predicate ')'  */
-#line 1077 "mdl.y"
+#line 1080 "mdl.y"
                              {
    (yyval.P_predicate) = new Predicate(new ParanthesisOp(), (yyvsp[-1].P_predicate));  
 }
-#line 3833 "mdl.tab.c"
+#line 3837 "mdl.tab.c"
     break;
 
   case 148: /* predicate: IDENTIFIER  */
-#line 1080 "mdl.y"
+#line 1083 "mdl.y"
              {
    (yyval.P_predicate) = new InstancePredicate(new TerminalOp(), *(yyvsp[0].P_string));  
    delete (yyvsp[0].P_string);
 }
-#line 3842 "mdl.tab.c"
+#line 3846 "mdl.tab.c"
     break;
 
   case 149: /* predicate: IDENTIFIER '(' ')'  */
-#line 1084 "mdl.y"
+#line 1087 "mdl.y"
                      {
    (yyval.P_predicate) = new FunctionPredicate(new TerminalOp(), *(yyvsp[-2].P_string));  
    delete (yyvsp[-2].P_string);
 }
-#line 3851 "mdl.tab.c"
+#line 3855 "mdl.tab.c"
     break;
 
   case 150: /* predicate: SHARED DOT IDENTIFIER  */
-#line 1088 "mdl.y"
+#line 1091 "mdl.y"
                         {
    (yyval.P_predicate) = new SharedPredicate(new TerminalOp(), *(yyvsp[0].P_string));  
    delete (yyvsp[0].P_string);
 }
-#line 3860 "mdl.tab.c"
+#line 3864 "mdl.tab.c"
     break;
 
   case 151: /* predicate: PSET DOT IDENTIFIER  */
-#line 1092 "mdl.y"
+#line 1095 "mdl.y"
                       {
    (yyval.P_predicate) = new PSetPredicate(new TerminalOp(), *(yyvsp[0].P_string));  
    delete (yyvsp[0].P_string);
 }
-#line 3869 "mdl.tab.c"
+#line 3873 "mdl.tab.c"
     break;
 
   case 152: /* predicate: STRING_LITERAL  */
-#line 1096 "mdl.y"
+#line 1099 "mdl.y"
                  {
    std::ostringstream os;
    os << '"' << *(yyvsp[0].P_string) << '"';
    (yyval.P_predicate) = new Predicate(new TerminalOp(), os.str(), "string");  
    delete (yyvsp[0].P_string);
 }
-#line 3880 "mdl.tab.c"
+#line 3884 "mdl.tab.c"
     break;
 
   case 153: /* predicate: INT_CONSTANT  */
-#line 1102 "mdl.y"
+#line 1105 "mdl.y"
                {
    std::ostringstream os;
    os << (yyvsp[0].V_int);
    (yyval.P_predicate) = new Predicate(new TerminalOp(), os.str(), "int");  
 }
-#line 3890 "mdl.tab.c"
+#line 3894 "mdl.tab.c"
     break;
 
   case 154: /* predicate: DOUBLE_CONSTANT  */
-#line 1107 "mdl.y"
+#line 1110 "mdl.y"
                   {
    std::ostringstream os;
    os << (yyvsp[0].V_double);
    (yyval.P_predicate) = new Predicate(new TerminalOp(), os.str(), "double");  
 }
-#line 3900 "mdl.tab.c"
+#line 3904 "mdl.tab.c"
     break;
 
   case 155: /* predicate: _TRUE  */
-#line 1112 "mdl.y"
+#line 1115 "mdl.y"
         {
    (yyval.P_predicate) = new Predicate(new TerminalOp(), "true", "bool");  
 }
-#line 3908 "mdl.tab.c"
+#line 3912 "mdl.tab.c"
     break;
 
   case 156: /* predicate: _FALSE  */
-#line 1115 "mdl.y"
+#line 1118 "mdl.y"
          {
    (yyval.P_predicate) = new Predicate(new TerminalOp(), "false", "bool");  
 }
-#line 3916 "mdl.tab.c"
+#line 3920 "mdl.tab.c"
     break;
 
   case 157: /* predicate: predicate EQUAL predicate  */
-#line 1118 "mdl.y"
+#line 1121 "mdl.y"
                             {
    (yyval.P_predicate) = new Predicate(new EqualOp(), (yyvsp[-2].P_predicate), (yyvsp[0].P_predicate));  
 }
-#line 3924 "mdl.tab.c"
+#line 3928 "mdl.tab.c"
     break;
 
   case 158: /* predicate: predicate NOT_EQUAL predicate  */
-#line 1121 "mdl.y"
+#line 1124 "mdl.y"
                                 {
    (yyval.P_predicate) = new Predicate(new NotEqualOp(), (yyvsp[-2].P_predicate), (yyvsp[0].P_predicate));  
 }
-#line 3932 "mdl.tab.c"
+#line 3936 "mdl.tab.c"
     break;
 
   case 159: /* predicate: predicate LESS_EQUAL predicate  */
-#line 1124 "mdl.y"
+#line 1127 "mdl.y"
                                  {
    (yyval.P_predicate) = new Predicate(new LessEqualOp(), (yyvsp[-2].P_predicate), (yyvsp[0].P_predicate));  
 }
-#line 3940 "mdl.tab.c"
+#line 3944 "mdl.tab.c"
     break;
 
   case 160: /* predicate: predicate GREATER_EQUAL predicate  */
-#line 1127 "mdl.y"
+#line 1130 "mdl.y"
                                     {
    (yyval.P_predicate) = new Predicate(new GreaterEqualOp(), (yyvsp[-2].P_predicate), (yyvsp[0].P_predicate));  
 }
-#line 3948 "mdl.tab.c"
+#line 3952 "mdl.tab.c"
     break;
 
   case 161: /* predicate: predicate LESS predicate  */
-#line 1130 "mdl.y"
+#line 1133 "mdl.y"
                            {
    (yyval.P_predicate) = new Predicate(new LessOp(), (yyvsp[-2].P_predicate), (yyvsp[0].P_predicate));  
 }
-#line 3956 "mdl.tab.c"
+#line 3960 "mdl.tab.c"
     break;
 
   case 162: /* predicate: predicate GREATER predicate  */
-#line 1133 "mdl.y"
+#line 1136 "mdl.y"
                               {
    (yyval.P_predicate) = new Predicate(new GreaterOp(), (yyvsp[-2].P_predicate), (yyvsp[0].P_predicate));  
 }
-#line 3964 "mdl.tab.c"
+#line 3968 "mdl.tab.c"
     break;
 
   case 163: /* predicate: predicate AND predicate  */
-#line 1136 "mdl.y"
+#line 1139 "mdl.y"
                           {
    (yyval.P_predicate) = new Predicate(new AndOp(), (yyvsp[-2].P_predicate), (yyvsp[0].P_predicate));  
 }
-#line 3972 "mdl.tab.c"
+#line 3976 "mdl.tab.c"
     break;
 
   case 164: /* predicate: predicate OR predicate  */
-#line 1139 "mdl.y"
+#line 1142 "mdl.y"
                          {
    (yyval.P_predicate) = new Predicate(new OrOp(), (yyvsp[-2].P_predicate), (yyvsp[0].P_predicate));  
 }
-#line 3980 "mdl.tab.c"
+#line 3984 "mdl.tab.c"
     break;
 
   case 165: /* dataTypeList: dataType  */
-#line 1144 "mdl.y"
+#line 1147 "mdl.y"
                        {
    (yyval.P_dataTypeList) = new C_dataTypeList((yyvsp[0].P_dataType));
    (yyval.P_dataTypeList)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 3989 "mdl.tab.c"
+#line 3993 "mdl.tab.c"
     break;
 
   case 166: /* dataTypeList: dataTypeList dataType  */
-#line 1148 "mdl.y"
+#line 1151 "mdl.y"
                         {
    (yyval.P_dataTypeList) = new C_dataTypeList((yyvsp[-1].P_dataTypeList), (yyvsp[0].P_dataType));
    (yyval.P_dataTypeList)->setTokenLocation(CURRENTFILE, (yylsp[-1]).first_line);
 }
-#line 3998 "mdl.tab.c"
+#line 4002 "mdl.tab.c"
     break;
 
   case 167: /* optionalDataType: OPTIONAL nonPointerTypeClassifier nameCommentList ';'  */
-#line 1154 "mdl.y"
+#line 1157 "mdl.y"
                                                                         {
    (yyval.P_dataType) = new C_dataType((yyvsp[-2].P_typeClassifier), (yyvsp[-1].P_nameCommentList), false, true);
    (yyval.P_dataType)->setTokenLocation(CURRENTFILE, (yylsp[-3]).first_line);
 }
-#line 4007 "mdl.tab.c"
+#line 4011 "mdl.tab.c"
     break;
 
   case 168: /* optionalDataType: OPTIONAL DERIVED nonPointerTypeClassifier nameCommentList ';'  */
-#line 1158 "mdl.y"
+#line 1161 "mdl.y"
                                                                 {
    (yyval.P_dataType) = new C_dataType((yyvsp[-2].P_typeClassifier), (yyvsp[-1].P_nameCommentList), true, true);
    (yyval.P_dataType)->setTokenLocation(CURRENTFILE, (yylsp[-4]).first_line);
 }
-#line 4016 "mdl.tab.c"
+#line 4020 "mdl.tab.c"
     break;
 
   case 169: /* dataType: typeClassifier nameCommentList ';'  */
-#line 1164 "mdl.y"
+#line 1167 "mdl.y"
                                              {
    (yyval.P_dataType) = new C_dataType((yyvsp[-2].P_typeClassifier), (yyvsp[-1].P_nameCommentList));
    (yyval.P_dataType)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
 }
-#line 4025 "mdl.tab.c"
+#line 4029 "mdl.tab.c"
     break;
 
   case 170: /* dataType: DERIVED typeClassifier nameCommentList ';'  */
-#line 1168 "mdl.y"
+#line 1171 "mdl.y"
                                              {
    (yyval.P_dataType) = new C_dataType((yyvsp[-2].P_typeClassifier), (yyvsp[-1].P_nameCommentList), true);
    (yyval.P_dataType)->setTokenLocation(CURRENTFILE, (yylsp[-3]).first_line);
 }
-#line 4034 "mdl.tab.c"
+#line 4038 "mdl.tab.c"
     break;
 
   case 171: /* nameComment: IDENTIFIER  */
-#line 1174 "mdl.y"
+#line 1177 "mdl.y"
                         {
    (yyval.P_nameComment) = new C_nameComment(*(yyvsp[0].P_string));
    (yyval.P_nameComment)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
    delete (yyvsp[0].P_string);
 }
-#line 4044 "mdl.tab.c"
+#line 4048 "mdl.tab.c"
     break;
 
   case 172: /* nameComment: IDENTIFIER '(' INT_CONSTANT ')'  */
-#line 1179 "mdl.y"
+#line 1182 "mdl.y"
                                   {
    (yyval.P_nameComment) = new C_nameComment(*(yyvsp[-3].P_string), (yyvsp[-1].V_int));
    (yyval.P_nameComment)->setTokenLocation(CURRENTFILE, (yylsp[-3]).first_line);
    delete (yyvsp[-3].P_string);
 }
-#line 4054 "mdl.tab.c"
+#line 4058 "mdl.tab.c"
     break;
 
   case 173: /* nameComment: IDENTIFIER '(' INT_CONSTANT ',' INT_CONSTANT ')'  */
-#line 1184 "mdl.y"
+#line 1187 "mdl.y"
                                                    {
    (yyval.P_nameComment) = new C_nameComment(*(yyvsp[-5].P_string), (yyvsp[-3].V_int), (yyvsp[-1].V_int));
    (yyval.P_nameComment)->setTokenLocation(CURRENTFILE, (yylsp[-5]).first_line);
    delete (yyvsp[-5].P_string);
 }
-#line 4064 "mdl.tab.c"
+#line 4068 "mdl.tab.c"
     break;
 
   case 174: /* nameComment: IDENTIFIER ':' STRING_LITERAL  */
-#line 1189 "mdl.y"
+#line 1192 "mdl.y"
                                 {
    (yyval.P_nameComment) = new C_nameComment(*(yyvsp[-2].P_string), *(yyvsp[0].P_string));
    (yyval.P_nameComment)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
    delete (yyvsp[-2].P_string);
    delete (yyvsp[0].P_string);
 }
-#line 4075 "mdl.tab.c"
+#line 4079 "mdl.tab.c"
     break;
 
   case 175: /* nameComment: IDENTIFIER '(' INT_CONSTANT ')' ':' STRING_LITERAL  */
-#line 1195 "mdl.y"
+#line 1198 "mdl.y"
                                                      {
    (yyval.P_nameComment) = new C_nameComment(*(yyvsp[-5].P_string), *(yyvsp[0].P_string), (yyvsp[-3].V_int));
    (yyval.P_nameComment)->setTokenLocation(CURRENTFILE, (yylsp[-5]).first_line);
    delete (yyvsp[-5].P_string);
    delete (yyvsp[0].P_string);
 }
-#line 4086 "mdl.tab.c"
+#line 4090 "mdl.tab.c"
     break;
 
   case 176: /* nameComment: IDENTIFIER '(' INT_CONSTANT ',' INT_CONSTANT ')' ':' STRING_LITERAL  */
-#line 1201 "mdl.y"
+#line 1204 "mdl.y"
                                                                        {
    (yyval.P_nameComment) = new C_nameComment(*(yyvsp[-7].P_string), *(yyvsp[0].P_string), (yyvsp[-5].V_int), (yyvsp[-3].V_int));
    (yyval.P_nameComment)->setTokenLocation(CURRENTFILE, (yylsp[-7]).first_line);
    delete (yyvsp[-7].P_string);
    delete (yyvsp[0].P_string);
 }
-#line 4097 "mdl.tab.c"
+#line 4101 "mdl.tab.c"
     break;
 
   case 177: /* nameCommentList: nameComment  */
-#line 1209 "mdl.y"
+#line 1212 "mdl.y"
                              {   
    (yyval.P_nameCommentList) = new C_nameCommentList((yyvsp[0].P_nameComment));
    (yyval.P_nameCommentList)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4106 "mdl.tab.c"
+#line 4110 "mdl.tab.c"
     break;
 
   case 178: /* nameCommentList: nameCommentList ',' nameComment  */
-#line 1213 "mdl.y"
+#line 1216 "mdl.y"
                                   {
    (yyval.P_nameCommentList) = new C_nameCommentList((yyvsp[-2].P_nameCommentList), (yyvsp[0].P_nameComment));   
    (yyval.P_nameCommentList)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
 }
-#line 4115 "mdl.tab.c"
+#line 4119 "mdl.tab.c"
     break;
 
   case 179: /* nameCommentArgument: IDENTIFIER  */
-#line 1219 "mdl.y"
+#line 1222 "mdl.y"
                                 {
    (yyval.P_nameComment) = new C_nameComment(*(yyvsp[0].P_string));
    (yyval.P_nameComment)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
    delete (yyvsp[0].P_string);
 }
-#line 4125 "mdl.tab.c"
+#line 4129 "mdl.tab.c"
     break;
 
   case 180: /* nameCommentArgumentList: nameCommentArgument  */
-#line 1226 "mdl.y"
+#line 1229 "mdl.y"
                                              {
    (yyval.P_nameCommentList) = new C_nameCommentList((yyvsp[0].P_nameComment));
    (yyval.P_nameCommentList)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4134 "mdl.tab.c"
+#line 4138 "mdl.tab.c"
     break;
 
   case 181: /* functor: FUNCTOR IDENTIFIER '{' functorStatementList '}'  */
-#line 1232 "mdl.y"
+#line 1235 "mdl.y"
                                                          {
     (yyval.P_functor) = new C_functor(*(yyvsp[-3].P_string), (yyvsp[-1].P_generalList));
     (yyval.P_functor)->setTokenLocation(CURRENTFILE, (yylsp[-4]).first_line);
     delete (yyvsp[-3].P_string);
 }
-#line 4144 "mdl.tab.c"
+#line 4148 "mdl.tab.c"
     break;
 
   case 182: /* functor: FRAMEWORK FUNCTOR IDENTIFIER '{' functorStatementList '}'  */
-#line 1237 "mdl.y"
+#line 1240 "mdl.y"
                                                             {
     (yyval.P_functor) = new C_functor(*(yyvsp[-3].P_string), (yyvsp[-1].P_generalList));
     (yyval.P_functor)->setTokenLocation(CURRENTFILE, (yylsp[-5]).first_line);
     (yyval.P_functor)->setFrameWorkElement();
     delete (yyvsp[-3].P_string);
 }
-#line 4155 "mdl.tab.c"
+#line 4159 "mdl.tab.c"
     break;
 
   case 183: /* functor: FUNCTOR IDENTIFIER CATEGORY STRING_LITERAL '{' functorStatementList '}'  */
-#line 1243 "mdl.y"
+#line 1246 "mdl.y"
                                                                           {
     (yyval.P_functor) = new C_functor(*(yyvsp[-5].P_string), (yyvsp[-1].P_generalList), *(yyvsp[-3].P_string));
     (yyval.P_functor)->setTokenLocation(CURRENTFILE, (yylsp[-6]).first_line);
     delete (yyvsp[-5].P_string);
     delete (yyvsp[-3].P_string);
 }
-#line 4166 "mdl.tab.c"
+#line 4170 "mdl.tab.c"
     break;
 
   case 184: /* functor: FRAMEWORK FUNCTOR IDENTIFIER CATEGORY STRING_LITERAL '{' functorStatementList '}'  */
-#line 1249 "mdl.y"
+#line 1252 "mdl.y"
                                                                                     {
     (yyval.P_functor) = new C_functor(*(yyvsp[-5].P_string), (yyvsp[-1].P_generalList), *(yyvsp[-3].P_string));
     (yyval.P_functor)->setTokenLocation(CURRENTFILE, (yylsp[-7]).first_line);
@@ -4174,507 +4178,507 @@ yyreduce:
     delete (yyvsp[-5].P_string);
     delete (yyvsp[-3].P_string);
 }
-#line 4178 "mdl.tab.c"
+#line 4182 "mdl.tab.c"
     break;
 
   case 185: /* functorStatementList: functorStatement  */
-#line 1258 "mdl.y"
+#line 1261 "mdl.y"
                                        {
    (yyval.P_generalList) = new C_generalList((yyvsp[0].P_general));
    (yyval.P_generalList)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4187 "mdl.tab.c"
+#line 4191 "mdl.tab.c"
     break;
 
   case 186: /* functorStatementList: functorStatementList functorStatement  */
-#line 1262 "mdl.y"
+#line 1265 "mdl.y"
                                         {
    (yyval.P_generalList) = new C_generalList((yyvsp[-1].P_generalList), (yyvsp[0].P_general));   
    (yyval.P_generalList)->setTokenLocation(CURRENTFILE, (yylsp[-1]).first_line);
 }
-#line 4196 "mdl.tab.c"
+#line 4200 "mdl.tab.c"
     break;
 
   case 187: /* functorStatement: noop  */
-#line 1268 "mdl.y"
+#line 1271 "mdl.y"
                        {
    (yyval.P_general) = (yyvsp[0].P_noop);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4205 "mdl.tab.c"
+#line 4209 "mdl.tab.c"
     break;
 
   case 188: /* functorStatement: execute  */
-#line 1272 "mdl.y"
+#line 1275 "mdl.y"
           {
    (yyval.P_general) = (yyvsp[0].P_general);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4214 "mdl.tab.c"
+#line 4218 "mdl.tab.c"
     break;
 
   case 189: /* functorStatement: initialize  */
-#line 1276 "mdl.y"
+#line 1279 "mdl.y"
              {
    (yyval.P_general) = (yyvsp[0].P_general);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4223 "mdl.tab.c"
+#line 4227 "mdl.tab.c"
     break;
 
   case 190: /* execute: returnType EXECUTE '(' ')' ';'  */
-#line 1282 "mdl.y"
+#line 1285 "mdl.y"
                                         {
    (yyval.P_general) = new C_execute((yyvsp[-4].P_returnType));
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[-4]).first_line);  
 }
-#line 4232 "mdl.tab.c"
+#line 4236 "mdl.tab.c"
     break;
 
   case 191: /* execute: returnType EXECUTE '(' ELLIPSIS ')' ';'  */
-#line 1286 "mdl.y"
+#line 1289 "mdl.y"
                                           {
    (yyval.P_general) = new C_execute((yyvsp[-5].P_returnType), true);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[-5]).first_line);  
 }
-#line 4241 "mdl.tab.c"
+#line 4245 "mdl.tab.c"
     break;
 
   case 192: /* execute: returnType EXECUTE '(' argumentDataTypeList ')' ';'  */
-#line 1290 "mdl.y"
+#line 1293 "mdl.y"
                                                       {
    (yyval.P_general) = new C_execute((yyvsp[-5].P_returnType), (yyvsp[-2].P_generalList));
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[-5]).first_line);  
 }
-#line 4250 "mdl.tab.c"
+#line 4254 "mdl.tab.c"
     break;
 
   case 193: /* execute: returnType EXECUTE '(' argumentDataTypeList ',' ELLIPSIS ')' ';'  */
-#line 1294 "mdl.y"
+#line 1297 "mdl.y"
                                                                    {
    (yyval.P_general) = new C_execute((yyvsp[-7].P_returnType), (yyvsp[-4].P_generalList), true);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[-7]).first_line);  
 }
-#line 4259 "mdl.tab.c"
+#line 4263 "mdl.tab.c"
     break;
 
   case 194: /* returnType: VOID  */
-#line 1300 "mdl.y"
+#line 1303 "mdl.y"
                  {
    (yyval.P_returnType) = new C_returnType(true);
    (yyval.P_returnType)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);    
 }
-#line 4268 "mdl.tab.c"
+#line 4272 "mdl.tab.c"
     break;
 
   case 195: /* returnType: typeClassifier  */
-#line 1304 "mdl.y"
+#line 1307 "mdl.y"
                  {
    (yyval.P_returnType) = new C_returnType((yyvsp[0].P_typeClassifier));
    (yyval.P_returnType)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);    
 }
-#line 4277 "mdl.tab.c"
+#line 4281 "mdl.tab.c"
     break;
 
   case 196: /* initialize: INITIALIZE '(' ')' ';'  */
-#line 1310 "mdl.y"
+#line 1313 "mdl.y"
                                    {
    (yyval.P_general) = new C_initialize();
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[-3]).first_line);  
 }
-#line 4286 "mdl.tab.c"
+#line 4290 "mdl.tab.c"
     break;
 
   case 197: /* initialize: INITIALIZE '(' ELLIPSIS ')' ';'  */
-#line 1314 "mdl.y"
+#line 1317 "mdl.y"
                                   {
    (yyval.P_general) = new C_initialize(true);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[-4]).first_line);  
 }
-#line 4295 "mdl.tab.c"
+#line 4299 "mdl.tab.c"
     break;
 
   case 198: /* initialize: INITIALIZE '(' argumentDataTypeList ')' ';'  */
-#line 1318 "mdl.y"
+#line 1321 "mdl.y"
                                               {
    (yyval.P_general) = new C_initialize((yyvsp[-2].P_generalList));
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[-4]).first_line);  
 }
-#line 4304 "mdl.tab.c"
+#line 4308 "mdl.tab.c"
     break;
 
   case 199: /* initialize: INITIALIZE '(' argumentDataTypeList ',' ELLIPSIS ')' ';'  */
-#line 1322 "mdl.y"
+#line 1325 "mdl.y"
                                                            {
    (yyval.P_general) = new C_initialize((yyvsp[-4].P_generalList), true);
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[-6]).first_line);  
 }
-#line 4313 "mdl.tab.c"
+#line 4317 "mdl.tab.c"
     break;
 
   case 200: /* argumentDataTypeList: argumentDataType  */
-#line 1328 "mdl.y"
+#line 1331 "mdl.y"
                                        {
    (yyval.P_generalList) = new C_generalList((yyvsp[0].P_general));
    (yyval.P_generalList)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4322 "mdl.tab.c"
+#line 4326 "mdl.tab.c"
     break;
 
   case 201: /* argumentDataTypeList: argumentDataTypeList ',' argumentDataType  */
-#line 1332 "mdl.y"
+#line 1335 "mdl.y"
                                             {
    (yyval.P_generalList) = new C_generalList((yyvsp[-2].P_generalList), (yyvsp[0].P_general));
    (yyval.P_generalList)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
 }
-#line 4331 "mdl.tab.c"
+#line 4335 "mdl.tab.c"
     break;
 
   case 202: /* argumentDataType: typeClassifier nameCommentArgumentList  */
-#line 1338 "mdl.y"
+#line 1341 "mdl.y"
                                                          {
    (yyval.P_general) = new C_dataType((yyvsp[-1].P_typeClassifier), (yyvsp[0].P_nameCommentList));
    (yyval.P_general)->setTokenLocation(CURRENTFILE, (yylsp[-1]).first_line);
 }
-#line 4340 "mdl.tab.c"
+#line 4344 "mdl.tab.c"
     break;
 
   case 203: /* triggeredFunctionInstance: TRIGGEREDFUNCTION identifierList ';'  */
-#line 1344 "mdl.y"
+#line 1347 "mdl.y"
                                                                 {
    (yyval.P_triggeredFunction) = new C_triggeredFunctionInstance((yyvsp[-1].P_identifierList), TriggeredFunction::_SERIAL);
    (yyval.P_triggeredFunction)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
 }
-#line 4349 "mdl.tab.c"
+#line 4353 "mdl.tab.c"
     break;
 
   case 204: /* triggeredFunctionInstance: SERIAL TRIGGEREDFUNCTION identifierList ';'  */
-#line 1348 "mdl.y"
+#line 1351 "mdl.y"
                                               {
    (yyval.P_triggeredFunction) = new C_triggeredFunctionInstance((yyvsp[-1].P_identifierList), TriggeredFunction::_SERIAL);
    (yyval.P_triggeredFunction)->setTokenLocation(CURRENTFILE, (yylsp[-3]).first_line);
 }
-#line 4358 "mdl.tab.c"
+#line 4362 "mdl.tab.c"
     break;
 
   case 205: /* triggeredFunctionInstance: PARALLEL TRIGGEREDFUNCTION identifierList ';'  */
-#line 1352 "mdl.y"
+#line 1355 "mdl.y"
                                                 {
    (yyval.P_triggeredFunction) = new C_triggeredFunctionInstance((yyvsp[-1].P_identifierList), TriggeredFunction::_PARALLEL);
    (yyval.P_triggeredFunction)->setTokenLocation(CURRENTFILE, (yylsp[-3]).first_line);
 }
-#line 4367 "mdl.tab.c"
+#line 4371 "mdl.tab.c"
     break;
 
   case 206: /* triggeredFunctionShared: TRIGGEREDFUNCTION identifierList ';'  */
-#line 1358 "mdl.y"
+#line 1361 "mdl.y"
                                                               {
    (yyval.P_triggeredFunction) = new C_triggeredFunctionShared((yyvsp[-1].P_identifierList), TriggeredFunction::_SERIAL);
    (yyval.P_triggeredFunction)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
 }
-#line 4376 "mdl.tab.c"
+#line 4380 "mdl.tab.c"
     break;
 
   case 207: /* triggeredFunctionShared: SERIAL TRIGGEREDFUNCTION identifierList ';'  */
-#line 1362 "mdl.y"
+#line 1365 "mdl.y"
                                               {
    (yyval.P_triggeredFunction) = new C_triggeredFunctionShared((yyvsp[-1].P_identifierList), TriggeredFunction::_SERIAL);
    (yyval.P_triggeredFunction)->setTokenLocation(CURRENTFILE, (yylsp[-3]).first_line);
 }
-#line 4385 "mdl.tab.c"
+#line 4389 "mdl.tab.c"
     break;
 
   case 208: /* triggeredFunctionShared: PARALLEL TRIGGEREDFUNCTION identifierList ';'  */
-#line 1366 "mdl.y"
+#line 1369 "mdl.y"
                                                 {
    (yyval.P_triggeredFunction) = new C_triggeredFunctionShared((yyvsp[-1].P_identifierList), TriggeredFunction::_PARALLEL);
    (yyval.P_triggeredFunction)->setTokenLocation(CURRENTFILE, (yylsp[-3]).first_line);
 }
-#line 4394 "mdl.tab.c"
+#line 4398 "mdl.tab.c"
     break;
 
   case 209: /* nonPointerTypeClassifier: typeCore  */
-#line 1377 "mdl.y"
+#line 1380 "mdl.y"
                                    {
    (yyval.P_typeClassifier) = new C_typeClassifier((yyvsp[0].P_typeCore));
    (yyval.P_typeClassifier)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4403 "mdl.tab.c"
+#line 4407 "mdl.tab.c"
     break;
 
   case 210: /* nonPointerTypeClassifier: array  */
-#line 1381 "mdl.y"
+#line 1384 "mdl.y"
         { 
    (yyval.P_typeClassifier) = new C_typeClassifier((yyvsp[0].P_array));
    (yyval.P_typeClassifier)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4412 "mdl.tab.c"
+#line 4416 "mdl.tab.c"
     break;
 
   case 211: /* typeClassifier: typeCore  */
-#line 1387 "mdl.y"
+#line 1390 "mdl.y"
                          {
    (yyval.P_typeClassifier) = new C_typeClassifier((yyvsp[0].P_typeCore));
    (yyval.P_typeClassifier)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4421 "mdl.tab.c"
+#line 4425 "mdl.tab.c"
     break;
 
   case 212: /* typeClassifier: typeCore STAR  */
-#line 1391 "mdl.y"
+#line 1394 "mdl.y"
                 {
    (yyval.P_typeClassifier) = new C_typeClassifier((yyvsp[-1].P_typeCore), true);
    (yyval.P_typeClassifier)->setTokenLocation(CURRENTFILE, (yylsp[-1]).first_line);
 }
-#line 4430 "mdl.tab.c"
+#line 4434 "mdl.tab.c"
     break;
 
   case 213: /* typeClassifier: array  */
-#line 1395 "mdl.y"
+#line 1398 "mdl.y"
         { 
    (yyval.P_typeClassifier) = new C_typeClassifier((yyvsp[0].P_array));
    (yyval.P_typeClassifier)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4439 "mdl.tab.c"
+#line 4443 "mdl.tab.c"
     break;
 
   case 214: /* typeClassifier: array STAR  */
-#line 1399 "mdl.y"
+#line 1402 "mdl.y"
              {
    (yyval.P_typeClassifier) = new C_typeClassifier((yyvsp[-1].P_array), true);
    (yyval.P_typeClassifier)->setTokenLocation(CURRENTFILE, (yylsp[-1]).first_line);
 }
-#line 4448 "mdl.tab.c"
+#line 4452 "mdl.tab.c"
     break;
 
   case 215: /* typeCore: STRING  */
-#line 1405 "mdl.y"
+#line 1408 "mdl.y"
                  {
    (yyval.P_typeCore) = new C_typeCore(new StringType());
    (yyval.P_typeCore)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4457 "mdl.tab.c"
+#line 4461 "mdl.tab.c"
     break;
 
   case 216: /* typeCore: BOOL  */
-#line 1409 "mdl.y"
+#line 1412 "mdl.y"
        {
    (yyval.P_typeCore) = new C_typeCore(new BoolType());
    (yyval.P_typeCore)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4466 "mdl.tab.c"
+#line 4470 "mdl.tab.c"
     break;
 
   case 217: /* typeCore: CHAR  */
-#line 1413 "mdl.y"
+#line 1416 "mdl.y"
        {
    (yyval.P_typeCore) = new C_typeCore(new CharType());
    (yyval.P_typeCore)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4475 "mdl.tab.c"
+#line 4479 "mdl.tab.c"
     break;
 
   case 218: /* typeCore: SHORT  */
-#line 1417 "mdl.y"
+#line 1420 "mdl.y"
         {
    (yyval.P_typeCore) = new C_typeCore(new ShortType());
    (yyval.P_typeCore)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4484 "mdl.tab.c"
+#line 4488 "mdl.tab.c"
     break;
 
   case 219: /* typeCore: INT  */
-#line 1421 "mdl.y"
+#line 1424 "mdl.y"
       {
    (yyval.P_typeCore) = new C_typeCore(new IntType());
    (yyval.P_typeCore)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4493 "mdl.tab.c"
+#line 4497 "mdl.tab.c"
     break;
 
   case 220: /* typeCore: LONG  */
-#line 1425 "mdl.y"
+#line 1428 "mdl.y"
        {
    (yyval.P_typeCore) = new C_typeCore(new LongType());
    (yyval.P_typeCore)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4502 "mdl.tab.c"
+#line 4506 "mdl.tab.c"
     break;
 
   case 221: /* typeCore: FLOAT  */
-#line 1429 "mdl.y"
+#line 1432 "mdl.y"
         {
    (yyval.P_typeCore) = new C_typeCore(new FloatType());
    (yyval.P_typeCore)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4511 "mdl.tab.c"
+#line 4515 "mdl.tab.c"
     break;
 
   case 222: /* typeCore: DOUBLE  */
-#line 1433 "mdl.y"
+#line 1436 "mdl.y"
          {
    (yyval.P_typeCore) = new C_typeCore(new DoubleType());
    (yyval.P_typeCore)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4520 "mdl.tab.c"
+#line 4524 "mdl.tab.c"
     break;
 
   case 223: /* typeCore: LONG DOUBLE  */
-#line 1437 "mdl.y"
+#line 1440 "mdl.y"
               {
    (yyval.P_typeCore) = new C_typeCore(new LongDoubleType());
    (yyval.P_typeCore)->setTokenLocation(CURRENTFILE, (yylsp[-1]).first_line);
 }
-#line 4529 "mdl.tab.c"
+#line 4533 "mdl.tab.c"
     break;
 
   case 224: /* typeCore: UNSIGNED  */
-#line 1441 "mdl.y"
+#line 1444 "mdl.y"
            {
    (yyval.P_typeCore) = new C_typeCore(new UnsignedType());
    (yyval.P_typeCore)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4538 "mdl.tab.c"
+#line 4542 "mdl.tab.c"
     break;
 
   case 225: /* typeCore: EDGE  */
-#line 1445 "mdl.y"
+#line 1448 "mdl.y"
        {
    (yyval.P_typeCore) = new C_typeCore(new EdgeType());
    (yyval.P_typeCore)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4547 "mdl.tab.c"
+#line 4551 "mdl.tab.c"
     break;
 
   case 226: /* typeCore: EDGESET  */
-#line 1449 "mdl.y"
+#line 1452 "mdl.y"
           {
    (yyval.P_typeCore) = new C_typeCore(new EdgeSetType());
    (yyval.P_typeCore)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4556 "mdl.tab.c"
+#line 4560 "mdl.tab.c"
     break;
 
   case 227: /* typeCore: EDGETYPE  */
-#line 1453 "mdl.y"
+#line 1456 "mdl.y"
            {
    (yyval.P_typeCore) = new C_typeCore(new EdgeTypeType());
    (yyval.P_typeCore)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4565 "mdl.tab.c"
+#line 4569 "mdl.tab.c"
     break;
 
   case 228: /* typeCore: FUNCTOR  */
-#line 1457 "mdl.y"
+#line 1460 "mdl.y"
           {
    (yyval.P_typeCore) = new C_typeCore(new FunctorType());
    (yyval.P_typeCore)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4574 "mdl.tab.c"
+#line 4578 "mdl.tab.c"
     break;
 
   case 229: /* typeCore: GRID  */
-#line 1461 "mdl.y"
+#line 1464 "mdl.y"
        {
    (yyval.P_typeCore) = new C_typeCore(new GridType());
    (yyval.P_typeCore)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4583 "mdl.tab.c"
+#line 4587 "mdl.tab.c"
     break;
 
   case 230: /* typeCore: NODE  */
-#line 1465 "mdl.y"
+#line 1468 "mdl.y"
        {
    (yyval.P_typeCore) = new C_typeCore(new NodeType());
    (yyval.P_typeCore)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4592 "mdl.tab.c"
+#line 4596 "mdl.tab.c"
     break;
 
   case 231: /* typeCore: NODESET  */
-#line 1469 "mdl.y"
+#line 1472 "mdl.y"
           {
    (yyval.P_typeCore) = new C_typeCore(new NodeSetType());
    (yyval.P_typeCore)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4601 "mdl.tab.c"
+#line 4605 "mdl.tab.c"
     break;
 
   case 232: /* typeCore: NODETYPE  */
-#line 1473 "mdl.y"
+#line 1476 "mdl.y"
            {
    (yyval.P_typeCore) = new C_typeCore(new NodeTypeType());
    (yyval.P_typeCore)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4610 "mdl.tab.c"
+#line 4614 "mdl.tab.c"
     break;
 
   case 233: /* typeCore: SERVICE  */
-#line 1477 "mdl.y"
+#line 1480 "mdl.y"
           {
    (yyval.P_typeCore) = new C_typeCore(new ServiceType());
    (yyval.P_typeCore)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4619 "mdl.tab.c"
+#line 4623 "mdl.tab.c"
     break;
 
   case 234: /* typeCore: REPERTOIRE  */
-#line 1481 "mdl.y"
+#line 1484 "mdl.y"
              {
    (yyval.P_typeCore) = new C_typeCore(new RepertoireType());
    (yyval.P_typeCore)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4628 "mdl.tab.c"
+#line 4632 "mdl.tab.c"
     break;
 
   case 235: /* typeCore: TRIGGER  */
-#line 1485 "mdl.y"
+#line 1488 "mdl.y"
           {
    (yyval.P_typeCore) = new C_typeCore(new TriggerType());
    (yyval.P_typeCore)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4637 "mdl.tab.c"
+#line 4641 "mdl.tab.c"
     break;
 
   case 236: /* typeCore: PARAMETERSET  */
-#line 1489 "mdl.y"
+#line 1492 "mdl.y"
                {
    (yyval.P_typeCore) = new C_typeCore(new ParameterSetType());
    (yyval.P_typeCore)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4646 "mdl.tab.c"
+#line 4650 "mdl.tab.c"
     break;
 
   case 237: /* typeCore: NDPAIRLIST  */
-#line 1493 "mdl.y"
+#line 1496 "mdl.y"
              {
    (yyval.P_typeCore) = new C_typeCore(new NDPairListType());
    (yyval.P_typeCore)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
 }
-#line 4655 "mdl.tab.c"
+#line 4659 "mdl.tab.c"
     break;
 
   case 238: /* typeCore: IDENTIFIER  */
-#line 1497 "mdl.y"
+#line 1500 "mdl.y"
              {
    (yyval.P_typeCore) = new C_typeCore(*(yyvsp[0].P_string));
    (yyval.P_typeCore)->setTokenLocation(CURRENTFILE, (yylsp[0]).first_line);
    delete (yyvsp[0].P_string);
 }
-#line 4665 "mdl.tab.c"
+#line 4669 "mdl.tab.c"
     break;
 
   case 239: /* array: typeClassifier '[' ']'  */
-#line 1504 "mdl.y"
+#line 1507 "mdl.y"
                                {
    (yyval.P_array) = new C_array((yyvsp[-2].P_typeClassifier));
    (yyval.P_array)->setTokenLocation(CURRENTFILE, (yylsp[-2]).first_line);
 }
-#line 4674 "mdl.tab.c"
+#line 4678 "mdl.tab.c"
     break;
 
 
-#line 4678 "mdl.tab.c"
+#line 4682 "mdl.tab.c"
 
       default: break;
     }
@@ -4903,7 +4907,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 1510 "mdl.y"
+#line 1513 "mdl.y"
 
 
 // Lexer implementation
@@ -4915,7 +4919,27 @@ int mdllex(YYSTYPE* lvalp, YYLTYPE* locp, void* parm)
 // Error handling function
 void mdlerror(YYLTYPE* locp, void* parm, const char* s)
 {
-    fprintf(stderr, "%s\n", s);
+    MdlContext *c = (MdlContext *) parm;
+    if (c && c->_lexer && locp) {
+        // Store the error location in the context
+        c->setLastError(c->_lexer->currentFileName, locp->first_line);
+        
+        // Optional: add more detailed diagnostics for debugging
+        if (!c->isErrorDisplayed()) {
+            fprintf(stderr, "ERROR: [%s:%d] %s\n", 
+                    c->_lexer->currentFileName.c_str(),
+                    locp->first_line, 
+                    s);
+            
+            // When encountering a "missing semicolon" error, suggest checking the previous line
+            if (strstr(s, "expecting ';'") != NULL) {
+                fprintf(stderr, "HINT: The error might be a missing semicolon at the end of line %d.\n", 
+                  locp->first_line - 1);
+            }
+        }
+    } else {
+        fprintf(stderr, "Parser error: %s (location info unavailable)\n", s);
+    }
 }
 
 // Main and Helper Functions 
@@ -4932,27 +4956,25 @@ int main(int argc, char *argv[])
   char year_format[] = "%Y";
   char year[] = "mm-dd-yyyya";
   strftime(year, strlen(year), year_format, timetm);
-
-std::cout << ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n"
-          << ".                                                           .\n"
-          << ".  Licensed Materials - Property of IBM                     .\n"
-          << ".                                                           .\n"
-          << ".  \"Restricted Materials of IBM\"                            .\n"
-          << ".                                                           .\n"
-          //<< ".  BCM-YKT-07-18-2017                                     .\n"
-	  << ".  BCM-YKT-"
-	  << time_str << "                                     .\n"
-          << ".                                                           .\n"
-          //<< ".  (C) Copyright IBM Corp. 2005-2017  All rights reserved   .\n"
-	  << ".  (C) Copyright IBM Corp. 2005-"
-	  << year << "  All rights reserved   .\n"
-          << ".                                                           .\n"
-          << ".                                                           .\n"
-          << ".                                                           .\n"
-          << ".  This product includes software developed by the          .\n"
-          << ".  University of California, Berkeley and its contributors  .\n"
-          << ".                                                           .\n"
-          << ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n\n\n";
+  std::cout << ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ." << std::endl
+            << ".                                                           ." << std::endl
+            << ".        /\\/\\/\\    ______     _                             ." << std::endl
+            << ".       /      \\  |  __  \\   | |                            ." << std::endl
+            << ".      /  /\\/\\  \\ | |  | |   | |                            ." << std::endl
+            << ".     /  /    \\  \\| |  | |   | |                            ." << std::endl
+            << ".    /  /      \\  \\ |__| |   | | ___                        ." << std::endl
+            << ".    \\/\\/      /\\/ \\____/    |_|_____\\                      ." << std::endl
+            << ".     \\  \\    /     \\   /       /                           ." << std::endl
+            << ".      \\  \\  /       \\ /       /                            ." << std::endl
+            << ".       \\  \\/         \\       /                             ." << std::endl
+            << ".        \\  \\\\        /\\      /                             ." << std::endl
+            << ".         \\  \\\\      /  \\    /                              ." << std::endl
+            << ".          \\  \\\\    /    \\  /                               ." << std::endl
+            << ".           \\  \\\\  /      \\/                                ." << std::endl
+            << ".            \\  \\\\/        *                                ." << std::endl
+            << ".             \\  \\\\       * *                               ." << std::endl
+            << ".              \\__/      * * *                              ." << std::endl
+            << ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n\n\n";
 
    Initializer init(argc, argv);
    if (init.execute()) {

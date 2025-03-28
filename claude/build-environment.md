@@ -16,7 +16,7 @@ Here's a summary of what we've learned about building the Model Graph Simulator 
 
 2. **Environment Variables**:
    - NTSMGSROOT, NTSROOT, MGSROOT: Set to the project root directory
-   - LENSROOT: Set to $NTSROOT/gsl
+   - MGSROOT: Set to $NTSROOT/gsl
    - MDLROOT: Set to $NTSROOT/mdl
    - PATH: Updated to include $NTSROOT/gsl/bin
    - GSLPARSER: Set to $NTSROOT/gsl/bin/gslparser
