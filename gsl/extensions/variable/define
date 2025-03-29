@@ -14,8 +14,8 @@
 #*/
 
 sed '/\\/p' $1 | \
-    sed 's/#include "/\[\[ -f $LENSROOT\/Extensions.mk \]\] \&\& cp $LENSROOT\/Extensions.mk $LENSROOT\/Extensions.mk.bak ; $MDLROOT\/bin\/mdlparser /g' | \
-    sed 's/"/ ; \[\[ -f $LENSROOT\/Extensions.mk.bak \]\] \&\& cp $LENSROOT\/Extensions.mk.bak $LENSROOT\/Extensions.mk ;/g' | sed 's/\/\//\#/g'> \
+    sed 's/#include "/\[\[ -f $GSLROOT\/Extensions.mk \]\] \&\& cp $GSLROOT\/Extensions.mk $GSLROOT\/Extensions.mk.bak ; $MDLROOT\/bin\/mdlparser /g' | \
+    sed 's/"/ ; \[\[ -f $GSLROOT\/Extensions.mk.bak \]\] \&\& cp $GSLROOT\/Extensions.mk.bak $GSLROOT\/Extensions.mk ;/g' | sed 's/\/\//\#/g'> \
         defineModels1.sh;
 
 if [ $# -gt 1 ] && [ $2 == "-rebuild" ]; then

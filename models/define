@@ -33,13 +33,13 @@
 #{{{
 function run_mdlparser() {
   #{{{
-  # NOTE: $LENSROOT/extensions/functor need to be added explicitly to configure.py
+  # NOTE: $GSLROOT/extensions/functor need to be added explicitly to configure.py
   #temp_mdf_only=$(mktemp)
   #temp_mdl_only=$(mktemp)
   #grep  '^[^//]' $1 | gawk '/mdf"/ {print $2}' > ${temp_mdf_only}
   #grep  '^[^//]' $1 | gawk '/mdl"/ {print}' > ${temp_mdl_only}
-  $MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct -n;
-  #$MDLROOT/bin/mdlparser `cat ${temp_mdf_only} | tr '\n' ' ' ` ${temp_mdfl_only} -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct;
+  $MDLROOT/bin/mdlparser $1 -i $GSLROOT/extensions/variable:$GSLROOT/extensions/struct -n;
+  #$MDLROOT/bin/mdlparser `cat ${temp_mdf_only} | tr '\n' ' ' ` ${temp_mdfl_only} -i $GSLROOT/extensions/variable:$GSLROOT/extensions/struct;
   #}}}
 }
 #}}}
@@ -82,14 +82,14 @@ rm -f defineModels1.sh;
 rm -f defineModels2.sh;
 ##NOTE: we need this to regenerate Extension.mk file (yet it doesn't rebuild)
 REGEN=0
-if [ ! -f $LENSROOT/Extensions.mk ]; then
+if [ ! -f $GSLROOT/Extensions.mk ]; then
   run_mdlparser $1; REGEN=1;
 fi
 if [ define -ot $1 ] && [ "$RERUN" -eq 1 ]; then run_mdlparser $1;  REGEN=1; fi
 if [ $REGEN -eq 0 ]; then
   if [ define -ot $1 ] && [ "$2" == "-force" ]; then run_mdlparser $1; REGEN=1; fi
 fi
-#$MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct;
+#$MDLROOT/bin/mdlparser $1 -i $GSLROOT/extensions/variable:$GSLROOT/extensions/struct;
 for i in "${MDLFILES[@]}"
 do
   if [ define -ot $i ]; then RERUN=1; cpp $i > $(dirname "${i}")"/."$(basename "${i}"); fi
@@ -99,8 +99,8 @@ if [ "$RERUN" -eq 1 ]  && [ $REGEN -eq 0 ]; then run_mdlparser $1; REGEN=1; fi
 touch $1
 sleep 2
 touch define;
-touch $LENSROOT/Extensions.mk
-cp $LENSROOT/Extensions.mk{,.bak}
-cp Extensions.mk $LENSROOT
+touch $GSLROOT/Extensions.mk
+cp $GSLROOT/Extensions.mk{,.bak}
+cp Extensions.mk $GSLROOT
 rm ${temp_mdf_only}
 rm ${temp_mdl_only}
