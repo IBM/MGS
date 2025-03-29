@@ -840,18 +840,16 @@ void Class::generateOutput(const std::string& modifier,
      /* TUAN TODO: consider using Boost.FileSystem for cross-platform */
       std::string fName = directory + "/" + name + modifier;
       if (_userCode) {
-	 fName += ".gen";
+	      fName += ".gen";
       }
       //else return; // hack for MBL
       std::ofstream fs(fName.c_str());
       fs << os.str();
       fs.close();
    } 
-   if (_extra_files.size() > 0)
-   {
+   if (_extra_files.size() > 0) {
      auto iter = _extra_files.begin();
-     while (iter != _extra_files.end())
-     {
+     while (iter != _extra_files.end()) {
        std::cout << iter->first << std::endl;
        std::string fName = directory + "/" + iter->first;
        std::ofstream fs(fName.c_str());

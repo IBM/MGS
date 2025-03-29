@@ -107,7 +107,7 @@ using namespace std;
 #define TOKEN_GRIDLAYERS 329              /* GRIDLAYERS  */
 #define TOKEN_THREADS 330                 /* THREADS  */
 #define TOKEN_OPTIONAL 331                /* OPTIONAL  */
-#define TOKEN_FRAMEWORK 332                /* FRAMEWORK  */
+#define TOKEN_FRAMEWORK 332               /* FRAMEWORK  */
 
 // Helper method declarations
 void MdlLexer::skip_proc(void) {

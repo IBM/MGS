@@ -208,7 +208,7 @@ void Initializer::generateCopyModules() {
    std::map<std::string, std::vector<std::string> >::iterator it, 
       end = _copyModules.end();
    for(it = _copyModules.begin(); it != end; ++it) {
-     os << "mkdir -p $MGSROOT/extensions/" << it->first << "\n";
+     os << "mkdir -p $GSLROOT/extensions/" << it->first << "\n";
      os << "cp -r ";
      std::vector<std::string>::iterator it2, end2 = it->second.end();
      for (it2 = it->second.begin(); it2 != end2; ++it2) {
@@ -217,13 +217,13 @@ void Initializer::generateCopyModules() {
        }
        os << *it2 << " ";
      }
-     os << " $MGSROOT/gsl/extensions/" << it->first << "> /dev/null 2>&1 || : \n";
+     os << " $GSLROOT/extensions/" << it->first << "> /dev/null 2>&1 || : \n";
    }   
    //TUAN: no need to overwrite Extensions.mk if we call mdlparser directly
    // this can be done (if needed), by calling via the ../define script
-   //os << "touch $MGSROOT/Extensions.mk\n";
-   //os << "cp $MGSROOT/Extensions.mk $MGSROOT/Extensions.mk.bak\n";
-   //os << "cp Extensions.mk $MGSROOT/\n";
+   //os << "touch $GSLROOT/Extensions.mk\n";
+   //os << "cp $GSLROOT/Extensions.mk $GSLROOT/Extensions.mk.bak\n";
+   //os << "cp Extensions.mk $GSLROOT/\n";
    std::ofstream fs("copyModules");
    if (fs.is_open()) {
       fs << os.str();

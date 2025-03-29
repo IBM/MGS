@@ -30,8 +30,13 @@ MdlContext::MdlContext(MdlContext* c)
 }
 
 void MdlContext::synchronize() {
-   _lineNumber = _lexer->lineCount;
-   _fileName = _lexer->currentFileName;
+   if (_lexer) {
+       _lineNumber = _lexer->lineCount;
+       _fileName = _lexer->currentFileName;
+       
+       // Optional: Debug output
+       // std::cerr << "Context synchronized: " << _fileName << ":" << _lineNumber << std::endl;
+   }
 }
 
 std::string const &MdlContext::getFileName() const {
