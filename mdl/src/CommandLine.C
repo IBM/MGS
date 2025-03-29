@@ -21,13 +21,14 @@
 #include <iostream>
 
 CommandLine::CommandLine() 
-   : _fileName(""), _static(false)
+   : _fileName(""), _static(false), _skipIncludes(false)
 {
 }
 
 CommandLine::CommandLine(CommandLine& cl) 
    : _fileName(cl._fileName), _static(cl._static), 
-   _printWarning(cl._printWarning), _includePath(cl._includePath)
+   _printWarning(cl._printWarning), _includePath(cl._includePath),
+   _skipIncludes(cl._skipIncludes)
 {
 }
 
@@ -41,6 +42,7 @@ bool CommandLine::parse(int argc, char** argv)
    parser.addOption(Option('i', "includePath", Option::TYPE_REQUIRED));
    parser.addOption(Option('s', "static", Option::TYPE_NONE));
    parser.addOption(Option('n', "no-warning", Option::TYPE_NONE));
+   parser.addOption(Option('k', "skip-includes", Option::TYPE_NONE));
 
    // No arguments: show help and quit
    if (argc == 1) {
@@ -64,8 +66,9 @@ bool CommandLine::parse(int argc, char** argv)
             _printWarning = false;
          } else if (option.getShortName() == 'i') {
             mdl::tokenize(value, _includePath, ':');
-         }
-      }
+         } else if (option.getShortName() == 'k') {
+            _skipIncludes = true;
+         }      }
    } catch (Parser::Exception exception) {
       std::cerr << "Exception: " << exception.getMessage() << "...exiting...\n";
    }

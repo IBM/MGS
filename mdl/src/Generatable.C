@@ -21,6 +21,7 @@
 #include "BaseClass.h"
 #include "DataType.h"
 #include "MemberContainer.h"
+#include "CommandLine.h"
 
 #include <string>
 #include <memory>
@@ -66,12 +67,17 @@ Generatable& Generatable::operator=(const Generatable& rv)
 void Generatable::generateFiles(const std::string& originalFileName) 
 {
    std::string modName = "\"" + originalFileName + "\"";
-   _fileOutput = modName == _fileName;
+   if (_cmdLine && _cmdLine->skipIncludes()) {
+      _fileOutput = modName == _fileName;  // Only generate the main file
+   } else {
+      _fileOutput = true;  // Generate all files including includes
+   }
+   
    internalGenerateFiles();
    createDirectoryStructure();
    generateModuleMk(); // hack for MBL
-   for (std::vector<Class*>::iterator it = _classes.begin()
-	   ; it != _classes.end(); it++) {
+   
+   for (std::vector<Class*>::iterator it = _classes.begin(); it != _classes.end(); it++) {
      (*it)->setFileOutput(_fileOutput);
      (*it)->generate(getModuleName());
    }
@@ -129,16 +135,16 @@ void Generatable::generateModuleMk()
       std::vector<Class*>::iterator end = _classes.end();
       std::vector<Class*>::iterator it;
       for (it = _classes.begin(); it != end;) {
-	if ( (*it)->generateSourceFile() ) {
-	  os << (*it)->getFileName() << ".C ";
-	  it++;
-	  if (it != end) {
-	    os << "\\\n";
-	  } else {
-	    os << "\n";
-	  }
-	}
-	else it++;
+	      if ( (*it)->generateSourceFile() ) {
+	         os << (*it)->getFileName() << ".C ";
+	         it++;
+	         if (it != end) {
+	            os << "\\\n";
+	         } else {
+	            os << "\n";
+	         }
+	      }
+	      else it++;
       }
    } else {
       throw InternalException(

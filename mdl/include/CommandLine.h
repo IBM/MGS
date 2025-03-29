@@ -28,18 +28,19 @@ class CommandLine {
       bool parse(int argc, char** argv);
 
       const std::string& getFileName() {
-	 return _fileName;
+	      return _fileName;
       }
-
       bool isStatic() const {
-	 return _static;
-      }	 
+	      return _static;
+      }
+      bool skipIncludes() const {
+	      return _skipIncludes;
+      }
       bool printWarning() const {
-	 return _printWarning;
-      }	 
-
+   	   return _printWarning;
+      }
       const std::vector<std::string>& getIncludePath() {
-	 return _includePath;
+	      return _includePath;
       }
 
    private:
@@ -47,6 +48,7 @@ class CommandLine {
       std::string _fileName;
       bool _static;
       bool _printWarning=true;
+      bool _skipIncludes;
       std::vector<std::string> _includePath;
 };
 

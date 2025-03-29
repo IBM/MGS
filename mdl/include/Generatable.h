@@ -46,12 +46,12 @@ class Generatable {
       //void addSupportForMachineType(MachineType mach){ _supportedMachineTypes.insert(mach) };
       void addSupportForMachineType(MachineType mach){ _supportedMachineType = (mach);};
       bool isSupportedMachineType(MachineType mach) const { 
-	 //const bool is_in = _supportedMachineTypes.find(mach) != _supportedMachineTypes.end();
-	 const bool is_in = _supportedMachineType == mach;
-	 return is_in;
+	      //const bool is_in = _supportedMachineTypes.find(mach) != _supportedMachineTypes.end();
+	      const bool is_in = _supportedMachineType == mach;
+	      return is_in;
       };
       MachineType getSupportedMachineType() const { 
-	 return _supportedMachineType;
+	      return _supportedMachineType;
       };
 
       // Used to print out code for feedback to the user.
@@ -71,24 +71,26 @@ class Generatable {
 				std::vector<std::string> >& modules);
 
       LinkType getLinkType() const {
-	 return _linkType;
+	      return _linkType;
       }
 
       void setLinkType(LinkType obj) {
-	 _linkType = obj;
+	      _linkType = obj;
       }
 
       bool isFrameWorkElement() const {
-	 return _frameWorkElement;
+	      return _frameWorkElement;
       }
       
       void setFrameWorkElement(bool val = true) {
-	 _frameWorkElement = val;
+	      _frameWorkElement = val;
       }
-      void setCommandLine(CommandLine& obj){ _cmdLine = &obj;}
-      CommandLine* getCommandLine(){ 
-	 assert(_cmdLine != 0); 
-	 return _cmdLine;
+      void setCommandLine(CommandLine& obj) {
+         _cmdLine = &obj;
+      }
+      CommandLine* getCommandLine() { 
+	      assert(_cmdLine != 0); 
+	      return _cmdLine;
       }
 
    protected:
@@ -128,29 +130,29 @@ class Generatable {
 
       // used by generateType, dictates which insrance type will be created.
       virtual std::string getInstanceNameForType() const {
-	 return getModuleName();
+	      return getModuleName();
       }
       
       // This function is called by the getType function, it returns the
       // arguments that are necessary in creating a new instance.
       virtual std::string getInstanceNameForTypeArguments() const {
-	 return "";
+	      return "";
       }
 
       // This function adds a doInitialize function to the class given using
       // the members.
       void addDoInitializeMethods(
-	 Class& instance, const MemberContainer<DataType>& members) const;
+	      Class& instance, const MemberContainer<DataType>& members) const;
 
       std::string getDoInitializeMethodBody(
-	 const MemberContainer<DataType>& members) const;
+	      const MemberContainer<DataType>& members) const;
 
       std::string getSetupFromNDPairListMethodBody(
-	 const MemberContainer<DataType>& members) const;
+	      const MemberContainer<DataType>& members) const;
 
       // This function can be overridden to add an attribute to the class of generate type.
       virtual void addGenerateTypeClassAttribute(Class& c) const {
-	 return;
+	      return;
       }
 
       // The classes that this generatable has.
