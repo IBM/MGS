@@ -67,10 +67,6 @@ void Generatable::generateFiles(const std::string& originalFileName)
 {
    std::string modName = "\"" + originalFileName + "\"";
    _fileOutput = modName == _fileName;
-   std::cerr << "modName: '" << modName << "'" << std::endl;
-   std::cerr << "_fileName: '" << _fileName << "'" << std::endl;
-   std::cerr << "modName : '" << modName << "'" << std::endl;
-   std::cerr << "_fileOutput: " << (_fileOutput ? "true" : "false") << std::endl;
    internalGenerateFiles();
    createDirectoryStructure();
    generateModuleMk(); // hack for MBL
@@ -117,21 +113,8 @@ void Generatable::generateModuleMk()
    }
 
    std::ostringstream os;
-   os << "# =================================================================\n"
-      << "# Licensed Materials - Property of IBM\n"
-      << "#\n"
-      << "# \"Restricted Materials of IBM\n"
-      << "#\n"
-      << "# BCM-YKT-07-18-2017\n"
-      << "#\n"
-      << "# (C) Copyright IBM Corp. 2005-2017  All rights reserved\n"
-      << "# US Government Users Restricted Rights -\n"
-      << "# Use, duplication or disclosure restricted by\n"
-      << "# GSA ADP Schedule Contract with IBM Corp.\n"
-      << "#\n"
-      << "# =================================================================\n\n";
 
-   os << "# The pathname is relative to the lens directory" << "\n"
+   os << "# The pathname is relative to the MGS directory" << "\n"
       << "THIS_DIR := " << "extensions/" << getModuleTypeName() 
       << "/" << getModuleName() << "\n"
       << "THIS_STEM := " << getModuleName() << "\n"

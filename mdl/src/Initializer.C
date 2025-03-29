@@ -217,7 +217,7 @@ void Initializer::generateCopyModules() {
        }
        os << *it2 << " ";
      }
-     os << " $MGSROOT/extensions/" << it->first << "> /dev/null 2>&1 || : \n";
+     os << " $MGSROOT/gsl/extensions/" << it->first << "> /dev/null 2>&1 || : \n";
    }   
    //TUAN: no need to overwrite Extensions.mk if we call mdlparser directly
    // this can be done (if needed), by calling via the ../define script
@@ -226,9 +226,9 @@ void Initializer::generateCopyModules() {
    //os << "cp Extensions.mk $MGSROOT/\n";
    std::ofstream fs("copyModules");
    if (fs.is_open()) {
-     fs << os.str();
-     fs.close();
-     system("sh copyModules");
+      fs << os.str();
+      fs.close();
+      system("sh copyModules");
    }
    else {
      std::cerr << "ERROR: Cannot create/open copyModules file" << std::endl;

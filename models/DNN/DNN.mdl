@@ -18,7 +18,7 @@
 #include "./DNNTools.mdl"
 
 Node DNNode Implements ForwardProducer, BackwardProducer {
-   double output
+   double output;
    double gradient;
    EdgeSetInput [] inputs;
    double* weightedGradient;
