@@ -1,9 +1,0 @@
-118c6dc1,James Kozloski,17 minutes ago,Fix line number reporting in MDL parser error messages
-0d36570a,James Kozloski,20 hours ago,Fix file generation issues on macOS
-00034c5c,James Kozloski,3 days ago,Straggler from previous commit.
-fc1cd119,James Kozloski,3 days ago,Straggler from previous commit.
-76e4275e,James Kozloski,3 days ago,Fix mdlparser build and code generation issues
-5d6577dd,James Kozloski,3 days ago,Prettifying parser code.
-30e114b5,James Kozloski,7 days ago,Update build system for macOS compatibility
-6c4455c1,James Kozloski,7 days ago,chore: Migrate codebase from std::auto_ptr to std::unique_ptr
-88516b17,James Kozloski,8 days ago,Fixed the following in mdl codebase: 1) replaced header file values.h with limits.h 2) fixed c pre processor errors during Apple compilation, 3) added C++ style comments for skipping within mdl.l

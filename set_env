@@ -1,9 +1,10 @@
 export MGSROOT=`pwd`
 export NTSROOT=$MGSROOT
 export NTSMGSROOT=$MGSROOT
+export GSLROOT=$MGSROOT/gsl
 export MDLROOT=$MGSROOT/mdl
-export PATH=$MGSROOT/gsl/bin:$PATH
-export GSLPARSER=$MGSROOT/gsl/bin/gslparser
+export GSLPARSER=$GSLROOT/bin/gslparser
+export PATH=$GSLROOT/bin:$PATH
 if [ -f .built ]; then
 sed -i "1s@.*@$MGSROOT@" .built
 sed -i "2s@.*@@" .built

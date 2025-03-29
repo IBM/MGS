@@ -2,5 +2,6 @@ export PATH=$(echo "$PATH" | sed -e 's@'"$MGSROOT"'/gsl/bin:@@g')
 unset MGSROOT
 unset NTSMGSROOT
 unset NTSROOT
+unset GSLROOT
 unset MDLROOT
 unset GSLPARSER
