@@ -816,11 +816,11 @@ if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
     fi
     BUILD_FAIL=0
     if [ "$RELEASE" == "-release" ]; then
-      if [ ! `ls $MGSROOT/lib/libnti.a 2>/dev/null` ]; then
+      if [ ! `ls $LENSROOT/lib/libnti.a 2>/dev/null` ]; then
         BUILD_FAIL=1
       fi
     else
-      if [ ! -f $MGSROOT/lib/libnti_db.a ]; then
+      if [ ! -f $LENSROOT/lib/libnti_db.a ]; then
         BUILD_FAIL=1
       fi
     fi
@@ -844,7 +844,7 @@ EXTRA_ARGS="${COLAB} ${REGENMAKEFILE} ${BUILD_TARGET}"
 if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
   #{{{
   if [ "$REGENMAKEFILE" == "--regen" ] ; then
-    cd $MGSROOT
+    cd $LENSROOT
     ./build_gsl -p $PLATFORM ${EXTRA_ARGS} --rebuild -j $NPROCS $GSL_BUILD_MODE $GPU  $ARMA 
     echoerr "${cc_blue}Complete: regenerate gsl/Makefile${cc_normal}"
     exit
@@ -852,7 +852,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
   echoerr "Start build GSL"
   if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
     #{{{
-    cd $MGSROOT
+    cd $LENSROOT
     chmod +x ./build_gsl
     if [ "$CLEAN" == "-clean" ] ; then
       #{{{
@@ -862,8 +862,8 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
 
       #rm_ifexist $BASE_FOLDER/models/all.mdf
       #rm_ifexist $BASE_FOLDER/models/all_test.mdf
-      rm_ifexist $MGSROOT/extensions/functor/all.mdf
-      rm_ifexist $MGSROOT/extensions/functor/all_test.mdf
+      rm_ifexist $LENSROOT/extensions/functor/all.mdf
+      rm_ifexist $LENSROOT/extensions/functor/all_test.mdf
       find . -iname "CG_*" | xargs -I{} rm {}
       find $BASE_FOLDER/models -iname "CG_*" | xargs -I{} rm {}
       find $BASE_FOLDER/models -iname ".*mdl" | xargs -I{} rm {}
@@ -874,11 +874,11 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     cd $BASE_FOLDER
     if [ "$REBUILD" == "-rebuild" ] ;then
       #{{{
-      cd $MGSROOT/extensions/variable
+      cd $LENSROOT/extensions/variable
       ./define variables.mdf $REBUILD
-      cd $MGSROOT/extensions/struct
+      cd $LENSROOT/extensions/struct
       ./define structs.mdf $REBUILD
-      cd $MGSROOT/extensions/functor
+      cd $LENSROOT/extensions/functor
       #rm_ifexist all.mdf
       JUST_CREATE=0
       if [[ ! -f all.mdf ]] || [[ "$PREV_TYPE" != "$TYPE" ]]; then
@@ -901,13 +901,13 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       touch ${MDF_TARGET}
       #CUDA DEBUG block 2 lines for debug [to preserve CG_* code ]
       ./define ${MDF_TARGET} $REBUILD
-      cp Extensions.mk $MGSROOT/
+      cp Extensions.mk $LENSROOT/
 
       cd $BASE_FOLDER
       #}}}
     fi
     cd -
-    cd $MGSROOT
+    cd $LENSROOT
     if [ "$REBUILD" == "-rebuild" ] || [ "$MCO" == "-MCO" ]; then
       ./build_gsl -p $PLATFORM ${EXTRA_ARGS} --rebuild -j $NPROCS $GSL_BUILD_MODE $GPU  $ARMA
     fi
@@ -915,11 +915,11 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     #}}}
   else
     #{{{
-    cd $MGSROOT/extensions/variable
+    cd $LENSROOT/extensions/variable
     ./define variables.mdf $REBUILD
-    cd $MGSROOT/extensions/struct
+    cd $LENSROOT/extensions/struct
     ./define structs.mdf $REBUILD
-    cd $MGSROOT/extensions/functor
+    cd $LENSROOT/extensions/functor
     make_functor_mdf all_test.mdf
     if ! diff -q all_test.mdf all.mdf &>/dev/null; then
       mv all_test.mdf all.mdf
@@ -935,17 +935,17 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       ./define ${MDF_TARGET} $REBUILD
     fi
 
-    cp Extensions.mk $MGSROOT/
+    cp Extensions.mk $LENSROOT/
     cd $BASE_FOLDER
     # -s or -singlethread
-    cd $MGSROOT
+    cd $LENSROOT
     ./build_gsl -p $PLATFORM -j $NPROCS $GSL_BUILD_MODE ${EXTRA_ARGS} $GPU  $ARMA
     cd -
     #}}}
   fi
   if { [ "$CLEAN" != "-clean"  ] || [ "$REBUILD" == "-rebuild"  ] ; } ; then
     #{{{
-    if [ $? -eq 0 ] && [  `ls $MGSROOT/bin/gslparser` ]; then
+    if [ $? -eq 0 ] && [  `ls $LENSROOT/bin/gslparser` ]; then
       echoerr -e "\n\n\n${cc_blue}Congratulations! You have made ${TYPE} ...${cc_normal}
 
     To run the test NTS tissue simulation :

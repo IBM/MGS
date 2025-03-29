@@ -227,7 +227,7 @@ def createConfigHeader():
 
     if create is True:
         cmd = "#include <string>\n\n"
-        cmd += "const std::string MGSROOT = \"" + rootDir + "\";\n"
+        cmd += "const std::string LENSROOT = \"" + rootDir + "\";\n"
         header = open(CONFIG_HEADER, "w")
         header.write(cmd)
         header.close()
@@ -935,12 +935,12 @@ NTI_INC_DIR=$(NTI_DIR)/include
 BISON=$(shell which bison)
 FLEX=$(shell which flex)
 
-MGSROOT = $(shell pwd)
+LENSROOT = $(shell pwd)
 OPERATING_SYSTEM = $(shell uname)
 
 SCRIPTS_DIR := scripts
 DX_DIR := dx
-SO_DIR := $(MGSROOT)/so
+SO_DIR := $(LENSROOT)/so
 PARSER_PATH := framework/parser
 STD_UTILS_OBJ_PATH := utils/std/obj
 TOTALVIEW_LIBPATH := /opt/toolworks/totalview.8.4.1-7/rs6000/lib
@@ -1580,13 +1580,13 @@ CFLAGS += $(COLAB_CFLAGS) \
             if self.options.debug == USE:
                 retStr += \
                     """
-NTS_LIBS := ${MGSROOT}/lib/libnts_db.so\n
+NTS_LIBS := ${LENSROOT}/lib/libnts_db.so\n
 
 """
             else:
                 retStr += \
                     """
-NTS_LIBS := ${MGSROOT}/lib/libnts.so\n
+NTS_LIBS := ${LENSROOT}/lib/libnts.so\n
 
 """
         # retStr += "LENS_LIBS_EXT := $(LENS_LIBS) lib/liblensext.a\n"
