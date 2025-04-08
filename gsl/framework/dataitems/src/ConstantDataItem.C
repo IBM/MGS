@@ -83,7 +83,7 @@ void ConstantDataItem::copyOwnedHeap(const ConstantDataItem& rv)
 {
    if (rv._data) {
       std::unique_ptr<Constant> dup;
-      rv._data->duplicate(dup);
+      rv._data->duplicate(std::move(dup));
       _data = dup.release();
    } else {
       _data = 0;

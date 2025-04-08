@@ -39,17 +39,17 @@ FloatArrayMaker::~FloatArrayMaker()
 {
 }
 
-void FloatArrayMaker::duplicate(std::unique_ptr<FloatArrayMaker>& dup) const
+void FloatArrayMaker::duplicate(std::unique_ptr<FloatArrayMaker>&& dup) const
 {
    dup.reset(new FloatArrayMaker(*this));
 }
 
-void FloatArrayMaker::duplicate(std::unique_ptr<Functor>& dup) const
+void FloatArrayMaker::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new FloatArrayMaker(*this));
 }
 
-void FloatArrayMaker::duplicate(std::unique_ptr<CG_FloatArrayMakerBase>& dup) const
+void FloatArrayMaker::duplicate(std::unique_ptr<CG_FloatArrayMakerBase>&& dup) const
 {
    dup.reset(new FloatArrayMaker(*this));
 }

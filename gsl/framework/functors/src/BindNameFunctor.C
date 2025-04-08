@@ -15,7 +15,7 @@
 
 #include "BindNameFunctor.h"
 #include "FunctorType.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "LensContext.h"
 //#include <iostream>
 //#include <sstream>
@@ -44,11 +44,11 @@ void BindNameFunctor::doInitialize(LensContext *c,
       std::pair<std::string, DataItem*> curElem;
 
       // get the name
-      StringDataItem* sdi;
-     sdi = dynamic_cast<StringDataItem*>(*iter);
+      CustomStringDataItem* sdi;
+     sdi = dynamic_cast<CustomStringDataItem*>(*iter);
       if (sdi == 0) {
 	 throw SyntaxErrorException(
-	    "Dynamic cast of DataItem to StringDataItem failed in BindNameFunctor");
+	    "Dynamic cast of DataItem to CustomStringDataItem failed in BindNameFunctor");
       }
       curElem.first = sdi->getString();
 
@@ -102,9 +102,9 @@ void BindNameFunctor::doExecute(LensContext *c,
 }
 
 
-void BindNameFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void BindNameFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
-   fap.reset(new BindNameFunctor(*this));
+   fap=std::make_unique<BindNameFunctor>(*this);
 }
 
 

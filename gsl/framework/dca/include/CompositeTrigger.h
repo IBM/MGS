@@ -35,7 +35,7 @@ class CompositeTrigger : public TriggerBase
 		       std::string& op);
       CompositeTrigger(Simulation& sim, Trigger* t1);
       virtual bool status();
-      virtual void duplicate(std::unique_ptr<Trigger>& dup) const;
+      virtual void duplicate(std::unique_ptr<Trigger>&& dup) const;
       virtual ~CompositeTrigger();
    private:
       void setEvaluator();

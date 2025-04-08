@@ -18,7 +18,8 @@ InitPhases = { initialize };
 RuntimePhases = { updateMNIST, updateNodes, updateEdgeSets, lastPhase };
 FinalPhases = { finalize };
 
-#define MNIST_DIRECTORY "/home/kozloski/Proprio/mnist_data/"
+#define STRINGIFY(x) #x
+#define MNIST_DIRECTORY "/Users/kozloski/code/src/open/MGS/gsl/utils/mnist-master"
 #define TRANSFER_FUNCTION "tanh"
 #define N_LABELS 10
 

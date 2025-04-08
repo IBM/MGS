@@ -29,9 +29,9 @@ class ModifyParameterSet : public CG_ModifyParameterSetBase
       std::unique_ptr<ParameterSet> userExecute(LensContext* CG_c);
       ModifyParameterSet();
       virtual ~ModifyParameterSet();
-      virtual void duplicate(std::unique_ptr<ModifyParameterSet>& dup) const;
-      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_ModifyParameterSetBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<ModifyParameterSet>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_ModifyParameterSetBase>&& dup) const;
 };
 
 #endif

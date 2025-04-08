@@ -31,7 +31,7 @@ class ConnectSets2Functor: public ConnectorFunctor
 {
    public:
       ConnectSets2Functor();
-      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
       virtual ~ConnectSets2Functor();
    protected:
       virtual void doInitialize(LensContext *c, 

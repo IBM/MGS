@@ -74,17 +74,17 @@ GetPreNodeCoordFunctor& GetPreNodeCoordFunctor::operator=(
    return *this;
 }
 
-void GetPreNodeCoordFunctor::duplicate(std::unique_ptr<GetPreNodeCoordFunctor>& dup) const 
+void GetPreNodeCoordFunctor::duplicate(std::unique_ptr<GetPreNodeCoordFunctor>&& dup) const 
 {
    dup.reset(new GetPreNodeCoordFunctor(*this));
 }
 
-void GetPreNodeCoordFunctor::duplicate(std::unique_ptr<Functor>& dup) const
+void GetPreNodeCoordFunctor::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new GetPreNodeCoordFunctor(*this));
 }
 
-void GetPreNodeCoordFunctor::duplicate(std::unique_ptr<CG_GetPreNodeCoordFunctorBase>& dup) const
+void GetPreNodeCoordFunctor::duplicate(std::unique_ptr<CG_GetPreNodeCoordFunctorBase>&& dup) const
 {
    dup.reset(new GetPreNodeCoordFunctor(*this));
 }

@@ -51,7 +51,7 @@ class NDPairList;
 #include "GenericService.h"
 #include "Publisher.h"
 #include "Simulation.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "IntDataItem.h"
 #include "UnsignedIntDataItem.h"
 #include "ServiceDataItem.h"
@@ -92,7 +92,7 @@ class LENSServer : public TriggerableBase {
   protected:
   virtual TriggerableBase::EventType createTriggerableCaller(
       const std::string& functionName, NDPairList* ndpList,
-      std::unique_ptr<TriggerableCaller>& triggerableCaller);
+      std::unique_ptr<TriggerableCaller>&& triggerableCaller);
 
   private:
   int _controlSock;
@@ -160,7 +160,7 @@ public:
       (_triggerable->*_triggerFunction)(trigger, _ndPairList);
     }
     virtual Triggerable* getTriggerable() { return _triggerable; }
-    virtual void duplicate(std::unique_ptr<TriggerableCaller>& dup) const {
+    virtual void duplicate(std::unique_ptr<TriggerableCaller>&& dup) const {
       dup.reset(new LENSServerEvent(*this));
     }
 
@@ -184,13 +184,13 @@ inline LENSServer::LENSServer(int p, Simulation& s)
   assert(iterService != NULL);
   _simIteration = iterService->getData();
 
-  StringDataItem desc = StringDataItem();
+  CustomStringDataItem desc = CustomStringDataItem();
   desc.setString("Reports Every 50 Iterations to Server");
 
   IntDataItem delay = IntDataItem();
   delay.setInt(0);
 
-  StringDataItem op = StringDataItem();
+  CustomStringDataItem op = CustomStringDataItem();
   op.setString("!%");
 
   UnsignedIntDataItem crit = UnsignedIntDataItem();
@@ -438,6 +438,7 @@ sendMsg(newMsg);
 std::cout << "LENSServer:  Received: " << _serveBuff << std::endl;
 return _serveBuff;
 */
+  return 0;
 }
 
 inline void LENSServer::sendComposerError(const char* facName,
@@ -447,7 +448,7 @@ inline void LENSServer::sendComposerError(const char* facName,
   // TUAN: temporary disable code
   /*
 std::cerr << "LENSServer: Dynamic cast of expected user entered parameter to "
-       "StringDataItem and NumericDataItem failed!" << std::endl;
+       "CustomStringDataItem and NumericDataItem failed!" << std::endl;
 std::ostringstream errstream;
 errstream
 << "display extended_error <>The server has returned the following:<>";
@@ -526,7 +527,7 @@ inline const char* LENSServer::composerMsgHandler(char* msg) {
       std::unique_ptr<DataItem> apdi;
       if (strcmp(paramType, "string") == 0) {
         paramDesc[i].second->duplicate(apdi);
-        StringDataItem* sdi = dynamic_cast<StringDataItem*>(apdi.get());
+        CustomStringDataItem* sdi = dynamic_cast<CustomStringDataItem*>(apdi.get());
         NumericDataItem* ndi = dynamic_cast<NumericDataItem*>(apdi.get());
         if (sdi == 0 && ndi == 0) {
           const char* expected_type = apdi->getType();
@@ -622,6 +623,7 @@ return ("control display not loaded");
 return ("control display loaded");
 }
 */
+  return 0;
 }
 
 inline char* LENSServer::controlMsgHandler(char* msg) {
@@ -719,6 +721,7 @@ inline void LENSServer::disconnect() {
 }
 
 inline const char* LENSServer::msgHandler(char* msg) {
+  std::string rval="";
   std::string message(msg);
   static const std::string msg_disconnect("disconnect");
   static const std::string msg_compose("compose");
@@ -730,20 +733,21 @@ inline const char* LENSServer::msgHandler(char* msg) {
   //  Otherwise, this new implementation is good
   if (message == msg_disconnect) {
     //   if(strncmp(msg, "disconnect", 10)==0)
-    return ("disconnect");
+    rval="disconnect";
   } else if (message == msg_compose) {
     //  if (strncmp(msg, "compose", 7) == 0) {
-    return (composerMsgHandler(msg));
+    rval=composerMsgHandler(msg);
   } else if (message == msg_control) {
     //  if (strncmp(msg, "control", 7) == 0) {
-    if (message.size() > 8) return (controlMsgHandler(msg + 8));
-    //    if (strlen(msg) > 8) return (controlMsgHandler(msg + 8));
+    if (message.size() > 8) rval=controlMsgHandler(msg + 8);
+    //    if (strlen(msg) > 8) rval=controlMsgHandler(msg + 8);
   } else if (message == msg_browse) {
     // if (strncmp(msg, "browse", 6) == 0)
-    return ("browse command received");
+    rval="browse command received";
   } else {
-    return ("command not understood");
+    rval="command not understood";
   }
+  return strdup(rval.c_str());
 }
 
 inline void LENSServer::recvMsg(char* msg, int size, int sockfd) {
@@ -755,14 +759,16 @@ inline void LENSServer::recvMsg(char* msg, int size, int sockfd) {
 }
 
 inline const char* LENSServer::sendToClient(const char* msg) {
+  std::string rval="";
   sendMsg(msg);
   char buff[MAXBUFFSIZE];
   recvMsg(buff, 8, _displaySock);
   if (std::string(buff) == std::string("received")) {
     //  if (strcmp(buff, "received") == 0)
-    return ("received");
+    rval="received";
   } else
-    return ("sending error");
+    rval="sending error";
+  return strdup(rval.c_str());
 }
 
 inline void LENSServer::sendMsg(const char* msg) {
@@ -1020,7 +1026,7 @@ inline void LENSServer::keepDataItem(std::unique_ptr<DataItem>& diap) {
 
 inline TriggerableBase::EventType LENSServer::createTriggerableCaller(
     const std::string& functionName, NDPairList* ndpList,
-    std::unique_ptr<TriggerableCaller>& triggerableCaller) {
+    std::unique_ptr<TriggerableCaller>&& triggerableCaller) {
   if (functionName != "event") {
     throw SyntaxErrorException(
         functionName +

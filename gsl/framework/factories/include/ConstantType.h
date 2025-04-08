@@ -33,7 +33,7 @@ class ConstantType : public InstanceFactory
 {
    public:
       ConstantType();
-      virtual void duplicate(std::unique_ptr<ConstantType>& dup) const=0;
+      virtual void duplicate(std::unique_ptr<ConstantType>&& dup) const=0;
       virtual void getConstant(std::unique_ptr<Constant> & r_aptr)=0;
       virtual Constant* getConstant()=0;
       virtual std::string getName()=0;

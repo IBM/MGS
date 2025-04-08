@@ -30,7 +30,7 @@ class NdplNodeInitFunctor: public NodeInitializerFunctor
    public:
       NdplNodeInitFunctor();
       NdplNodeInitFunctor(const NdplNodeInitFunctor&);
-      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
       virtual ~NdplNodeInitFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 

@@ -14,6 +14,7 @@
 /*                                                                  */
 /* =================================================================*/
 %}
+%x COMMENT
 
 %option c++
 %option yyclass="LensLexer"
@@ -38,6 +39,10 @@ using namespace std;
 %}
 
 %%
+"//".*            { /* Ignore C++-style comments */ }
+"/*"              { BEGIN(COMMENT); }
+<COMMENT>"*/"     { BEGIN(INITIAL); }
+<COMMENT>.|\n     { /* Ignore everything in a comment */ }
 int               { yylloc->first_line = lineCount;
                     return ( LOCAL_INT );
                     }

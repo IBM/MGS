@@ -14,7 +14,7 @@
 // =================================================================
 
 #include "NDPair.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "IntDataItem.h"
 #include "DoubleDataItem.h"
 
@@ -27,7 +27,7 @@ NDPair::NDPair(const std::string& name, std::unique_ptr<DataItem>& di)
 NDPair::NDPair(const std::string& name, const std::string& value)
 : _name(name)
 {
-  _dataItem.reset(new StringDataItem(value));
+  _dataItem.reset(new CustomStringDataItem(value));
 }
 
 NDPair::NDPair(const std::string& name, int value)
@@ -97,7 +97,7 @@ std::string NDPair::getValue() const
 
 void NDPair::setValue(const std::string& value)
 {
-  _dataItem.reset(new StringDataItem(value));
+  _dataItem.reset(new CustomStringDataItem(value));
 }
 
 void NDPair::setValue(int value)

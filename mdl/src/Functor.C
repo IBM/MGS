@@ -212,7 +212,6 @@ void Functor::generateInstanceBase()
    instance->addHeader("\"" + PREFIX + getModuleName() + "ExecArgs.h\"");
 
    std::unique_ptr<Method> methodCup;
-   
    createInitMethod(std::move(methodCup), _initializeArguments, "Initialize"
 		    , "init", _userInitialization, false);
    instance->addMethod(std::move(methodCup));
@@ -235,7 +234,6 @@ void Functor::generateInstanceBase()
 
    instance->addStandardMethods();
    _classes.push_back(instance.release());
-
 }
 
 void Functor::createInitMethod(std::unique_ptr<Method>&& method, 
@@ -257,7 +255,7 @@ void Functor::createInitMethod(std::unique_ptr<Method>&& method,
 
    bool isRetValVoid = (dynamic_cast<VoidType*>(_returnType) != 0);
    if (hasRetVal) {
-      method->addParameter("std::unique_ptr<DataItem>&& rvalue");     
+      method->addParameter("std::unique_ptr<DataItem>& rvalue");     
    }
 
    std::string userFunctionCaller =
@@ -340,6 +338,7 @@ void Functor::generateInstance()
    } else {
       retStr = _returnType->getTypeString();
    }
+   
    createUserMethod(std::move(std::move(methodCup)), *_executeArguments, "Execute", retStr
 		    , _userExecute, false);
    instance->addMethod(std::move(methodCup));

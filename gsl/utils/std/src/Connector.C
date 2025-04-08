@@ -125,7 +125,7 @@ void Connector::constantToNodeSet(
         int toPartitionId = sim->getGranule(*(*it))->getPartitionId();                                        
         if (toPartitionId == myRank)                                                                          
 	{                                                                                                     
-	  (*it)->getGridLayerDescriptor()->getNodeType()->getInAttrParameterSet(inAttrPSet);                  
+	  (*it)->getGridLayerDescriptor()->getNodeType()->getInAttrParameterSet(std::move(inAttrPSet));                  
 	  inAttrPSet->set(*destinationInAttr);                                                                
 	  node = (*it)->getNode();                                                                            
 	  source->addPostNode((*it), outAttrPSet.get());                                                      
@@ -160,7 +160,7 @@ void Connector::constantToNode(
      source->getOutAttrParameterSet(outAttrPSet);
      outAttrPSet->set(*sourceOutAttr);
      std::unique_ptr<ParameterSet> inAttrPSet;  
-     destination->getGridLayerDescriptor()->getNodeType()->getInAttrParameterSet(inAttrPSet);
+     destination->getGridLayerDescriptor()->getNodeType()->getInAttrParameterSet(std::move(inAttrPSet));
      inAttrPSet->set(*destinationInAttr);
      source->addPostNode(node, outAttrPSet.get());
      node->addPreConstant(source, inAttrPSet.get());

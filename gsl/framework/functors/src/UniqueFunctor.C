@@ -34,13 +34,13 @@ UniqueFunctor::UniqueFunctor()
 UniqueFunctor::UniqueFunctor(const UniqueFunctor& csf)
 {
    if (csf._functor_ap.get())
-      csf._functor_ap->duplicate(_functor_ap);
+      csf._functor_ap->duplicate(std::move(_functor_ap));
 }
 
 
-void UniqueFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void UniqueFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
-   fap.reset(new UniqueFunctor(*this));
+   fap=std::make_unique<UniqueFunctor>(*this);
 }
 
 
@@ -67,7 +67,7 @@ void UniqueFunctor::doInitialize(LensContext *c,
          throw SyntaxErrorException(
 	    "FunctorDataItem in UniqueFunctor doesn't hold a proper functor");
       }
-      functor->duplicate(_functor_ap);
+      functor->duplicate(std::move(_functor_ap));
    }
 }
 

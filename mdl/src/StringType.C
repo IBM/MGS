@@ -28,13 +28,13 @@ void StringType::duplicate(std::unique_ptr<DataType>&& rv) const
 
 std::string StringType::getDescriptor() const
 {
-   return "String";
+   return "CustomString";
 }
 
 std::string StringType::getHeaderString(
    std::vector<std::string>& arrayTypeVec) const
 {
-   return "\"String.h\"";
+   return "\"CustomString.h\"";
 }
 
 std::string StringType::getDataItemFunctionString() const

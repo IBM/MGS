@@ -38,7 +38,8 @@ inline std::unique_ptr<char[]> read_mnist_file(const std::string& path, uint32_t
     file.open(path, std::ios::in | std::ios::binary | std::ios::ate);
 
     if (!file) {
-        std::cout << "Error opening file" << std::endl;
+        std::cout << "ERROR: mnist_reader_common.hpp. Error opening file!" << std::endl;
+        assert(0);
         return {};
     }
 

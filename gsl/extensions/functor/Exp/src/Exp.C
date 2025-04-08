@@ -45,17 +45,17 @@ Exp::~Exp()
 {
 }
 
-void Exp::duplicate(std::unique_ptr<Exp>& dup) const
+void Exp::duplicate(std::unique_ptr<Exp>&& dup) const
 {
    dup.reset(new Exp(*this));
 }
 
-void Exp::duplicate(std::unique_ptr<Functor>& dup) const
+void Exp::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new Exp(*this));
 }
 
-void Exp::duplicate(std::unique_ptr<CG_ExpBase>& dup) const
+void Exp::duplicate(std::unique_ptr<CG_ExpBase>&& dup) const
 {
    dup.reset(new Exp(*this));
 }

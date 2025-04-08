@@ -23,7 +23,7 @@
 #include "LayoutFunctor.h"
 #include "NodeInitializerFunctor.h"
 #include "Functor.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "NodeTypeDataItem.h"
 #include "NodeSetDataItem.h"
 #include "GranuleMapperDataItem.h"
@@ -212,7 +212,7 @@ void C_grid_function_name::layers(LensContext* c, Grid* grid) {
   } else {
     if (c->sim->isGranuleMapperPass() || c->sim->isCostAggregationPass()) {
       std::vector<DataItem*> gmargs;
-      StringDataItem descrDI("Default Volume Granule Mapper.");
+      CustomStringDataItem descrDI("Default Volume Granule Mapper.");
       gmargs.push_back(&descrDI);
 
       const std::vector<int>& sz = grid->getSize();

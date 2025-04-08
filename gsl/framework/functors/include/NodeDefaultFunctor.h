@@ -28,7 +28,7 @@ class NodeDefaultFunctor: public NodeInitializerFunctor
 {
    public:
       NodeDefaultFunctor();
-      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
       virtual ~NodeDefaultFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 

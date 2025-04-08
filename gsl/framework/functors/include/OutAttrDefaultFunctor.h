@@ -31,7 +31,7 @@ class OutAttrDefaultFunctor: public Functor
    public:
       OutAttrDefaultFunctor();
       OutAttrDefaultFunctor(const OutAttrDefaultFunctor&);
-      virtual void duplicate (std::unique_ptr<Functor> &fap) const;
+      virtual void duplicate (std::unique_ptr<Functor>&& fap) const;
       virtual ~OutAttrDefaultFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 

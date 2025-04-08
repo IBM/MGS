@@ -32,7 +32,7 @@ class EachDstPropSrcFunctor: public SampFctr2Functor
    public:
       EachDstPropSrcFunctor();
       EachDstPropSrcFunctor(const EachDstPropSrcFunctor&);
-      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
       virtual ~EachDstPropSrcFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 

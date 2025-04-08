@@ -24,7 +24,7 @@ class UniformLayoutFunctor: public LayoutFunctor
 {
    public:
       UniformLayoutFunctor();
-      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
       virtual ~UniformLayoutFunctor();
 
    private:

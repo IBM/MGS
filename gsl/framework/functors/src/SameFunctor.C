@@ -34,11 +34,11 @@ SameFunctor::SameFunctor()
 
 SameFunctor::SameFunctor(const SameFunctor& csf)
 {
-   if (csf._pset.get()) csf._pset.get()->duplicate(_pset);
+   if (csf._pset.get()) csf._pset.get()->duplicate(std::move(_pset));
 }
 
 
-void SameFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void SameFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new SameFunctor(*this));
 }
@@ -62,7 +62,7 @@ void SameFunctor::doInitialize(LensContext *c,
       throw SyntaxErrorException(
 	 "Dynamic cast of DataItem to ParameterSetDataItem failed on SameFunctor");
    }
-   if (psdi->getParameterSet()) psdi->getParameterSet()->duplicate(_pset);
+   if (psdi->getParameterSet()) psdi->getParameterSet()->duplicate(std::move(_pset));
    else {
       throw SyntaxErrorException(
 	 "Bad ParameterSetDataItem passed to initialize SameFunctor");

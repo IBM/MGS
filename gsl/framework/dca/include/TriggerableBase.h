@@ -39,7 +39,7 @@ class TriggerableBase : public Triggerable
    protected:
       virtual EventType createTriggerableCaller(
 	 const std::string& functionName, NDPairList* ndpList, 
-	 std::unique_ptr<TriggerableCaller>& triggerableCaller) = 0;
+	 std::unique_ptr<TriggerableCaller>&& triggerableCaller) = 0;
    private:
       DuplicatePointerArray<NDPairList> _ndPairLists;
       std::vector<Trigger*> _triggers;

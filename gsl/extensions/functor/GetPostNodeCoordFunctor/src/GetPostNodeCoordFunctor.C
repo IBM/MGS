@@ -76,17 +76,17 @@ GetPostNodeCoordFunctor& GetPostNodeCoordFunctor::operator=(
    return *this;
 }
 
-void GetPostNodeCoordFunctor::duplicate(std::unique_ptr<GetPostNodeCoordFunctor>& dup) const
+void GetPostNodeCoordFunctor::duplicate(std::unique_ptr<GetPostNodeCoordFunctor>&& dup) const
 {
    dup.reset(new GetPostNodeCoordFunctor(*this));
 }
 
-void GetPostNodeCoordFunctor::duplicate(std::unique_ptr<Functor>& dup) const
+void GetPostNodeCoordFunctor::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new GetPostNodeCoordFunctor(*this));
 }
 
-void GetPostNodeCoordFunctor::duplicate(std::unique_ptr<CG_GetPostNodeCoordFunctorBase>& dup) const
+void GetPostNodeCoordFunctor::duplicate(std::unique_ptr<CG_GetPostNodeCoordFunctorBase>&& dup) const
 {
    dup.reset(new GetPostNodeCoordFunctor(*this));
 }

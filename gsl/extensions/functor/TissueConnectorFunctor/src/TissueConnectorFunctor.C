@@ -43,17 +43,17 @@ TissueConnectorFunctor::~TissueConnectorFunctor()
 {
 }
 
-void TissueConnectorFunctor::duplicate(std::unique_ptr<TissueConnectorFunctor>& dup) const
+void TissueConnectorFunctor::duplicate(std::unique_ptr<TissueConnectorFunctor>&& dup) const
 {
    dup.reset(new TissueConnectorFunctor(*this));
 }
 
-void TissueConnectorFunctor::duplicate(std::unique_ptr<Functor>& dup) const
+void TissueConnectorFunctor::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new TissueConnectorFunctor(*this));
 }
 
-void TissueConnectorFunctor::duplicate(std::unique_ptr<CG_TissueConnectorFunctorBase>& dup) const
+void TissueConnectorFunctor::duplicate(std::unique_ptr<CG_TissueConnectorFunctorBase>&& dup) const
 {
    dup.reset(new TissueConnectorFunctor(*this));
 }

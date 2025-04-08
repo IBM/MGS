@@ -30,7 +30,7 @@
 #include "FloatArrayDataItem.h"
 #include "IntDataItem.h"
 #include "IntArrayDataItem.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "NDPairDataItem.h"
 #include "GridSetDataItem.h"
 #include "NodeSetDataItem.h"
@@ -312,7 +312,7 @@ const char *C_type_specifier::getDataItemType() {
       throwError(mes);
     }
     case (_STRING):
-      retval = StringDataItem::_type;
+      retval = CustomStringDataItem::_type;
       break;
     case (_NDPAIR):
       retval = NDPairDataItem::_type;

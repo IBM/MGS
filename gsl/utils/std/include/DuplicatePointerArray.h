@@ -131,7 +131,15 @@ void DuplicatePointerArray<T, blockSize, blockIncrementSize>::
 internalCopy(T*& lval, T*& rval)
 {
    std::unique_ptr<T> dup;
-   rval->duplicate(dup);
+   // Use decltype and SFINAE to detect the parameter type of duplicate
+   using Args = decltype(&T::duplicate);
+   if constexpr (std::is_same_v<Args, void (T::*)(std::unique_ptr<T>&) const>) {
+      // lvalue reference version
+      rval->duplicate(dup);
+   } else {
+      // rvalue reference version
+      rval->duplicate(std::move(dup));
+   }
    lval = dup.release();
 }
 

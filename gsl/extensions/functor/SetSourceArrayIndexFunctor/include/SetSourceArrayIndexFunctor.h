@@ -17,9 +17,9 @@ class SetSourceArrayIndexFunctor : public CG_SetSourceArrayIndexFunctorBase
       SetSourceArrayIndexFunctor();
       SetSourceArrayIndexFunctor(SetSourceArrayIndexFunctor const&);
       virtual ~SetSourceArrayIndexFunctor();
-      virtual void duplicate(std::unique_ptr<SetSourceArrayIndexFunctor>& dup) const;
-      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_SetSourceArrayIndexFunctorBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<SetSourceArrayIndexFunctor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_SetSourceArrayIndexFunctorBase>&& dup) const;
    private:
       std::map<NodeDescriptor*, unsigned> _indexMap;
       std::unique_ptr<Functor> _destinationInAttr;

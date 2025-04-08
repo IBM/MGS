@@ -17,9 +17,9 @@ class ConnectNodeSetsByVolumeFunctor : public CG_ConnectNodeSetsByVolumeFunctorB
       void userExecute(LensContext* CG_c, NodeSet*& source, NodeSet*& destination, String& center, float& radius, float& scale, Functor*& sourceOutAttr, Functor*& destinationInAttr);
       ConnectNodeSetsByVolumeFunctor();
       virtual ~ConnectNodeSetsByVolumeFunctor();
-      virtual void duplicate(std::unique_ptr<ConnectNodeSetsByVolumeFunctor>& dup) const;
-      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_ConnectNodeSetsByVolumeFunctorBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<ConnectNodeSetsByVolumeFunctor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_ConnectNodeSetsByVolumeFunctorBase>&& dup) const;
    private:
       NoConnectConnector* _noConnector;
       GranuleConnector* _granuleConnector;

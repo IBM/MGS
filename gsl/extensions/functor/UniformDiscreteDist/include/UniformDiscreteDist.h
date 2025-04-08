@@ -28,9 +28,9 @@ class UniformDiscreteDist : public CG_UniformDiscreteDistBase
       int userExecute(LensContext* CG_c);
       UniformDiscreteDist();
       virtual ~UniformDiscreteDist();
-      virtual void duplicate(std::unique_ptr<UniformDiscreteDist>& dup) const;
-      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_UniformDiscreteDistBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<UniformDiscreteDist>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_UniformDiscreteDistBase>&& dup) const;
 };
 
 #endif

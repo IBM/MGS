@@ -32,9 +32,9 @@ class DstDimensionConstrainedSampler : public CG_DstDimensionConstrainedSamplerB
       void userExecute(LensContext* CG_c);
       DstDimensionConstrainedSampler();
       virtual ~DstDimensionConstrainedSampler();
-      virtual void duplicate(std::unique_ptr<DstDimensionConstrainedSampler>& dup) const;
-      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_DstDimensionConstrainedSamplerBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<DstDimensionConstrainedSampler>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_DstDimensionConstrainedSamplerBase>&& dup) const;
 
    private:
       int _constrainedDstDim;

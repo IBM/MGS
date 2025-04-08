@@ -27,7 +27,7 @@ class BindFrontFunctor: public Functor
    public:
       BindFrontFunctor();
       BindFrontFunctor(const BindFrontFunctor &);
-      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
       virtual ~BindFrontFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 

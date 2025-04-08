@@ -20,7 +20,7 @@
 #include "Simulation.h"
 #include "DistributableCompCategoryBase.h"
 #include "DataItem.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "NumericDataItem.h"
 #include "IntArrayDataItem.h"
 #include "FunctorDataItem.h"
@@ -42,9 +42,9 @@ RankGranuleMapper::RankGranuleMapper(Simulation& sim, std::vector<DataItem*> con
    }
    std::vector<DataItem*>::const_iterator iter = args.begin();
 
-   StringDataItem* descriptionDI = dynamic_cast<StringDataItem*>(*iter);
+   CustomStringDataItem* descriptionDI = dynamic_cast<CustomStringDataItem*>(*iter);
    if (descriptionDI == 0) {
-      std::cerr<<"Dynamic cast of DataItem to StringDataItem failed on RankGranuleMapper!"<<std::endl;
+      std::cerr<<"Dynamic cast of DataItem to CustomStringDataItem failed on RankGranuleMapper!"<<std::endl;
       exit(-1);
    }
    _description  = descriptionDI->getString();

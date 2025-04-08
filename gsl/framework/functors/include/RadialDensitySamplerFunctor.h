@@ -46,7 +46,7 @@ class RadialDensitySamplerFunctor: public SampFctr1Functor
       };
 
       RadialDensitySamplerFunctor();
-      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
       virtual ~RadialDensitySamplerFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 

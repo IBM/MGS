@@ -34,9 +34,9 @@ class Zipper : public CG_ZipperBase
       Zipper();
       Zipper(Zipper const &);
       virtual ~Zipper();
-      virtual void duplicate(std::unique_ptr<Zipper>& dup) const;
-      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_ZipperBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<Zipper>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_ZipperBase>&& dup) const;
    private:
       NoConnectConnector* _noConnector;
       GranuleConnector* _granuleConnector;

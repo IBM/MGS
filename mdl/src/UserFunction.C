@@ -44,8 +44,8 @@ void UserFunction::generateInstanceMethod(Class& instance,
       new Method(_name, "void"));
    method->setVirtual();
    method->setPureVirtual(pureVirtual);
-   method->addParameter("const String& " + PREFIX + "direction");
-   method->addParameter("const String& " + PREFIX + "component");
+   method->addParameter("const CustomString& " + PREFIX + "direction");
+   method->addParameter("const CustomString& " + PREFIX + "component");
    method->addParameter("NodeDescriptor* " + PREFIX + "node");
    method->addParameter("Edge* " + PREFIX + "edge");
 //   method->addParameter("Variable* " + PREFIX + "variable");

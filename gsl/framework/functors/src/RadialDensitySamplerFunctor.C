@@ -47,7 +47,7 @@ RadialDensitySamplerFunctor::RadialDensitySamplerFunctor()
 {
 }
 
-void RadialDensitySamplerFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void RadialDensitySamplerFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new RadialDensitySamplerFunctor(*this));
 }

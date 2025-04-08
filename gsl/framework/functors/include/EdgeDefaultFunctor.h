@@ -29,7 +29,7 @@ class EdgeDefaultFunctor: public EdgeInitializerFunctor
 {
    public:
       EdgeDefaultFunctor();
-      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
       virtual ~EdgeDefaultFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 

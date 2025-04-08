@@ -21,7 +21,7 @@
 #include "Simulation.h"
 #include "DistributableCompCategoryBase.h"
 #include "DataItem.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "ArrayDataItem.h"
 #include "IntArrayDataItem.h"
 #include "NumericDataItem.h"
@@ -43,9 +43,9 @@ VolumeGranuleMapper::VolumeGranuleMapper(Simulation& sim, std::vector<DataItem*>
    }
    std::vector<DataItem*>::const_iterator iter = args.begin();
 
-   StringDataItem* descriptionDI = dynamic_cast<StringDataItem*>(*iter);
+   CustomStringDataItem* descriptionDI = dynamic_cast<CustomStringDataItem*>(*iter);
    if (descriptionDI == 0) {
-      std::cerr<<"Dynamic cast of DataItem to StringDataItem failed on VolumeGranuleMapper! (first argument)"<<std::endl;
+      std::cerr<<"Dynamic cast of DataItem to CustomStringDataItem failed on VolumeGranuleMapper! (first argument)"<<std::endl;
       exit(-1);
    }
    _description  = descriptionDI->getString();

@@ -33,7 +33,7 @@ NodeProxyBase::~NodeProxyBase()
 
 TriggerableBase::EventType NodeProxyBase::createTriggerableCaller(
    const std::string& name, NDPairList* ndpList, 
-   std::unique_ptr<TriggerableCaller>& triggerableCaller) {
+   std::unique_ptr<TriggerableCaller>&& triggerableCaller) {
    throw SyntaxErrorException(
       name + " is not defined in node proxy.");
    //return TriggerableBase::_UNALTERED;

@@ -109,7 +109,7 @@ std::unique_ptr<ParameterSet> ReversedSrcRefGaussianWeightModifier::userExecute(
    ndpl.push_back(ndp2);
 
    std::unique_ptr<ParameterSet> pset;
-   psdi->getParameterSet()->duplicate(pset);
+   psdi->getParameterSet()->duplicate(std::move(pset));
    pset->set(ndpl);
    return pset;
 }
@@ -123,17 +123,17 @@ ReversedSrcRefGaussianWeightModifier::~ReversedSrcRefGaussianWeightModifier()
 {
 }
 
-void ReversedSrcRefGaussianWeightModifier::duplicate(std::unique_ptr<ReversedSrcRefGaussianWeightModifier>& dup) const
+void ReversedSrcRefGaussianWeightModifier::duplicate(std::unique_ptr<ReversedSrcRefGaussianWeightModifier>&& dup) const
 {
    dup.reset(new ReversedSrcRefGaussianWeightModifier(*this));
 }
 
-void ReversedSrcRefGaussianWeightModifier::duplicate(std::unique_ptr<Functor>& dup) const
+void ReversedSrcRefGaussianWeightModifier::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new ReversedSrcRefGaussianWeightModifier(*this));
 }
 
-void ReversedSrcRefGaussianWeightModifier::duplicate(std::unique_ptr<CG_ReversedSrcRefGaussianWeightModifierBase>& dup) const
+void ReversedSrcRefGaussianWeightModifier::duplicate(std::unique_ptr<CG_ReversedSrcRefGaussianWeightModifierBase>&& dup) const
 {
    dup.reset(new ReversedSrcRefGaussianWeightModifier(*this));
 }

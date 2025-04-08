@@ -132,7 +132,7 @@ void SumFunctor::doExecute(LensContext *c, const std::vector<DataItem *> &args,
   }
 }
 
-void SumFunctor::duplicate(std::unique_ptr<Functor> &fap) const {
+void SumFunctor::duplicate(std::unique_ptr<Functor>&& fap) const {
   Functor *p = new SumFunctor(*this);
   fap.reset(p);
 }

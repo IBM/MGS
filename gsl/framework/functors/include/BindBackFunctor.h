@@ -27,7 +27,7 @@ class BindBackFunctor: public Functor
    public:
       BindBackFunctor();
       BindBackFunctor(const BindBackFunctor &);
-      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
       virtual ~BindBackFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 

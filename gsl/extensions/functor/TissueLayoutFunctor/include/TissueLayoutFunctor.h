@@ -33,9 +33,9 @@ class TissueLayoutFunctor : public CG_TissueLayoutFunctorBase, public TissueElem
       TissueLayoutFunctor();
       TissueLayoutFunctor(TissueLayoutFunctor const &);
       virtual ~TissueLayoutFunctor();
-      virtual void duplicate(std::unique_ptr<TissueLayoutFunctor>& dup) const;
-      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_TissueLayoutFunctorBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<TissueLayoutFunctor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_TissueLayoutFunctorBase>&& dup) const;
       void setTissueFunctor(TissueFunctor* tf) {_tissueFunctor=tf;}
 
    private:

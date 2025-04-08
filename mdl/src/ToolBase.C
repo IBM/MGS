@@ -104,24 +104,24 @@ void ToolBase::generateInitializer(const std::string& type
 
    instance->addAttributes(members);
 
-   std::unique_ptr<Method> doInitMethod(
-      new Method("initialize", "std::vector<DataItem*>::const_iterator") );
+   std::unique_ptr<Method> doInitMethod = std::make_unique<Method>(
+      "initialize", "std::vector<DataItem*>::const_iterator");
    doInitMethod->addParameter("const std::vector<DataItem*>& args");
    std::ostringstream doInitFunctionBody;
    if (userInit) {
       doInitFunctionBody 
-	 << TAB << "if (args.size() < " << members.size() << ") {\n"
-	 << TAB << TAB << "throw SyntaxErrorException(" 
-	 << "\"Number of arguments should be greater than or equal to " 
-	 << members.size() << "\");\n"
-	 << TAB << "}\n";
+      << TAB << "if (args.size() < " << members.size() << ") {\n"
+      << TAB << TAB << "throw SyntaxErrorException(" 
+      << "\"Number of arguments should be greater than or equal to " 
+      << members.size() << "\");\n"
+      << TAB << "}\n";
    } else {
       doInitFunctionBody 
-	 << TAB << "if (args.size() != " << members.size() << ") {\n"
-	 << TAB << TAB << "throw SyntaxErrorException(" 
-	 << "\"Number of arguments should be equal to " 
-	 << members.size() << "\");\n"
-	 << TAB << "}\n";
+      << TAB << "if (args.size() != " << members.size() << ") {\n"
+      << TAB << TAB << "throw SyntaxErrorException(" 
+      << "\"Number of arguments should be equal to " 
+      << members.size() << "\");\n"
+      << TAB << "}\n";
    }
    doInitFunctionBody 
       << TAB << "std::vector<DataItem*>::const_iterator " 
@@ -129,8 +129,8 @@ void ToolBase::generateInitializer(const std::string& type
    if (members.size() > 0) {
       MemberContainer<DataType>::const_iterator it, end = members.end();
       for (it = members.begin(); it != end; it++) {
-	 doInitFunctionBody 
-	    << it->second->getInitializerString(PREFIX + "currentDI");
+	      doInitFunctionBody 
+	      << it->second->getInitializerString(PREFIX + "currentDI");
       }
    }
    doInitFunctionBody 

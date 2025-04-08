@@ -15,7 +15,7 @@
 
 #include "CompositeTriggerServiceTrigger.h"
 #include "Simulation.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "BoolDataItem.h"
 #include "TriggerDataItem.h"
 #include "PhaseDataItem.h"
@@ -35,9 +35,9 @@ CompositeTriggerServiceTrigger::CompositeTriggerServiceTrigger(Simulation& sim,
       exit(-1);
    }
    std::vector<DataItem*>::const_iterator iter = args.begin();
-   StringDataItem* descriptionDI = dynamic_cast<StringDataItem*>(*iter);
+   CustomStringDataItem* descriptionDI = dynamic_cast<CustomStringDataItem*>(*iter);
    if (descriptionDI == 0) {
-      std::cerr<<"Dynamic cast of DataItem to StringDataItem failed on CompositeTriggerServiceTriggerServiceTrigger!"<<std::endl;
+      std::cerr<<"Dynamic cast of DataItem to CustomStringDataItem failed on CompositeTriggerServiceTriggerServiceTrigger!"<<std::endl;
       exit(-1);
    }
    _description = descriptionDI->getString();
@@ -58,9 +58,9 @@ CompositeTriggerServiceTrigger::CompositeTriggerServiceTrigger(Simulation& sim,
    ++iter;
 
    if (args.size() == 8) {
-      StringDataItem* opDI = dynamic_cast<StringDataItem*>(*iter);
+      CustomStringDataItem* opDI = dynamic_cast<CustomStringDataItem*>(*iter);
       if (opDI == 0) {
-	 std::cerr<<"Dynamic cast of DataItem to StringDataItem failed on CompositeTriggerServiceTriggerServiceTrigger!"<<std::endl;
+	 std::cerr<<"Dynamic cast of DataItem to CustomStringDataItem failed on CompositeTriggerServiceTriggerServiceTrigger!"<<std::endl;
 	 exit(-1);
       }
       _op = opDI->getString();
@@ -209,7 +209,7 @@ bool CompositeTriggerServiceTrigger::isSingle()
    return (_triggerA->status() == _criterionA);
 }
 
-void CompositeTriggerServiceTrigger::duplicate(std::unique_ptr<Trigger>& dup) const
+void CompositeTriggerServiceTrigger::duplicate(std::unique_ptr<Trigger>&& dup) const
 {
    dup.reset(new CompositeTriggerServiceTrigger(*this));
 }

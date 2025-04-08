@@ -21,7 +21,7 @@
 #include "NumericDataItem.h"
 #include <memory>
 
-void NameReturnValue::userInitialize(LensContext* CG_c, String& s, Functor*& f) 
+void NameReturnValue::userInitialize(LensContext* CG_c, CustomString& s, Functor*& f) 
 {
 }
 
@@ -52,17 +52,17 @@ NameReturnValue::~NameReturnValue()
 {
 }
 
-void NameReturnValue::duplicate(std::unique_ptr<NameReturnValue>& dup) const
+void NameReturnValue::duplicate(std::unique_ptr<NameReturnValue>&& dup) const
 {
    dup.reset(new NameReturnValue(*this));
 }
 
-void NameReturnValue::duplicate(std::unique_ptr<Functor>& dup) const
+void NameReturnValue::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new NameReturnValue(*this));
 }
 
-void NameReturnValue::duplicate(std::unique_ptr<CG_NameReturnValueBase>& dup) const
+void NameReturnValue::duplicate(std::unique_ptr<CG_NameReturnValueBase>&& dup) const
 {
    dup.reset(new NameReturnValue(*this));
 }

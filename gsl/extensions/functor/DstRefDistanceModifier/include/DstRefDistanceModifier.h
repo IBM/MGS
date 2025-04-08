@@ -29,9 +29,9 @@ class DstRefDistanceModifier : public CG_DstRefDistanceModifierBase
       std::unique_ptr<ParameterSet> userExecute(LensContext* CG_c);
       DstRefDistanceModifier();
       virtual ~DstRefDistanceModifier();
-      virtual void duplicate(std::unique_ptr<DstRefDistanceModifier>& dup) const;
-      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_DstRefDistanceModifierBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<DstRefDistanceModifier>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_DstRefDistanceModifierBase>&& dup) const;
 };
 
 #endif

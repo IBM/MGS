@@ -204,17 +204,17 @@ ToroidalRadialSampler::~ToroidalRadialSampler()
 {
 }
 
-void ToroidalRadialSampler::duplicate(std::unique_ptr<ToroidalRadialSampler>& dup) const
+void ToroidalRadialSampler::duplicate(std::unique_ptr<ToroidalRadialSampler>&& dup) const
 {
    dup.reset(new ToroidalRadialSampler(*this));
 }
 
-void ToroidalRadialSampler::duplicate(std::unique_ptr<Functor>& dup) const
+void ToroidalRadialSampler::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new ToroidalRadialSampler(*this));
 }
 
-void ToroidalRadialSampler::duplicate(std::unique_ptr<CG_ToroidalRadialSamplerBase>& dup) const
+void ToroidalRadialSampler::duplicate(std::unique_ptr<CG_ToroidalRadialSamplerBase>&& dup) const
 {
    dup.reset(new ToroidalRadialSampler(*this));
 }

@@ -30,9 +30,9 @@ class SrcRefSumRsqrdInvWeightModifier : public CG_SrcRefSumRsqrdInvWeightModifie
       std::unique_ptr<ParameterSet> userExecute(LensContext* CG_c);
       SrcRefSumRsqrdInvWeightModifier();
       virtual ~SrcRefSumRsqrdInvWeightModifier();
-      virtual void duplicate(std::unique_ptr<SrcRefSumRsqrdInvWeightModifier>& dup) const;
-      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_SrcRefSumRsqrdInvWeightModifierBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<SrcRefSumRsqrdInvWeightModifier>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_SrcRefSumRsqrdInvWeightModifierBase>&& dup) const;
 
       bool _setDistance;
       std::map<float, float> _radiusMap;

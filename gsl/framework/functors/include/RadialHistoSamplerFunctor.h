@@ -57,7 +57,7 @@ class RadialHistoSamplerFunctor: public SampFctr1Functor
       };
 
       RadialHistoSamplerFunctor();
-      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
       virtual ~RadialHistoSamplerFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 

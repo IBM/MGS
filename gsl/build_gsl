@@ -131,7 +131,13 @@ BUILD_TARGET=""
 COLAB=""
 REGENMAKEFILE=""
 DEBUGOPTS="1"
-NPROCS=$((`cat /proc/cpuinfo | grep processor | wc -l`))
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS
+    NPROCS=$(sysctl -n hw.ncpu)
+else
+    # Linux
+    NPROCS=$((`cat /proc/cpuinfo | grep processor | wc -l`))
+fi
 PROFILE=""
 
 optspec=":d:p:sr-:j:"

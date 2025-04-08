@@ -2,7 +2,7 @@
 #define TRANSFERFUNCTION_H
 
 #include <math.h>
-#include "String.h"
+#include "CustomString.h"
 
 class TransferFunction
 {
@@ -11,7 +11,7 @@ class TransferFunction
      double (*transfer) (double);
      double (*derivativeOfTransfer) (double);
      
-     void setType(String type) {
+     void setType(CustomString type) {
        if (type == "tanh") {
 	 transfer = &tanh;
 	 derivativeOfTransfer = &dtanh;

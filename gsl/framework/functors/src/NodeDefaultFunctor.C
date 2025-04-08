@@ -32,7 +32,7 @@ NodeDefaultFunctor::NodeDefaultFunctor()
 {
 }
 
-void NodeDefaultFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void NodeDefaultFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new NodeDefaultFunctor(*this));
 }
@@ -62,7 +62,7 @@ void NodeDefaultFunctor::doExecute(LensContext *c,
    std::vector<GridLayerDescriptor*>::const_iterator gld = layers.begin();
    std::vector<GridLayerDescriptor*>::const_iterator end = layers.end();
    for (; gld != end; ++gld) {
-      (*gld)->getNodeType()->getInitializationParameterSet(initPset);
+      (*gld)->getNodeType()->getInitializationParameterSet(std::move(initPset));
 
       nodes.clear();
       nodeset->getNodes(nodes, *gld);

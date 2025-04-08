@@ -29,9 +29,9 @@ class RefAngleModifier : public CG_RefAngleModifierBase
       std::unique_ptr<ParameterSet> userExecute(LensContext* CG_c);
       RefAngleModifier();
       virtual ~RefAngleModifier();
-      virtual void duplicate(std::unique_ptr<RefAngleModifier>& dup) const;
-      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_RefAngleModifierBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<RefAngleModifier>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_RefAngleModifierBase>&& dup) const;
 };
 
 #endif

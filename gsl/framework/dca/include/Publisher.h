@@ -44,6 +44,6 @@ class Publisher
       getServiceDescriptors() const = 0;
       virtual ~Publisher() {}
 
-      virtual void duplicate(std::unique_ptr<Publisher>& dup) const  = 0;
+      virtual void duplicate(std::unique_ptr<Publisher>&& dup) const  = 0;
 };
 #endif

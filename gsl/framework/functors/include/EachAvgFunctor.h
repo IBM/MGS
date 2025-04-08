@@ -40,7 +40,7 @@ class EachAvgFunctor : public SampFctr1Functor
   };
   EachAvgFunctor();
   EachAvgFunctor(const EachAvgFunctor&);
-  virtual void duplicate(std::unique_ptr<Functor>& fap) const;
+  virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
   virtual ~EachAvgFunctor();
 
   protected:

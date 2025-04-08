@@ -100,8 +100,7 @@ void GranuleConnector::variableToNodeSet(
    source->getVariable()->getOutAttrParameterSet(outAttrPSet);
    outAttrPSet->set(*sourceOutAttr);
    std::unique_ptr<ParameterSet> inAttrPSet;
-   (*it)->getGridLayerDescriptor()->getNodeType()->getInAttrParameterSet(
-      inAttrPSet);
+   (*it)->getGridLayerDescriptor()->getNodeType()->getInAttrParameterSet(std::move(inAttrPSet));
    inAttrPSet->set(*destinationInAttr);
 
    Granule *fromGran, *toGran;
@@ -162,7 +161,7 @@ void GranuleConnector::nodeSetToVariable(
    source->getNodes(nodes);
    std::vector<NodeDescriptor*>::iterator it = nodes.begin(), end = nodes.end();
    std::unique_ptr<ParameterSet> outAttrPSet;
-   (*it)->getGridLayerDescriptor()->getNodeType()->getOutAttrParameterSet(outAttrPSet);
+   (*it)->getGridLayerDescriptor()->getNodeType()->getOutAttrParameterSet(std::move(outAttrPSet));
    outAttrPSet->set(*sourceOutAttr);
    std::unique_ptr<ParameterSet> inAttrPSet;
    destination->getVariable()->getInAttrParameterSet(inAttrPSet);

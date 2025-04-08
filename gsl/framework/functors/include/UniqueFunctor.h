@@ -30,7 +30,7 @@ class UniqueFunctor: public SampFctr2Functor
    public:
       UniqueFunctor();
       UniqueFunctor(const UniqueFunctor&);
-      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
       virtual ~UniqueFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 

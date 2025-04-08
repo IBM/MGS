@@ -38,7 +38,7 @@ C_connection_script_definition::C_connection_script_definition(
 {
    if (rv._functor) {
       std::unique_ptr<Functor> fap;
-      rv._functor->duplicate(fap);
+      rv._functor->duplicate(std::move(fap));
       _functor = fap.release();
    }
    if (rv._declarator) {

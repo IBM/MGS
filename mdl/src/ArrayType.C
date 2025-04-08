@@ -211,11 +211,11 @@ void ArrayType::addProxyAttribute(std::unique_ptr<Class>&& instance) const
       dup2->setName(PREFIX + getName());
       
       std::unique_ptr<DataType> dup2ptr(dup2);
-      std::unique_ptr<Attribute> att(new DataTypeAttribute(std::move(dup2ptr)));
+      std::unique_ptr<Attribute> att = std::make_unique<DataTypeAttribute>(std::move(dup2ptr));
       att->setAccessType(AccessType::PROTECTED);
       instance->addAttribute(std::move(att));
    }
-   std::unique_ptr<Attribute> att(new DataTypeAttribute(std::move(dup)));
+   std::unique_ptr<Attribute> att = std::make_unique<DataTypeAttribute>(std::move(dup));
    att->setAccessType(AccessType::PROTECTED);
    instance->addAttribute(att);
 }

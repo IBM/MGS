@@ -23,7 +23,7 @@
 class C_argument;
 class LensContext;
 class DataItem;
-class StringDataItem;
+class CustomStringDataItem;
 class SyntaxError;
 
 class C_argument_string: public C_argument
@@ -44,7 +44,7 @@ class C_argument_string: public C_argument
       DataItem* getArgumentDataItem() const;
 
    private:
-      StringDataItem* _str_dataitem;
+      CustomStringDataItem* _str_dataitem;
       std::string* _string;
 };
 #endif

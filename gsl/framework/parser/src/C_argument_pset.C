@@ -55,13 +55,13 @@ void C_argument_pset::internalExecute(LensContext *c)
       NodeType* nt = c->sim->getNodeType(
 	 _parm_type_pair->getModelName(), dummy);
       if (_parm_type_pair->getParameterType() == C_parameter_type_pair::_INIT)
-         nt->getInitializationParameterSet(pset);
+         nt->getInitializationParameterSet(std::move(pset));
       else if (_parm_type_pair->getParameterType() == 
 	       C_parameter_type_pair::_IN)
-         nt->getInAttrParameterSet(pset);
+         nt->getInAttrParameterSet(std::move(pset));
       else if (_parm_type_pair->getParameterType() == 
 	       C_parameter_type_pair::_OUT)
-         nt->getOutAttrParameterSet(pset);
+         nt->getOutAttrParameterSet(std::move(pset));
    }
 
    try {

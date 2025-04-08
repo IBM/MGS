@@ -90,7 +90,7 @@ std::unique_ptr<ParameterSet> DstScaledGaussianWeightModifier::userExecute(LensC
    ndpl.push_back(ndp2);
 
    std::unique_ptr<ParameterSet> pset;
-   psdi->getParameterSet()->duplicate(pset);
+   psdi->getParameterSet()->duplicate(std::move(pset));
    pset->set(ndpl);
    return pset;
 }
@@ -104,17 +104,17 @@ DstScaledGaussianWeightModifier::~DstScaledGaussianWeightModifier()
 {
 }
 
-void DstScaledGaussianWeightModifier::duplicate(std::unique_ptr<DstScaledGaussianWeightModifier>& dup) const
+void DstScaledGaussianWeightModifier::duplicate(std::unique_ptr<DstScaledGaussianWeightModifier>&& dup) const
 {
    dup.reset(new DstScaledGaussianWeightModifier(*this));
 }
 
-void DstScaledGaussianWeightModifier::duplicate(std::unique_ptr<Functor>& dup) const
+void DstScaledGaussianWeightModifier::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new DstScaledGaussianWeightModifier(*this));
 }
 
-void DstScaledGaussianWeightModifier::duplicate(std::unique_ptr<CG_DstScaledGaussianWeightModifierBase>& dup) const
+void DstScaledGaussianWeightModifier::duplicate(std::unique_ptr<CG_DstScaledGaussianWeightModifierBase>&& dup) const
 {
    dup.reset(new DstScaledGaussianWeightModifier(*this));
 }

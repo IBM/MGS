@@ -318,17 +318,17 @@ PolyConnectorFunctor::~PolyConnectorFunctor()
 {
 }
 
-void PolyConnectorFunctor::duplicate(std::unique_ptr<PolyConnectorFunctor>& dup) const
+void PolyConnectorFunctor::duplicate(std::unique_ptr<PolyConnectorFunctor>&& dup) const
 {
    dup.reset(new PolyConnectorFunctor(*this));
 }
 
-void PolyConnectorFunctor::duplicate(std::unique_ptr<Functor>& dup) const
+void PolyConnectorFunctor::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new PolyConnectorFunctor(*this));
 }
 
-void PolyConnectorFunctor::duplicate(std::unique_ptr<CG_PolyConnectorFunctorBase>& dup) const
+void PolyConnectorFunctor::duplicate(std::unique_ptr<CG_PolyConnectorFunctorBase>&& dup) const
 {
    dup.reset(new PolyConnectorFunctor(*this));
 }

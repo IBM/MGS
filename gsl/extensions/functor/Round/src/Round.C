@@ -45,17 +45,17 @@ Round::~Round()
 {
 }
 
-void Round::duplicate(std::unique_ptr<Round>& dup) const
+void Round::duplicate(std::unique_ptr<Round>&& dup) const
 {
    dup.reset(new Round(*this));
 }
 
-void Round::duplicate(std::unique_ptr<Functor>& dup) const
+void Round::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new Round(*this));
 }
 
-void Round::duplicate(std::unique_ptr<CG_RoundBase>& dup) const
+void Round::duplicate(std::unique_ptr<CG_RoundBase>&& dup) const
 {
    dup.reset(new Round(*this));
 }

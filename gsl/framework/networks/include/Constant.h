@@ -41,7 +41,7 @@ class Constant : public Publishable
       virtual ~Constant();
       virtual void getOutAttrParameterSet(
 	 std::unique_ptr<ParameterSet>& outAttrPSet) const = 0;
-      virtual void duplicate(std::unique_ptr<Constant>& dup) const = 0;
+      virtual void duplicate(std::unique_ptr<Constant>&& dup) const = 0;
       void initialize(LensContext *c, const std::vector<DataItem*>& args);
       void initialize(const NDPairList& ndplist);
    protected:

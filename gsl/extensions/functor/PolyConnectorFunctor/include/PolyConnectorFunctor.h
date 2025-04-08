@@ -38,9 +38,9 @@ class PolyConnectorFunctor : public CG_PolyConnectorFunctorBase
       void userExecute(LensContext* CG_c, std::vector<DataItem*>::const_iterator begin, std::vector<DataItem*>::const_iterator end);
       PolyConnectorFunctor();
       virtual ~PolyConnectorFunctor();
-      virtual void duplicate(std::unique_ptr<PolyConnectorFunctor>& dup) const;
-      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_PolyConnectorFunctorBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<PolyConnectorFunctor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_PolyConnectorFunctorBase>&& dup) const;
    private:
       NoConnectConnector _noConnector;
       GranuleConnector _granuleConnector;

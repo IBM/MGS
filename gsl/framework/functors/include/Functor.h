@@ -34,7 +34,7 @@ class Functor {
   Functor& operator=(const Functor& rv) {
     return *this;
   };
-  virtual void duplicate(std::unique_ptr<Functor>& fap) const = 0;
+  virtual void duplicate(std::unique_ptr<Functor>&& fap) const = 0;
   virtual ~Functor();
 
   protected:

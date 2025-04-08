@@ -25,17 +25,17 @@
 
 class Parser {
 	public:
-		typedef std::string String;
-		typedef std::vector<String> StringVector;
+		typedef std::string CustomString;
+		typedef std::vector<CustomString> StringVector;
 		typedef std::vector<Option> OptionVector;
 		typedef std::vector<Parameter> ParameterVector;
 		class Exception {
 			private:
-				String fieldMessage;
+				CustomString fieldMessage;
 			public:
-				Exception(String message) : fieldMessage(message) {}
+				Exception(CustomString message) : fieldMessage(message) {}
 				~Exception() {}
-				String getMessage() {
+				CustomString getMessage() {
 					return(fieldMessage);
 				}
 		}; 
@@ -54,11 +54,11 @@ class Parser {
 		ParameterVector parse(int argc, char *argv[]);
 	private:
 		OptionVector &getOptions();
-		int countOptions(String arg);
-		int findOption(String arg);
+		int countOptions(CustomString arg);
+		int findOption(CustomString arg);
 		int countOptions(char c);
 		int findOption(char c);
-		int countType(String arg, Option::Type type);
+		int countType(CustomString arg, Option::Type type);
                 int countArgs(StringVector &args, StringVector::size_type start);
 };
 

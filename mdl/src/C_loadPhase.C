@@ -37,8 +37,8 @@ void C_loadPhase::addToList(C_generalList* gl)
    std::vector<C_phaseIdentifier*>::const_iterator it, end = ids.end();
    for (it = ids.begin(); it != end; ++it) {   
       _phaseType->duplicate(std::move(dup));
-      std::unique_ptr<Phase> phase(
-	 new LoadPhase((*it)->getName(), std::move(dup), (*it)->getIdentifiers()));
+      std::unique_ptr<Phase> phase = std::make_unique<LoadPhase>(
+         (*it)->getName(), std::move(dup), (*it)->getIdentifiers());
       gl->addPhase(std::move(phase));
    }
 }

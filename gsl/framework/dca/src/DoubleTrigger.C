@@ -19,7 +19,7 @@
 #include "NumericDataItem.h"
 #include "Simulation.h"
 #include "Service.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "BoolDataItem.h"
 #include "TriggerDataItem.h"
 #include "ServiceDataItem.h"
@@ -37,9 +37,9 @@ DoubleTrigger::DoubleTrigger(Simulation& sim, std::vector<DataItem*> const & arg
       exit(-1);
    }
    std::vector<DataItem*>::const_iterator iter = args.begin();
-   StringDataItem* descriptionDI = dynamic_cast<StringDataItem*>(*iter);
+   CustomStringDataItem* descriptionDI = dynamic_cast<CustomStringDataItem*>(*iter);
    if (descriptionDI == 0) {
-      std::cerr<<"Dynamic cast of DataItem to StringDataItem failed on DoubleTrigger!"<<std::endl;
+      std::cerr<<"Dynamic cast of DataItem to CustomStringDataItem failed on DoubleTrigger!"<<std::endl;
       exit(-1);
    }
    _description = descriptionDI->getString();
@@ -50,9 +50,9 @@ DoubleTrigger::DoubleTrigger(Simulation& sim, std::vector<DataItem*> const & arg
       exit(-1);
    }
    ++iter;
-   StringDataItem* opDI = dynamic_cast<StringDataItem*>(*iter);
+   CustomStringDataItem* opDI = dynamic_cast<CustomStringDataItem*>(*iter);
    if (opDI == 0) {
-      std::cerr<<"Dynamic cast of DataItem to StringDataItem failed on DoubleTrigger!"<<std::endl;
+      std::cerr<<"Dynamic cast of DataItem to CustomStringDataItem failed on DoubleTrigger!"<<std::endl;
       exit(-1);
    }
    _op = opDI->getString();
@@ -162,7 +162,7 @@ bool DoubleTrigger::isLessThanOrEqual()
    return (*_service) <= _criterion;
 }
 
-void DoubleTrigger::duplicate(std::unique_ptr<Trigger>& dup) const
+void DoubleTrigger::duplicate(std::unique_ptr<Trigger>&& dup) const
 {
    dup.reset(new DoubleTrigger(*this));
 }

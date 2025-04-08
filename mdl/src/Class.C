@@ -220,8 +220,7 @@ void Class::addAttributes(const MemberContainer<DataType>& members
 	 std::unique_ptr<DataType> dup;
 	 it->second->duplicate(std::move(dup));
 	 if (dup->isPointer() && suppressPointers) dup->setPointer(false);
- 	 //std::unique_ptr<Attribute> att(new DataTypeAttribute(dup));
- 	 std::unique_ptr<Attribute> att(new DataTypeAttribute(std::move(dup)));
+ 	 std::unique_ptr<Attribute> att = std::make_unique<DataTypeAttribute>(std::move(dup));
 	 att->setAccessType(accessType);
 	 if (add_gpu_attributes)
 	 {//make these data members 'disappear' in GPU
@@ -1308,7 +1307,7 @@ void Class::addDuplicate()
 		 it = _baseClasses.begin(); it != _baseClasses.end(); ++it) {
 	    std::unique_ptr<Method> dupBase(new Method("duplicate", "void"));
 	    dupBase->addParameter("std::unique_ptr<" 
-				   + (*it)->getName() + ">& dup");
+				   + (*it)->getName() + ">&& dup");
 	    dupBase->setFunctionBody(commonBody);
 	    dupBase->setVirtual();
 	    dupBase->setConst();

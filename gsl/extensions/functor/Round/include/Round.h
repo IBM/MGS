@@ -28,9 +28,9 @@ class Round : public CG_RoundBase
       double userExecute(LensContext* CG_c);
       Round();
       virtual ~Round();
-      virtual void duplicate(std::unique_ptr<Round>& dup) const;
-      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_RoundBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<Round>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_RoundBase>&& dup) const;
 };
 
 #endif

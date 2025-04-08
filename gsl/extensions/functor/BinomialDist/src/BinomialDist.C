@@ -48,17 +48,17 @@ BinomialDist::~BinomialDist()
 {
 }
 
-void BinomialDist::duplicate(std::unique_ptr<BinomialDist>& dup) const
+void BinomialDist::duplicate(std::unique_ptr<BinomialDist>&& dup) const
 {
    dup.reset(new BinomialDist(*this));
 }
 
-void BinomialDist::duplicate(std::unique_ptr<Functor>& dup) const
+void BinomialDist::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new BinomialDist(*this));
 }
 
-void BinomialDist::duplicate(std::unique_ptr<CG_BinomialDistBase>& dup) const
+void BinomialDist::duplicate(std::unique_ptr<CG_BinomialDistBase>&& dup) const
 {
    dup.reset(new BinomialDist(*this));
 }

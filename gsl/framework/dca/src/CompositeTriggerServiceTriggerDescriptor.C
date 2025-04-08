@@ -21,7 +21,7 @@
 #include "Trigger.h"
 #include "DataItem.h"
 #include "BoolDataItem.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "UnsignedIntDataItem.h"
 #include "TriggerDataItem.h"
 #include "Queriable.h"
@@ -43,7 +43,7 @@ CompositeTriggerServiceTriggerDescriptor::CompositeTriggerServiceTriggerDescript
    std::vector<std::pair<std::string, DataItem*> > v;
 
    p.first = "Description";
-   p.second = new StringDataItem;
+   p.second = new CustomStringDataItem;
    v.push_back(p);
 
    p.first = "Trigger A";
@@ -55,7 +55,7 @@ CompositeTriggerServiceTriggerDescriptor::CompositeTriggerServiceTriggerDescript
    v.push_back(p);
 
    p.first = "Operator : AND && OR || XOR";
-   p.second = new StringDataItem;
+   p.second = new CustomStringDataItem;
    v.push_back(p);
 
    p.first = "Trigger B";
@@ -147,7 +147,7 @@ Trigger* CompositeTriggerServiceTriggerDescriptor :: getTrigger(NDPairList& ndp)
    }
    else {
       bool descriptionPassed = false;
-      StringDataItem descriptionDI;
+      CustomStringDataItem descriptionDI;
 
       if (itr1 == end) {
 	 descriptionDI.setString(_description);

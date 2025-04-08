@@ -42,13 +42,13 @@ EachSrcPropDstFunctor::EachSrcPropDstFunctor(const EachSrcPropDstFunctor& csf)
      _sourceSet(csf._sourceSet), _nodes(csf._nodes), _slope(csf._slope),
      _transforms(csf._transforms), _coords(csf._coords)
 {
-   if (csf._functor_ap.get()) csf._functor_ap->duplicate(_functor_ap);
+   if (csf._functor_ap.get()) csf._functor_ap->duplicate(std::move(_functor_ap));
    _nodesIter = _nodes.begin();
    _nodesEnd = _nodes.end();
 }
 
 
-void EachSrcPropDstFunctor::duplicate (std::unique_ptr<Functor> &fap) const
+void EachSrcPropDstFunctor::duplicate (std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new EachSrcPropDstFunctor(*this));
 }
@@ -72,7 +72,7 @@ void EachSrcPropDstFunctor::doInitialize(LensContext *c,
     throw SyntaxErrorException(
 			       "Dynamic cast of DataItem to FunctorDataItem failed on EachSrcPropDstFunctor");
   }
-  if (fdi->getFunctor()) fdi->getFunctor()->duplicate(_functor_ap);
+  if (fdi->getFunctor()) fdi->getFunctor()->duplicate(std::move(_functor_ap));
   else {
     throw SyntaxErrorException(
 			       "Bad functor argument passed to EachSrcPropDstFunctor");

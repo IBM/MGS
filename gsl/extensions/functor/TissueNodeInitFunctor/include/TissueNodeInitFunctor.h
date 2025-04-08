@@ -30,9 +30,9 @@ class TissueNodeInitFunctor : public CG_TissueNodeInitFunctorBase, public Tissue
       TissueNodeInitFunctor();
       TissueNodeInitFunctor(TissueNodeInitFunctor const &);
       virtual ~TissueNodeInitFunctor();
-      virtual void duplicate(std::unique_ptr<TissueNodeInitFunctor>& dup) const;
-      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_TissueNodeInitFunctorBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<TissueNodeInitFunctor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_TissueNodeInitFunctorBase>&& dup) const;
       void setTissueFunctor(TissueFunctor* tf) {_tissueFunctor=tf;}
 
    private:

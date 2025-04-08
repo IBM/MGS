@@ -20,7 +20,7 @@
 #include "Simulation.h"
 #include "Service.h"
 #include "NumericDataItem.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "BoolDataItem.h"
 #include "TriggerDataItem.h"
 #include "ServiceDataItem.h"
@@ -38,10 +38,10 @@ BoolTrigger::BoolTrigger(Simulation& sim, std::vector<DataItem*> const& args)
     exit(-1);
   }
   std::vector<DataItem*>::const_iterator iter = args.begin();
-  StringDataItem* descriptionDI = dynamic_cast<StringDataItem*>(*iter);
+  CustomStringDataItem* descriptionDI = dynamic_cast<CustomStringDataItem*>(*iter);
   if (descriptionDI == 0) {
     std::cerr
-        << "Dynamic cast of DataItem to StringDataItem failed on BoolTrigger!"
+        << "Dynamic cast of DataItem to CustomStringDataItem failed on BoolTrigger!"
         << std::endl;
     exit(-1);
   }
@@ -55,10 +55,10 @@ BoolTrigger::BoolTrigger(Simulation& sim, std::vector<DataItem*> const& args)
     exit(-1);
   }
   ++iter;
-  StringDataItem* opDI = dynamic_cast<StringDataItem*>(*iter);
+  CustomStringDataItem* opDI = dynamic_cast<CustomStringDataItem*>(*iter);
   if (opDI == 0) {
     std::cerr
-        << "Dynamic cast of DataItem to StringDataItem failed on BoolTrigger!"
+        << "Dynamic cast of DataItem to CustomStringDataItem failed on BoolTrigger!"
         << std::endl;
     exit(-1);
   }
@@ -137,7 +137,7 @@ bool BoolTrigger::isEqual() { return (*_service) == _criterion; }
 
 bool BoolTrigger::isNotEqual() { return (*_service) != _criterion; }
 
-void BoolTrigger::duplicate(std::unique_ptr<Trigger>& dup) const {
+void BoolTrigger::duplicate(std::unique_ptr<Trigger>&& dup) const {
   dup.reset(new BoolTrigger(*this));
 }
 

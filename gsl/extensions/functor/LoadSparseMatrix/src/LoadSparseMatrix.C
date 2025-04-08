@@ -8,7 +8,7 @@
 
 //#define DBG
 
-void LoadSparseMatrix::userInitialize(LensContext* CG_c, String& filepath, String& filename) 
+void LoadSparseMatrix::userInitialize(LensContext* CG_c, CustomString& filepath, CustomString& filename) 
 {
 }
 
@@ -89,17 +89,17 @@ LoadSparseMatrix::~LoadSparseMatrix()
 {
 }
 
-void LoadSparseMatrix::duplicate(std::unique_ptr<LoadSparseMatrix>& dup) const
+void LoadSparseMatrix::duplicate(std::unique_ptr<LoadSparseMatrix>&& dup) const
 {
    dup.reset(new LoadSparseMatrix(*this));
 }
 
-void LoadSparseMatrix::duplicate(std::unique_ptr<Functor>& dup) const
+void LoadSparseMatrix::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new LoadSparseMatrix(*this));
 }
 
-void LoadSparseMatrix::duplicate(std::unique_ptr<CG_LoadSparseMatrixBase>& dup) const
+void LoadSparseMatrix::duplicate(std::unique_ptr<CG_LoadSparseMatrixBase>&& dup) const
 {
    dup.reset(new LoadSparseMatrix(*this));
 }

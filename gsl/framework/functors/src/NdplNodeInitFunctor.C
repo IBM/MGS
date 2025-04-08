@@ -43,11 +43,11 @@ NdplNodeInitFunctor::NdplNodeInitFunctor()
 NdplNodeInitFunctor::NdplNodeInitFunctor(const NdplNodeInitFunctor& csf)
 {
    if (csf._functor_ap.get())
-      csf._functor_ap->duplicate(_functor_ap);
+      csf._functor_ap->duplicate(std::move(_functor_ap));
 }
 
 
-void NdplNodeInitFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void NdplNodeInitFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new NdplNodeInitFunctor(*this));
 }
@@ -75,7 +75,7 @@ void NdplNodeInitFunctor::doInitialize(LensContext *c,
       throw SyntaxErrorException(
 	 "Functor provided to NdplNodeInitFunctor is not valid!");
    }
-   functor->duplicate(_functor_ap);
+   functor->duplicate(std::move(_functor_ap));
 }
 
 
@@ -97,8 +97,7 @@ void NdplNodeInitFunctor::doExecute(LensContext *c,
       GridLayerDescriptor* gld = (*iter);
       std::vector<NodeDescriptor*>  nodes;
       nodeset->getNodes(nodes, gld);
-      c->sim->getNodeType(
-	 gld->getModelName(), dummy)->getInitializationParameterSet(initPset);
+      c->sim->getNodeType(gld->getModelName(), dummy)->getInitializationParameterSet(std::move(initPset));
       nodesIter = nodes.begin();
       nodesEnd = nodes.end();
       for (; nodesIter != nodesEnd; ++nodesIter) {

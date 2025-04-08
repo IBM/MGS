@@ -43,7 +43,7 @@ ConnectSets2Functor::ConnectSets2Functor()
    _lensConnector = new LensConnector;
 }
 
-void ConnectSets2Functor::duplicate (std::unique_ptr<Functor> &fap) const
+void ConnectSets2Functor::duplicate (std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new ConnectSets2Functor(*this));
 }

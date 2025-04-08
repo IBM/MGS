@@ -37,11 +37,11 @@ InAttrDefaultFunctor::InAttrDefaultFunctor()
 InAttrDefaultFunctor::InAttrDefaultFunctor(const InAttrDefaultFunctor& csf)
 {
    if (csf._pset.get()) {
-      csf._pset->duplicate(_pset);
+      csf._pset->duplicate(std::move(_pset));
    }
 }
 
-void InAttrDefaultFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void InAttrDefaultFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new InAttrDefaultFunctor(*this));
 }
@@ -66,7 +66,7 @@ void InAttrDefaultFunctor::doExecute(LensContext *c,
    std::unique_ptr<ParameterSet> pset;
 
    NodeType *nt = cc->destinationNode->getGridLayerDescriptor()->getNodeType();
-   nt->getInAttrParameterSet(pset);
+   nt->getInAttrParameterSet(std::move(pset));
 
    ParameterSetDataItem *psdi= new ParameterSetDataItem();
    psdi->setParameterSet(pset);

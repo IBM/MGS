@@ -37,11 +37,11 @@ NdplEdgeInitFunctor::NdplEdgeInitFunctor()
 NdplEdgeInitFunctor::NdplEdgeInitFunctor(const NdplEdgeInitFunctor& csf)
 {
    if (csf._functor_ap.get())
-      csf._functor_ap->duplicate(_functor_ap);
+      csf._functor_ap->duplicate(std::move(_functor_ap));
 }
 
 
-void NdplEdgeInitFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void NdplEdgeInitFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new NdplEdgeInitFunctor(*this));
 }
@@ -69,7 +69,7 @@ void NdplEdgeInitFunctor::doInitialize(LensContext *c,
       throw SyntaxErrorException(
 	 "Functor provided to NdplEdgeInitFunctor is not valid");
    }
-   functor->duplicate(_functor_ap);
+   functor->duplicate(std::move(_functor_ap));
 }
 
 

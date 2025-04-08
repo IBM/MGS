@@ -6,7 +6,7 @@
 #include <memory>
 #include <fstream>
 
-void LoadMatrix::userInitialize(LensContext* CG_c, String& filename, int& rows, int& cols) 
+void LoadMatrix::userInitialize(LensContext* CG_c, CustomString& filename, int& rows, int& cols) 
 {
 }
 
@@ -60,17 +60,17 @@ LoadMatrix::~LoadMatrix()
 {
 }
 
-void LoadMatrix::duplicate(std::unique_ptr<LoadMatrix>& dup) const
+void LoadMatrix::duplicate(std::unique_ptr<LoadMatrix>&& dup) const
 {
    dup.reset(new LoadMatrix(*this));
 }
 
-void LoadMatrix::duplicate(std::unique_ptr<Functor>& dup) const
+void LoadMatrix::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new LoadMatrix(*this));
 }
 
-void LoadMatrix::duplicate(std::unique_ptr<CG_LoadMatrixBase>& dup) const
+void LoadMatrix::duplicate(std::unique_ptr<CG_LoadMatrixBase>&& dup) const
 {
    dup.reset(new LoadMatrix(*this));
 }

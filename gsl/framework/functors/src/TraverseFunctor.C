@@ -26,7 +26,7 @@ TraverseFunctor::TraverseFunctor()
 }
 
 
-void TraverseFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void TraverseFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new TraverseFunctor(*this));
 }

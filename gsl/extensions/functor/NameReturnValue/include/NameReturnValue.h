@@ -25,13 +25,13 @@
 class NameReturnValue : public CG_NameReturnValueBase
 {
    public:
-      void userInitialize(LensContext* CG_c, String& s, Functor*& f);
+      void userInitialize(LensContext* CG_c, CustomString& s, Functor*& f);
       std::unique_ptr<NDPairList> userExecute(LensContext* CG_c);
       NameReturnValue();
       virtual ~NameReturnValue();
-      virtual void duplicate(std::unique_ptr<NameReturnValue>& dup) const;
-      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_NameReturnValueBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<NameReturnValue>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_NameReturnValueBase>&& dup) const;
 };
 
 #endif

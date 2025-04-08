@@ -157,17 +157,17 @@ BidirectConnectNodeSetsFunctor::~BidirectConnectNodeSetsFunctor()
 {
 }
 
-void BidirectConnectNodeSetsFunctor::duplicate(std::unique_ptr<BidirectConnectNodeSetsFunctor>& dup) const
+void BidirectConnectNodeSetsFunctor::duplicate(std::unique_ptr<BidirectConnectNodeSetsFunctor>&& dup) const
 {
    dup.reset(new BidirectConnectNodeSetsFunctor(*this));
 }
 
-void BidirectConnectNodeSetsFunctor::duplicate(std::unique_ptr<Functor>& dup) const
+void BidirectConnectNodeSetsFunctor::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new BidirectConnectNodeSetsFunctor(*this));
 }
 
-void BidirectConnectNodeSetsFunctor::duplicate(std::unique_ptr<CG_BidirectConnectNodeSetsFunctorBase>& dup) const
+void BidirectConnectNodeSetsFunctor::duplicate(std::unique_ptr<CG_BidirectConnectNodeSetsFunctorBase>&& dup) const
 {
    dup.reset(new BidirectConnectNodeSetsFunctor(*this));
 }

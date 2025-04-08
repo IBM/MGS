@@ -18,7 +18,7 @@
 #include "UnsignedIntDataItem.h"
 #include "Service.h"
 #include "Simulation.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "ServiceDataItem.h"
 #include "IntDataItem.h"
 #include "UnsignedIntDataItem.h"
@@ -44,7 +44,7 @@ UnsignedTriggerDescriptor::UnsignedTriggerDescriptor(Simulation& s)
    std::vector<std::pair<std::string, DataItem*> > v;
 
    p.first = "Description";
-   p.second = new StringDataItem;
+   p.second = new CustomStringDataItem;
    v.push_back(p);
 
    p.first = "Predicate";
@@ -52,7 +52,7 @@ UnsignedTriggerDescriptor::UnsignedTriggerDescriptor(Simulation& s)
    v.push_back(p);
 
    p.first = "Operator :  == < > != <= >=";
-   p.second = new StringDataItem;
+   p.second = new CustomStringDataItem;
    v.push_back(p);
 
    p.first = "Criterion";
@@ -126,7 +126,7 @@ Trigger* UnsignedTriggerDescriptor::getTrigger(NDPairList& ndp)
    else {
       
       bool descriptionPassed = false;
-      StringDataItem descriptionDI;
+      CustomStringDataItem descriptionDI;
 
       if (itr == end) {
 	 descriptionDI.setString(_description);

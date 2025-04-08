@@ -27,8 +27,9 @@ CommandLine::CommandLine()
 
 CommandLine::CommandLine(CommandLine& cl) 
    : _fileName(cl._fileName), _static(cl._static), 
-   _printWarning(cl._printWarning), _includePath(cl._includePath),
-   _skipIncludes(cl._skipIncludes)
+   _printWarning(cl._printWarning),
+   _skipIncludes(cl._skipIncludes),
+   _includePath(cl._includePath)
 {
 }
 
@@ -54,7 +55,7 @@ bool CommandLine::parse(int argc, char** argv)
    try {
       for (Parser::ParameterVector::size_type i = 0; i < parameterVector.size(); i++) {
          Option option = parameterVector[i].getOption();
-         Parser::String value = parameterVector[i].getValue();
+         Parser::CustomString value = parameterVector[i].getValue();
          if (option == Option::OPTION_NONE) {
             std::cout << "The input MDL File Name is " << value << "\n";
             _fileName = value;

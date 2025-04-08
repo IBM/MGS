@@ -104,7 +104,7 @@ void ConstantBase::copyOwnedHeap(const ConstantBase& rv)
 {
    if (rv._publisher) {
       std::unique_ptr<Publisher> dup;
-      rv._publisher->duplicate(dup);
+      rv._publisher->duplicate(std::move(dup));
       _publisher = dup.release();
    } else {
       _publisher = 0;

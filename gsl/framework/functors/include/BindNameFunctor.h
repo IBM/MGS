@@ -30,7 +30,7 @@ class BindNameFunctor: public NDPairListFunctor
       typedef std::pair<std::string, DataItem*> NDPairGenerator;
       BindNameFunctor();
       BindNameFunctor(const BindNameFunctor &);
-      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
       virtual ~BindNameFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 

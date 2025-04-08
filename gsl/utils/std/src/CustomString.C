@@ -16,20 +16,20 @@
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
-#include "String.h"
+#include "CustomString.h"
 #include <iostream>
 #include <cstdlib>
 #include <stdio.h>
 //#include <cstring>
 
 // TUAN: should get rid of char*
-//      we can provide String class wrapper to std::string class
+//      we can provide CustomString class wrapper to std::string class
 
 // class-global constant intialization
-unsigned int String::AllocIncr = 16;
+unsigned int CustomString::AllocIncr = 16;
 
 // private function to shrink the size of an allocated string
-void String::shrink() {
+void CustomString::shrink() {
   char* temp;
   if ((_capacity - _size) > (AllocIncr * 1.5)) {  // Avoid the border condition
     _capacity = ((_size + AllocIncr - 1) / AllocIncr) * AllocIncr;
@@ -42,14 +42,14 @@ void String::shrink() {
 }
 
 // constructor
-String::String() {
+CustomString::CustomString() {
   _size = 0;
   _capacity = AllocIncr;
   _data = new char[_capacity];
   _data[0] = '\x00';
 }
 
-String::String(const String& str) {
+CustomString::CustomString(const CustomString& str) {
   _size = str._size;
   _capacity = str._capacity;
   //reset();
@@ -58,7 +58,7 @@ String::String(const String& str) {
   std::copy(str._data, str._data + _size, _data);
 }
 
-String::String(const char* cstr) {
+CustomString::CustomString(const char* cstr) {
   int length = 0;
   while (cstr[length] != '\0')  //  remove ;
   {
@@ -73,7 +73,7 @@ String::String(const char* cstr) {
   std::copy(cstr, cstr + _size, _data);
 }
 
-String::String(char fillCh, unsigned int count) {
+CustomString::CustomString(char fillCh, unsigned int count) {
   _capacity = ((count + AllocIncr - 1) / AllocIncr) * AllocIncr;
   _size = _capacity;
   //reset();
@@ -83,9 +83,9 @@ String::String(char fillCh, unsigned int count) {
 }
 
 // destructor
-String::~String() { reset(); }
+CustomString::~CustomString() { reset(); }
 
-inline void String::reset()
+inline void CustomString::reset()
 {
   /* free all memory
    */
@@ -96,18 +96,18 @@ inline void String::reset()
   }
 }
 // value return methods
-unsigned int String::size() { return _size; }
+unsigned int CustomString::size() { return _size; }
 
-unsigned int String::capacity() { return _capacity; }
+unsigned int CustomString::capacity() { return _capacity; }
 
 // Function to return a blank string
-String empty() {
-  static String emptyStr;
+CustomString empty() {
+  static CustomString emptyStr;
   return emptyStr;
 }
 
-// copy String to c-string method
-void String::copy(char* cstr, unsigned int max) {
+// copy CustomString to c-string method
+void CustomString::copy(char* cstr, unsigned int max) {
   unsigned int copyLen;
 
   if (max == 0) {
@@ -123,8 +123,8 @@ void String::copy(char* cstr, unsigned int max) {
   cstr[copyLen] = '\x00';
 }
 
-// create a c-string from String method
-const char* String::c_str() {
+// create a c-string from CustomString method
+const char* CustomString::c_str() {
   if (_size == _capacity) {
     char* temp;
     _capacity += AllocIncr;
@@ -140,7 +140,7 @@ const char* String::c_str() {
 }
 
 // assignment method
-String& String::operator=(const String& str) {
+CustomString& CustomString::operator=(const CustomString& str) {
   _size = str._size;
   _capacity = str._capacity;
   delete[] _data;
@@ -151,10 +151,10 @@ String& String::operator=(const String& str) {
 }
 
 // concatenation methods
-String operator+(const String& str1, const String& str2) {
+CustomString operator+(const CustomString& str1, const CustomString& str2) {
   unsigned long totalLen;
   unsigned int newLen, newSiz, copyLen;
-  String tempStr;
+  CustomString tempStr;
   char* temp;
 
   totalLen = str1._size + str2._size;
@@ -183,7 +183,7 @@ String operator+(const String& str1, const String& str2) {
   return tempStr;
 }
 
-String& String::operator+=(const String& str) {
+CustomString& CustomString::operator+=(const CustomString& str) {
   unsigned long totalLen;
   unsigned int newLen, newSiz, copyLen;
   char* temp;
@@ -212,31 +212,31 @@ String& String::operator+=(const String& str) {
 }
 
 // comparison methods
-int String::operator<(const String& str) const {
+int CustomString::operator<(const CustomString& str) const {
   return (compare(str) == SC_LESS);
 }
 
-int String::operator>(const String& str) const {
+int CustomString::operator>(const CustomString& str) const {
   return (compare(str) == SC_GREATER);
 }
 
-int String::operator<=(const String& str) const {
+int CustomString::operator<=(const CustomString& str) const {
   return (compare(str) != SC_GREATER);
 }
 
-int String::operator>=(const String& str) const {
+int CustomString::operator>=(const CustomString& str) const {
   return (compare(str) != SC_LESS);
 }
 
-int String::operator==(const String& str) const {
+int CustomString::operator==(const CustomString& str) const {
   return (compare(str) == SC_EQUAL);
 }
 
-int String::operator!=(const String& str) const {
+int CustomString::operator!=(const CustomString& str) const {
   return (compare(str) != SC_EQUAL);
 }
 
-int String::compare(const String& str) const {
+int CustomString::compare(const CustomString& str) const {
   unsigned int index, minIndex;
   char ch1, ch2;
 
@@ -281,7 +281,7 @@ int String::compare(const String& str) const {
 }
 
 // substring search methods
-int String::find(const String& str, unsigned int& pos) {
+int CustomString::find(const CustomString& str, unsigned int& pos) {
   char* tempStr1, *tempStr2;
   unsigned int lastPos, searchLen, tempPos;
   bool found;
@@ -326,7 +326,7 @@ int String::find(const String& str, unsigned int& pos) {
 }
 
 // substring deletion method
-void String::del(unsigned int pos, unsigned int count) {
+void CustomString::del(unsigned int pos, unsigned int count) {
   unsigned int copyPos;
 
   if (pos > _size) {
@@ -350,7 +350,7 @@ void String::del(unsigned int pos, unsigned int count) {
 }
 
 // substring insertion methods
-void String::insert(unsigned int pos, char ch) {
+void CustomString::insert(unsigned int pos, char ch) {
   char* temp;
 
   if (pos > _size) {
@@ -378,7 +378,7 @@ void String::insert(unsigned int pos, char ch) {
   ++_size;
 }
 
-void String::insert(unsigned int pos, const String& str) {
+void CustomString::insert(unsigned int pos, const CustomString& str) {
   unsigned int sLen = str._size;
 
   if (sLen > 0) {
@@ -390,11 +390,11 @@ void String::insert(unsigned int pos, const String& str) {
 }
 
 // append method
-void String::append(char ch) { insert(size(), ch); }
+void CustomString::append(char ch) { insert(size(), ch); }
 
 // substring retrieval method
-String String::subStr(unsigned int start, unsigned int count) {
-  String tempStr;
+CustomString CustomString::subStr(unsigned int start, unsigned int count) {
+  CustomString tempStr;
   char* temp;
 
   if ((start < _size) && (count > 0)) {
@@ -419,7 +419,7 @@ String String::subStr(unsigned int start, unsigned int count) {
 }
 
 // character retrieval method
-char String::operator[](unsigned int pos) {
+char CustomString::operator[](unsigned int pos) {
   if (pos >= _size) {
     return '\x00';
   }
@@ -428,8 +428,8 @@ char String::operator[](unsigned int pos) {
 }
 
 // case-modification methods
-String String::toUpper() {
-  String tempStr = *this;
+CustomString CustomString::toUpper() {
+  CustomString tempStr = *this;
 
   for (unsigned int Pos = 0; Pos < _size; ++Pos) {
     tempStr._data[Pos] = toupper(tempStr._data[Pos]);
@@ -438,8 +438,8 @@ String String::toUpper() {
   return tempStr;
 }
 
-String String::toLower() {
-  String tempStr = *this;
+CustomString CustomString::toLower() {
+  CustomString tempStr = *this;
 
   for (unsigned int pos = 0; pos < _size; ++pos) {
     tempStr._data[pos] = tolower(tempStr._data[pos]);
@@ -449,7 +449,7 @@ String String::toLower() {
 }
 
 // stream I/O methods
-std::istream& operator>>(std::istream& input, String& str) {
+std::istream& operator>>(std::istream& input, CustomString& str) {
   char buffer;
 
   str = empty();
@@ -464,7 +464,7 @@ std::istream& operator>>(std::istream& input, String& str) {
   return input;
 }
 
-std::ostream& operator<<(std::ostream& output, const String& str) {
+std::ostream& operator<<(std::ostream& output, const CustomString& str) {
   unsigned int index;
 
   for (index = 0; index < str._size; ++index) output << str._data[index];

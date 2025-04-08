@@ -25,7 +25,7 @@ class PrintFunctor: public Functor
 {
    public:
       PrintFunctor();
-      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
       virtual ~PrintFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 

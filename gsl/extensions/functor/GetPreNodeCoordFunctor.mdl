@@ -1,5 +1,5 @@
 #ifndef GetPreNodeCoordFunctor_MDL
-#define GetPreNodeCoordCoordFunctor_MDL
+#define GetPreNodeCoordFunctor_MDL
 
 Framework Functor GetPreNodeCoordFunctor {
    Initialize();

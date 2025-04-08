@@ -13,67 +13,67 @@
 //
 // =================================================================
 
-#include "StringDataItem.h"
-#include "String.h"
+#include "CustomStringDataItem.h"
+#include "CustomString.h"
 #include <string>
 #include <sstream>
 #define DOUBLE_MANTISSA_MAX = 2251799813685250;
 #define DOUBLE_MANTISSA_MIN (- DOUBLE_MANTISSA_MAX -1)
 
 // Type
-const char* StringDataItem::_type = "STRING";
+const char* CustomStringDataItem::_type = "STRING";
 
 // Constructors
-StringDataItem::StringDataItem(const std::string& data)
+CustomStringDataItem::CustomStringDataItem(const std::string& data)
    : _data(data)
 {
 }
 
-StringDataItem::StringDataItem(String& data)
+CustomStringDataItem::CustomStringDataItem(CustomString& data)
 {
    _data = data.c_str();
 }
 
 
-StringDataItem::StringDataItem(const StringDataItem& DI)
+CustomStringDataItem::CustomStringDataItem(const CustomStringDataItem& DI)
 {
    _data = DI._data;
 }
 
 
 // Utility methods
-void StringDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
+void CustomStringDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
-   r_aptr.reset(static_cast<DataItem*> (new StringDataItem(*this)));
+   r_aptr.reset(static_cast<DataItem*> (new CustomStringDataItem(*this)));
 }
 
 
-StringDataItem& StringDataItem::operator=(const StringDataItem& DI)
+CustomStringDataItem& CustomStringDataItem::operator=(const CustomStringDataItem& DI)
 {
    _data = DI.getString();
    return(*this);
 }
 
 
-const char* StringDataItem::getType() const
+const char* CustomStringDataItem::getType() const
 {
    return _type;
 }
 
 
 // Singlet methods
-std::string StringDataItem::getString(Error* error) const
+std::string CustomStringDataItem::getString(Error* error) const
 {
    return _data;
 }
 
-String StringDataItem::getLensString(Error* error) const
+CustomString CustomStringDataItem::getLensString(Error* error) const
 {
-   return String(_data.c_str());
+   return CustomString(_data.c_str());
 }
 
 
-void StringDataItem::setString(std::string i, Error* error)
+void CustomStringDataItem::setString(std::string i, Error* error)
 {
    _data = i;
 }

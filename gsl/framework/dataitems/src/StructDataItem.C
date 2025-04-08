@@ -83,7 +83,7 @@ void StructDataItem::copyOwnedHeap(const StructDataItem& rv)
 {
    if (rv._data) {
       std::unique_ptr<Struct> dup;
-      rv._data->duplicate(dup);
+      rv._data->duplicate(std::move(dup));
       _data = dup.release();
    } else {
       _data = 0;

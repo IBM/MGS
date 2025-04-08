@@ -26,7 +26,7 @@ class RangePassThruFunctor: public Functor
 {
    public:
       RangePassThruFunctor();
-      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
       virtual ~RangePassThruFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 

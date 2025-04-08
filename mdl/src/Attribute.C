@@ -144,7 +144,7 @@ std::string Attribute::getCopyString(const std::string& tab)
 	       << ");\n";
 	 } else {
 	    os << tab << TAB << "std::unique_ptr< " << getType() << " > dup;\n"
-	       << tab << TAB << "rv." << getName() << "->duplicate(dup);\n"
+	       << tab << TAB << "rv." << getName() << "->duplicate(std::move(dup));\n"
 	       << tab << TAB << getName() << " = dup.release();\n";
 	 }
 	 os << tab << "} else {\n"

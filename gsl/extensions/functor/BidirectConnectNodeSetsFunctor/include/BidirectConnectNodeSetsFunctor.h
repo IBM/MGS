@@ -32,9 +32,9 @@ class BidirectConnectNodeSetsFunctor : public CG_BidirectConnectNodeSetsFunctorB
       void userExecute(LensContext* CG_c, NodeSet*& source, NodeSet*& destination, Functor*& sampling, Functor*& sourceOutAttr, Functor*& destinationInAttr, Functor*& destinationOutAttr, Functor*& sourceInAttr);
       BidirectConnectNodeSetsFunctor();
       virtual ~BidirectConnectNodeSetsFunctor();
-      virtual void duplicate(std::unique_ptr<BidirectConnectNodeSetsFunctor>& dup) const;
-      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_BidirectConnectNodeSetsFunctorBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<BidirectConnectNodeSetsFunctor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_BidirectConnectNodeSetsFunctorBase>&& dup) const;
    private:
       NoConnectConnector* _noConnector;
       GranuleConnector* _granuleConnector;

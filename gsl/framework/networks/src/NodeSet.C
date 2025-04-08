@@ -322,7 +322,7 @@ void NodeSet::setIndices(const std::vector<int>& indices)
    _allIndices = false;
 }
 
-void NodeSet::duplicate(std::unique_ptr<NodeSet>& dup) const
+void NodeSet::duplicate(std::unique_ptr<NodeSet>&& dup) const
 {
    dup.reset(new NodeSet(*this));
 }

@@ -44,14 +44,14 @@ class NodeCompCategoryBase : public DistributableCompCategoryBase, public NodeTy
 
       // NodeType functions to be implemented
       virtual void getNodeAccessor(
-	 std::unique_ptr<NodeAccessor>& nodeAccessor, 
+	 std::unique_ptr<NodeAccessor>&& nodeAccessor, 
 	 GridLayerDescriptor* gridLayerDescriptor) = 0;
       virtual void getInitializationParameterSet(
-	 std::unique_ptr<ParameterSet>& initPSet) = 0;
+	 std::unique_ptr<ParameterSet>&& initPSet) = 0;
       virtual void getInAttrParameterSet(
-	 std::unique_ptr<ParameterSet>& inAttrPSet) = 0;
+	 std::unique_ptr<ParameterSet>&& inAttrPSet) = 0;
       virtual void getOutAttrParameterSet(
-	 std::unique_ptr<ParameterSet>& outAttrPSet) = 0;
+	 std::unique_ptr<ParameterSet>&& outAttrPSet) = 0;
       virtual std::string getModelName() {
 	return _modelName;
       }

@@ -29,9 +29,9 @@ class SrcRefPeakedWeightModifier : public CG_SrcRefPeakedWeightModifierBase
       std::unique_ptr<ParameterSet> userExecute(LensContext* CG_c);
       SrcRefPeakedWeightModifier();
       virtual ~SrcRefPeakedWeightModifier();
-      virtual void duplicate(std::unique_ptr<SrcRefPeakedWeightModifier>& dup) const;
-      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_SrcRefPeakedWeightModifierBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<SrcRefPeakedWeightModifier>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_SrcRefPeakedWeightModifierBase>&& dup) const;
 
       float _sigma;
       float _max;

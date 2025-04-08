@@ -44,7 +44,7 @@ EachAvgFunctor::EachAvgFunctor(const EachAvgFunctor& csf)
    _nodesEnd = _nodes.end();
 }
 
-void EachAvgFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void EachAvgFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new EachAvgFunctor(*this));
 }

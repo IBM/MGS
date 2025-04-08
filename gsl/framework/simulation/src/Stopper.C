@@ -30,7 +30,7 @@ void Stopper::event(Trigger* trigger, NDPairList* ndPairList)
 
 TriggerableBase::EventType Stopper::createTriggerableCaller(
    const std::string& functionName, NDPairList* ndpList,
-   std::unique_ptr<TriggerableCaller>& triggerableCaller)
+   std::unique_ptr<TriggerableCaller>&& triggerableCaller)
 {
    if (functionName != "event") {
       throw SyntaxErrorException(

@@ -33,7 +33,7 @@ class ConnectionScriptFunctor: public ConnectorFunctor
       ConnectionScriptFunctor(C_connection_script_definition_body *, 
 			      std::list<C_parameter_type> *);
       ConnectionScriptFunctor(const ConnectionScriptFunctor&);
-      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
       virtual ~ConnectionScriptFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 

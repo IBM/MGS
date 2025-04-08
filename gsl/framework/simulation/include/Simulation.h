@@ -20,7 +20,7 @@
 #define SIMULATION_H
 #include "Copyright.h"
 
-#ifndef LINUX
+#if !defined(LINUX) && !defined(DARWIN)
 #include <sys/processor.h>
 #include <sys/thread.h>
 #endif

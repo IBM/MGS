@@ -75,7 +75,7 @@ void FunctorDataItem::setFunctor(Functor *f, Error* error)
 {
    delete _data;
    std::unique_ptr<Functor> fap;
-   f->duplicate(fap);
+   f->duplicate(std::move(fap));
    _data = fap.release();
 }
 

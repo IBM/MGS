@@ -35,9 +35,9 @@ class TissueProbeFunctor : public CG_TissueProbeFunctorBase, public TissueElemen
       TissueProbeFunctor();
       TissueProbeFunctor(TissueProbeFunctor*);
       virtual ~TissueProbeFunctor();
-      virtual void duplicate(std::unique_ptr<TissueProbeFunctor>& dup) const;
-      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_TissueProbeFunctorBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<TissueProbeFunctor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_TissueProbeFunctorBase>&& dup) const;
       void setTissueFunctor(TissueFunctor* tf) {_tissueFunctor=tf;}
 
    private:

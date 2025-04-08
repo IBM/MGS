@@ -24,7 +24,7 @@ class OpenCircleLayoutFunctor: public LayoutFunctor
 {
    public:
       OpenCircleLayoutFunctor();
-      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
       virtual ~OpenCircleLayoutFunctor();
 
    private:

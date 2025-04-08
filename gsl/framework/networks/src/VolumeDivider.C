@@ -22,7 +22,7 @@
 #include "Simulation.h"
 #include "DistributableCompCategoryBase.h"
 #include "DataItem.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "ArrayDataItem.h"
 #include "IntArrayDataItem.h"
 #include "NumericDataItem.h"

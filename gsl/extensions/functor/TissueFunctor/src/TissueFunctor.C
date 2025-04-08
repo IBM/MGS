@@ -31,7 +31,7 @@
 #include "FloatDataItem.h"
 #include "FloatArrayDataItem.h"
 #include "StructDataItem.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "DataItemArrayDataItem.h"
 #include "ConstantDataItem.h"
 #include "Struct.h"
@@ -47,7 +47,7 @@
 #include "IntArrayDataItem.h"
 #include "DoubleDataItem.h"
 #include "DoubleArrayDataItem.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "StringArrayDataItem.h"
 #include <mpi.h>
 #include <typeinfo>
@@ -9013,17 +9013,17 @@ TissueFunctor::~TissueFunctor()
 #endif
 }
 
-void TissueFunctor::duplicate(std::unique_ptr<TissueFunctor>& dup) const
+void TissueFunctor::duplicate(std::unique_ptr<TissueFunctor>&& dup) const
 {
   dup.reset(new TissueFunctor(*this));
 }
 
-void TissueFunctor::duplicate(std::unique_ptr<Functor>& dup) const
+void TissueFunctor::duplicate(std::unique_ptr<Functor>&& dup) const
 {
   dup.reset(new TissueFunctor(*this));
 }
 
-void TissueFunctor::duplicate(std::unique_ptr<CG_TissueFunctorBase>& dup) const
+void TissueFunctor::duplicate(std::unique_ptr<CG_TissueFunctorBase>&& dup) const
 {
   dup.reset(new TissueFunctor(*this));
 }

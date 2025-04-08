@@ -174,7 +174,7 @@ void VariableBase::copyOwnedHeap(const VariableBase& rv)
 {
    if (rv._publisher) {
       std::unique_ptr<Publisher> dup;
-      rv._publisher->duplicate(dup);
+      rv._publisher->duplicate(std::move(dup));
       _publisher = dup.release();
    } else {
       _publisher = 0;

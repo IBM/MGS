@@ -78,9 +78,9 @@ class TissueFunctor : public CG_TissueFunctorBase
   TissueFunctor();
   TissueFunctor(TissueFunctor const&);
   virtual ~TissueFunctor();
-  virtual void duplicate(std::unique_ptr<TissueFunctor>& dup) const;
-  virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-  virtual void duplicate(std::unique_ptr<CG_TissueFunctorBase>& dup) const;
+  virtual void duplicate(std::unique_ptr<TissueFunctor>&& dup) const;
+  virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+  virtual void duplicate(std::unique_ptr<CG_TissueFunctorBase>&& dup) const;
 
   private:
   dyn_var_t getFractionCapsuleVolumeFromPre(ComputeBranch* branch);
@@ -138,7 +138,7 @@ class TissueFunctor : public CG_TissueFunctorBase
   ShallowArray<int> doLayoutHybrid(LensContext* lc);
   void doNodeInit(LensContext* lc);
   void doConnector(LensContext* lc);
-  void doProbe(LensContext* lc, std::unique_ptr<NodeSet>& rval);
+  void doProbe(LensContext* lc, std::unique_ptr<NodeSet>&& rval);
   //Zipper purpose
   Grid* doProbe(LensContext* lc, std::vector<NodeDescriptor*>& nodeDescriptors);
   Grid* doProbe_Number(LensContext* lc, std::vector<NodeDescriptor*>& nodeDescriptors,

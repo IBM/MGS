@@ -33,7 +33,7 @@ class NDPairList
       NDPairList();
       NDPairList(const NDPairList& rv);
       NDPairList& operator=(const NDPairList& rv);
-      virtual void duplicate(std::unique_ptr<NDPairList>& dup) const;
+      virtual void duplicate(std::unique_ptr<NDPairList>&& dup) const;
       virtual ~NDPairList();
 
       unsigned size() {

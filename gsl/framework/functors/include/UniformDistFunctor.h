@@ -23,7 +23,7 @@ class UniformDistFunctor: public Functor
 {
    public:
       UniformDistFunctor();
-      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
       virtual ~UniformDistFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 

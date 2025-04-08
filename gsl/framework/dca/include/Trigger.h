@@ -40,7 +40,7 @@ class Trigger
       virtual void addParallelTriggerableCaller(
 	 std::unique_ptr<TriggerableCaller>& triggerableCaller)=0;
       virtual std::string getDescription()=0;
-      virtual void duplicate(std::unique_ptr<Trigger>& dup) const = 0;
+      virtual void duplicate(std::unique_ptr<Trigger>&& dup) const = 0;
       virtual ~Trigger() {}
       virtual void setNumOfThreads(int numOfThreads) = 0;
       virtual std::deque<WorkUnit*>& getWorkUnits() = 0;

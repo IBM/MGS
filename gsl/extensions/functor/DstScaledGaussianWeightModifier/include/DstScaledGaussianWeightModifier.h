@@ -29,9 +29,9 @@ class DstScaledGaussianWeightModifier : public CG_DstScaledGaussianWeightModifie
       std::unique_ptr<ParameterSet> userExecute(LensContext* CG_c);
       DstScaledGaussianWeightModifier();
       virtual ~DstScaledGaussianWeightModifier();
-      virtual void duplicate(std::unique_ptr<DstScaledGaussianWeightModifier>& dup) const;
-      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_DstScaledGaussianWeightModifierBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<DstScaledGaussianWeightModifier>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_DstScaledGaussianWeightModifierBase>&& dup) const;
 
       float _sigma;
       float _max;

@@ -37,11 +37,11 @@ OutAttrDefaultFunctor::OutAttrDefaultFunctor()
 OutAttrDefaultFunctor::OutAttrDefaultFunctor(const OutAttrDefaultFunctor& csf)
 {
    if (csf._pset.get()) {
-      csf._pset->duplicate(_pset);
+      csf._pset->duplicate(std::move(_pset));
    }
 }
 
-void OutAttrDefaultFunctor::duplicate (std::unique_ptr<Functor> &fap) const
+void OutAttrDefaultFunctor::duplicate (std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new OutAttrDefaultFunctor(*this));
 }
@@ -65,7 +65,7 @@ void OutAttrDefaultFunctor::doExecute(
    ConnectionContext *cc = c->connectionContext;
    std::unique_ptr<ParameterSet> pset;
    NodeType *nt = cc->sourceNode->getGridLayerDescriptor()->getNodeType();
-   nt->getOutAttrParameterSet(pset);
+   nt->getOutAttrParameterSet(std::move(pset));
 
    ParameterSetDataItem *psdi= new ParameterSetDataItem();
    psdi->setParameterSet(pset);

@@ -192,10 +192,12 @@ bool SimInitializer::internalExecute(int argc, char** argv)
    char command[256];
    if (mkstemp(temporaryName)) {                                 // added by Jizhu Lu on 01/10/2006
 #ifdef LINUX
-     sprintf(command,"cpp %s %s", infilename, temporaryName);
+     sprintf(command,"cpp -traditional-cpp %s %s", infilename, temporaryName);
 #endif
 #ifdef AIX
-     sprintf(command,"/usr/gnu/bin/gcpp %s %s", infilename, temporaryName);
+     sprintf(command,"/usr/gnu/bin/gcpp -traditional-cpp %s %s", infilename, temporaryName);
+#elif defined(DARWIN)
+     sprintf(command,"cpp -traditional-cpp %s %s", infilename, temporaryName);
 #endif
      int s=system(command);
      processed=true;
@@ -292,14 +294,10 @@ bool SimInitializer::internalExecute(int argc, char** argv)
      {
        sim->benchmark_timelapsed("Preparation");
      } 
-     if (sim->getRank()==0) printf("\nThe first execution of the parse tree begins.\n\n");
+     if (sim->getRank()==0) printf("The first execution of the parse tree begins.\n\n");
      if (sim->getRank()==0 && sim->isCostAggregationPass()) std::cout << "Aggregating costs in granule graph." << std::endl << std::endl;
 
      firstPassContext->execute();
-     if (sim->getRank()==0)
-     {
-       sim->benchmark_timelapsed("Preparation (firstPassContext->execute())");
-     } 
      if (firstPassContext->isError()) {
        if (sim->getRank()==0) printf("Quitting due to errors...\n\n");
        return false;
@@ -310,31 +308,15 @@ bool SimInitializer::internalExecute(int argc, char** argv)
 #ifdef USING_BLUEGENE
      if (sim->getRank()==0) printf("Available memory after simulation initialization first pass: %lf MB.\n\n",AvailableMemory());
 #endif 
-       if (sim->getRank()==0)
-       {
-	 sim->benchmark_timelapsed_diff(" ...setSeparationGranules + setGraph ())");
-       } 
      
      if (commandLine.getSimulate()) {
        if (sim->getRank()==0) printf("Resetting simulation.\n\n");
        sim->resetInternals();
        sim->setSimulatePass();
-       if (sim->getRank()==0)
-       {
-	 sim->benchmark_timelapsed_diff(" ... resetInternals, setSimulatePass())");
-       } 
        context->addCurrentRepertoire(sim->getRootRepertoire());
-       if (sim->getRank()==0)
-       {
-	 sim->benchmark_timelapsed_diff(" ... addCurrentRepertoire())");
-       } 
        if (sim->getRank()==0) printf("The second execution of the parse tree begins.\n\n");
        context->execute();
      }
-     if (sim->getRank()==0)
-     {
-       sim->benchmark_timelapsed("Preparation (context->execute())");
-     } 
    /*
    }
    catch (SyntaxErrorException& e) {

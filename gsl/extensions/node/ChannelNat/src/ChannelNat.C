@@ -30,7 +30,7 @@ GSA ADP Schedule Contract with IBM Corp.
 #include "NumberUtils.h"
 #include "MaxComputeOrder.h"
 #include "Python.h"
-#include "String.h"
+#include "CustomString.h"
 
 #define SMALL 1.0E-6
 #define decimal_places 6
@@ -834,7 +834,7 @@ void ChannelNat::initialize(RNG& rng)
       (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA))
   {
     std::ostringstream os;
-    std::string data_path(((String)getSharedMembers().data_path).c_str()); //#, getSharedMembers().data_path.size());
+    std::string data_path(((CustomString)getSharedMembers().data_path).c_str()); //#, getSharedMembers().data_path.size());
     const char* title="gslparser";
     Py_SetProgramName((char*)title);  /* optional but recommended */
     Py_Initialize();

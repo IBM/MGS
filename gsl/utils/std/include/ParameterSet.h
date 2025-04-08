@@ -26,7 +26,7 @@ class ParameterSet
 {
    public:
       enum ParameterType{_INIT, _IN, _OUT};
-      virtual void duplicate(std::unique_ptr<ParameterSet> & r_aptr) const=0;
+      virtual void duplicate(std::unique_ptr<ParameterSet>&& r_aptr) const=0;
       virtual void set(NDPairList&) =0;
 
 	  //TUAN TODO: think about if we should use a reference, 

@@ -606,7 +606,6 @@ std::unique_ptr<DataItem> apdi(sd);
 _UI->getServer()->keepDataItem(apdi);
 */
     } else {
-      const char* n = _currentQ->getQueriableDescriptor().getName().c_str();
       std::ostringstream os;
       os << "display extended_error <>The server returned the following: <> "
             "Could"
@@ -616,7 +615,9 @@ _UI->getServer()->keepDataItem(apdi);
             "may "
          << "be a mismatch in what you have selected, and what the server "
             "thinks "
-         << "you have selected.\n Item selected: \"" << n << "\".<>";
+         << "you have selected.\n Item selected: \""
+         << _currentQ->getQueriableDescriptor().getName()
+         << "\".<>";
       // TUAN: temporary disable the code
       /*
   char errBuff[MAXBUFFSIZE];
@@ -716,7 +717,7 @@ _UI->getServer()->sendToClient(outbuff);
       }
       std::list<Queriable*> const& qbls = _currentQ->getQueriableList();
       _historyQ.push_back(_currentQ);
-      const char* n = _currentQ->getQueriableDescriptor().getName().c_str();
+      const char* n = strdup(_currentQ->getQueriableDescriptor().getName().c_str());
       _location.push_back(n);
 
       sendQbls(qbls);
@@ -775,7 +776,7 @@ _UI->getServer()->sendToClient(outbuff);
       (*_result)[selection]->duplicate(dup);
       _currentQ = dup.release();
       _historyQ.push_back(_currentQ);
-      const char* n = _currentQ->getQueriableDescriptor().getName().c_str();
+      const char* n = strdup(_currentQ->getQueriableDescriptor().getName().c_str());
       _location.push_back(n);
 
       std::list<Queriable*> const& qbls = _currentQ->getQueriableList();

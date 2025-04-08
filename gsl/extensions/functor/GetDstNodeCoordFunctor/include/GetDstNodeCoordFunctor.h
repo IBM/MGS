@@ -30,9 +30,9 @@ class GetDstNodeCoordFunctor : public CG_GetDstNodeCoordFunctorBase
       int userExecute(LensContext* CG_c);
       GetDstNodeCoordFunctor();
       virtual ~GetDstNodeCoordFunctor();
-      virtual void duplicate(std::unique_ptr<GetDstNodeCoordFunctor>& dup) const;
-      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_GetDstNodeCoordFunctorBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<GetDstNodeCoordFunctor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_GetDstNodeCoordFunctorBase>&& dup) const;
 
    private:
       CoordsStruct _coords;

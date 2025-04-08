@@ -30,7 +30,7 @@ class NodeAccessor
    public:
       virtual NodeDescriptor* getNodeDescriptor(std::vector<int> const & coords, int densityIndex) =0;
       virtual NodeDescriptor* getNodeDescriptor(int nodeIndex, int densityIndex) =0;
-      virtual void duplicate(std::unique_ptr<NodeAccessor> & r_aptr) const =0;
+      virtual void duplicate(std::unique_ptr<NodeAccessor>&& r_aptr) const =0;
       virtual int getNbrUnits() =0;
       virtual GridLayerDescriptor* getGridLayerDescriptor() =0;
       virtual std::string getModelName() =0;

@@ -27,7 +27,7 @@
 #include "Simulation.h"
 #include "NodeSetDataItem.h"
 #include "FunctorDataItem.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "IntDataItem.h"
 #include "FloatDataItem.h"
 #include "NodeSet.h"
@@ -327,17 +327,17 @@ Zipper::~Zipper()
   if (_lensConnector) delete _lensConnector;
 }
 
-void Zipper::duplicate(std::unique_ptr<Zipper>& dup) const
+void Zipper::duplicate(std::unique_ptr<Zipper>&& dup) const
 {
    dup.reset(new Zipper(*this));
 }
 
-void Zipper::duplicate(std::unique_ptr<Functor>& dup) const
+void Zipper::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new Zipper(*this));
 }
 
-void Zipper::duplicate(std::unique_ptr<CG_ZipperBase>& dup) const
+void Zipper::duplicate(std::unique_ptr<CG_ZipperBase>&& dup) const
 {
    dup.reset(new Zipper(*this));
 }

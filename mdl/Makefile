@@ -23,7 +23,7 @@ OBJECTONLYFLAGS :=
 
 # Look for include files in each of the modules
 #  This will append CFLAGS with a string like '-Idir1/include -Idir2/include'
-CFLAGS := -Iinclude -Iparser  -std=c++11 -Wno-deprecated-declarations
+CFLAGS := -Iinclude -Iparser  -std=c++17 -Wno-deprecated-declarations
 
 # Create a variable 'ADDCFLAGS' that you can use to add to the CFLAGS from the
 # command line option of gmake if necessary
@@ -43,7 +43,7 @@ SRCS :=
 FINAL_TARGET_FLAG := 
 
 ifeq ($(CC), g++)
-  CFLAGS += -std=c++11 -Wall -Wno-unused -Wpointer-arith -Wcast-qual -Wcast-align -Wno-deprecated-declarations
+  CFLAGS += -std=c++17 -Wall -Wno-unused -Wpointer-arith -Wcast-qual -Wcast-align -Wno-deprecated-declarations
 endif
 
 ifeq ($(OPERATING_SYSTEM), Linux)

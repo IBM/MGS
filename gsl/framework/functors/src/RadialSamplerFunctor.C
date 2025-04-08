@@ -60,7 +60,7 @@ RadialSamplerFunctor::RadialSamplerFunctor(const RadialSamplerFunctor& rsf)
   _square_radius = _radius * _radius;
 }
 
-void RadialSamplerFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void RadialSamplerFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new RadialSamplerFunctor(*this));
 }

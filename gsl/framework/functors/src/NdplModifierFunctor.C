@@ -34,19 +34,18 @@ NdplModifierFunctor::NdplModifierFunctor()
 {
 }
 
-
 NdplModifierFunctor::NdplModifierFunctor(const NdplModifierFunctor& csf)
    : _ndpList(0)
 {
    if (csf._functor_ap.get())
-      csf._functor_ap->duplicate(_functor_ap);
+      csf._functor_ap->duplicate(std::move(_functor_ap));
    if (csf._ndpList) {
       _ndpList = new NDPairList(*csf._ndpList);
    }
 }
 
 
-void NdplModifierFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void NdplModifierFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new NdplModifierFunctor(*this));
 }
@@ -75,7 +74,7 @@ void NdplModifierFunctor::doInitialize(LensContext *c,
       throw SyntaxErrorException(
 	 "Functor provided to NdplModifierFunctor is not valid");
    }
-   functor->duplicate(_functor_ap);
+   functor->duplicate(std::move(_functor_ap));
 
    // Now the name value std::pair list
    NDPairListDataItem* ndpldi = dynamic_cast<NDPairListDataItem*>(args[1]);

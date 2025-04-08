@@ -60,7 +60,7 @@ void GaussianFunctor::doExecute(LensContext *c,
 }
 
 
-void GaussianFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void GaussianFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new GaussianFunctor(*this));
 }

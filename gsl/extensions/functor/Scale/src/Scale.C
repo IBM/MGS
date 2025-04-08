@@ -45,17 +45,17 @@ Scale::~Scale()
 {
 }
 
-void Scale::duplicate(std::unique_ptr<Scale>& dup) const
+void Scale::duplicate(std::unique_ptr<Scale>&& dup) const
 {
    dup.reset(new Scale(*this));
 }
 
-void Scale::duplicate(std::unique_ptr<Functor>& dup) const
+void Scale::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new Scale(*this));
 }
 
-void Scale::duplicate(std::unique_ptr<CG_ScaleBase>& dup) const
+void Scale::duplicate(std::unique_ptr<CG_ScaleBase>&& dup) const
 {
    dup.reset(new Scale(*this));
 }

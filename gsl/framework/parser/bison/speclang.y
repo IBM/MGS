@@ -10,7 +10,7 @@
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 
-#ifndef LINUX
+#if !defined(LINUX) && !defined(__APPLE__)
 #include <fptrap.h>
 #endif
 
@@ -71,7 +71,7 @@ using namespace std;
 
 %}
 
-%pure-parser
+%define api.pure full
 %locations
 %lex-param {parm}
 %parse-param {void* parm}

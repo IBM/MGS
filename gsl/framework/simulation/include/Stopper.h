@@ -41,7 +41,7 @@ class Stopper : public TriggerableBase
    protected:
       virtual TriggerableBase::EventType createTriggerableCaller(
 	 const std::string& functionName, NDPairList* ndpList,
-	 std::unique_ptr<TriggerableCaller>& triggerableCaller);
+	 std::unique_ptr<TriggerableCaller>&& triggerableCaller);
 
    private:
       Simulation& _sim;
@@ -64,7 +64,7 @@ class Stopper : public TriggerableBase
 	    virtual Triggerable* getTriggerable(){
 	       return _triggerable;
 	    }
-	    virtual void duplicate(std::unique_ptr<TriggerableCaller>& dup) const {
+	    virtual void duplicate(std::unique_ptr<TriggerableCaller>&& dup) const {
 	       dup.reset(new StopperEvent(*this));
 	    }
 	    

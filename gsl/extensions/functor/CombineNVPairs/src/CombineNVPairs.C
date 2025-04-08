@@ -14,7 +14,7 @@ std::unique_ptr<NDPairList> CombineNVPairs::userExecute(LensContext* CG_c)
 {
   DuplicatePointerArray< Functor >::iterator iter = init.fl.begin(), end = init.fl.end();
   std::unique_ptr<NDPairList> rval;
-  init.l->duplicate(rval);
+  init.l->duplicate(std::move(rval));
 
   for (; iter!=end; ++iter) {
     std::vector<DataItem*> nullArgs;
@@ -39,17 +39,17 @@ CombineNVPairs::~CombineNVPairs()
 {
 }
 
-void CombineNVPairs::duplicate(std::unique_ptr<CombineNVPairs>& dup) const
+void CombineNVPairs::duplicate(std::unique_ptr<CombineNVPairs>&& dup) const
 {
    dup.reset(new CombineNVPairs(*this));
 }
 
-void CombineNVPairs::duplicate(std::unique_ptr<Functor>& dup) const
+void CombineNVPairs::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new CombineNVPairs(*this));
 }
 
-void CombineNVPairs::duplicate(std::unique_ptr<CG_CombineNVPairsBase>& dup) const
+void CombineNVPairs::duplicate(std::unique_ptr<CG_CombineNVPairsBase>&& dup) const
 {
    dup.reset(new CombineNVPairs(*this));
 }

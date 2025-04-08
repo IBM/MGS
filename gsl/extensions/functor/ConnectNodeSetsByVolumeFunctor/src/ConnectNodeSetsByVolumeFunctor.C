@@ -217,17 +217,17 @@ ConnectNodeSetsByVolumeFunctor::~ConnectNodeSetsByVolumeFunctor()
 {
 }
 
-void ConnectNodeSetsByVolumeFunctor::duplicate(std::unique_ptr<ConnectNodeSetsByVolumeFunctor>& dup) const
+void ConnectNodeSetsByVolumeFunctor::duplicate(std::unique_ptr<ConnectNodeSetsByVolumeFunctor>&& dup) const
 {
    dup.reset(new ConnectNodeSetsByVolumeFunctor(*this));
 }
 
-void ConnectNodeSetsByVolumeFunctor::duplicate(std::unique_ptr<Functor>& dup) const
+void ConnectNodeSetsByVolumeFunctor::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new ConnectNodeSetsByVolumeFunctor(*this));
 }
 
-void ConnectNodeSetsByVolumeFunctor::duplicate(std::unique_ptr<CG_ConnectNodeSetsByVolumeFunctorBase>& dup) const
+void ConnectNodeSetsByVolumeFunctor::duplicate(std::unique_ptr<CG_ConnectNodeSetsByVolumeFunctorBase>&& dup) const
 {
    dup.reset(new ConnectNodeSetsByVolumeFunctor(*this));
 }

@@ -28,9 +28,9 @@ class Threshold : public CG_ThresholdBase
       bool userExecute(LensContext* CG_c);
       Threshold();
       virtual ~Threshold();
-      virtual void duplicate(std::unique_ptr<Threshold>& dup) const;
-      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_ThresholdBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<Threshold>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_ThresholdBase>&& dup) const;
 };
 
 #endif

@@ -29,9 +29,9 @@ class TissueMGSifyFunctor : public CG_TissueMGSifyFunctorBase, public TissueElem
       void userExecute(LensContext* CG_c);
       TissueMGSifyFunctor();
       virtual ~TissueMGSifyFunctor();
-      virtual void duplicate(std::unique_ptr<TissueMGSifyFunctor>& dup) const;
-      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_TissueMGSifyFunctorBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<TissueMGSifyFunctor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_TissueMGSifyFunctorBase>&& dup) const;
       void setTissueFunctor(TissueFunctor* tf) {_tissueFunctor=tf;}
 
    private:

@@ -29,9 +29,9 @@ class SrcRefDoGWeightModifier : public CG_SrcRefDoGWeightModifierBase
       std::unique_ptr<ParameterSet> userExecute(LensContext* CG_c);
       SrcRefDoGWeightModifier();
       virtual ~SrcRefDoGWeightModifier();
-      virtual void duplicate(std::unique_ptr<SrcRefDoGWeightModifier>& dup) const;
-      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_SrcRefDoGWeightModifierBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<SrcRefDoGWeightModifier>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_SrcRefDoGWeightModifierBase>&& dup) const;
 
       float _sigma1;
       float _max1;

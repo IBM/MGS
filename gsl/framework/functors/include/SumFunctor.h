@@ -25,7 +25,7 @@ class SumFunctor: public Functor
    public:
       SumFunctor();
       SumFunctor(const SumFunctor&);
-      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
       virtual ~SumFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 

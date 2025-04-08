@@ -40,11 +40,11 @@ NdplInAttrInitFunctor::NdplInAttrInitFunctor()
 NdplInAttrInitFunctor::NdplInAttrInitFunctor(const NdplInAttrInitFunctor& csf)
 {
    if (csf._functor_ap.get())
-      csf._functor_ap->duplicate(_functor_ap);
+      csf._functor_ap->duplicate(std::move(_functor_ap));
 }
 
 
-void NdplInAttrInitFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void NdplInAttrInitFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new NdplInAttrInitFunctor(*this));
 }
@@ -71,7 +71,7 @@ void NdplInAttrInitFunctor::doInitialize(LensContext *c, const std::vector<DataI
       throw SyntaxErrorException(
 	 "Functor provided to NdplInAttrInitFunctor is not valid");
    }
-   functor->duplicate(_functor_ap);
+   functor->duplicate(std::move(_functor_ap));
 }
 
 
@@ -87,7 +87,7 @@ void NdplInAttrInitFunctor::doExecute(LensContext *c,
    ConnectionContext *cc = c->connectionContext;
 
    c->sim->getNodeType(cc->destinationNode->getGridLayerDescriptor()->getModelName(), 
-      dummy)->getInAttrParameterSet(pset);
+      dummy)->getInAttrParameterSet(std::move(pset));
 
    _functor_ap->execute(c, nullArgs, rval_ap);
 

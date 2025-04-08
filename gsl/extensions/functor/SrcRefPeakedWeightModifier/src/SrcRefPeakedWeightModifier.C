@@ -110,7 +110,7 @@ std::unique_ptr<ParameterSet> SrcRefPeakedWeightModifier::userExecute(LensContex
    ndpl.push_back(ndp2);
 
    std::unique_ptr<ParameterSet> pset;
-   psdi->getParameterSet()->duplicate(pset);
+   psdi->getParameterSet()->duplicate(std::move(pset));
    pset->set(ndpl);
    return pset;
 }
@@ -124,17 +124,17 @@ SrcRefPeakedWeightModifier::~SrcRefPeakedWeightModifier()
 {
 }
 
-void SrcRefPeakedWeightModifier::duplicate(std::unique_ptr<SrcRefPeakedWeightModifier>& dup) const
+void SrcRefPeakedWeightModifier::duplicate(std::unique_ptr<SrcRefPeakedWeightModifier>&& dup) const
 {
    dup.reset(new SrcRefPeakedWeightModifier(*this));
 }
 
-void SrcRefPeakedWeightModifier::duplicate(std::unique_ptr<Functor>& dup) const
+void SrcRefPeakedWeightModifier::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new SrcRefPeakedWeightModifier(*this));
 }
 
-void SrcRefPeakedWeightModifier::duplicate(std::unique_ptr<CG_SrcRefPeakedWeightModifierBase>& dup) const
+void SrcRefPeakedWeightModifier::duplicate(std::unique_ptr<CG_SrcRefPeakedWeightModifierBase>&& dup) const
 {
    dup.reset(new SrcRefPeakedWeightModifier(*this));
 }

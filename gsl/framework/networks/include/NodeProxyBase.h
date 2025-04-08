@@ -46,17 +46,17 @@ class NodeProxyBase : public Node
       }
 
       virtual void getInitializationParameterSet(
-	 std::unique_ptr<ParameterSet>& initPSet) const {
+	 std::unique_ptr<ParameterSet>&& initPSet) const {
 	 assert(false);
       }
 
       virtual void getInAttrParameterSet(
-	 std::unique_ptr<ParameterSet>& CG_castedPSet) const {
+	 std::unique_ptr<ParameterSet>&& CG_castedPSet) const {
 	 assert(false);
       }
 
       virtual void getOutAttrParameterSet(
-	 std::unique_ptr<ParameterSet>& CG_castedPSet) const {
+	 std::unique_ptr<ParameterSet>&& CG_castedPSet) const {
 	 assert(false);
       }
 
@@ -164,7 +164,7 @@ class NodeProxyBase : public Node
       // [begin]
       virtual TriggerableBase::EventType createTriggerableCaller(
 	 const std::string& name, NDPairList* ndpList, 
-	 std::unique_ptr<TriggerableCaller>& triggerableCaller);
+	 std::unique_ptr<TriggerableCaller>&& triggerableCaller);
       // [end]
 
       NodeDescriptor* _nodeInstanceAccessor;

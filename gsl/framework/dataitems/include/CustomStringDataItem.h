@@ -13,28 +13,28 @@
 //
 // =================================================================
 
-#ifndef STRINGDATAITEM_H
-#define STRINGDATAITEM_H
+#ifndef CUSTOMSTRINGDATAITEM_H
+#define CUSTOMSTRINGDATAITEM_H
 #include "Copyright.h"
 
 #include "DataItem.h"
-#include "String.h"
+#include "CustomString.h"
 #include <string>
 
-class StringDataItem : public DataItem
+class CustomStringDataItem : public DataItem
 {
    private:
       std::string _data;
 
    public:
-      virtual StringDataItem& operator=(const StringDataItem& DI);
+      virtual CustomStringDataItem& operator=(const CustomStringDataItem& DI);
 
       static const char* _type;
 
       // Constructors
-      StringDataItem(const std::string& data = "");
-      StringDataItem(String& data);
-      StringDataItem(const StringDataItem& DI);
+      CustomStringDataItem(const std::string& data = "");
+      CustomStringDataItem(CustomString& data);
+      CustomStringDataItem(const CustomStringDataItem& DI);
 
       // Utility methods
       void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
@@ -42,7 +42,7 @@ class StringDataItem : public DataItem
 
       // Singlet Methods
       std::string getString(Error* error=0) const;
-      String getLensString(Error* error=0) const;
+      CustomString getLensString(Error* error=0) const;
       void setString(std::string i, Error* error=0);
 };
 #endif

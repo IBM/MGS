@@ -32,7 +32,7 @@ GridLayerDescriptor::GridLayerDescriptor(
       _uniformDensity = _densityVector[0];
    }
    std::unique_ptr<NodeAccessor> nodeAccessor;
-   _nt->getNodeAccessor(nodeAccessor, this);
+   _nt->getNodeAccessor(std::move(nodeAccessor), this);
    setNodeAccessor(nodeAccessor);
 }
 

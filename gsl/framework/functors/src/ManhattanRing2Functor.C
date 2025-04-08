@@ -40,7 +40,7 @@ _currentSample(0), _refNode(0), _currentCount(0),_currentList(0)
 {
 }
 
-void ManhattanRing2Functor::duplicate(std::unique_ptr<Functor> &fap) const
+void ManhattanRing2Functor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new ManhattanRing2Functor(*this));
 }

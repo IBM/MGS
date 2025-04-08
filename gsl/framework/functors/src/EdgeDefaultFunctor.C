@@ -29,7 +29,7 @@ EdgeDefaultFunctor::EdgeDefaultFunctor()
 {
 }
 
-void EdgeDefaultFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void EdgeDefaultFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new EdgeDefaultFunctor(*this));
 }

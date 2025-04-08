@@ -44,7 +44,7 @@ class GranuleMapper
       virtual void setGlobalGranuleIds(unsigned& id) = 0;
       virtual unsigned getIndex() = 0;
       virtual void setIndex(unsigned index) = 0;
-      virtual void duplicate(std::unique_ptr<GranuleMapper>& dup) const = 0;      
+      virtual void duplicate(std::unique_ptr<GranuleMapper>&& dup) const = 0;      
       virtual std::string getName() = 0;
       virtual unsigned getNumberOfGranules() = 0;
       virtual ~GranuleMapper(){}

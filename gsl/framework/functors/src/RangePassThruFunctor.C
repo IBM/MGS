@@ -21,7 +21,7 @@
 #include "DataItem.h"
 #include "FloatDataItem.h"
 #include "FunctorDataItem.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "InstanceFactoryQueriable.h"
 #include "DataItemQueriable.h"
 #include "FunctorDataItem.h"
@@ -45,10 +45,10 @@ void RangePassThruFunctor::doInitialize(LensContext *c,
    }
    _left_limit = ndi->getFloat();
 
-   StringDataItem* sdi = dynamic_cast<StringDataItem*>(args[1]);
+   CustomStringDataItem* sdi = dynamic_cast<CustomStringDataItem*>(args[1]);
    if (sdi == 0) {
       throw SyntaxErrorException(
-	 "Dynamic cast of DataItem to StringDataItem failed in RangePassThruFunctor");
+	 "Dynamic cast of DataItem to CustomStringDataItem failed in RangePassThruFunctor");
    }
    _left_oper = sdi->getString();
 
@@ -59,10 +59,10 @@ void RangePassThruFunctor::doInitialize(LensContext *c,
    }
    _testFunct = fdi->getFunctor();
 
-   sdi = dynamic_cast<StringDataItem*>(args[3]);
+   sdi = dynamic_cast<CustomStringDataItem*>(args[3]);
    if (sdi == 0) {
       throw SyntaxErrorException(
-	 "Dynamic cast of DataItem to StringDataItem failed in RangePassThruFunctor");
+	 "Dynamic cast of DataItem to CustomStringDataItem failed in RangePassThruFunctor");
    }
    _right_oper = sdi->getString();
 
@@ -239,7 +239,7 @@ void RangePassThruFunctor::doExecute(LensContext *c,
 }
 
 
-void RangePassThruFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void RangePassThruFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    Functor *p = new RangePassThruFunctor(*this);
    fap.reset(p);

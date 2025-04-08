@@ -162,7 +162,7 @@ void SimulationPublisher::destructOwnedData()
   }
 }
 
-void SimulationPublisher::duplicate(std::unique_ptr<Publisher>& dup) const
+void SimulationPublisher::duplicate(std::unique_ptr<Publisher>&& dup) const
 {
   dup.reset(new SimulationPublisher(*this));
 }

@@ -60,13 +60,13 @@ void C_declaration_pset::internalExecute(LensContext *c)
 	 _parameterTypePair->getModelName(), dummy);
       if (_parameterTypePair->getParameterType() == 
 	  C_parameter_type_pair::_INIT)
-         nt->getInitializationParameterSet(pset);
+         nt->getInitializationParameterSet(std::move(pset));
       else if (_parameterTypePair->getParameterType() == 
 	       C_parameter_type_pair::_IN)
-         nt->getInAttrParameterSet(pset);
+         nt->getInAttrParameterSet(std::move(pset));
       else if (_parameterTypePair->getParameterType() == 
 	       C_parameter_type_pair::_OUT)
-         nt->getOutAttrParameterSet(pset);
+         nt->getOutAttrParameterSet(std::move(pset));
    }
 
    try {

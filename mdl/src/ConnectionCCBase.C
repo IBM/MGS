@@ -345,7 +345,7 @@ void ConnectionCCBase::addExtraInstanceBaseMethods(Class& instance) const
    CompCategoryBase::addExtraInstanceBaseMethods(instance);
 
    instance.addClass("Constant");
-   instance.addHeader("\"String.h\"");
+   instance.addHeader("\"CustomString.h\"");
    instance.addHeader("\"Service.h\"");
    instance.addHeader("\"SyntaxErrorException.h\"");
    instance.addHeader("\"VariableDescriptor.h\"");
@@ -380,7 +380,7 @@ void ConnectionCCBase::addExtraInstanceProxyMethods(Class& instance) const
    CompCategoryBase::addExtraInstanceProxyMethods(instance);
 
    instance.addClass("Constant");
-   instance.addHeader("\"String.h\"");
+   instance.addHeader("\"CustomString.h\"");
    instance.addHeader("<cassert>");
 
    // @TODO Implement acceptService method

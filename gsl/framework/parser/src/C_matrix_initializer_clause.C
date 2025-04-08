@@ -59,7 +59,7 @@ void C_matrix_initializer_clause::internalExecute(LensContext *c, ArrayDataItem 
 	    I_adi->getModifiableIntVector()->begin();
          I_matrixIterator += offSet;
 	 std::list<float>::iterator initIter, initEnd=initList->end();
-	 for (initIter=initList->begin(); initIter!=initEnd; ++initIter, I_matrixIterator) {
+	 for (initIter=initList->begin(); initIter!=initEnd; ++initIter, ++I_matrixIterator) {
 	   (*I_matrixIterator)=int(*initIter);
 	 }
       }
@@ -67,7 +67,7 @@ void C_matrix_initializer_clause::internalExecute(LensContext *c, ArrayDataItem 
       else {
 	std::list<float>::iterator initIter, initEnd=initList->end();
 	std::vector<int>::iterator I_adiIter = I_adi->getModifiableIntVector()->begin();
-	for (initIter=initList->begin(); initIter!=initEnd; ++initIter, I_adiIter) {
+	for (initIter=initList->begin(); initIter!=initEnd; ++initIter, ++I_adiIter) {
 	  (*I_adiIter)=int(*initIter);
 	}
       }

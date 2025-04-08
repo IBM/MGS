@@ -78,7 +78,7 @@ void StructType::copyContents(const StructType& rv)
    std::list<Struct*>::const_iterator it, end = rv._structList.end();
    for (it = rv._structList.begin(); it!=end; ++it) {
       std::unique_ptr<Struct> dup;
-      (*it)->duplicate(dup);
+      (*it)->duplicate(std::move(dup));
       _structList.push_back(dup.release());
    }
 }

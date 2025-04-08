@@ -84,12 +84,12 @@ void TriggerBase::copyOwnedHeap(const TriggerBase& rv)
    std::vector<TriggerableCaller*>::const_iterator it, 
       end = rv._serialTriggerableCallers.end();
    for (it = rv._serialTriggerableCallers.begin(); it != end; ++it) {
-      (*it)->duplicate(dup);
+      (*it)->duplicate(std::move(dup));
       _serialTriggerableCallers.push_back(dup.release());
    }
    end = rv._parallelTriggerableCallers.end();
    for (it = rv._parallelTriggerableCallers.begin(); it != end; ++it) {
-      (*it)->duplicate(dup);
+      (*it)->duplicate(std::move(dup));
       _parallelTriggerableCallers.push_back(dup.release());
    }
    // workunits should not be copied, instead make your own with the copied

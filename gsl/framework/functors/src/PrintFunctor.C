@@ -46,7 +46,7 @@ void PrintFunctor::doExecute(LensContext *c,
 }
 
 
-void PrintFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void PrintFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new PrintFunctor(*this));
 }

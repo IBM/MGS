@@ -59,11 +59,11 @@ class Node : public NodeDescriptor, public ServiceAcceptor, public TriggerableBa
       virtual ~Node() {}
 
       virtual void getInitializationParameterSet(
-	 std::unique_ptr<ParameterSet> & r_aptr) const = 0;
+	 std::unique_ptr<ParameterSet>&& r_aptr) const = 0;
       virtual void getInAttrParameterSet(
-	 std::unique_ptr<ParameterSet> & r_aptr) const = 0;
+	 std::unique_ptr<ParameterSet>&& r_aptr) const = 0;
       virtual void getOutAttrParameterSet(
-	 std::unique_ptr<ParameterSet> & r_aptr) const = 0;
+	 std::unique_ptr<ParameterSet>&& r_aptr) const = 0;
 
 //      virtual float getComputeCost() const = 0;
       virtual bool hasService() = 0;

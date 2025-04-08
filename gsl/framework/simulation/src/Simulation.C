@@ -228,7 +228,7 @@ Simulation::Simulation(int numWorkUnits, unsigned seed, int gpuID)
    _rngShared.reSeedShared(seed-1);
    _rngSeed=seed;
    LENS_PT_LOCK(_timerMutex);
-   if (_rank==0) printf("Simulation construct end: t = %lf\n\n", _simTimer.lapWallTime());
+   if (_rank==0) printf("Simulation construct complete: t = %lf\n\n", _simTimer.lapWallTime());
    _simTimer.reset();
    LENS_PT_UNLOCK(_timerMutex);
 }
@@ -451,7 +451,7 @@ bool Simulation::start()
    if (_rank==0) printf("Starting Simulation.\n\n");
    LENS_PT_LOCK(_timerMutex);
 
-   if (_rank==0) printf("Initialization complete : t = %lf\n\n", _simTimer.lapWallTime());
+   if (_rank==0) printf("Initialization complete: t = %lf\n\n", _simTimer.lapWallTime());
    _simTimer.reset();
    _simTimer.start();
    LENS_PT_UNLOCK(_timerMutex);
@@ -1122,7 +1122,7 @@ void Simulation::benchmark_start(const std::string& msg)
 double Simulation::benchmark_timelapsed(const std::string& msg)
 {
    LENS_PT_LOCK(_timerMutex);
-   if (_rank==0) printf("%s passed: t = %lf\n\n", msg.c_str(),  _simTimer.lapWallTime());
+   if (_rank==0) printf("%s time elapsed: t = %lf\n\n", msg.c_str(),  _simTimer.lapWallTime());
    _prevTimeElapsed  = _simTimer.lapWallTime();
    LENS_PT_UNLOCK(_timerMutex);
    return _prevTimeElapsed;
@@ -1144,7 +1144,7 @@ void Simulation::benchmark_timelapsed_diff(const std::string& msg)
 void Simulation::benchmark_end(const std::string& msg)
 {
    LENS_PT_LOCK(_timerMutex);
-   if (_rank==0) printf("%s end: t = %lf\n\n", msg.c_str(), _simTimer.lapWallTime());
+   if (_rank==0) printf("%s complete: t = %lf\n\n", msg.c_str(), _simTimer.lapWallTime());
    _simTimer.reset();
    LENS_PT_UNLOCK(_timerMutex);
 

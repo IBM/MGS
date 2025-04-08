@@ -10,13 +10,13 @@
 class LoadMatrix : public CG_LoadMatrixBase
 {
    public:
-      void userInitialize(LensContext* CG_c, String& filename, int& rows, int& cols);
+      void userInitialize(LensContext* CG_c, CustomString& filename, int& rows, int& cols);
       ShallowArray< float > userExecute(LensContext* CG_c);
       LoadMatrix();
       virtual ~LoadMatrix();
-      virtual void duplicate(std::unique_ptr<LoadMatrix>& dup) const;
-      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_LoadMatrixBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<LoadMatrix>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_LoadMatrixBase>&& dup) const;
 };
 
 #endif

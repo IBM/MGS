@@ -46,17 +46,17 @@ Log::~Log()
 {
 }
 
-void Log::duplicate(std::unique_ptr<Log>& dup) const
+void Log::duplicate(std::unique_ptr<Log>&& dup) const
 {
    dup.reset(new Log(*this));
 }
 
-void Log::duplicate(std::unique_ptr<Functor>& dup) const
+void Log::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new Log(*this));
 }
 
-void Log::duplicate(std::unique_ptr<CG_LogBase>& dup) const
+void Log::duplicate(std::unique_ptr<CG_LogBase>&& dup) const
 {
    dup.reset(new Log(*this));
 }

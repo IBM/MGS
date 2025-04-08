@@ -28,7 +28,7 @@ void TriggerableBase::addTrigger(
       _ndPairLists.push_back(ndp);
    }
    std::unique_ptr<TriggerableCaller> cup;
-   EventType type = createTriggerableCaller(functionName, ndp, cup);
+   EventType type = createTriggerableCaller(functionName, ndp, std::move(cup));
    assert(type != _UNALTERED);
    if (type == _SERIAL) {
       trigger->addSerialTriggerableCaller(cup);

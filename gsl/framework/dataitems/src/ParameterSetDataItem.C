@@ -34,7 +34,7 @@ ParameterSetDataItem::ParameterSetDataItem(std::unique_ptr<ParameterSet>& data)
 ParameterSetDataItem::ParameterSetDataItem(const ParameterSetDataItem& DI)
 {
    std::unique_ptr<ParameterSet> pset;
-   DI._data->duplicate(pset);
+   DI._data->duplicate(std::move(pset));
    _data = pset.release();
 }
 

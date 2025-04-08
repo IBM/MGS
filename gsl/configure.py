@@ -85,6 +85,10 @@ LINUX_SHARED_PFIX = "-shared -Wl,--export-dynamic -Wl,-soname,lib$(notdir $@)"
 LINUX_SHARED_CC = "$(CC) $(SHARED_PFIX) -o $@ $(filter %.o, $^)"
 LINUX_FINAL_TARGET_FLAG = "-Wl,--export-dynamic"
 
+DARWIN_EXTRA_FLAGS = "-DDARWIN"
+DARWIN_SHARED_PFIX = "-shared -Wl,-export_dynamic -Wl,-install_name,@rpath/lib$(notdir $@)"
+DARWIN_SHARED_CC = "$(CC) $(SHARED_PFIX) -o $@ $(filter %.o, $^)"
+DARWIN_FINAL_TARGET_FLAG = "-Wl,-export_dynamic"
 AIX_GNU_MINIMAL_TOC_FLAG = "-mminimal-toc"
 
 AIX_EXTRA_FLAGS = "-DAIX"
@@ -267,9 +271,10 @@ class DxInfo:
         self.liteLib = self.mainPath
         if (operatingSystem == "AIX"):
             self.liteLib += "/lib_ibm6000/"
-        else:
+        elif self.operatingSystem == "Linux":
             self.liteLib += "/lib_linux/"
-
+        elif self.operatingSystem == "Darwin":
+            self.liteLib += "/lib_darwin/"  # This path may need adjustment
         self.liteLib += "libDXlite.a"
         if os.path.isfile(self.liteLib) is not True:
             print("libDXlite.a could not be found at", self.liteLib)
@@ -595,8 +600,14 @@ class BuildSetup:
         self.hostName = ""
         self.architecture = ""
         self.objectMode = ""
-        self.numCPUs = os.sysconf("SC_NPROCESSORS_ONLN")
-
+        try:
+            if self.operatingSystem == "Darwin":
+                import subprocess
+                self.numCPUs = int(subprocess.check_output(['sysctl', '-n', 'hw.ncpu']).strip())
+            else:
+                self.numCPUs = os.sysconf("SC_NPROCESSORS_ONLN")
+        except (ValueError, AttributeError, subprocess.SubprocessError):
+            self.numCPUs = 2  # Default to 2 if detection fails
         # Binaries
         self.bisonBin = ""
         self.flexBin = ""
@@ -625,6 +636,11 @@ class BuildSetup:
 
         self.operatingSystem = self.unameInfo[0]
         self.hostName = self.unameInfo[1]
+        self.pythonLibName = "python2.7"  # Default value
+        # The path to the Python include directory
+        self.pythonIncludeDir = os.environ.get("PYTHON_INCLUDE_DIR", "/usr/local/include/python2.7")
+        # The path to the Python library directory
+        self.pythonLibDir = os.environ.get("PYTHON_LIB", "/usr/local/lib")
 
         if self.operatingSystem == "AIX":
             self.architecture = "ppc64"
@@ -637,8 +653,11 @@ class BuildSetup:
         elif self.operatingSystem == "Linux":
             self.architecture = self.unameInfo[4]
             self.objectMode = "64"
+        elif self.operatingSystem == "Darwin":  # Add this section
+            self.architecture = "arm64" if "arm" in self.unameInfo[4] else "x86_64"
+            self.objectMode = "64"
         else:
-            raise FatalError(PROJECT_NAME + " only runs in AIX or Linux")
+            raise FatalError(PROJECT_NAME + " only runs in AIX, Linux, or macOS (Darwin)")
 
         self.bisonBin = findFile("bison", True)
         self.flexBin = findFile("flex", True)
@@ -810,6 +829,7 @@ class BuildSetup:
         self.setCompilers()
         self.setDX()
         self.bisonVersionFinder()
+        self.getPythonLibName()  # Add this line
         print(self.getSystemInfo())
 
         # At this point if there has been no FatalError, the environment
@@ -952,6 +972,9 @@ BIN_DIR?=./bin
 EXE_FILE=gslparser
 
 """
+        retStr += "PYTHON_INCLUDE_DIR := " + self.pythonIncludeDir + "\n"
+        retStr += "PYTHON_LIB := " + self.pythonLibDir + "\n"
+
         if (self.options.asNts is True) or (self.options.asNtsNVU is True):
             retStr += \
                 """\
@@ -1617,6 +1640,8 @@ CUDA_NVCC_FLAGS += $(SOURCE_AS_CPP)
 # OTHER_LIBS :=-lgmp -lpython2.7
 OTHER_LIBS :=-lgmp  \
 """
+        # Add compatibility header inclusion
+        retStr += " -include utils/std/include/darwin_compat.h"
         retStr += " -I$(PYTHON_INCLUDE_DIR) -L$(PYTHON_LIB) -l{}".format(self.pythonLibName)
 
         retStr += "\n"
@@ -1658,6 +1683,30 @@ CFLAGS += $(COLAB_CFLAGS) \
             retStr += " " + LINUX_EXTRA_FLAGS
             if self.options.compiler == "gcc":
                 retStr += " -fpic "
+        elif self.operatingSystem == "Darwin":
+            retStr += " -DDARWIN"  # Define DARWIN instead of LINUX
+            retStr += " -stdlib=libc++"  # Use LLVM's C++ stdlib
+            retStr += " -fpic "            
+            # These flags should help with standard library compatibility issues
+            retStr += " -Wno-error=c++11-extensions -Wno-error=c++14-extensions -Wno-c++11-narrowing"
+            retStr += " -Wno-deprecated-register -Wno-reserved-user-defined-literal"
+            # Disable warnings about incompatible pointer types and implicit conversions
+            retStr += " -Wno-incompatible-pointer-types-discards-qualifiers -Wno-implicit-int-conversion"            
+            # Add specific flags for macOS SDK compatibility 
+            retStr += " -D_LIBCPP_ENABLE_CXX17_REMOVED_FEATURES"
+            # These help with string template issues
+            retStr += " -D_LIBCPP_BUILDING_LIBRARY -D_LIBCPP_DISABLE_EXTERN_TEMPLATE"
+            # Modify the include order for Darwin
+            retStr += " -iquote . -isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1"
+            if self.options.withMpi is True:
+                retStr += " -I/opt/homebrew/opt/open-mpi/include"
+            # Add include path for our custom values.h
+            retStr += " -I$(GSLROOT)/utils/std/include"
+            retStr += " -I$(GSLROOT)/utils/streams/include"
+            # Add compatibility header inclusion
+            retStr += " -include utils/std/include/darwin_compat.h"    
+            # Add direct include for system string.h
+            retStr += " -include /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/string.h"
         elif self.operatingSystem == "AIX":
             if self.options.compiler == "gcc":
                 retStr += " " + AIX_GNU_MINIMAL_TOC_FLAG
@@ -1796,7 +1845,7 @@ LIBS := """
             retStr += "-lm "
         if self.operatingSystem == "AIX":
             retStr += "$(LENS_LIBS_EXT) "
-        elif self.operatingSystem == "Linux":
+        elif self.operatingSystem == "Linux" or self.operatingSystem == "Darwin":
             # retStr += "-Wl,--whole-archive "
             retStr += "$(LENS_LIBS_EXT) "
             # retStr += "-Wl,-no-whole-archive "
@@ -1813,8 +1862,12 @@ LIBS := """
 
         if self.options.compiler == "gcc":
             if self.options.withMpi is True:
-                retStr += " -L$(LAMHOME)/lib -lmpi -llammpi++ -llam -ldl -lpthread"
-
+                if self.operatingSystem == "Darwin":
+                    retStr += " -L/opt/homebrew/opt/open-mpi/lib -lmpi"
+                    retStr += " -Wl,-rpath,/opt/homebrew/opt/open-mpi/lib"
+                elif self.operatingSystem == "Linux":
+                    retStr += " -L$(LAMHOME)/lib -lmpi -llammpi++ -llam -ldl -lpthread"
+        
         if self.options.withGpu is True:
             retStr += " -lcuda -lcudart -lcurand"
             if self.options.withMpi is True:
@@ -1822,6 +1875,9 @@ LIBS := """
 
         if self.options.withArma is True:
             retStr += " -llapack -lopenblas -larmadillo"
+
+        if self.operatingSystem == "Darwin" and self.options.withMpi is True:
+            retStr += " -Wl,-rpath,/opt/homebrew/opt/open-mpi/lib"
 
         if self.options.colab is True:
             if self.options.debug == USE:
@@ -1841,6 +1897,8 @@ LIBS := """
 
         if self.operatingSystem == "Linux":
             retStr += LINUX_SHARED_PFIX
+        elif self.operatingSystem == "Darwin":
+            retStr += DARWIN_SHARED_PFIX
         elif self.operatingSystem == "AIX":
             if self.options.compiler == "gcc":
                 retStr += " " + AIX_GNU_SHARED_PFIX
@@ -1858,6 +1916,8 @@ LIBS := """
 
         if self.operatingSystem == "Linux":
             retStr += LINUX_SHARED_CC
+        elif self.operatingSystem == "Darwin":
+            retStr += DARWIN_SHARED_CC
         elif self.operatingSystem == "AIX":
             retStr += AIX_SHARED_CC
         else:
@@ -1874,8 +1934,10 @@ LIBS := """
                 # retStr += "-Xlinker -rdynamic"
             else:
                 retStr += LINUX_FINAL_TARGET_FLAG
+        elif self.operatingSystem == "Darwin":
+            retStr += DARWIN_FINAL_TARGET_FLAG 
+            retStr += " -v"
         elif self.operatingSystem == "AIX":
-
             if self.options.dynamicLoading is True:
                 retStr += " -Wl,-bnoautoexp -Wl,-bE:$(SO_DIR)/main.def"
             if self.options.compiler == "gcc":
@@ -1912,6 +1974,9 @@ DX_INCLUDE := framework/dca/include
         retStr += "DX_BASE := " + self.dx.mainPath + "\n"
 
         if self.operatingSystem == "Linux":
+            retStr += "DX_CFLAGS := " + LINUX_DX_CFLAGS + "\n"
+            retStr += "DX_LITELIBS := " + LINUX_DX_LITELIBS + "\n"
+        elif self.operatingSystem == "Darwin":
             retStr += "DX_CFLAGS := " + LINUX_DX_CFLAGS + "\n"
             retStr += "DX_LITELIBS := " + LINUX_DX_LITELIBS + "\n"
         elif self.operatingSystem == "AIX":
@@ -2165,7 +2230,7 @@ $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
                 retStr += "$(SO_DIR)/main.def "
             else:
                 retStr += "$(LENS_LIBS_EXT) "
-        elif self.operatingSystem == "Linux":
+        elif self.operatingSystem == "Linux" or self.operatingSystem == "Darwin":
             retStr += LENSPARSER_TARGETS + "$(LENS_LIBS_EXT) "
         else:
             raise InternalError("Unknown OS " + self.operatingSystem)
@@ -2232,21 +2297,56 @@ clean:
 
     def getPythonLibName(self):
         import os
-        import fnmatch
+        import subprocess
+        
+        try:
+            # Try to detect the Python version using 'python3-config --ldflags'
+            if self.operatingSystem == "Darwin":
+                try:
+                    ldflags = subprocess.check_output(["python3-config", "--ldflags"], universal_newlines=True).strip()
+                    lib_parts = [p for p in ldflags.split() if p.startswith("-lpython")]
+                    if lib_parts:
+                        # Extract just the library name without the -l prefix
+                        self.pythonLibName = lib_parts[0][2:]
+                    else:
+                        self.pythonLibName = "python3"
+                    
+                    # Also extract the library path
+                    lib_path_parts = [p for p in ldflags.split() if p.startswith("-L")]
+                    if lib_path_parts:
+                        self.pythonLibDir = lib_path_parts[0][2:]
+                    
+                    # Get the include directory using python3-config
+                    incflags = subprocess.check_output(["python3-config", "--includes"], universal_newlines=True).strip()
+                    inc_parts = [p for p in incflags.split() if p.startswith("-I")]
+                    if inc_parts:
+                        self.pythonIncludeDir = inc_parts[0][2:]
+                except (subprocess.SubprocessError, FileNotFoundError):
+                    # Default to python3 on macOS if detection fails
+                    self.pythonLibName = "python3"
+            else:
+                # Original Linux detection logic
+                import fnmatch
+                
+                def find(pattern, path):
+                    result = []
+                    for roots, dirs, files in os.walk(path):
+                        for name in files:
+                            if fnmatch.fnmatch(name, pattern):
+                                result.append(name)
+                    return result
+                
+                libs_found = find("libpython*.so", os.environ.get("PYTHON_LIB", "/usr/lib"))
+                if not libs_found:
+                    self.pythonLibName = "python2.7"
+                else:
+                    # Strip lib prefix and .so suffix
+                    self.pythonLibName = libs_found[0][3:-3]
+        except Exception as e:
+            print(f"Warning: Error detecting Python library: {e}")
+            self.pythonLibName = "python3" if self.operatingSystem == "Darwin" else "python2.7"
 
-        def find(pattern, path):
-            result = []
-            for roots, dirs, files in os.walk(path):
-                for name in files:
-                    if fnmatch.fnmatch(name, pattern):
-                        result.append(name)
-            return result
-        libs_found = find("libpython*.so", os.environ["PYTHON_LIB"])
-        if not libs_found:
-            self.pythonLibName = "python2.7"
-        else:
-            self.pythonLibName = libs_found[0][:-3][3:]
-
+       
     def generateMakefile(self, fileName):
         fileBody = self.getInitialValues()
         fileBody += "\n"

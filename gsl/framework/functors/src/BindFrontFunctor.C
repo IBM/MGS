@@ -41,7 +41,7 @@ void BindFrontFunctor::doInitialize(LensContext *c,
    }
 
    std::unique_ptr<Functor> fap;
-   fdi->getFunctor()->duplicate(fap);
+   fdi->getFunctor()->duplicate(std::move(fap));
    _bind_functor = fap.release();
 
    std::vector<DataItem*>::const_iterator iter, 
@@ -75,7 +75,7 @@ void BindFrontFunctor::doExecute(LensContext *c,
 }
 
 
-void BindFrontFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void BindFrontFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new BindFrontFunctor(*this));
 }
@@ -92,7 +92,7 @@ BindFrontFunctor::BindFrontFunctor(const BindFrontFunctor &f)
 {
    if (f._bind_functor) {
       std::unique_ptr<Functor> fap;
-      f._bind_functor->duplicate(fap);
+      f._bind_functor->duplicate(std::move(fap));
       _bind_functor = fap.release();
    }
 

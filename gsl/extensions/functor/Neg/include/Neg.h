@@ -28,9 +28,9 @@ class Neg : public CG_NegBase
       double userExecute(LensContext* CG_c);
       Neg();
       virtual ~Neg();
-      virtual void duplicate(std::unique_ptr<Neg>& dup) const;
-      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_NegBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<Neg>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_NegBase>&& dup) const;
 };
 
 #endif

@@ -165,8 +165,8 @@ std::string DataType::duplicateIfOwned(const std::string& name,
       os << tab << TAB << "std::unique_ptr< " 
 	 << getDescriptor() << " > " << newName << ";\n"
 	 << tab << TAB << name << "->" << getDataItemFunctionString() 
-	 << "->duplicate("
-	 << newName << ");\n";
+	 << "->duplicate(std::move("
+	 << newName << "));\n";
       return os.str();	 
    } else {
       newName = name;
@@ -596,7 +596,7 @@ void DataType::addProxyAttribute(std::unique_ptr<Class>&& instance) const
    dup->setPointer(false);
    instance->addDataTypeHeader(dup.get());
    instance->addDataTypeDataItemHeader(dup.get());
-   std::unique_ptr<Attribute> att(new DataTypeAttribute(std::move(dup)));
+   std::unique_ptr<Attribute> att = std::make_unique<DataTypeAttribute>(std::move(dup));
    att->setAccessType(AccessType::PROTECTED);
    instance->addAttribute(att);
 }

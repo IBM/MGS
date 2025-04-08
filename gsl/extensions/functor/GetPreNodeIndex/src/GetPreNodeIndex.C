@@ -23,17 +23,17 @@ GetPreNodeIndex::~GetPreNodeIndex()
 {
 }
 
-void GetPreNodeIndex::duplicate(std::unique_ptr<GetPreNodeIndex>& dup) const
+void GetPreNodeIndex::duplicate(std::unique_ptr<GetPreNodeIndex>&& dup) const
 {
    dup.reset(new GetPreNodeIndex(*this));
 }
 
-void GetPreNodeIndex::duplicate(std::unique_ptr<Functor>& dup) const
+void GetPreNodeIndex::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new GetPreNodeIndex(*this));
 }
 
-void GetPreNodeIndex::duplicate(std::unique_ptr<CG_GetPreNodeIndexBase>& dup) const
+void GetPreNodeIndex::duplicate(std::unique_ptr<CG_GetPreNodeIndexBase>&& dup) const
 {
    dup.reset(new GetPreNodeIndex(*this));
 }

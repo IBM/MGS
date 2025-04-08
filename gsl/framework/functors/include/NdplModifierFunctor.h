@@ -32,7 +32,7 @@ class NdplModifierFunctor: public Functor
    public:
       NdplModifierFunctor();
       NdplModifierFunctor(const NdplModifierFunctor&);
-      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
       virtual ~NdplModifierFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 

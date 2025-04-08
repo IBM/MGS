@@ -50,17 +50,17 @@ ReverseFunctor::~ReverseFunctor()
 {
 }
 
-void ReverseFunctor::duplicate(std::unique_ptr<ReverseFunctor>& dup) const
+void ReverseFunctor::duplicate(std::unique_ptr<ReverseFunctor>&& dup) const
 {
    dup.reset(new ReverseFunctor(*this));
 }
 
-void ReverseFunctor::duplicate(std::unique_ptr<Functor>& dup) const
+void ReverseFunctor::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new ReverseFunctor(*this));
 }
 
-void ReverseFunctor::duplicate(std::unique_ptr<CG_ReverseFunctorBase>& dup) const
+void ReverseFunctor::duplicate(std::unique_ptr<CG_ReverseFunctorBase>&& dup) const
 {
    dup.reset(new ReverseFunctor(*this));
 }

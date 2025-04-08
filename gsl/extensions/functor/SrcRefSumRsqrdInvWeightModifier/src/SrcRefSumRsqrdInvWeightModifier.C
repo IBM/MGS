@@ -123,7 +123,7 @@ std::unique_ptr<ParameterSet> SrcRefSumRsqrdInvWeightModifier::userExecute(LensC
    }
 
    std::unique_ptr<ParameterSet> pset;
-   psdi->getParameterSet()->duplicate(pset);
+   psdi->getParameterSet()->duplicate(std::move(pset));
    pset->set(ndpl);
    return pset;
 }
@@ -137,17 +137,17 @@ SrcRefSumRsqrdInvWeightModifier::~SrcRefSumRsqrdInvWeightModifier()
 {
 }
 
-void SrcRefSumRsqrdInvWeightModifier::duplicate(std::unique_ptr<SrcRefSumRsqrdInvWeightModifier>& dup) const
+void SrcRefSumRsqrdInvWeightModifier::duplicate(std::unique_ptr<SrcRefSumRsqrdInvWeightModifier>&& dup) const
 {
    dup.reset(new SrcRefSumRsqrdInvWeightModifier(*this));
 }
 
-void SrcRefSumRsqrdInvWeightModifier::duplicate(std::unique_ptr<Functor>& dup) const
+void SrcRefSumRsqrdInvWeightModifier::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new SrcRefSumRsqrdInvWeightModifier(*this));
 }
 
-void SrcRefSumRsqrdInvWeightModifier::duplicate(std::unique_ptr<CG_SrcRefSumRsqrdInvWeightModifierBase>& dup) const
+void SrcRefSumRsqrdInvWeightModifier::duplicate(std::unique_ptr<CG_SrcRefSumRsqrdInvWeightModifierBase>&& dup) const
 {
    dup.reset(new SrcRefSumRsqrdInvWeightModifier(*this));
 }

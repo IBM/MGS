@@ -31,7 +31,7 @@ void Operation::operate(Predicate* p1, Predicate* p2, Predicate* cur)
 
 Operation::_Type Operation::classify(std::string s) 
 {
-   if ((s == "string") || (s == "String")) {
+   if ((s == "string") || (s == "CustomString")) {
       return _String;
    } else if (s == "bool") {
       return _Bool;

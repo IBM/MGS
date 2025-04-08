@@ -68,7 +68,7 @@ void UniformDistFunctor::doExecute(LensContext *c,
 }
 
 
-void UniformDistFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void UniformDistFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new UniformDistFunctor(*this));
 }

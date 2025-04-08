@@ -96,7 +96,7 @@ std::unique_ptr<ParameterSet> RefDistanceModifier::userExecute(LensContext* CG_c
    NDPairList ndpl;
    ndpl.push_back(ndp);
    std::unique_ptr<ParameterSet> pset;
-   psdi->getParameterSet()->duplicate(pset);
+   psdi->getParameterSet()->duplicate(std::move(pset));
    pset->set(ndpl);
    return pset;
 }
@@ -110,17 +110,17 @@ RefDistanceModifier::~RefDistanceModifier()
 {
 }
 
-void RefDistanceModifier::duplicate(std::unique_ptr<RefDistanceModifier>& dup) const
+void RefDistanceModifier::duplicate(std::unique_ptr<RefDistanceModifier>&& dup) const
 {
    dup.reset(new RefDistanceModifier(*this));
 }
 
-void RefDistanceModifier::duplicate(std::unique_ptr<Functor>& dup) const
+void RefDistanceModifier::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new RefDistanceModifier(*this));
 }
 
-void RefDistanceModifier::duplicate(std::unique_ptr<CG_RefDistanceModifierBase>& dup) const
+void RefDistanceModifier::duplicate(std::unique_ptr<CG_RefDistanceModifierBase>&& dup) const
 {
    dup.reset(new RefDistanceModifier(*this));
 }

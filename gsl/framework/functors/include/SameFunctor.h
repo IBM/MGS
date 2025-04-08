@@ -30,7 +30,7 @@ class SameFunctor: public NodeInitializerFunctor
    public:
       SameFunctor();
       SameFunctor(const SameFunctor&);
-      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
       virtual ~SameFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 

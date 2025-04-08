@@ -44,17 +44,17 @@ GetDstNodeCoordFunctor::~GetDstNodeCoordFunctor()
 {
 }
 
-void GetDstNodeCoordFunctor::duplicate(std::unique_ptr<GetDstNodeCoordFunctor>& dup) const
+void GetDstNodeCoordFunctor::duplicate(std::unique_ptr<GetDstNodeCoordFunctor>&& dup) const
 {
    dup.reset(new GetDstNodeCoordFunctor(*this));
 }
 
-void GetDstNodeCoordFunctor::duplicate(std::unique_ptr<Functor>& dup) const
+void GetDstNodeCoordFunctor::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new GetDstNodeCoordFunctor(*this));
 }
 
-void GetDstNodeCoordFunctor::duplicate(std::unique_ptr<CG_GetDstNodeCoordFunctorBase>& dup) const
+void GetDstNodeCoordFunctor::duplicate(std::unique_ptr<CG_GetDstNodeCoordFunctorBase>&& dup) const
 {
    dup.reset(new GetDstNodeCoordFunctor(*this));
 }

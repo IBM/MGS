@@ -18,7 +18,7 @@
 #include "DoubleTrigger.h"
 #include "Service.h"
 #include "Simulation.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "UnsignedIntDataItem.h"
 #include "ServiceDataItem.h"
 #include "TriggerDataItem.h"
@@ -42,7 +42,7 @@ DoubleTriggerDescriptor::DoubleTriggerDescriptor(Simulation& s)
    std::vector<std::pair<std::string, DataItem*> > v;
 
    p.first = "Description";
-   p.second = new StringDataItem;
+   p.second = new CustomStringDataItem;
    v.push_back(p);
 
    p.first = "Predicate";
@@ -50,7 +50,7 @@ DoubleTriggerDescriptor::DoubleTriggerDescriptor(Simulation& s)
    v.push_back(p);
 
    p.first = "Operator : == < > != <= >=";
-   p.second = new StringDataItem;
+   p.second = new CustomStringDataItem;
    v.push_back(p);
 
    p.first = "Criterion";
@@ -124,7 +124,7 @@ Trigger* DoubleTriggerDescriptor :: getTrigger(NDPairList& ndp)
    else {
       
       bool descriptionPassed = false;
-      StringDataItem descriptionDI;
+      CustomStringDataItem descriptionDI;
 
       if (itr == end) {
 	 descriptionDI.setString(_description);

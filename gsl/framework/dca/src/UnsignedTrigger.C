@@ -19,7 +19,7 @@
 #include "NumericDataItem.h"
 #include "Simulation.h"
 #include "Service.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "BoolDataItem.h"
 #include "TriggerDataItem.h"
 #include "ServiceDataItem.h"
@@ -39,10 +39,10 @@ UnsignedTrigger::UnsignedTrigger(Simulation& sim,
     exit(-1);
   }
   std::vector<DataItem*>::const_iterator iter = args.begin();
-  StringDataItem* descriptionDI = dynamic_cast<StringDataItem*>(*iter);
+  CustomStringDataItem* descriptionDI = dynamic_cast<CustomStringDataItem*>(*iter);
   if (descriptionDI == 0)
   {
-    std::cerr << "Dynamic cast of DataItem to StringDataItem failed on "
+    std::cerr << "Dynamic cast of DataItem to CustomStringDataItem failed on "
                  "UnsignedTrigger!" << std::endl;
     exit(-1);
   }
@@ -56,10 +56,10 @@ UnsignedTrigger::UnsignedTrigger(Simulation& sim,
     exit(-1);
   }
   ++iter;
-  StringDataItem* opDI = dynamic_cast<StringDataItem*>(*iter);
+  CustomStringDataItem* opDI = dynamic_cast<CustomStringDataItem*>(*iter);
   if (opDI == 0)
   {
-    std::cerr << "Dynamic cast of DataItem to StringDataItem failed on "
+    std::cerr << "Dynamic cast of DataItem to CustomStringDataItem failed on "
                  "UnsignedTrigger!" << std::endl;
     exit(-1);
   }
@@ -200,7 +200,7 @@ bool UnsignedTrigger::isModulusZero() { return !((*_service) % _criterion); }
 
 bool UnsignedTrigger::isModulusNonZero() { return (*_service) % _criterion; }
 
-void UnsignedTrigger::duplicate(std::unique_ptr<Trigger>& dup) const
+void UnsignedTrigger::duplicate(std::unique_ptr<Trigger>&& dup) const
 {
   dup.reset(new UnsignedTrigger(*this));
 }

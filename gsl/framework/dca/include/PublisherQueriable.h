@@ -13,7 +13,7 @@
 //
 // =================================================================
 
-#ifndef PUBLISHERQUERIALBE_H
+#ifndef PUBLISHERQUERIABLE_H
 #define PUBLISHERQUERIABLE_H
 #include "Copyright.h"
 

@@ -45,17 +45,17 @@ Neg::~Neg()
 {
 }
 
-void Neg::duplicate(std::unique_ptr<Neg>& dup) const
+void Neg::duplicate(std::unique_ptr<Neg>&& dup) const
 {
    dup.reset(new Neg(*this));
 }
 
-void Neg::duplicate(std::unique_ptr<Functor>& dup) const
+void Neg::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new Neg(*this));
 }
 
-void Neg::duplicate(std::unique_ptr<CG_NegBase>& dup) const
+void Neg::duplicate(std::unique_ptr<CG_NegBase>&& dup) const
 {
    dup.reset(new Neg(*this));
 }

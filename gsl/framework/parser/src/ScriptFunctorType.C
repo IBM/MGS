@@ -60,7 +60,7 @@ ScriptFunctorType::ScriptFunctorType(ScriptFunctorType const *sft)
 
 void ScriptFunctorType::getFunctor(std::unique_ptr<Functor> & r_aptr)
 {
-   _c_script_def->getFunctor()->duplicate(r_aptr);
+   _c_script_def->getFunctor()->duplicate(std::move(r_aptr));
 }
 
 

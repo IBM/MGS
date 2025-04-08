@@ -31,7 +31,7 @@ class NdplInAttrInitFunctor: public InAttrInitializerFunctor
    public:
       NdplInAttrInitFunctor();
       NdplInAttrInitFunctor(const NdplInAttrInitFunctor&);
-      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
       virtual ~NdplInAttrInitFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 

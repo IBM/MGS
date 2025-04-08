@@ -185,7 +185,7 @@ void LensConnector::variableToNodeSet(
 	 v=source->getVariable();
 	 v->getOutAttrParameterSet(outAttrPSet);
 	 outAttrPSet->set(*sourceOutAttr);
-	 (*it)->getGridLayerDescriptor()->getNodeType()->getInAttrParameterSet(inAttrPSet);
+	 (*it)->getGridLayerDescriptor()->getNodeType()->getInAttrParameterSet(std::move(inAttrPSet));
 	 inAttrPSet->set(*destinationInAttr);
 	 v->addPostNode(*it, outAttrPSet.get());
 	 (*it)->getNode()->addPreVariable(v, inAttrPSet.get());
@@ -199,7 +199,7 @@ void LensConnector::variableToNodeSet(
      outAttrPSet->set(*sourceOutAttr);
      std::unique_ptr<ParameterSet> inAttrPSet;
 
-     (*it)->getGridLayerDescriptor()->getNodeType()->getInAttrParameterSet(inAttrPSet);
+     (*it)->getGridLayerDescriptor()->getNodeType()->getInAttrParameterSet(std::move(inAttrPSet));
      inAttrPSet->set(*destinationInAttr);
     
      for (; it != end; ++it) {
@@ -334,7 +334,7 @@ void LensConnector::nodeSetToVariable(
      if (to) {
 #endif
        std::unique_ptr<ParameterSet> outAttrPSet;
-       (*it)->getGridLayerDescriptor()->getNodeType()->getOutAttrParameterSet(outAttrPSet);
+       (*it)->getGridLayerDescriptor()->getNodeType()->getOutAttrParameterSet(std::move(outAttrPSet));
        outAttrPSet->set(*sourceOutAttr);
        std::unique_ptr<ParameterSet> inAttrPSet;
        to->getInAttrParameterSet(inAttrPSet);

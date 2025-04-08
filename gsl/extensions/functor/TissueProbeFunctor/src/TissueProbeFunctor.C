@@ -91,17 +91,17 @@ TissueProbeFunctor::TissueProbeFunctor(TissueProbeFunctor* tpf)
 }
 
 
-void TissueProbeFunctor::duplicate(std::unique_ptr<TissueProbeFunctor>& dup) const
+void TissueProbeFunctor::duplicate(std::unique_ptr<TissueProbeFunctor>&& dup) const
 {
    dup.reset(new TissueProbeFunctor(*this));
 }
 
-void TissueProbeFunctor::duplicate(std::unique_ptr<Functor>& dup) const
+void TissueProbeFunctor::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new TissueProbeFunctor(*this));
 }
 
-void TissueProbeFunctor::duplicate(std::unique_ptr<CG_TissueProbeFunctorBase>& dup) const
+void TissueProbeFunctor::duplicate(std::unique_ptr<CG_TissueProbeFunctorBase>&& dup) const
 {
    dup.reset(new TissueProbeFunctor(*this));
 }

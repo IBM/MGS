@@ -44,17 +44,17 @@ TissueLayoutFunctor::~TissueLayoutFunctor()
 {
 }
 
-void TissueLayoutFunctor::duplicate(std::unique_ptr<TissueLayoutFunctor>& dup) const
+void TissueLayoutFunctor::duplicate(std::unique_ptr<TissueLayoutFunctor>&& dup) const
 {
    dup.reset(new TissueLayoutFunctor(*this));
 }
 
-void TissueLayoutFunctor::duplicate(std::unique_ptr<Functor>& dup) const
+void TissueLayoutFunctor::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new TissueLayoutFunctor(*this));
 }
 
-void TissueLayoutFunctor::duplicate(std::unique_ptr<CG_TissueLayoutFunctorBase>& dup) const
+void TissueLayoutFunctor::duplicate(std::unique_ptr<CG_TissueLayoutFunctorBase>&& dup) const
 {
    dup.reset(new TissueLayoutFunctor(*this));
 }

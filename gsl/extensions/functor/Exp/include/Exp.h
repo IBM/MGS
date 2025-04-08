@@ -28,9 +28,9 @@ class Exp : public CG_ExpBase
       double userExecute(LensContext* CG_c);
       Exp();
       virtual ~Exp();
-      virtual void duplicate(std::unique_ptr<Exp>& dup) const;
-      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_ExpBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<Exp>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_ExpBase>&& dup) const;
 };
 
 #endif

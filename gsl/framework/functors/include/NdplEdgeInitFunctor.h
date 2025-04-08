@@ -31,7 +31,7 @@ class NdplEdgeInitFunctor: public EdgeInitializerFunctor
    public:
       NdplEdgeInitFunctor();
       NdplEdgeInitFunctor(const NdplEdgeInitFunctor&);
-      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
       virtual ~NdplEdgeInitFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 

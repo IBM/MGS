@@ -36,7 +36,7 @@ ConnectionScriptFunctor::ConnectionScriptFunctor(
 }
 
 
-void ConnectionScriptFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void ConnectionScriptFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new ConnectionScriptFunctor(*this));
 }

@@ -19,7 +19,7 @@
 #include "UnsignedIntDataItem.h"
 #include "UnsignedTrigger.h"
 #include "ServiceDataItem.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "IntDataItem.h"
 #include "PhaseDataItem.h"
 #include "RuntimePhase.h"
@@ -849,7 +849,7 @@ void LENSServer::keepDataItem(std::unique_ptr<DataItem> & diap)
 
 inline TriggerableBase::EventType LENSServer::createTriggerableCaller(
    const std::string& functionName, NDPairList* ndpList, 
-   std::unique_ptr<TriggerableCaller>& triggerableCaller)
+   std::unique_ptr<TriggerableCaller>&& triggerableCaller)
 {
    if (functionName != "event") {
       throw SyntaxErrorException(

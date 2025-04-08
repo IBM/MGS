@@ -70,17 +70,17 @@ GradientLayout::~GradientLayout()
 {
 }
 
-void GradientLayout::duplicate(std::unique_ptr<GradientLayout>& dup) const
+void GradientLayout::duplicate(std::unique_ptr<GradientLayout>&& dup) const
 {
    dup.reset(new GradientLayout(*this));
 }
 
-void GradientLayout::duplicate(std::unique_ptr<Functor>& dup) const
+void GradientLayout::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new GradientLayout(*this));
 }
 
-void GradientLayout::duplicate(std::unique_ptr<CG_GradientLayoutBase>& dup) const
+void GradientLayout::duplicate(std::unique_ptr<CG_GradientLayoutBase>&& dup) const
 {
    dup.reset(new GradientLayout(*this));
 }

@@ -110,7 +110,7 @@ void OpenCircleLayoutFunctor::doExecute(LensContext *c,
 }
 
 
-void OpenCircleLayoutFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void OpenCircleLayoutFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new OpenCircleLayoutFunctor(*this));
 }

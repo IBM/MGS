@@ -40,7 +40,7 @@ ManhattanRingFunctor::ManhattanRingFunctor()
 {
 }
 
-void ManhattanRingFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void ManhattanRingFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new ManhattanRingFunctor(*this));
 }

@@ -48,7 +48,7 @@ RadialHistoSamplerFunctor::RadialHistoSamplerFunctor()
 {
 }
 
-void RadialHistoSamplerFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void RadialHistoSamplerFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new RadialHistoSamplerFunctor(*this));
 }

@@ -31,7 +31,7 @@ class InAttrDefaultFunctor: public Functor
    public:
       InAttrDefaultFunctor();
       InAttrDefaultFunctor(const InAttrDefaultFunctor&);
-      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
       virtual ~InAttrDefaultFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 

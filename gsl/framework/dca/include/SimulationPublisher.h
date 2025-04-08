@@ -52,7 +52,7 @@ class SimulationPublisher : public Publisher
   std::string getName() const;
   std::string getDescription() const;
   ~SimulationPublisher();
-  virtual void duplicate(std::unique_ptr<Publisher>& dup) const;
+  virtual void duplicate(std::unique_ptr<Publisher>&& dup) const;
 
   private:
   SimulationPublisher& operator=(const SimulationPublisher& rv)

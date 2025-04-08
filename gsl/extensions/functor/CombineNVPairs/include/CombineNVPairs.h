@@ -14,9 +14,9 @@ class CombineNVPairs : public CG_CombineNVPairsBase
       std::unique_ptr<NDPairList> userExecute(LensContext* CG_c);
       CombineNVPairs();
       virtual ~CombineNVPairs();
-      virtual void duplicate(std::unique_ptr<CombineNVPairs>& dup) const;
-      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_CombineNVPairsBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<CombineNVPairs>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_CombineNVPairsBase>&& dup) const;
 };
 
 #endif

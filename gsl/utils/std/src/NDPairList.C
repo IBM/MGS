@@ -40,7 +40,7 @@ NDPairList& NDPairList::operator=(const NDPairList& rv)
    return *this;
 }
 
-void NDPairList::duplicate(std::unique_ptr<NDPairList>& dup) const
+void NDPairList::duplicate(std::unique_ptr<NDPairList>&& dup) const
 {
    dup.reset(new NDPairList(*this));
 }

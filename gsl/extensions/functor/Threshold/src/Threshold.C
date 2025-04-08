@@ -45,17 +45,17 @@ Threshold::~Threshold()
 {
 }
 
-void Threshold::duplicate(std::unique_ptr<Threshold>& dup) const
+void Threshold::duplicate(std::unique_ptr<Threshold>&& dup) const
 {
    dup.reset(new Threshold(*this));
 }
 
-void Threshold::duplicate(std::unique_ptr<Functor>& dup) const
+void Threshold::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new Threshold(*this));
 }
 
-void Threshold::duplicate(std::unique_ptr<CG_ThresholdBase>& dup) const
+void Threshold::duplicate(std::unique_ptr<CG_ThresholdBase>&& dup) const
 {
    dup.reset(new Threshold(*this));
 }

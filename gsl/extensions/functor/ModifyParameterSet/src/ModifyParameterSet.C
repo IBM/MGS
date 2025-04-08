@@ -38,7 +38,7 @@ std::unique_ptr<ParameterSet> ModifyParameterSet::userExecute(LensContext* CG_c)
 	 "ModifyParameterSet, first argument: functor did not return a Parameter Set");
    }
    std::unique_ptr<ParameterSet> pset;
-   psdi->getParameterSet()->duplicate(pset);
+   psdi->getParameterSet()->duplicate(std::move(pset));
 
    init.f2->execute(CG_c, nullArgs, rval_ap);
    NDPairListDataItem *ndpldi = 
@@ -48,7 +48,7 @@ std::unique_ptr<ParameterSet> ModifyParameterSet::userExecute(LensContext* CG_c)
 	 "ModifyParameterSet, second argument: functor did not return a NDPairList");
    }
    std::unique_ptr<NDPairList> ndpl_aptr;
-   ndpldi->getNDPairList()->duplicate(ndpl_aptr);
+   ndpldi->getNDPairList()->duplicate(std::move(ndpl_aptr));
 
    pset->set(*(ndpl_aptr.release()));
    return pset;
@@ -63,17 +63,17 @@ ModifyParameterSet::~ModifyParameterSet()
 {
 }
 
-void ModifyParameterSet::duplicate(std::unique_ptr<ModifyParameterSet>& dup) const
+void ModifyParameterSet::duplicate(std::unique_ptr<ModifyParameterSet>&& dup) const
 {
    dup.reset(new ModifyParameterSet(*this));
 }
 
-void ModifyParameterSet::duplicate(std::unique_ptr<Functor>& dup) const
+void ModifyParameterSet::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new ModifyParameterSet(*this));
 }
 
-void ModifyParameterSet::duplicate(std::unique_ptr<CG_ModifyParameterSetBase>& dup) const
+void ModifyParameterSet::duplicate(std::unique_ptr<CG_ModifyParameterSetBase>&& dup) const
 {
    dup.reset(new ModifyParameterSet(*this));
 }

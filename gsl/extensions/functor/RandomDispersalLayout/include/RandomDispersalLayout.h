@@ -15,9 +15,9 @@ class RandomDispersalLayout : public CG_RandomDispersalLayoutBase
       ShallowArray< int > userExecute(LensContext* CG_c);
       RandomDispersalLayout();
       virtual ~RandomDispersalLayout();
-      virtual void duplicate(std::unique_ptr<RandomDispersalLayout>& dup) const;
-      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_RandomDispersalLayoutBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<RandomDispersalLayout>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_RandomDispersalLayoutBase>&& dup) const;
       //   private:
       //      RNG _rng;
 };

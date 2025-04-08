@@ -4,10 +4,20 @@ export NTSMGSROOT=$MGSROOT
 export GSLROOT=$MGSROOT/gsl
 export MDLROOT=$MGSROOT/mdl
 export GSLPARSER=$GSLROOT/bin/gslparser
+export MDLPARSER=$MDLROOT/bin/mdlparser
 export PATH=$GSLROOT/bin:$PATH
+
 if [ -f .built ]; then
-sed -i "1s@.*@$MGSROOT@" .built
-sed -i "2s@.*@@" .built
+    # Detect OS and use appropriate sed syntax
+    if [[ "$(uname)" == "Darwin" ]]; then
+        # macOS
+        sed -i '' "1s@.*@$MGSROOT@" .built
+        sed -i '' "2s@.*@@" .built
+    else
+        # Linux and others
+        sed -i "1s@.*@$MGSROOT@" .built
+        sed -i "2s@.*@@" .built
+    fi
 fi
 #module switch gcc/7.3
 #module switch cuda/9.2

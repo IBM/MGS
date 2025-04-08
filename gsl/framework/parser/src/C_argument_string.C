@@ -14,12 +14,12 @@
 // =================================================================
 
 #include "C_argument_string.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "SyntaxError.h"
 
 void C_argument_string::internalExecute(LensContext *c)
 {
-   _str_dataitem = new StringDataItem();
+   _str_dataitem = new CustomStringDataItem();
    _str_dataitem->setString(*_string);
 }
 
@@ -30,7 +30,7 @@ C_argument_string::C_argument_string(const C_argument_string& rv)
    if (rv._str_dataitem) {
       std::unique_ptr<DataItem> cc_di;
       rv._str_dataitem->duplicate(cc_di);
-      _str_dataitem = dynamic_cast<StringDataItem*>(cc_di.release());
+      _str_dataitem = dynamic_cast<CustomStringDataItem*>(cc_di.release());
    }
    if (rv._string) {
       _string = new std::string(*(rv._string));

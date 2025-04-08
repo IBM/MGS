@@ -136,8 +136,8 @@ void IReceiver::initialize(Simulation* s, int rank)
    std::list<DistributableCompCategoryBase*>::iterator iter, end =  _simulationPtr->_distCatList.end();
 
    for (iter = _simulationPtr->_distCatList.begin(); iter != end; ++iter) {
-      if (dm = (*iter)->getDemarshaller(_source)) _demarshallers.push_back(dm);
-      if (ibc = (*iter)->getReceiveBlockCreator(_source)) _indexedBlockCreators.push_back(ibc);
+      if ( ( dm = (*iter)->getDemarshaller(_source) ) ) _demarshallers.push_back(dm);
+      if ( ( ibc = (*iter)->getReceiveBlockCreator(_source) ) ) _indexedBlockCreators.push_back(ibc);
    }
    _currentDemarshaller = _demarshallers.begin();
 }

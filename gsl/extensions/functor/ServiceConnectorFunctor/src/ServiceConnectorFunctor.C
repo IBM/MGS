@@ -38,7 +38,7 @@
 #include "EdgeSetDataItem.h"
 #include "NodeDataItem.h"
 #include "EdgeDataItem.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "FunctorDataItem.h"
 #include "ServiceDataItem.h"
 #include "Publisher.h"
@@ -140,14 +140,14 @@ void ServiceConnectorFunctor::userExecute(
 
   ++it;
 
-  StringDataItem* stringDI;
+  CustomStringDataItem* stringDI;
   FunctorDataItem* functorDI;
   std::string serviceName;
   std::unique_ptr<Functor> functorAp;
   while (it != end)
   {
     serviceName = "";
-    stringDI = dynamic_cast<StringDataItem*>(*it);
+    stringDI = dynamic_cast<CustomStringDataItem*>(*it);
     if (stringDI == 0)
     {
       functorDI = dynamic_cast<FunctorDataItem*>(*it);
@@ -160,7 +160,7 @@ void ServiceConnectorFunctor::userExecute(
       }
       else
       {
-        functorDI->getFunctor()->duplicate(functorAp);
+        functorDI->getFunctor()->duplicate(std::move(functorAp));
       }
     }
     else
@@ -170,7 +170,7 @@ void ServiceConnectorFunctor::userExecute(
 
     ++it;
 
-    stringDI = dynamic_cast<StringDataItem*>(*it);
+    stringDI = dynamic_cast<CustomStringDataItem*>(*it);
     if (stringDI == 0)
     {
       std::ostringstream os;
@@ -215,18 +215,18 @@ ServiceConnectorFunctor::ServiceConnectorFunctor()
 ServiceConnectorFunctor::~ServiceConnectorFunctor() {}
 
 void ServiceConnectorFunctor::duplicate(
-    std::unique_ptr<ServiceConnectorFunctor>& dup) const
+    std::unique_ptr<ServiceConnectorFunctor>&& dup) const
 {
   dup.reset(new ServiceConnectorFunctor(*this));
 }
 
-void ServiceConnectorFunctor::duplicate(std::unique_ptr<Functor>& dup) const
+void ServiceConnectorFunctor::duplicate(std::unique_ptr<Functor>&& dup) const
 {
   dup.reset(new ServiceConnectorFunctor(*this));
 }
 
 void ServiceConnectorFunctor::duplicate(
-    std::unique_ptr<CG_ServiceConnectorFunctorBase>& dup) const
+    std::unique_ptr<CG_ServiceConnectorFunctorBase>&& dup) const
 {
   dup.reset(new ServiceConnectorFunctor(*this));
 }
@@ -524,7 +524,7 @@ void ServiceConnectorFunctor::ServiceConnectorElement::copyOwnedHeap(
   if (rv._functor)
   {
     std::unique_ptr<Functor> dup;
-    rv._functor->duplicate(dup);
+    rv._functor->duplicate(std::move(dup));
     _functor = dup.release();
   }
   else

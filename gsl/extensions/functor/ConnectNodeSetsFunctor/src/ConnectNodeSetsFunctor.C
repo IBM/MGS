@@ -284,17 +284,17 @@ ConnectNodeSetsFunctor::~ConnectNodeSetsFunctor()
 {
 }
 
-void ConnectNodeSetsFunctor::duplicate(std::unique_ptr<ConnectNodeSetsFunctor>& dup) const
+void ConnectNodeSetsFunctor::duplicate(std::unique_ptr<ConnectNodeSetsFunctor>&& dup) const
 {
    dup.reset(new ConnectNodeSetsFunctor(*this));
 }
 
-void ConnectNodeSetsFunctor::duplicate(std::unique_ptr<Functor>& dup) const
+void ConnectNodeSetsFunctor::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new ConnectNodeSetsFunctor(*this));
 }
 
-void ConnectNodeSetsFunctor::duplicate(std::unique_ptr<CG_ConnectNodeSetsFunctorBase>& dup) const
+void ConnectNodeSetsFunctor::duplicate(std::unique_ptr<CG_ConnectNodeSetsFunctorBase>&& dup) const
 {
    dup.reset(new ConnectNodeSetsFunctor(*this));
 }

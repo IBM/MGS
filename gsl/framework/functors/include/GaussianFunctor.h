@@ -23,7 +23,7 @@ class GaussianFunctor: public Functor
 {
    public:
       GaussianFunctor();
-      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
       virtual ~GaussianFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 

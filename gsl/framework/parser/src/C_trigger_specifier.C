@@ -73,7 +73,7 @@ void C_trigger_specifier::internalExecute(LensContext *c)
       std::vector<Triggerable*>::iterator it, end = triggerables.end();
       for(it = triggerables.begin(); it != end; ++it) {
 	 if (ndpList) {
-	    ndpList->duplicate(ndpListAp);
+	    ndpList->duplicate(std::move(ndpListAp));
 	 }
 	 (*it)->addTrigger(trigger, _action->getName(), ndpListAp);
       }

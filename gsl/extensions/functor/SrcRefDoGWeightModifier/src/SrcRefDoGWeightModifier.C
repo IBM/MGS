@@ -111,7 +111,7 @@ std::unique_ptr<ParameterSet> SrcRefDoGWeightModifier::userExecute(LensContext* 
    ndpl.push_back(ndp2);
 
    std::unique_ptr<ParameterSet> pset;
-   psdi->getParameterSet()->duplicate(pset);
+   psdi->getParameterSet()->duplicate(std::move(pset));
    pset->set(ndpl);
    return pset;
 }
@@ -125,17 +125,17 @@ SrcRefDoGWeightModifier::~SrcRefDoGWeightModifier()
 {
 }
 
-void SrcRefDoGWeightModifier::duplicate(std::unique_ptr<SrcRefDoGWeightModifier>& dup) const
+void SrcRefDoGWeightModifier::duplicate(std::unique_ptr<SrcRefDoGWeightModifier>&& dup) const
 {
    dup.reset(new SrcRefDoGWeightModifier(*this));
 }
 
-void SrcRefDoGWeightModifier::duplicate(std::unique_ptr<Functor>& dup) const
+void SrcRefDoGWeightModifier::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new SrcRefDoGWeightModifier(*this));
 }
 
-void SrcRefDoGWeightModifier::duplicate(std::unique_ptr<CG_SrcRefDoGWeightModifierBase>& dup) const
+void SrcRefDoGWeightModifier::duplicate(std::unique_ptr<CG_SrcRefDoGWeightModifierBase>&& dup) const
 {
    dup.reset(new SrcRefDoGWeightModifier(*this));
 }

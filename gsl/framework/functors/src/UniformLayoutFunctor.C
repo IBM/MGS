@@ -51,7 +51,7 @@ void UniformLayoutFunctor::doExecute(LensContext *c,
 }
 
 
-void UniformLayoutFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void UniformLayoutFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new UniformLayoutFunctor(*this));
 }

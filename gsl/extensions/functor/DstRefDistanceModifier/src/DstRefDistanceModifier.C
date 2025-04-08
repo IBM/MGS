@@ -66,7 +66,7 @@ std::unique_ptr<ParameterSet> DstRefDistanceModifier::userExecute(LensContext* C
    NDPairList ndpl;
    ndpl.push_back(ndp);
    std::unique_ptr<ParameterSet> pset;
-   psdi->getParameterSet()->duplicate(pset);
+   psdi->getParameterSet()->duplicate(std::move(pset));
    pset->set(ndpl);
    return pset;
 }
@@ -80,17 +80,17 @@ DstRefDistanceModifier::~DstRefDistanceModifier()
 {
 }
 
-void DstRefDistanceModifier::duplicate(std::unique_ptr<DstRefDistanceModifier>& dup) const
+void DstRefDistanceModifier::duplicate(std::unique_ptr<DstRefDistanceModifier>&& dup) const
 {
    dup.reset(new DstRefDistanceModifier(*this));
 }
 
-void DstRefDistanceModifier::duplicate(std::unique_ptr<Functor>& dup) const
+void DstRefDistanceModifier::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new DstRefDistanceModifier(*this));
 }
 
-void DstRefDistanceModifier::duplicate(std::unique_ptr<CG_DstRefDistanceModifierBase>& dup) const
+void DstRefDistanceModifier::duplicate(std::unique_ptr<CG_DstRefDistanceModifierBase>&& dup) const
 {
    dup.reset(new DstRefDistanceModifier(*this));
 }

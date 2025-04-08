@@ -35,17 +35,17 @@ RandomDispersalLayout::~RandomDispersalLayout()
 {
 }
 
-void RandomDispersalLayout::duplicate(std::unique_ptr<RandomDispersalLayout>& dup) const
+void RandomDispersalLayout::duplicate(std::unique_ptr<RandomDispersalLayout>&& dup) const
 {
    dup.reset(new RandomDispersalLayout(*this));
 }
 
-void RandomDispersalLayout::duplicate(std::unique_ptr<Functor>& dup) const
+void RandomDispersalLayout::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new RandomDispersalLayout(*this));
 }
 
-void RandomDispersalLayout::duplicate(std::unique_ptr<CG_RandomDispersalLayoutBase>& dup) const
+void RandomDispersalLayout::duplicate(std::unique_ptr<CG_RandomDispersalLayoutBase>&& dup) const
 {
    dup.reset(new RandomDispersalLayout(*this));
 }

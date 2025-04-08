@@ -32,7 +32,7 @@ class UnsignedServiceTrigger : public TriggerBase
   public:
   UnsignedServiceTrigger(Simulation& sim, std::vector<DataItem*> const& args);
   virtual bool status();
-  virtual void duplicate(std::unique_ptr<Trigger>& dup) const;
+  virtual void duplicate(std::unique_ptr<Trigger>&& dup) const;
   virtual ~UnsignedServiceTrigger();
 
   private:

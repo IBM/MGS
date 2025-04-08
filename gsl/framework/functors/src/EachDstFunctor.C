@@ -41,13 +41,13 @@ EachDstFunctor::EachDstFunctor(const EachDstFunctor& csf)
      _nodes(csf._nodes), count(csf.count), _allowConnectToItself(csf._allowConnectToItself)
 
 {
-   if (csf._functor_ap.get()) csf._functor_ap->duplicate(_functor_ap);
+   if (csf._functor_ap.get()) csf._functor_ap->duplicate(std::move(_functor_ap));
    _nodesIter = _nodes.begin();
    _nodesEnd = _nodes.end();
 }
 
 
-void EachDstFunctor::duplicate (std::unique_ptr<Functor> &fap) const
+void EachDstFunctor::duplicate (std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new EachDstFunctor(*this));
 }
@@ -79,7 +79,7 @@ void EachDstFunctor::doInitialize(LensContext *c,
 	    << baseMsg.str();
       throw SyntaxErrorException(msg.str());
    }
-   if (fdi->getFunctor()) fdi->getFunctor()->duplicate(_functor_ap);
+   if (fdi->getFunctor()) fdi->getFunctor()->duplicate(std::move(_functor_ap));
    else {
       throw SyntaxErrorException(
 	 "Bad functor argument passed to EachDstFunctor");
