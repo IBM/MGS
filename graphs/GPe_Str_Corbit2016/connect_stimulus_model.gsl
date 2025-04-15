@@ -1,9 +1,7 @@
-#// =================================================================
-#//
-#// (C) Copyright 2018 New Jersey Institute of Technology.
-#//
-#// =================================================================
-
+// =============================================================================
+// (C) Copyright 2018 New Jersey Institute of Technology. All rights reserved.
+//
+// =============================================================================
 #if STIMULUS_CASE == CASE_08
 polyConnect(timeStep, somaClamp, <>, <>);
 polyConnect(somaClamp, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=0>), <>, <identifier="stimulation">);

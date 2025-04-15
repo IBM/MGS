@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-10-18-2018
-//
-// (C) Copyright IBM Corp. 2005-2018  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef DUPLICATEPOINTERARRAY_GPU_H
 #define DUPLICATEPOINTERARRAY_GPU_H
 template <class T, int memLocation = 0, unsigned blockIncrementSize = SUGGESTEDBLOCKINCREMENTSIZE>

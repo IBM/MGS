@@ -1,7 +1,7 @@
 #ifndef ChannelHayCaLVA_MDL
 #define ChannelHayCaLVA_MDL
 
-#include "../std/std.mdl"
+#include "std.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 

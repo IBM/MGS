@@ -2,7 +2,7 @@
 #define NMDAReceptor_MDL
 
 #include "../../nti/include/MaxComputeOrder.h"
-#include "../std/std.mdl"
+#include "std.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 

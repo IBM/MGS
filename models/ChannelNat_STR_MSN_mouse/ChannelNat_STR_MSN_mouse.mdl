@@ -1,15 +1,13 @@
-#// =================================================================
-#//
-#// (C) Copyright 2018 New Jersey Institute of Technology.
-#//
-#// =================================================================
-
+// =============================================================================
+// (C) Copyright 2018 New Jersey Institute of Technology. All rights reserved.
+//
+// =============================================================================
 #ifndef ChannelNat_STR_MSN_mouse_MDL
 #define ChannelNat_STR_MSN_mouse_MDL
 
 #include "../../nti/include/MaxComputeOrder.h"
 
-#include "../std/std.mdl"
+#include "std.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 

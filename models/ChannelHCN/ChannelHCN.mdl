@@ -1,7 +1,7 @@
 #ifndef ChannelHCN_MDL
 #define ChannelHCN_MDL
 
-#include "../std/std.mdl"
+#include "std.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 

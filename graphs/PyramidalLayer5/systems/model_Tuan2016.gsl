@@ -5,7 +5,7 @@
 #include "Topology.h"
 
 #include "../../nti/include/MaxComputeOrder.h"
-#include "../std/std.gsl"
+#include "std.gsl"
 
 #define _CCAT(x,y) x ## y 
 #define CCAT(x,y) _CCAT(x,y)

@@ -1,18 +1,12 @@
 %{
-/* =================================================================*/
-/* Licensed Materials - Property of IBM                             */
-/*                                                                  */
-/* "Restricted Materials of IBM"                                    */
-/*                                                                  */
-/* BCM-YKT-11-19-2015                                             */
-/*                                                                  */
-/* (C) Copyright IBM Corp. 2005-2015  All rights reserved          */
-/*                                                                  */
-/* US Government Users Restricted Rights -                          */
-/* Use, duplication or disclosure restricted by                     */
-/* GSA ADP Schedule Contract with IBM Corp.                         */
-/*                                                                  */
-/* =================================================================*/
+// =============================================================================*/
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)                        */
+//                                                                  */
+// =============================================================================*/
 %}
 %x COMMENT
 

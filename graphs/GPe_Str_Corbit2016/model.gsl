@@ -1,12 +1,10 @@
-#// =================================================================
-#//
-#// (C) Copyright 2018 New Jersey Institute of Technology.
-#//
-#// =================================================================
-
+// =============================================================================
+// (C) Copyright 2018 New Jersey Institute of Technology. All rights reserved.
+//
+// =============================================================================
 #include "Topology.h"
 #include "../../nti/include/MaxComputeOrder.h"
-#include "../std/std.gsl"
+#include "std.gsl"
 
 #define JK_Unit_Test
 

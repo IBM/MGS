@@ -1,7 +1,7 @@
 #ifndef KDRChannel_AIS_MDL
 #define KDRChannel_AIS_MDL
 
-#include "../std/std.mdl"
+#include "std.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 

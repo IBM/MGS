@@ -2,7 +2,7 @@
 #define ECS_MDL
 #include "../../nti/include/MaxComputeOrder.h"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
-#include "../std/std.mdl"
+#include "std.mdl"
 
 Interface AnythingIntProducer {
    int* anything;

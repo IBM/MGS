@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_phase_mapping.h"
 #include "SyntaxError.h"
 #include "C_production.h"
@@ -31,19 +24,19 @@ void C_phase_mapping::internalExecute(LensContext *c)
    CompCategoryBase* ccBase = c->getCurrentCompCategoryBase();
    std::string type = ccBase->getPhaseType(_modelPhase);
    if (type == "") {
-      throwError(_modelPhase + " does not exist in CompCategory.==================");
+      throwError("ERROR: " + _modelPhase + " does not exist in CompCategory.");
    }
    DataItem* dataItem = dynamic_cast<DataItem*> ( 
       c->symTable.getEntry(_simulationPhase));
    if (dataItem == 0) {
-      throwError(_simulationPhase + " is not defined.++++++++++++++");
+      throwError("ERROR: " + _simulationPhase + " is not defined.");
    }
    PhaseDataItem* phaseDataItem = dynamic_cast<PhaseDataItem*> (dataItem);
    if (phaseDataItem == 0) {
-      throwError(_simulationPhase + " is not defined as phase.");
+      throwError("ERROR: " + _simulationPhase + " is not defined as phase.");
    }
    if (type != phaseDataItem->getPhase()->getType()) {
-      throwError(_modelPhase + " type: " + type + ", " + _simulationPhase +
+      throwError("ERROR: " + _modelPhase + " type: " + type + ", " + _simulationPhase +
 		 " type: " + phaseDataItem->getPhase()->getType() + ".");
    }
    std::unique_ptr<Phase> dup;

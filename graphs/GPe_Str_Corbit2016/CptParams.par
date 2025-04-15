@@ -1,8 +1,7 @@
-#// =================================================================
-#//
-#// (C) Copyright 2018 New Jersey Institute of Technology.
-#//
-#// =================================================================
+// =============================================================================
+// (C) Copyright 2018 New Jersey Institute of Technology. All rights reserved.
+//
+// =============================================================================
 #{{{explains
 # NOTE: No ER on axon branch
 # MTYPE = 0 (neuron), = 1 (GABA bouton), = 2 or 3 (thin or mush spine)

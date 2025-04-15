@@ -1,9 +1,7 @@
-// =================================================================
+// =============================================================================
+// (C) Copyright 2018 New Jersey Institute of Technology. All rights reserved.
 //
-// (C) Copyright 2018 New Jersey Institute of Technology.
-//
-// =================================================================
-
+// =============================================================================
 
 #ifndef ChannelKv1_STR_FSI_mouseCompCategory_H
 #define ChannelKv1_STR_FSI_mouseCompCategory_H

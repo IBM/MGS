@@ -2961,18 +2961,25 @@ int main(int argc, char** argv)
   MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &provided);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #endif
-  if (rank==0) {
-    std::cout << ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n"
-          << ".                                                           .\n"
-          << ".  Licensed Materials - Property of IBM                     .\n"
-          << ".                                                           .\n"
-          << ".  \"Restricted Materials of IBM\"                            .\n"
-          << ".                                                           .\n"
-          << ".  BCM-YKT-10-20-2018, Version 3.0.0                        .\n"
-          << ".                                                           .\n"
-          << ".  (C) Copyright IBM Corp. 2005-2018  All rights reserved   .\n"
-          << ".                                                           .\n"
-          << ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n";
+  if (rank==0) { 
+    std::cout  <<". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . "<<std::endl
+               <<".         __+__+_          +_____+       +___+            . "<<std::endl
+               <<".       /    ___ \\        /       \\      /  /             ."<<std::endl
+               <<".      / /  +/  __|      /  _______\\     /  /             ."<<std::endl
+               <<".     / /  /            /  /             /  /             ."<<std::endl
+               <<".    / /  /            /  \\\\             /  /             ."<<std::endl
+               <<".   / /  /              \\   \\+____       /  /             ."<<std::endl
+               <<".  / /  /    ______      \\        \\\\     |  |             ."<<std::endl
+               <<". / /  /    [_   + ]      \\_______ \\\\    /  /             ."<<std::endl
+               <<". \\ \\+|        \\  \\               \\  \\   |  |             ."<<std::endl
+               <<".  \\ \\ \\        \\  \\     _____    /  \\\\  |  |             ."<<std::endl
+               <<".   \\ \\ \\      +/  /    /     \\+ /    /  |  |             ."<<std::endl
+               <<".    \\ \\ \\    /   /      \\     +     /   |  |             ."<<std::endl
+               <<".     \\ \\ \\  /   /        \\         /    \\  \\             ."<<std::endl
+               <<".      \\  \\\\    /          \\\\ + +  /     |  \\\\__________+ ."<<std::endl
+               <<".       \\ \\\\___/________ +  \\\\____/  _+  \\\\_\\\\__________/ ."<<std::endl
+               <<".        \\____/   ________________________ \\__________/   ."<<std::endl
+               <<". . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."<<std::endl;
   }
 
    SimInitializer si;

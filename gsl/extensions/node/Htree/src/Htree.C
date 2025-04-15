@@ -1,21 +1,14 @@
 /*
 @ University of Canterbury 2017-2018. All rights reserved.
  */
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-11-19-2018
-//
-// (C) Copyright IBM Corp. 2005-2018  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "Lens.h"
 #include "Htree.h"
 #include "CG_Htree.h"

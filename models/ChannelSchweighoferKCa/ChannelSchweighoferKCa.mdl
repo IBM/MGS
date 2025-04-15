@@ -1,7 +1,7 @@
 #ifndef ChannelSchweighoferKCa_MDL
 #define ChannelSchweighoferKCa_MDL
 
-#include "../std/std.mdl"
+#include "std.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 

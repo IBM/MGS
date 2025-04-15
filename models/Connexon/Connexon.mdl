@@ -3,7 +3,7 @@
 
 #include "../../nti/include/MaxComputeOrder.h"
 
-#include "../std/std.mdl"
+#include "std.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 

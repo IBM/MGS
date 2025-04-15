@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BMC-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef TissueFunctor_H
 #define TissueFunctor_H
 
@@ -62,17 +55,17 @@ class TissueFunctor : public CG_TissueFunctorBase
 
   public:
   //NDPairList* getParams(){ return _params; };
-  void userInitialize(LensContext* CG_c, String& commandLineArgs1,
-                      String& commandLineArgs2, String& compartmentParamFile,
-                      String& channelParamFile, String& synapseParamFile,
+  void userInitialize(LensContext* CG_c, CustomString& commandLineArgs1,
+                      CustomString& commandLineArgs2, CustomString& compartmentParamFile,
+                      CustomString& channelParamFile, CustomString& synapseParamFile,
                       Functor*& layoutFunctor, Functor*& nodeInitFunctor,
                       Functor*& connectorFunctor, Functor*& probeFunctor);
-  // void userInitialize(LensContext* CG_c, String& commandLineArgs1, String& commandLineArgs2, 
-	//	       String& compartmentParamFile, String& channelParamFile, String& synapseParamFile,
+  // void userInitialize(LensContext* CG_c, CustomString& commandLineArgs1, CustomString& commandLineArgs2, 
+	//	       CustomString& compartmentParamFile, CustomString& channelParamFile, CustomString& synapseParamFile,
 	//	       Functor*& layoutFunctor, Functor*& nodeInitFunctor,
 	//	       Functor*& connectorFunctor, Functor*& probeFunctor,
 	//	       Functor*& MGSifyFunctor); //idea abandoned - JamesK.
-  std::unique_ptr<Functor> userExecute(LensContext* CG_c, String& tissueElement,
+  std::unique_ptr<Functor> userExecute(LensContext* CG_c, CustomString& tissueElement,
                                      NDPairList*& params);
 
   TissueFunctor();

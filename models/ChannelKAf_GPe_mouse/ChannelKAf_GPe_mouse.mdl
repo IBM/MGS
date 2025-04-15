@@ -1,15 +1,13 @@
-#// =================================================================
-#//
-#// (C) Copyright 2018 New Jersey Institute of Technology.
-#//
-#// =================================================================
-
+// =============================================================================
+// (C) Copyright 2018 New Jersey Institute of Technology. All rights reserved.
+//
+// =============================================================================
 #ifndef ChannelKAf_GPe_mouse_MDL
 #define ChannelKAf_GPe_mouse_MDL
 
 #include "../../nti/include/MaxComputeOrder.h"
 
-#include "../std/std.mdl"
+#include "std.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 

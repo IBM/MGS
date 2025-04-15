@@ -1,19 +1,12 @@
 #include <memory>
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "Class.h"
 #include "Method.h"
 #include "CopyConstructorMethod.h"
@@ -560,38 +553,6 @@ void Class::printBeginning(std::ostringstream& os)
 //      << "\n";
 }
 
-
-void Class::printCopyright(std::ostringstream& os)
-{
-  std::string current_date; 
-  std::chrono::system_clock::time_point tp = std::chrono::system_clock::now();
-  std::time_t time = std::chrono::system_clock::to_time_t(tp);
-  std::tm* timetm = std::localtime(&time);
-  char date_time_format[] = "%m-%d-%Y";
-  char time_str[] = "mm-dd-yyyyaa";
-  strftime(time_str, strlen(time_str), date_time_format, timetm);
-  char year_format[] = "%Y";
-  char year[] = "mm-dd-yyyya";
-  strftime(year, strlen(year), year_format, timetm);
-  os << "// =================================================================\n"
-    << "// Licensed Materials - Property of IBM\n"
-    << "//\n"
-    << "// \"Restricted Materials of IBM\n"
-    << "//\n"
-    //<< "// BCM-YKT-07-18-2017\n"
-    << "// BCM-YKT-"
-    << time_str << "\n"
-    << "//\n"
-    << "//  (C) Copyright IBM Corp. 2005-"
-    << year << "  All rights reserved   .\n"
-    //<< "// (C) Copyright IBM Corp. 2005-2017  All rights reserved\n"
-    << "// US Government Users Restricted Rights -\n"
-    << "// Use, duplication or disclosure restricted by\n"
-    << "// GSA ADP Schedule Contract with IBM Corp.\n"
-    << "//\n"
-    << "// =================================================================\n\n";
-}
-
 void Class::printHeaders(const std::set<IncludeHeader>& headers, 
 			 std::ostringstream& os)
 {
@@ -875,7 +836,6 @@ void Class::generateOutputCustom(const std::string& filename,
 void Class::generateHeader(const std::string& moduleName)
 {
    std::ostringstream os;
-   if (!_userCode) printCopyright(os);
    printBeginning(os); 
 
    os << "#include \"Lens.h\"\n";          // added by Jizhu Lu on 01/06/2006
@@ -988,7 +948,6 @@ void Class::generateSource(const std::string& moduleName)
 {
    std::ostringstream os;
 
-   if (!_userCode) printCopyright(os);
    os << _macroConditional.getBeginning();
 
    os << "#include \"Lens.h\"\n";            // added by Jizhu Lu on 01/06/2006

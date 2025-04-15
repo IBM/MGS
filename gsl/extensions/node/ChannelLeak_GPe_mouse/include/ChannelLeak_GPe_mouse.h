@@ -1,9 +1,7 @@
-// =================================================================
+// =============================================================================
+// (C) Copyright 2018 New Jersey Institute of Technology. All rights reserved.
 //
-// (C) Copyright 2018 New Jersey Institute of Technology.
-//
-// =================================================================
-
+// =============================================================================
 
 #ifndef ChannelLeak_GPe_mouse_H
 #define ChannelLeak_GPe_mouse_H

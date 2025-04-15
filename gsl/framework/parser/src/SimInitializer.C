@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif 
@@ -128,83 +121,96 @@ bool SimInitializer::internalExecute(int argc, char** argv)
 //#ifndef PROFILING
    bool processed=false;
 #ifdef USING_BLUEGENE
-   char temporaryName[256];
+   char gslName[256];
    std::ostringstream os;
    os<<infilename<<"ps";
-   strcpy(temporaryName,os.str().c_str());
+   strcpy(gslName,os.str().c_str());
    std::string line;
    std::ifstream topf("Topology.h");
    std::string top[3] = {"-1", "-1", "-1"};
    if (topf.is_open()) {
-     while ( topf.good() ) {
-       getline(topf, line);
-       std::stringstream ss(line);
-       std::string tok;
-       ss>>tok;
-       if (tok=="#define") {
-	 ss>>tok;
-	 if (tok=="_X_") ss>>top[0];
-	 else if (tok=="_Y_") ss>>top[1];
-	 else if (tok=="_Z_") ss>>top[2];
-	 else {
-	   std::cerr<<"Error reading Topology.h!"<<std::endl;
-	   exit(-1);
-	 }
-       }
-     }
-     topf.close();
-     if (_rank==0) {
-       std::ifstream inf(infilename);
-       if (inf.is_open()) {
-	 std::ofstream outf(temporaryName);
-	 if (outf.is_open()) {
-	   while ( inf.good() ) {
-	     getline(inf, line);
-	     std::size_t pos=0;
-	     pos=line.find("_X_",0);
-	     while(pos!=std::string::npos) {
-	       line.replace(pos, 3, top[0]);
-	       pos=line.find("_X_",pos+1);
-	     }
-	     pos=line.find("_Y_",0);
-	     while(pos!=std::string::npos) {
-	       line.replace(pos, 3, top[1]);
-	       pos=line.find("_Y_",pos+1);
-	     }
-	     pos=line.find("_Z_",0);
-	     while(pos!=std::string::npos) {
-	       line.replace(pos, 3, top[2]);
-	       pos=line.find("_Z_",pos+1);
-	     }
-	     outf<<line<<std::endl;
-	   }
-	   outf.close();
-	   inf.close();
-	   processed=true;
-	 }
-       }
-     }
-     else processed=true;
+      while ( topf.good() ) {
+         getline(topf, line);
+         std::stringstream ss(line);
+         std::string tok;
+         ss>>tok;
+         if (tok=="#define") {
+            ss>>tok;
+            if (tok=="_X_") ss>>top[0];
+            else if (tok=="_Y_") ss>>top[1];
+            else if (tok=="_Z_") ss>>top[2];
+            else {
+               std::cerr<<"Error reading Topology.h!"<<std::endl;
+               exit(-1);
+            }
+         }
+      }
+      topf.close();
+      if (_rank==0) {
+         std::ifstream inf(infilename);
+         if (inf.is_open()) {
+	         std::ofstream outf(gslName);
+            if (outf.is_open()) {
+               while (inf.good() ) {
+                  getline(inf, line);
+                  std::size_t pos=0;
+                  pos=line.find("_X_",0);
+                  while(pos!=std::string::npos) {
+                     line.replace(pos, 3, top[0]);
+                     pos=line.find("_X_",pos+1);
+                  }
+                  pos=line.find("_Y_",0);
+                  while(pos!=std::string::npos) {
+                     line.replace(pos, 3, top[1]);
+                     pos=line.find("_Y_",pos+1);
+                  }
+                  pos=line.find("_Z_",0);
+                  while(pos!=std::string::npos) {
+                     line.replace(pos, 3, top[2]);
+                     pos=line.find("_Z_",pos+1);
+                  }
+                  outf<<line<<std::endl;
+               }
+               outf.close();
+               inf.close();
+               processed=true;
+            }
+         }
+      }
+      else processed=true;
    }
    MPI_Barrier(MPI_COMM_WORLD);
 #else
-   char temporaryName[256] = "/tmp/bc_mpp.XXXXXX";               // modified by Jizhu Lu on 01/10/2006
+   bool preprocessed = false;
+   char mgsName[256] = "mgs.XXXXXX";               // modified by Jizhu Lu on 01/10/2006
+   if (mkstemp(mgsName)) {                              // added by Jizhu Lu on 01/10/2006
+      std::string preprocessedContent = preprocessMGSROOT(infilename);
+      std::ofstream mgsFile(mgsName);
+      preprocessed = !preprocessedContent.empty();
+      mgsFile << preprocessedContent;
+      mgsFile.close();
+   }
+   char gslName[256] = "/tmp/gsl.XXXXXX";               // modified by Jizhu Lu on 01/10/2006
    char command[256];
-   if (mkstemp(temporaryName)) {                                 // added by Jizhu Lu on 01/10/2006
+   if (preprocessed && mkstemp(gslName)) {                                // added by Jizhu Lu on 01/10/2006
 #ifdef LINUX
-     sprintf(command,"cpp -traditional-cpp %s %s", infilename, temporaryName);
+     sprintf(command,"cpp -I$MGSROOT/graphs/std %s %s", mgsName, gslName);
 #endif
 #ifdef AIX
-     sprintf(command,"/usr/gnu/bin/gcpp -traditional-cpp %s %s", infilename, temporaryName);
+     sprintf(command,"/usr/gnu/bin/gcpp -I$MGSROOT/graphs/std %s %s", mgsName, gslName);
 #elif defined(DARWIN)
-     sprintf(command,"cpp -traditional-cpp %s %s", infilename, temporaryName);
+     sprintf(command,"cpp -I$MGSROOT/graphs/std %s %s", mgsName, gslName);
 #endif
      int s=system(command);
      processed=true;
    }
 #endif /* USING_BLUEGENE */
-   if (processed) 
-     infile = new std::ifstream(temporaryName);
+   if (processed) {
+     infile = new std::ifstream(gslName);
+     char cleanup[256];
+     sprintf(cleanup,"rm %s %s",mgsName, gslName);
+     int s=system(cleanup);
+   }
    else {
      std::cerr << "Unable to preprocess gsl file, aborting..." << std::endl << std::endl;
      return false;
@@ -350,7 +356,7 @@ bool SimInitializer::internalExecute(int argc, char** argv)
    delete partitioner;
 
 //#ifndef PROFILING
-   unlink(temporaryName);
+   unlink(gslName);
 //#endif
 
 #ifdef VERBOSE
@@ -464,4 +470,27 @@ bool SimInitializer::runSimulationAndUI(
 
 #endif // DISABLE_PTHREADS
    return true;
+}
+
+std::string SimInitializer::preprocessMGSROOT(const std::string& inputFile) {
+   std::ifstream input(inputFile);
+   std::ostringstream processed;
+   std::string line;
+   
+   char* mgsroot = getenv("MGSROOT");
+   if (!mgsroot) {
+       std::cerr << "MGSROOT environment variable not set!" << std::endl;
+       return "";
+   }
+   
+   while (std::getline(input, line)) {
+       size_t pos = 0;
+       while ((pos = line.find("<MGSROOT>", pos)) != std::string::npos) {
+           line.replace(pos, 9, mgsroot);
+           pos += strlen(mgsroot);
+       }
+       processed << line << std::endl;
+   }
+   
+   return processed.str();
 }

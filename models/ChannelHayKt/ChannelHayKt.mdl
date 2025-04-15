@@ -1,7 +1,7 @@
 #ifndef ChannelHayKt_MDL
 #define ChannelHayKt_MDL
 
-#include "../std/std.mdl"
+#include "std.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 
