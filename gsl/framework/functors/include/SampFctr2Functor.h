@@ -14,8 +14,7 @@
 class SampFctr2Functor : public Functor
 {
    public:
-      virtual  const char * getCategory();
-      static const char* _category;
-      virtual ~SampFctr2Functor();
+      virtual const std::string& getCategory() const;
+      static const std::string _category;
 };
 #endif

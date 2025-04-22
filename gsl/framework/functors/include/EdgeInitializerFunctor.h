@@ -14,7 +14,7 @@
 class EdgeInitializerFunctor : public Functor
 {
    public:
-      virtual  const char * getCategory();
-      static const char* _category;
+      virtual const std::string& getCategory() const;
+      static const std::string _category;
 };
 #endif

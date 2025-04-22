@@ -90,8 +90,8 @@ C_definition_variabletype::C_definition_variabletype(
 
 C_definition_variabletype::C_definition_variabletype(
    C_declarator *d, C_name* info, C_phase_mapping_list* p, SyntaxError * error)
-   : C_definition(error), _declarator(d), _info(info), _instanceFactory(0), 
-     _phase_mapping_list(p)
+   : C_definition(error), _declarator(d), _instanceFactory(0), 
+     _phase_mapping_list(p), _info(info)
 {
 }
 

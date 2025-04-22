@@ -8,9 +8,6 @@
 // =============================================================================
 #include "NDPairListFunctor.h"
 
-const char * NDPairListFunctor::_category = "NDPAIRLISTFUNCTOR";
+const std::string NDPairListFunctor::_category = "NDPAIRLISTFUNCTOR";
 
-const char * NDPairListFunctor::getCategory()
-{
-   return _category;
-}
+const std::string& NDPairListFunctor::getCategory() const { return _category; }

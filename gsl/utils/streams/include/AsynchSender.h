@@ -24,6 +24,7 @@ class AsynchSender
 
       // Checks if the transaction is complete.
       virtual bool check() = 0;
+      virtual ~AsynchSender() {};
 
    protected:
       virtual void internalSendRequest(int size) = 0;

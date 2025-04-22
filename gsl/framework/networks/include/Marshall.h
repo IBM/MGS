@@ -78,9 +78,9 @@ public:
      for (unsigned i=0; i < sz; ++i)
        mi1.marshall(stream, data[i]);
      if (sz<data.getCommunicatedSize()) {
-       T padding;
+       T padding{};
        for (unsigned i=sz; i < data.getCommunicatedSize(); ++i) 
-	 mi1.marshall(stream, padding);
+	      mi1.marshall(stream, padding);
      }
      MarshallerInstance<unsigned> mi2;
      mi2.marshall(stream, data.size());
@@ -109,9 +109,9 @@ public:
      for (unsigned i=0; i < sz; ++i)
        mi1.marshall(stream, data[i]);
      if (sz<data.getCommunicatedSize()) {
-       T padding;
+       T padding{};
        for (unsigned i=sz; i < data.getCommunicatedSize(); ++i) 
-	 mi1.marshall(stream, padding);
+	      mi1.marshall(stream, padding);
      }
      MarshallerInstance<unsigned> mi2;
      sz = data.size();
@@ -142,9 +142,9 @@ public:
      for (unsigned i=0; i < sz; ++i)
        mi1.marshall(stream, data[i]);
      if (sz<data.getCommunicatedSize()) {
-       T padding;
+       T padding{};
        for (unsigned i=sz; i < data.getCommunicatedSize(); ++i) 
-	 mi1.marshall(stream, padding);
+	      mi1.marshall(stream, padding);
      }
      MarshallerInstance<unsigned> mi2;
      mi2.marshall(stream, data.size());
@@ -173,9 +173,9 @@ public:
      for (unsigned i=0; i < sz; ++i)
        mi1.marshall(stream, data[i]);
      if (sz<data.getCommunicatedSize()) {
-       T padding;
+       T padding{};
        for (unsigned i=sz; i < data.getCommunicatedSize(); ++i) 
-	 mi1.marshall(stream, padding);
+	      mi1.marshall(stream, padding);
      }
      MarshallerInstance<unsigned> mi2;
      mi2.marshall(stream, data.size());

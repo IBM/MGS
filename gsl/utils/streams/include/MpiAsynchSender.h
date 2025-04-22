@@ -24,6 +24,7 @@ class MpiAsynchSender : public AsynchSender
       virtual bool check();
 #ifdef VERBOSE
       static double sendElapsed;
+      virtual ~MpiAsynchSender() {};
 #endif
    protected:
       virtual void internalSendRequest(int size);

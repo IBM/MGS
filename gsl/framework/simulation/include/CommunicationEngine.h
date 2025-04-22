@@ -61,8 +61,8 @@ class CommunicationEngine
     };
 
   CommunicationEngine(int MachineNodeCount, IIterator<ISender> *Senders, IIterator<IReceiver> *Receivers, Simulation *sim) :
-  _nprocs(MachineNodeCount), _nsteps(0), _myrank(0), P2P_TAG(21), _senders(Senders), _receivers(Receivers), _receivermaps(0), _sendervectors(0), _wsndCounts(0), _wsndDispls(0), 
-    _wrcvCounts(0), _wrcvDispls(0), _vsbuff(0), _vrbuff(0), _vOutputStream(0), _sim(sim)
+  _nprocs(MachineNodeCount), _nsteps(0), _myrank(0), _senders(Senders), _receivers(Receivers), _receivermaps(0), _sendervectors(0), P2P_TAG(21), 
+  _wsndCounts(0), _wsndDispls(0), _wrcvCounts(0), _wrcvDispls(0), _vOutputStream(0), _vsbuff(0), _vrbuff(0), _sim(sim)
     {
       _myrank = getRank();
       int tmp = _nprocs + _nprocs - 1;

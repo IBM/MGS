@@ -19,6 +19,7 @@ class Grid;
 class C_production_grid : public C_production
 {
    public:
+      using C_production::execute; // tell the compiler we want both from base and overloaded
       C_production_grid(SyntaxError* error);
       C_production_grid(const C_production_grid&);
       virtual ~C_production_grid();

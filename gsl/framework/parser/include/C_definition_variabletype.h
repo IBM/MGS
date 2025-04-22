@@ -48,7 +48,7 @@ class C_definition_variabletype : public C_definition
       C_declarator* _declarator;
       InstanceFactory* _instanceFactory;
       C_phase_mapping_list* _phase_mapping_list;
-	  C_name* _info; // which should be interpreted properly
+	   C_name* _info; // which should be interpreted properly
 };
 /*
  * HISTORY:

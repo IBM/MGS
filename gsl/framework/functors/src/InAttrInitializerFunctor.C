@@ -8,9 +8,6 @@
 // =============================================================================
 #include "InAttrInitializerFunctor.h"
 
-const char * InAttrInitializerFunctor::_category = "INATTRINITIALIZER";
+const std::string InAttrInitializerFunctor::_category = "INATTRINITIALIZER";
 
-const char * InAttrInitializerFunctor::getCategory()
-{
-   return _category;
-}
+const std::string& InAttrInitializerFunctor::getCategory() const { return _category; }

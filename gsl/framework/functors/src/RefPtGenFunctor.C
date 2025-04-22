@@ -8,9 +8,6 @@
 // =============================================================================
 #include "RefPtGenFunctor.h"
 
-const char * RefPtGenFunctor::_category = "REFPTGEN";
+const std::string RefPtGenFunctor::_category = "REFPTGEN";
 
-const char * RefPtGenFunctor::getCategory()
-{
-   return _category;
-}
+const std::string& RefPtGenFunctor::getCategory() const { return _category; }

@@ -8,14 +8,6 @@
 // =============================================================================
 #include "SampFctr2Functor.h"
 
-const char * SampFctr2Functor::_category = "SAMPFCTR2";
+const std::string SampFctr2Functor::_category = "SAMPFCTR2";
 
-const char * SampFctr2Functor::getCategory()
-{
-   return _category;
-}
-
-
-SampFctr2Functor::~SampFctr2Functor()
-{
-}
+const std::string& SampFctr2Functor::getCategory() const { return _category; }

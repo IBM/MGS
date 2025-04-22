@@ -30,6 +30,8 @@ class RandomOrderOdometer : public Odometer
    public:
 
   RandomOrderOdometer(std::vector<int> & begin, std::vector<int> & end, RNG&);
+      using Odometer::reset;
+      using Odometer::next;
       bool isAtEnd();
       bool isRolledOver();
       std::vector<int> & look();

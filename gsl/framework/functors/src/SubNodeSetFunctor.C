@@ -8,9 +8,6 @@
 // =============================================================================
 #include "SubNodeSetFunctor.h"
 
-const char * SubNodeSetFunctor::_category = "SUBNODESET";
+const std::string SubNodeSetFunctor::_category = "SUBNODESET";
 
-const char * SubNodeSetFunctor::getCategory()
-{
-   return _category;
-}
+const std::string& SubNodeSetFunctor::getCategory() const { return _category; }

@@ -9,7 +9,15 @@ from __future__ import print_function
 import os
 import os.path
 import sys
-import distutils.spawn
+import shutil
+
+# Create a replacement for distutils.spawn
+class distutils:
+    class spawn:
+        @staticmethod
+        def find_executable(name):
+            return shutil.which(name)
+        
 if sys.version_info[0] < 3:
     import popen2
 
@@ -29,7 +37,6 @@ else:
     import subprocess
 
     def find_version(name, full_path_name):
-        print(type(full_path_name))
         cmd = [full_path_name, "--version"]
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
         stdout, stderr = p.communicate()
@@ -127,7 +134,7 @@ LINUX_DX_LITELIBS = "-L$(DX_BASE)/lib_linux " + COMMON_DX_LITELIBS
 
 EXTRA_PARSER_TARGERS_FOR_DX = "$(DX_DIR)/EdgeSetSubscriberSocket $(DX_DIR)/NodeSetSubscriberSocket $(OBJS_DIR)/socket.o"
 
-LENSPARSER_TARGETS = "$(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(BASE_OBJECTS) "
+LENSPARSER_TARGETS = "$(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(BASE_OBJECTS) "
 
 # # Pre python 2.3 compatibility
 # True = 1
@@ -880,7 +887,10 @@ class BuildSetup:
         options to GCC
         """
         def setCompilersMPI(self):
-            if self.operatingSystem == "AIX":
+            if self.operatingSystem == "Darwin":
+                setCompilersMacOS(self)
+                return  # Skip the rest of the method
+            elif self.operatingSystem == "AIX":
                 if self.options.compiler == "gcc":
                     self.options.compiler = "gcc"
                     self.cCompiler = findFile("gcc", True)
@@ -915,6 +925,26 @@ class BuildSetup:
                                 self.cppCompiler = findFile("mpiCC", True)
                                 findFile("mpiCC", True)
                                 # raise FatalError("Currently MPI is only used by AIX")
+
+        def setCompilersMacOS(self):
+            """Set compilers for macOS"""
+            # Default to clang/clang++ on macOS
+            print("Setting compilers for macOS...")
+            self.options.compiler = "gcc"  # We'll still call it gcc for compatibility
+            
+            # First try looking for clang/clang++
+            clang = findFile("clang", False)
+            clangpp = findFile("clang++", False)
+            
+            if clang and clangpp:
+                self.cCompiler = clang
+                self.cppCompiler = clangpp
+                print(f"Using clang compilers: C={self.cCompiler}, C++={self.cppCompiler}")
+            else:
+                # Fall back to gcc/g++ which might be symlinks to clang on macOS
+                self.cCompiler = findFile("gcc", True)
+                self.cppCompiler = findFile("g++", True)
+                print(f"Using gcc compilers (might be symlinks to clang): C={self.cCompiler}, C++={self.cppCompiler}")
 
         def setCompilersMPI_GPU(self):
             if self.operatingSystem == "Linux":
@@ -1507,13 +1537,16 @@ CUDA_OBJS := $(patsubst %, $(OBJS_DIR)/%, $(CUDA_PURE_OBJS))
             else:
                 retStr += " " + XL_RUNTIME_TYPE_INFO_FLAG
         retStr += "\n"
+        
+        # Add this section separately
+        retStr += "OTHER_LIBS := -include utils/std/include/darwin_compat.h -I$(PYTHON_INCLUDE_DIR) -L$(PYTHON_LIB) -lpython3"
+        retStr += "\n"
+        retStr += "OTHER_LIBS_HEADER :=-I$(PYTHON_INCLUDE_DIR)"
         return retStr
 
     def getNVCCFlags(self):  # noqa
         retStr = \
             """\
-# OTHER_LIBS :=-lgmp -lpython2.7
-OTHER_LIBS :=-lgmp  \
 """
         retStr += " -I$(PYTHON_INCLUDE_DIR) -L$(PYTHON_LIB) -l{} ".format(self.pythonLibName)
 
@@ -1637,8 +1670,6 @@ CUDA_NVCC_FLAGS += $(SOURCE_AS_CPP)
     def getCFlags(self):  # noqa
         retStr = \
             """\
-# OTHER_LIBS :=-lgmp -lpython2.7
-OTHER_LIBS :=-lgmp  \
 """
         # Add compatibility header inclusion
         retStr += " -include utils/std/include/darwin_compat.h"
@@ -1684,29 +1715,56 @@ CFLAGS += $(COLAB_CFLAGS) \
             if self.options.compiler == "gcc":
                 retStr += " -fpic "
         elif self.operatingSystem == "Darwin":
-            retStr += " -DDARWIN"  # Define DARWIN instead of LINUX
-            retStr += " -stdlib=libc++"  # Use LLVM's C++ stdlib
-            retStr += " -fpic "            
-            # These flags should help with standard library compatibility issues
-            retStr += " -Wno-error=c++11-extensions -Wno-error=c++14-extensions -Wno-c++11-narrowing"
-            retStr += " -Wno-deprecated-register -Wno-reserved-user-defined-literal"
-            # Disable warnings about incompatible pointer types and implicit conversions
-            retStr += " -Wno-incompatible-pointer-types-discards-qualifiers -Wno-implicit-int-conversion"            
-            # Add specific flags for macOS SDK compatibility 
-            retStr += " -D_LIBCPP_ENABLE_CXX17_REMOVED_FEATURES"
-            # These help with string template issues
-            retStr += " -D_LIBCPP_BUILDING_LIBRARY -D_LIBCPP_DISABLE_EXTERN_TEMPLATE"
-            # Modify the include order for Darwin
-            retStr += " -iquote . -isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1"
+            # Base include paths and features
+            retStr += " -include utils/std/include/darwin_compat.h"
+            retStr += " -DDARWIN"
+            retStr += " -DDISABLE_DYNAMIC_LOADING"
             if self.options.withMpi is True:
-                retStr += " -I/opt/homebrew/opt/open-mpi/include"
-            # Add include path for our custom values.h
+                retStr += " -DHAVE_MPI"
+            if self.options.nowarning_dynamiccast is True:
+                retStr += " -DNOWARNING_DYNAMICCAST"
+            
+            # Compiler options
+            retStr += " -std=c++17"
+            retStr += " -stdlib=libc++" 
+            retStr += " -fpic"
+            
+            # Optimization and debugging
+            if self.options.optimization == "O3":
+                retStr += " -O3"
+            elif self.options.optimization == "Og":
+                retStr += " -Og"
+            else:
+                retStr += " -O3"  # Default to O3 for performance
+            retStr += " -fPIC"
+            retStr += " -MMD"
+            
+            # Library configuration for C++17
+            retStr += " -D_LIBCPP_ENABLE_CXX17_REMOVED_FEATURES"
+            retStr += " -D_LIBCPP_BUILDING_LIBRARY"
+            retStr += " -D_LIBCPP_DISABLE_EXTERN_TEMPLATE"
+            
+            # Warning suppressions
+            retStr += " -Wno-deprecated-declarations"
+            retStr += " -Wno-error=c++11-extensions" 
+            retStr += " -Wno-error=c++14-extensions"
+            retStr += " -Wno-c++11-narrowing"
+            retStr += " -Wno-deprecated-register"
+            retStr += " -Wno-reserved-user-defined-literal" 
+            retStr += " -Wno-incompatible-pointer-types-discards-qualifiers"
+            retStr += " -Wno-implicit-int-conversion"
+            
+            # Include paths
             retStr += " -I$(GSLROOT)/utils/std/include"
             retStr += " -I$(GSLROOT)/utils/streams/include"
-            # Add compatibility header inclusion
-            retStr += " -include utils/std/include/darwin_compat.h"    
-            # Add direct include for system string.h
-            retStr += " -include /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/string.h"
+            retStr += " -I/opt/homebrew/opt/gmp/include"
+            if self.options.withMpi is True:
+                retStr += " -I/opt/homebrew/opt/open-mpi/include"
+            # System includes
+            retStr += " -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+            # Add the correct C++ include path
+            retStr += " -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1"
+
         elif self.operatingSystem == "AIX":
             if self.options.compiler == "gcc":
                 retStr += " " + AIX_GNU_MINIMAL_TOC_FLAG
@@ -1815,81 +1873,81 @@ CFLAGS += $(COLAB_CFLAGS) \
             retStr += "lib/liblens.a\n"
         return retStr
 
-    def getLibs(self):  # noqa
+    def getLibs(self):
         retStr = "# add libs"
         if self.options.colab is True:
             if self.options.debug == USE:
-                retStr += \
-                    """
-NTS_LIBS := ${GSLROOT}/lib/libnts_db.so\n
+                retStr += """
+    NTS_LIBS := ${GSLROOT}/lib/libnts_db.so\n
 
-"""
+    """
             else:
-                retStr += \
-                    """
-NTS_LIBS := ${GSLROOT}/lib/libnts.so\n
+                retStr += """
+    NTS_LIBS := ${GSLROOT}/lib/libnts.so\n
 
-"""
-        # retStr += "LENS_LIBS_EXT := $(LENS_LIBS) lib/liblensext.a\n"
+    """
         retStr += """
-LIBS := """
+    LIBS := """
+        
+        # Add basic libraries only once
+        added_libs = set()
+        
         if self.options.dynamicLoading is True:
             retStr += "-ldl "
-        if self.options.pthreads is True:
+            added_libs.add("-ldl")
+        
+        if self.options.pthreads is True and "-lpthread" not in added_libs:
             retStr += "-lpthread "
-        if self.architecture == "ppc32":
+            added_libs.add("-lpthread")
+        
+        if self.architecture == "ppc32" or self.architecture == "ppc64":
             retStr += "-lmass "
-        elif self.architecture == "ppc64":
-            retStr += "-lmass "
-        else:
+            added_libs.add("-lmass")
+        elif "-lm" not in added_libs:
             retStr += "-lm "
-        if self.operatingSystem == "AIX":
+            added_libs.add("-lm")
+        
+        if self.operatingSystem == "AIX" or self.operatingSystem == "Linux" or self.operatingSystem == "Darwin":
             retStr += "$(LENS_LIBS_EXT) "
-        elif self.operatingSystem == "Linux" or self.operatingSystem == "Darwin":
-            # retStr += "-Wl,--whole-archive "
-            retStr += "$(LENS_LIBS_EXT) "
-            # retStr += "-Wl,-no-whole-archive "
         else:
             raise InternalError("Unknown OS " + self.operatingSystem)
-
-        if self.options.mpiTrace is True and self.options.blueGene is not True:
-            printWarning("MPI Trace profiling not available.")
-        elif self.options.mpiTrace is True:
-            retStr += " $(MPI_TRACE_LIBS)"
-
-        if self.options.blueGene is True:
-            retStr += " $(MPI_LIBS)"
-
-        if self.options.compiler == "gcc":
-            if self.options.withMpi is True:
-                if self.operatingSystem == "Darwin":
-                    retStr += " -L/opt/homebrew/opt/open-mpi/lib -lmpi"
-                    retStr += " -Wl,-rpath,/opt/homebrew/opt/open-mpi/lib"
-                elif self.operatingSystem == "Linux":
-                    retStr += " -L$(LAMHOME)/lib -lmpi -llammpi++ -llam -ldl -lpthread"
         
-        if self.options.withGpu is True:
-            retStr += " -lcuda -lcudart -lcurand"
+        if self.operatingSystem == "Darwin":
+            # Try to find GMP using pkg-config or fallback to common locations
+            import subprocess
+            try:
+                # Only add GMP once
+                if "/opt/homebrew/opt/gmp/lib/libgmp.a" not in added_libs:
+                    gmp_path = subprocess.check_output(["brew", "--prefix", "gmp"], universal_newlines=True).strip() + "/lib/libgmp.a"
+                    retStr += f" {gmp_path}"
+                    added_libs.add(gmp_path)
+            except (subprocess.SubprocessError, FileNotFoundError):
+                # Try common locations
+                if os.path.exists("/opt/homebrew/lib/libgmp.a") and "/opt/homebrew/lib/libgmp.a" not in added_libs:
+                    retStr += " /opt/homebrew/lib/libgmp.a"
+                    added_libs.add("/opt/homebrew/lib/libgmp.a")
+                elif os.path.exists("/usr/local/lib/libgmp.a") and "/usr/local/lib/libgmp.a" not in added_libs:
+                    retStr += " /usr/local/lib/libgmp.a"
+                    added_libs.add("/usr/local/lib/libgmp.a")
+                elif "-lgmp" not in added_libs:
+                    retStr += " -lgmp"  # Fallback to letting the linker find it
+                    added_libs.add("-lgmp")
+            
+            # Add MPI libraries only once
             if self.options.withMpi is True:
-                retStr += " -lmpi_cxx -lmpi -lopen-pal"
-
-        if self.options.withArma is True:
-            retStr += " -llapack -lopenblas -larmadillo"
-
-        if self.operatingSystem == "Darwin" and self.options.withMpi is True:
-            retStr += " -Wl,-rpath,/opt/homebrew/opt/open-mpi/lib"
-
-        if self.options.colab is True:
-            if self.options.debug == USE:
-                retStr += " -I$(NTI_INC_DIR) -L$(shell pwd)/lib/ -Wl,--rpath=$(shell pwd)/lib/ -lnti_db -lnts_db -lutils_db"
-            else:
-                retStr += " -I$(NTI_INC_DIR) -L$(shell pwd)/lib/ -Wl,--rpath=$(shell pwd)/lib/ -lnti -lnts -lutils"
-        retStr += " $(OTHER_LIBS)"
-
-        if self.options.withArma is True:
-            retStr += " -llapack -lopenblas -larmadillo"
-
-        retStr += "\n"
+                mpi_libs = ["-lmpi", "-lmpi_mpifh"]
+                for lib in mpi_libs:
+                    if lib not in added_libs:
+                        retStr += f" -L/opt/homebrew/opt/open-mpi/lib {lib}"
+                        added_libs.add(lib)
+                
+                # Add rpath only once
+                retStr += " -Wl,-rpath,/opt/homebrew/opt/open-mpi/lib"
+                retStr += " -L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib -lz"
+        else:
+            if "-lgmp" not in added_libs:
+                retStr += " -lgmp"  # Fallback to letting the linker find it
+                added_libs.add("-lgmp")
         return retStr
 
     def getSharedPFix(self):
@@ -2143,7 +2201,7 @@ $(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/
         if self.options.colab is True:
             retStr += "final: cleanfirst $(OBJS) $(LENS_LIBS_EXT) "
         else:
-            retStr += "final: cleanfirst speclang.tab.h $(OBJS)  $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o  $(LENS_LIBS_EXT) "
+            retStr += "final: cleanfirst speclang.tab.h $(OBJS) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(LENS_LIBS_EXT) "
         if self.options.dynamicLoading is True:
             retStr += " $(DEF_SYMBOLS) $(UNDEF_SYMBOLS) $(BIN_DIR)/createDF $(SHARED_OBJECTS) "
         if self.dx.exists is True:
@@ -2154,13 +2212,16 @@ $(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/
             retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(NEEDED_OBJS) "
         else:
             retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) "
-        # retStr = "final: $(BASE_OBJECTS) $(LENS_LIBS_EXT) $(BIN_DIR)/$(EXE_FILE) $(DCA_OBJ)/socket.o $(OBJS) $(MODULE_MKS)"
         if self.options.colab is True:
             pass
-        else:
-            if (self.options.asNts is True) or (self.options.asNtsNVU is True):
-                retStr += "$(NTI_OBJS) "
+        elif (self.options.asNts is True) or (self.options.asNtsNVU is True):
+            retStr += "$(NTI_OBJS) "
         retStr += "$(COMMON_OBJS) $(LDFLAGS) $(LIBS) -o $(BIN_DIR)/$(EXE_FILE) "
+        retStr += "\n\t$(CC) $(FINAL_TARGET_FLAG) "
+        if self.operatingSystem == "Darwin":
+            retStr += "-v $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o framework/dca/src/fakesocket.c $(OBJS) $(COMMON_OBJS) $(LDFLAGS) $(LIBS) -o $(BIN_DIR)/$(EXE_FILE)\n"
+        else:
+            retStr += "$(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) $(COMMON_OBJS) $(LDFLAGS) $(LIBS) -o $(BIN_DIR)/$(EXE_FILE)\n"        
         return retStr
 
     def getDependfileTarget(self):
@@ -2214,7 +2275,7 @@ library: speclang.tab.h  $(COLAB_OBJS)
 
     def getMainDefTarget(self):
         retStr = \
-            """\
+            r"""\
 $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
 \techo \#\!. > $@
 \t$(SCRIPTS_DIR)/gen_def.sh $^ >> $@
@@ -2268,9 +2329,9 @@ $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
         if self.objectMode == "64":
             retStr += " $(MAKE64)"
         if self.dx.exists is True:
-            retStr += " $(DX_CFLAGS) -c $< "
+            retStr += " $(DX_CFLAGS) -x c -c $< "
         else:
-            retStr += " -c $<"
+            retStr += " -x c -c $<"
         retStr += " -o $@\n"
         return retStr
 
@@ -2296,6 +2357,7 @@ clean:
         return retStr
 
     def getPythonLibName(self):
+        """detect Python library name and paths"""
         import os
         import subprocess
         
@@ -2303,6 +2365,7 @@ clean:
             # Try to detect the Python version using 'python3-config --ldflags'
             if self.operatingSystem == "Darwin":
                 try:
+                    # Get Python library info from python3-config
                     ldflags = subprocess.check_output(["python3-config", "--ldflags"], universal_newlines=True).strip()
                     lib_parts = [p for p in ldflags.split() if p.startswith("-lpython")]
                     if lib_parts:
@@ -2310,20 +2373,32 @@ clean:
                         self.pythonLibName = lib_parts[0][2:]
                     else:
                         self.pythonLibName = "python3"
-                    
+                        
                     # Also extract the library path
                     lib_path_parts = [p for p in ldflags.split() if p.startswith("-L")]
                     if lib_path_parts:
                         self.pythonLibDir = lib_path_parts[0][2:]
+                    else:
+                        # Fallback to system locations
+                        self.pythonLibDir = "/usr/lib" if os.path.exists("/usr/lib") else "/usr/local/lib"
                     
                     # Get the include directory using python3-config
                     incflags = subprocess.check_output(["python3-config", "--includes"], universal_newlines=True).strip()
                     inc_parts = [p for p in incflags.split() if p.startswith("-I")]
                     if inc_parts:
                         self.pythonIncludeDir = inc_parts[0][2:]
-                except (subprocess.SubprocessError, FileNotFoundError):
+                    else:
+                        # Fallback to system locations
+                        self.pythonIncludeDir = "/usr/include/python3.9" if os.path.exists("/usr/include/python3.9") else "/usr/local/include/python3.9"
+                    
+                    print(f"Python detected: lib={self.pythonLibName}, libdir={self.pythonLibDir}, incdir={self.pythonIncludeDir}")
+                    
+                except (subprocess.SubprocessError, FileNotFoundError) as e:
+                    print(f"Warning: Error running python3-config: {e}")
                     # Default to python3 on macOS if detection fails
                     self.pythonLibName = "python3"
+                    self.pythonLibDir = "/usr/local/lib"
+                    self.pythonIncludeDir = "/usr/local/include/python3.9"
             else:
                 # Original Linux detection logic
                 import fnmatch
@@ -2345,8 +2420,11 @@ clean:
         except Exception as e:
             print(f"Warning: Error detecting Python library: {e}")
             self.pythonLibName = "python3" if self.operatingSystem == "Darwin" else "python2.7"
-
-       
+            if not hasattr(self, 'pythonLibDir'):
+                self.pythonLibDir = "/usr/local/lib"
+            if not hasattr(self, 'pythonIncludeDir'):
+                self.pythonIncludeDir = "/usr/local/include/python3.9"
+                    
     def generateMakefile(self, fileName):
         fileBody = self.getInitialValues()
         fileBody += "\n"

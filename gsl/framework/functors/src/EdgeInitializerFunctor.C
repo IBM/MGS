@@ -8,9 +8,6 @@
 // =============================================================================
 #include "EdgeInitializerFunctor.h"
 
-const char * EdgeInitializerFunctor::_category = "EDGEINITIALIZER";
+const std::string EdgeInitializerFunctor::_category = "EDGEINITIALIZER";
 
-const char * EdgeInitializerFunctor::getCategory()
-{
-   return _category;
-}
+const std::string& EdgeInitializerFunctor::getCategory() const { return _category; }
