@@ -24,6 +24,7 @@ class C_identifierList;
 class C_triggeredFunction : public C_general {
 
    public:
+      using C_general::duplicate;
       virtual void execute(MdlContext* context);
       C_triggeredFunction(C_identifierList* identifierList, 
 			  TriggeredFunction::RunType runType); 

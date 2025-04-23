@@ -8,6 +8,7 @@
 // =============================================================================
 #include "LongDataItem.h"
 #include "MaxFloatFullPrecision.h"
+#include <climits>
 #include <sstream>
 
 // Type

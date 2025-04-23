@@ -19,7 +19,8 @@ class C_generalList;
 
 class C_psetToInstance : public C_psetMapping {
 
-   public:
+   public:  
+      using C_psetMapping::duplicate;
       virtual void execute(MdlContext* context);
       virtual void addToList(C_generalList* gl);
       C_psetToInstance();

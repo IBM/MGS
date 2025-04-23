@@ -16,7 +16,7 @@
 
 #include <memory>
 #include <string>
-#include <limits.h>
+#include <float.h>
 #include <iostream>
 
 void C_computeTime::execute(MdlContext* context) 
@@ -43,7 +43,7 @@ void C_computeTime::addToList(C_generalList* gl)
 
 
 C_computeTime::C_computeTime() 
-   : C_general(), _identifierList(0) , _computeTime(MAXFLOAT)
+   : C_general(), _identifierList(0) , _computeTime(FLT_MAX)
 {
 
 }

@@ -8,6 +8,7 @@
 // =============================================================================
 #include "IntDataItem.h"
 #include "MaxFloatFullPrecision.h"
+#include <climits>
 #include <sstream>
 
 // Type

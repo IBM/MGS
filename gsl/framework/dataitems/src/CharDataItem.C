@@ -11,6 +11,7 @@
 #endif
 #include "CharDataItem.h"
 #include <sstream>
+#include <climits>
 
 // Type
 const char* CharDataItem::_type = "CHAR";

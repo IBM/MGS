@@ -9,7 +9,7 @@
 #include "DataItem.h"
 #include "ArrayDataItem.h"
 #include "NodeSet.h"
-
+#include <climits>
 #include <iostream>
 #include <sstream>
 

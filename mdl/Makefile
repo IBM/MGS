@@ -151,7 +151,7 @@ LIBS += lib/libmdl.a
 final: mdl.tab.h $(OBJS) parser/mdl.tab.cpp lib/libmdl.a scanner/lex.yy.cc
 	@mkdir -p $(BIN_DIR)
 	-rm -f $(BIN_DIR)/$(EXE_FILE)
-	$(CC) $(CFLAGS) parser/mdl.tab.cpp scanner/lex.yy.cc $(LIBS) \
+	$(CC) $(CFLAGS) -Wno-sign-compare parser/mdl.tab.cpp scanner/lex.yy.cc $(LIBS) \
            $(XLINKER) -o $(BIN_DIR)/$(EXE_FILE) $(FINAL_TARGET_FLAG)
 
 .PHONY: clean

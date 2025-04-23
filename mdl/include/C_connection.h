@@ -23,10 +23,9 @@ class ConnectionCCBase;
 class Connection;
 
 class C_connection : public C_general {
-   protected:
-   using C_general::duplicate;  // Make base class method visible
-   using C_general::execute;  // Make base class method visible
    public:
+      using C_general::duplicate;  // Make base class method visible
+      using C_general::execute;  // Make base class method visible
       virtual void execute(MdlContext* context);
       virtual void addToList(C_generalList* gl) = 0;
       C_connection();

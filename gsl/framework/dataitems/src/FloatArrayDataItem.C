@@ -10,6 +10,8 @@
 #include <sstream>
 #include "VolumeOdometer.h"
 #include "MaxFloatFullPrecision.h"
+#include <float.h>
+#include <climits>
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>

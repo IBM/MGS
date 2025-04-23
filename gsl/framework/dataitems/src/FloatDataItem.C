@@ -9,6 +9,7 @@
 #include "FloatDataItem.h"
 #include <sstream>
 #include <float.h>
+#include <climits>
 #include <math.h>
 
 // Type

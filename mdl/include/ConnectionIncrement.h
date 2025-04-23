@@ -10,14 +10,13 @@
 #ifndef ConnectionIncrement_H
 #define ConnectionIncrement_H
 #include "Mdl.h"
-
-#include <limits.h>
+#include <float.h>
 
 class ConnectionIncrement
 {
    public:
       ConnectionIncrement() {
-         _computationTime = MAXFLOAT;
+         _computationTime = FLT_MAX;
          _memoryBytes = 0;
          _communicationBytes = 0;
       }

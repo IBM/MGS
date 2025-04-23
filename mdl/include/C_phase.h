@@ -22,6 +22,7 @@ class C_phaseIdentifierList;
 class C_phase : public C_general {
 
    public:
+      using C_general::duplicate;
       virtual void execute(MdlContext* context);
       C_phase(C_phaseIdentifierList* phaseIdentifierList, 
 	      std::unique_ptr<PhaseType>&& phaseType); 

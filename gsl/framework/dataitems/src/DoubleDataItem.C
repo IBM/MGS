@@ -8,6 +8,7 @@
 // =============================================================================
 #include "DoubleDataItem.h"
 #include <float.h>
+#include <climits>
 #include <sstream>
 
 // Type

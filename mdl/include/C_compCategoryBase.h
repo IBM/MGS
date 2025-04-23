@@ -20,8 +20,8 @@ class C_interfacePointerList;
 class CompCategoryBase;
 
 class C_compCategoryBase : public C_interfaceImplementorBase {
-   using C_interfaceImplementorBase::duplicate;  // Make base class method visible
    public:
+      using C_interfaceImplementorBase::duplicate;  // Make base class method visible
       virtual void execute(MdlContext* context);
       C_compCategoryBase();
       C_compCategoryBase(const std::string& name, C_interfacePointerList* ipl

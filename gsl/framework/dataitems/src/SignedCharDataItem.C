@@ -7,6 +7,7 @@
 //
 // =============================================================================
 #include "SignedCharDataItem.h"
+#include <climits>
 #include <sstream>
 
 // Type

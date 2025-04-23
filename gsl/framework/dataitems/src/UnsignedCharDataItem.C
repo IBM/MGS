@@ -7,6 +7,7 @@
 //
 // =============================================================================
 #include "UnsignedCharDataItem.h"
+#include <climits>
 #include <sstream>
 
 // Type

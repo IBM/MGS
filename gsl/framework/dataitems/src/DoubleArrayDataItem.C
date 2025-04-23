@@ -9,6 +9,7 @@
 #include "DoubleArrayDataItem.h"
 #include <sstream>
 #include "VolumeOdometer.h"
+#include <cfloat>
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>

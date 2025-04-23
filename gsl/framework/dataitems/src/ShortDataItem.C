@@ -7,6 +7,7 @@
 //
 // =============================================================================
 #include "ShortDataItem.h"
+#include <climits>
 #include <sstream>
 
 // Type

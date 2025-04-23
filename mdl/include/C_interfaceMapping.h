@@ -21,6 +21,7 @@ class C_identifierList;
 class C_interfaceMapping : public C_general {
 
    public:
+      using C_general::duplicate;
       virtual void execute(MdlContext* context);
       C_interfaceMapping();
       C_interfaceMapping(const std::string& interface, 

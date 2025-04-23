@@ -20,9 +20,8 @@ class C_interfacePointerList;
 class InterfaceImplementorBase;
 
 class C_interfaceImplementorBase : public C_production {
-   protected:
-   using C_production::duplicate;  // Make base class method visible
    public:
+      using C_production::duplicate;  // Make base class method visible
       virtual void execute(MdlContext* context);
       C_interfaceImplementorBase();
       C_interfaceImplementorBase(const std::string& name, 

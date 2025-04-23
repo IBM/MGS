@@ -21,6 +21,7 @@ class C_identifierList;
 class C_psetMapping : public C_general {
 
    public:
+      using C_general::duplicate;
       virtual void execute(MdlContext* context);
       C_psetMapping();
       C_psetMapping(const std::string& psetMember,

@@ -21,6 +21,7 @@ class C_identifierList;
 class C_instanceMapping : public C_interfaceMapping {
 
    public:
+      using C_interfaceMapping::duplicate;
       virtual void execute(MdlContext* context);
       virtual void addToList(C_generalList* gl);
       C_instanceMapping();
