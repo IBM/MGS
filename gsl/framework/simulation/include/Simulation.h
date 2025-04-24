@@ -518,7 +518,7 @@ class Simulation : public Publishable {
   void benchmark_start(const std::string&);
   double benchmark_timelapsed(const std::string&);
   void benchmark_timelapsed_diff(const std::string&);
-  void benchmark_set_timelapsed_diff();
+  void benchmark_set_timelapsed_diff(const std::string&);
   void benchmark_end(const std::string&);
   //END DEBUG PURPOSE
   private:
@@ -528,9 +528,8 @@ class Simulation : public Publishable {
   double currentTime; 
   TypeManager<NodeType>* _ntm;
   TypeManager<EdgeType>* _etm;
-  SysTimer _simTimer;
-  double _prevTimeElapsed;
-  float _mark;
+  // map to timer and prevTimeElapsed
+  std::map<std::string, std::pair<SysTimer, double> > _simTimers;
   Repertoire* _root;
   
 #ifndef DISABLE_PTHREADS

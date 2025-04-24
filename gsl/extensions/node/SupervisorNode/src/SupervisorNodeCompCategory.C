@@ -19,14 +19,17 @@ void SupervisorNodeCompCategory::initializeShared(RNG& rng)
 {
   dataset = mnist::read_dataset<std::vector, std::vector, uint8_t, uint8_t>
     (std::string(SHD.dataLocation.c_str()));
-  std::cerr<<"mnist_reader loaded "<<dataset.training_images.size()<<" training images."<<std::endl;
-  std::cerr<<"mnist_reader loaded "<<dataset.test_images.size()<<" test images."
-	   <<std::endl<<std::endl;
   shuffleDeck(dataset.training_images.size(),rng);
   SHD.x.increaseSizeTo(IMG_SIZE);
   for (int i=0; i<IMG_SIZE; ++i) SHD.x[i]=PRELIM_STATE;
   SHD.imageIndex=-1;
   SHD.trainingEpoch=1;
+  if (getSimulation().getRank()==0) {
+    std::cerr<<"MNIST reader loaded "<<dataset.training_images.size()<<" training images."<<std::endl<<std::endl;
+    std::cerr<<"MNIST reader loaded "<<dataset.test_images.size()<<" test images."
+      <<std::endl<<std::endl;
+    _sim.benchmark_start("DNN Training");
+  }
 }
 
 void SupervisorNodeCompCategory::updateShared(RNG& rng) 
@@ -108,6 +111,7 @@ void SupervisorNodeCompCategory::outputError(unsigned currentLabel)
   }
   SHD.numberOfInputs = 0;
   SHD.refreshErrors = true;
+  _sim.benchmark_timelapsed_diff("DNN Training");
 }
 
 bool SupervisorNodeCompCategory::isReady()

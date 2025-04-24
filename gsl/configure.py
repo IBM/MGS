@@ -2207,21 +2207,16 @@ $(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/
         if self.dx.exists is True:
             retStr += " $(DX_DIR)/EdgeSetSubscriberSocket $(DX_DIR)/NodeSetSubscriberSocket "
         retStr += " | $(BIN_DIR)"
-        retStr += "\n"
         if self.options.colab is True:
             retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(NEEDED_OBJS) "
-        else:
-            retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) "
         if self.options.colab is True:
             pass
         elif (self.options.asNts is True) or (self.options.asNtsNVU is True):
             retStr += "$(NTI_OBJS) "
-        retStr += "$(COMMON_OBJS) $(LDFLAGS) $(LIBS) -o $(BIN_DIR)/$(EXE_FILE) "
         retStr += "\n\t$(CC) $(FINAL_TARGET_FLAG) "
         if self.operatingSystem == "Darwin":
-            retStr += "-v $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o framework/dca/src/fakesocket.c $(OBJS) $(COMMON_OBJS) $(LDFLAGS) $(LIBS) -o $(BIN_DIR)/$(EXE_FILE)\n"
-        else:
-            retStr += "$(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) $(COMMON_OBJS) $(LDFLAGS) $(LIBS) -o $(BIN_DIR)/$(EXE_FILE)\n"        
+            retStr += "-v "
+        retStr += "$(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) $(COMMON_OBJS) $(LDFLAGS) $(LIBS) -o $(BIN_DIR)/$(EXE_FILE) "
         return retStr
 
     def getDependfileTarget(self):
