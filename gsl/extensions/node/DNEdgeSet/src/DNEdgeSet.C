@@ -2,6 +2,7 @@
 #include "DNEdgeSet.h"
 #include "CG_DNEdgeSet.h"
 #include "rndm.h"
+#include <cfloat>
 #ifdef HAVE_GPU
 #include "CG_DNEdgeSetCompCategory.h"
 #endif

@@ -8,11 +8,9 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
-#*/
 
 #include "../../nti/include/MaxComputeOrder.h"
-
-#include "std.mdl"
+#include "../std/std.mdl"
 
 Struct BranchDataStruct {
 	// This data structure is important for retrieving 

@@ -1,7 +1,7 @@
 #ifndef CaConnexon_MDL
 #define CaConnexon_MDL
 
-#include "std.mdl"
+#include "../std/std.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 

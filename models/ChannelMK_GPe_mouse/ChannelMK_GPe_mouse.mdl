@@ -6,7 +6,7 @@
 #ifndef ChannelMK_GPe_mouse_MDL
 #define ChannelMK_GPe_mouse_MDL
 
-#include "std.mdl"
+#include "../std/std.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 

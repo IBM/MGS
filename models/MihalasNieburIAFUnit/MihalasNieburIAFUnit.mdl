@@ -71,3 +71,4 @@ Node MihalasNieburIAFUnit Implements SpikeProducer, OutputProducer, ThresholdPro
    }
 }
 
+#endif

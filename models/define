@@ -1,12 +1,12 @@
 #!/bin/bash
-// =============================================================================
-// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
-//
-// Distributed under the terms of the Apache License
-// Version 2.0, January 2004.
-// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
-//
-// =============================================================================
+# =============================================================================
+# (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+#
+# Distributed under the terms of the Apache License
+# Version 2.0, January 2004.
+# (See accompanying file LICENSE or copy at http:#www.apache.org/licenses/.)
+#
+# =============================================================================
 ### UPDATE:
 # (Aug-08-2017)
 #  comment starting with // is allowed in *.mdf file
@@ -46,17 +46,17 @@ grep  '^[^//]' $1 | gawk '/mdl"/ {print}' > ${temp_mdl_only}
 MDLFILES=()
 sed '/\\/p' ${temp_mdl_only}| sed 's/#include "/cd /g' | sed 's/\(.*\)\//\1 ; $MDLROOT\/bin\/mdlparser /g' | sed 's/"/ -n ; sh copyModules ; cd - ;/g' > defineModels1.sh;
 while read mdl_in; do
-  mdl_file_name=`echo $mdl_in | gawk  '{print \$2}' | sed -e "s/^\"//" -e "s/\"$//"  `
+  mdl_file_name=`echo $mdl_in | gawk  '{print $2}' | sed -e "s/^\"//" -e "s/\"$//"  `
   MDLFILES+=($mdl_file_name)
 done < $temp_mdl_only
 while read in; do
-  file_name=`echo $in | gawk  '{print \$2}' | sed -e "s/^\"//" -e "s/\"$//"  `
+  file_name=`echo $in | gawk  '{print $2}' | sed -e "s/^\"//" -e "s/\"$//"  `
   if [ -f $file_name ]; then
     cat ${file_name} | grep  '^[^//]'  | sed '/\\/p' | sed 's/#include "/cd /g' | sed 's/\(.*\)\//\1 ; $MDLROOT\/bin\/mdlparser /g' | sed 's/"/ -n ; sh copyModules ; cd - ;/g' >> defineModels1.sh;
     temp_file_name=$(mktemp)
     grep  '^[^//]' $1 | gawk '/mdl"/ {print}' > ${temp_file_name}
     while read mdl_in; do
-      mdl_file_name=`echo $mdl_in | gawk  '{print \$2}' | sed -e "s/^\"//" -e "s/\"$//"  `
+      mdl_file_name=`echo $mdl_in | gawk  '{print $2}' | sed -e "s/^\"//" -e "s/\"$//"  `
       MDLFILES+=($mdl_file_name)
     done < $temp_file_name
   fi
@@ -67,7 +67,7 @@ if [ $# -gt 1 ] && [ $2 == "-rebuild" ]; then
   gawk '{ print  $0 }' defineModels1.sh > defineModels2.sh;
   RERUN=1
 else
-  gawk 'NF { print "if [ ! -f " $2 "/" $5" ]; then echo \" not found: " $2 "/" $5 "\"; exit 1; fi; if [ '$1' -ot " $2 "/" $5 " ] || { [ define -ot '$1' ] && [ define -ot " $2 "/" $5 " ];}; then " $0 " fi; for i in \$(gawk -F\" |{\"  '"'"'{for(i=1;i<=NF;i++) if (\$i==\"Node\" && \$(i+2)==\"Implements\") {print \$(i+1);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(gawk -F\" |{\" '"'"'{for(i=1;i<=NF;i++) if (\$i==\"Constant\" && \$(i+2)==\"Implements\") {print \$(i+1);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(gawk -F\" |{\" '"'"'{if (\$1==\"Variable\" ) {print \$(2);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(comm -12 <(cpp " $2 "/" $5 "|gawk -F\" |{\" '"'"'{if (\$1==\"Interface\" ) {print \$(2);}}'"'"'|sort) <(gawk -F\" |{\" '"'"'{if (\$1==\"Interface\" ) {print \$(2);}}'"'"' " $2 "/" $5 "|sort)); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; if ! cmp --silent <(cpp " $2 "/" $5")   " $2 "/." $5 "; then cpp " $2 "/" $5 " >" $2 "/." $5 ";" $0 " fi" }' defineModels1.sh > defineModels2.sh;
+  gawk 'NF { print "if [ ! -f " $2 "/" $5" ]; then echo \" not found: " $2 "/" $5 "\"; exit 1; fi; if [ '$1' -ot " $2 "/" $5 " ] || { [ define -ot '$1' ] && [ define -ot " $2 "/" $5 " ];}; then " $0 " fi; for i in $(gawk -F\" |{\"  '"'"'{for(i=1;i<=NF;i++) if ($i==\"Node\" && $(i+2)==\"Implements\") {print $(i+1);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in $(gawk -F\" |{\" '"'"'{for(i=1;i<=NF;i++) if ($i==\"Constant\" && $(i+2)==\"Implements\") {print $(i+1);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in $(gawk -F\" |{\" '"'"'{if ($1==\"Variable\" ) {print $(2);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in $(comm -12 <(cpp " $2 "/" $5 "|gawk -F\" |{\" '"'"'{if ($1==\"Interface\" ) {print $(2);}}'"'"'|sort) <(gawk -F\" |{\" '"'"'{if ($1==\"Interface\" ) {print $(2);}}'"'"' " $2 "/" $5 "|sort)); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; if ! cmp --silent <(cpp " $2 "/" $5")   " $2 "/." $5 "; then cpp " $2 "/" $5 " >" $2 "/." $5 ";" $0 " fi" }' defineModels1.sh > defineModels2.sh;
 fi
 
 set -e

@@ -2,6 +2,7 @@
 #include "SupervisorNodeCompCategory.h"
 #include "NDPairList.h"
 #include "CG_SupervisorNodeCompCategory.h"
+#include <cfloat>
 #include <string>
 #include <map>
 

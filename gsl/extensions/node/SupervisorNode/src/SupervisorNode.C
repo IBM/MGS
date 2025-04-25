@@ -4,6 +4,7 @@
 #include "rndm.h"
 #include "IsToast.h"
 #include <math.h>
+#include <cfloat>
 #ifdef HAVE_GPU
 #include "CG_SupervisorNodeCompCategory.h"
 #endif

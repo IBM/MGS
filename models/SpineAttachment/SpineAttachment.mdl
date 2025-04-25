@@ -2,8 +2,7 @@
 #define SpineAttachment_MDL
 
 #include "../../nti/include/MaxComputeOrder.h"
-
-#include "std.mdl"
+#include "../std/std.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
