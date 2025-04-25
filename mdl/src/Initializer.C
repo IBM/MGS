@@ -30,7 +30,7 @@ extern int yydebug;
 #endif
 
 Initializer::Initializer(int argc, char** argv)
-   : _argc(argc), _argv(argv) {
+   : _argc(argc), _argv(argv), _generatables(0){
 }
 
 bool Initializer::execute() {
@@ -44,7 +44,7 @@ bool Initializer::execute() {
 
    std::string fileName = commandLine.getFileName();
    char const * infilename = fileName.c_str();
-   std::istream *infile;
+   std::istream *infile = 0;
    std::ostream *outfile = &std::cout;
 #if YYDEBUG
    yydebug = 0;
@@ -155,7 +155,7 @@ bool Initializer::execute() {
    // generateCopyModulesPy();
    
    //free memory/resources
-   delete infile;
+   if (infile) delete infile;
    //remove the cpp temporary file
    unlink(temporaryName); // added by Jizhu Lu on 01/10/2006 to remove the temporary file.
    return true;

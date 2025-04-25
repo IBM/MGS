@@ -8,7 +8,6 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
-//*/
 
 #include "../../nti/include/MaxComputeOrder.h"
 
