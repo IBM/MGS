@@ -38,7 +38,7 @@
 
 //NOTE: g++ -DUSE_DOUBLES=1 myprogram.cpp
 //NOTE: dyn_var_t = dynamical-variable-type
-//NOTE: we can't use typedef as MDL currently does not support type with new name like 'dyn_var_t'
+//NOTE: we can\'t use typedef as MDL currently does not support type with new name like 'dyn_var_t'
 //   e.g. typedef double dyn_var_t;
 //   e.g. typedef float dyn_var_t;
 //   e.g. typedef double key_size_t
@@ -115,7 +115,7 @@
 //NOTE: 
 ///enable or disable the macro to turn on or off the option
 //  IDEA1 = the rescale of explicit junction compartment by taking capsules from 
-//  NEWIDEA = (Params.cxx) which is mainly to deal with accept param's value as a string, which can be the name of the function with parameters for that function, e.g.
+//  NEWIDEA = (Params.cxx) which is mainly to deal with accept param$\'s value as a string, which can be the name of the function with parameters for that function, e.g.
 //  gbar = lineardistane(a,b) 
 //  gbar = linearbranchorder
 //  ...
@@ -213,7 +213,7 @@
          //     w2 = 1/(dimensions[size-1]->length)
 //}}}
 
-//{{{ switch between Kozloski-2011 implementation of discritization vs. original paper's method
+//{{{ switch between Kozloski-2011 implementation of discritization vs. original paper$\'s method
 // The Mascagni (1995) is supposed to be the right version
 #define NEW_DISTANCE_NONUNIFORM_GRID //if defined, then ensure 
 //       dsi = (dx1 + dx2)/2 - Check Mascagni (1995, pg 33)
@@ -285,11 +285,11 @@
 //}}}
 #define KEEP_PAIR_PRE_POST   // this ensure a receptor always produce the pre- and post- branch information via only 1 interface; 
  // ..  rather than 2 separate set of interface 
- // .. ALWAYS ENABLE THIS: as we haven't made produce post-index available yet 
+ // .. ALWAYS ENABLE THIS: as we haven$\'t made produce post-index available yet 
  // NOTE: This is 2-element array: with pre-side first then post-side
 // The reason to have this is to enable AnyConcentrationDisplay to be able to 
 //   capture [NT] of a particular type of Neurotransmitter (e.g. Glut, GABA)
-// We also needs to update Synapse-receptors's Interfaces
+// We also needs to update Synapse-receptors$\'s Interfaces
 
 //#define SUPPORT_MODULABLE_CLEFT  //enable this if we want to have DA, Ser(otonin) as part of neurotransmitter in the SynapticCleft Node
 
