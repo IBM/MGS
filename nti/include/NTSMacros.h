@@ -102,8 +102,8 @@
 //}}}
 //IMPORTANT: Enable one or many from this list in your cell model
 //          SIMULATE_VM must always be defined
-//          others can be enabled within the MODEL_TO_USE macro\'s value
-//          depending on the details of cell\'s model
+//          others can be enabled within the MODEL_TO_USE macro's value
+//          depending on the details of cell's model
 //{{{
 #define SIMULATE_VM
 //#define SIMULATE_CACYTO
@@ -321,7 +321,7 @@
 
 #define _CaLVA_DEFAULT CaLVA_HAY_2011
 //}}}
-// CaL CHANNEL_CaL macro  (designed for maximal user\'s defined parameters)
+// CaL CHANNEL_CaL macro  (designed for maximal user's defined parameters)
 //{{{
 #define CaL_GENERAL    100
 //}}}
@@ -532,7 +532,7 @@
 ///////////////////////////////////////////////////////////////////////
 // USER-SELECTED SECTION
 // 1. to choose a model: select the proper value for MODEL_TO_USE
-// Please don\'t do it here, edit inside this file
+// Please don't do it here, edit inside this file
 #include "Model2Use.h"
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
@@ -572,7 +572,7 @@
 
 //}}}
 //}}}
-#elif   MODEL_TO_USE == _MSN_2005_WOLF
+#elif MODEL_TO_USE == _MSN_2005_WOLF
 //{{{
 #define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
   #define SYNAPSE_MODEL_STRATEGY USE_SYNAPTICCLEFT

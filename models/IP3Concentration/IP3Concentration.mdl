@@ -124,27 +124,33 @@ Node IP3Concentration Implements SolutionArrayProducer,
     /*{{{*/
   InitPhase initializeCompartmentData;
 
-  #if MAX_COMPUTE_ORDER>0
+#if MAX_COMPUTE_ORDER>0
   RuntimePhase forwardSolve1, backwardSolve1; 
-  #endif
-  #if MAX_COMPUTE_ORDER>1
+#endif
+
+#if MAX_COMPUTE_ORDER>1
   RuntimePhase forwardSolve2, backwardSolve2; 
-  #endif
-  #if MAX_COMPUTE_ORDER>2
+#endif
+
+#if MAX_COMPUTE_ORDER>2
   RuntimePhase forwardSolve3, backwardSolve3; 
-  #endif
-  #if MAX_COMPUTE_ORDER>3
+#endif
+
+#if MAX_COMPUTE_ORDER>3
   RuntimePhase forwardSolve4, backwardSolve4; 
-  #endif
-  #if MAX_COMPUTE_ORDER>4
+#endif
+
+#if MAX_COMPUTE_ORDER>4
   RuntimePhase forwardSolve5, backwardSolve5; 
-  #endif
-  #if MAX_COMPUTE_ORDER>5
+#endif
+
+#if MAX_COMPUTE_ORDER>5
   RuntimePhase forwardSolve6, backwardSolve6; 
-  #endif
-  #if MAX_COMPUTE_ORDER>6
+#endif
+
+#if MAX_COMPUTE_ORDER>6
   RuntimePhase forwardSolve7, backwardSolve7; 
-  #endif
+#endif
 
   RuntimePhase solve, finish;
     /*}}}*/

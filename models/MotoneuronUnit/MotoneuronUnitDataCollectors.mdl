@@ -72,7 +72,8 @@ Variable MotoneuronUnitDataCollector
   double* [] a_p_Nap_last;
   double* [] a_s_Ks_last;  
   */
-#endif // saveSimple
+#endif
+// saveSimple
   UserFunction getNodeIndices;
 
   // Flags
@@ -87,7 +88,8 @@ Variable MotoneuronUnitDataCollector
   bool op_save_s_EverythingElse;
   bool op_save_i_EverythingElse;
   //  bool op_save_a_EverythingElse;
-#endif // saveSimple
+#endif
+// saveSimple
 
 #if saveSimple == 1  
   Connection Pre Node () Expects MotoneuronSimpleProducer
@@ -164,7 +166,8 @@ Variable MotoneuronUnitDataCollector
     
     getNodeIndices();
   }
-#endif // saveSimple
+#endif
+// saveSimple
   
   InitPhase initialize;
   TriggeredFunction dataCollection;

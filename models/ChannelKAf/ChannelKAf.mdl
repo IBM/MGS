@@ -18,7 +18,7 @@
 // A-type fast component (Kt)
 Node ChannelKAf Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, 
 BranchDataProducer, IOCurrentArrayProducer, DimensionArrayProducer {
-/*{{{*/
+//{{{
   //DATA
   // Hodgkin-Huxley-based formula
   //{{{
@@ -112,7 +112,7 @@ Node ChannelKAf_KChIP Implements ConductanceArrayProducer,
      BranchDataProducer, IOCurrentArrayProducer, DimensionArrayProducer 
 {
 //Kv4 K+ channels with KChIP-auxiliary proteins and Ca2+-dependent mechanism
-/*{{{*/
+//{{{
   //DATA
   // Hodgkin-Huxley-based formula
   //{{{

@@ -13,7 +13,6 @@
 // =============================================================================
 
 #include "../../nti/include/MaxComputeOrder.h"
-
 #include "../std/std.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
@@ -24,7 +23,7 @@ Node ChannelNat Implements
      ConductanceArrayProducer, ReversalPotentialArrayProducer, // to Vm
      IOCurrentArrayProducer, // to I/O
      BranchDataProducer, DimensionArrayProducer {
-/*{{{*/
+//{{{
   //DATA
   // Hodgkin-Huxley-based formula
   //{{{
@@ -129,7 +128,7 @@ Node ChannelNat Implements
   Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
     TimeStepProducer.deltaT >> Shared.deltaT;
   }
-/*}}}*/
+//}}}
 }
 
 ////NOTE: Model suppose to be specific for Nav1.6 gene-expressed Na+ channel
@@ -224,7 +223,7 @@ Node ChannelNat Implements
 //  Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
 //    TimeStepProducer.deltaT >> Shared.deltaT;
 //  }
-///*}}}*/
+//}}}
 //}
 
 //NOTE: Don't use CurrentArrayProducer as it causes conflict with GHK-formula
@@ -332,7 +331,7 @@ Node ChannelNat_AIS Implements
   Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
     TimeStepProducer.deltaT >> Shared.deltaT;
   }
-/*}}}*/
+//}}}
 }
 
 

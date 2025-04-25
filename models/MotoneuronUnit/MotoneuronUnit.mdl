@@ -16,7 +16,8 @@
 Node MotoneuronUnit Implements MotoneuronSimpleProducer
 #else
 Node MotoneuronUnit Implements MotoneuronProducer
-#endif // saveSimple
+#endif
+// saveSimple
 
 {
   // ##### WHOLE NEURON #####
@@ -315,7 +316,7 @@ Node MotoneuronUnit Implements MotoneuronProducer
   MotoneuronProducer.a_p_Nap_last <<&a_p_Nap_last;
   MotoneuronProducer.a_s_Ks_last <<&a_s_Ks_last;  
   */
-#endif // saveSimple  
+#endif 
+// saveSimple  
 }
-
 #endif

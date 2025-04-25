@@ -29,7 +29,7 @@ Node AMPAReceptor Implements ConductanceProducer, ReversalPotentialProducer
 #endif
      , DimensionArrayProducer //for post
 {
-/*{{{*/
+//{{{
   //{{{DATA
   dyn_var_t g;  //[nS/um^2]
   dyn_var_t gbar; // [nS/um^2]
@@ -225,7 +225,7 @@ Node AMPAReceptor_Markov Implements ConductanceProducer, ReversalPotentialProduc
 #endif
      , DimensionArrayProducer //for post
 {
-/*{{{*/
+//{{{
   //{{{DATA
   dyn_var_t g;  //[nS/um^2]
   dyn_var_t gbar; // [nS/um^2]

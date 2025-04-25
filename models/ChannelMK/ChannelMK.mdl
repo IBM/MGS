@@ -22,7 +22,7 @@
 //NOTE: Don't use CurrentArrayProducer as it causes conflict with GHK-formula
 //    Use IOCurrentArrayProducer instead
 Node ChannelMK Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer, IOCurrentArrayProducer, DimensionArrayProducer {
-/*{{{*/
+//{{{
   //DATA
   // Hodgkin-Huxley-based formula
   //{{{

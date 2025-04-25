@@ -20,7 +20,7 @@
 
 Node ChannelNap Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, 
 BranchDataProducer, IOCurrentArrayProducer, DimensionArrayProducer {
-/*{{{*/
+//{{{
   //DATA
   // Hodgkin-Huxley-based formula
   //{{{
@@ -109,7 +109,7 @@ BranchDataProducer, IOCurrentArrayProducer, DimensionArrayProducer {
   Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
     TimeStepProducer.deltaT >> Shared.deltaT;
   }
-/*}}}*/
+//}}}
 }
 
 
