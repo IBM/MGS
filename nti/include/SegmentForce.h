@@ -9,14 +9,14 @@
 #ifndef SEGMENTFORCE_H
 #define SEGMENTFORCE_H
 
-#include "SegmentDescriptor.h"
-#include "Sphere.h"
-
 #include <mpi.h>
 #include <vector>
 
 #define N_SEGFORCE_DATA 4
 
+
+class SegmentDescriptor;
+struct Sphere;
 class SegmentForce
 {
  public:

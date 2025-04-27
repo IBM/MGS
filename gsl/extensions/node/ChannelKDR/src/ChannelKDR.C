@@ -9,7 +9,6 @@
 // (C) Copyright 2018 New Jersey Institute of Technology. All rights reserved.
 // 
 // =============================================================================
-*/
 
 #include "Lens.h"
 #include "ChannelKDR.h"

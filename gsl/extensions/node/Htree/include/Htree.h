@@ -121,8 +121,8 @@ public:
   void writeToFiles(RNG &rng);
   //virtual void dataCollection(Trigger* trigger, NDPairList* ndPairList);
 
-  virtual void setPointers(const String &CG_direction,
-                           const String &CG_component, NodeDescriptor *CG_node,
+  virtual void setPointers(const CustomString &CG_direction,
+                           const CustomString &CG_component, NodeDescriptor *CG_node,
                            Edge *CG_edge, VariableDescriptor *CG_variable,
                            Constant *CG_constant,
                            CG_HtreeInAttrPSet *CG_inAttrPset,

@@ -65,7 +65,7 @@ void LifeDataCollector::dataCollection(Trigger* trigger, NDPairList* ndPairList)
   output<<std::endl;
 }
 
-void LifeDataCollector::getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_LifeDataCollectorInAttrPSet* CG_inAttrPset, CG_LifeDataCollectorOutAttrPSet* CG_outAttrPset) 
+void LifeDataCollector::getNodeIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_LifeDataCollectorInAttrPSet* CG_inAttrPset, CG_LifeDataCollectorOutAttrPSet* CG_outAttrPset) 
 {
   ShallowArray<unsigned,3,2> coords;
   CG_node->getNode()->getNodeCoords(coords);
@@ -84,17 +84,17 @@ LifeDataCollector::~LifeDataCollector()
   delete file;
 }
 
-void LifeDataCollector::duplicate(std::unique_ptr<LifeDataCollector>& dup) const
+void LifeDataCollector::duplicate(std::unique_ptr<LifeDataCollector>&& dup) const
 {
    dup.reset(new LifeDataCollector(*this));
 }
 
-void LifeDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
+void LifeDataCollector::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
    dup.reset(new LifeDataCollector(*this));
 }
 
-void LifeDataCollector::duplicate(std::unique_ptr<CG_LifeDataCollector>& dup) const
+void LifeDataCollector::duplicate(std::unique_ptr<CG_LifeDataCollector>&& dup) const
 {
    dup.reset(new LifeDataCollector(*this));
 }

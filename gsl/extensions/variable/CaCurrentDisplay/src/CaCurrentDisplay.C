@@ -170,7 +170,7 @@ void CaCurrentDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList)
 }
 
 void CaCurrentDisplay::setUpPointers(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_CaCurrentDisplayInAttrPSet* CG_inAttrPset,
     CG_CaCurrentDisplayOutAttrPSet* CG_outAttrPset)
@@ -188,17 +188,17 @@ CaCurrentDisplay::CaCurrentDisplay() : CG_CaCurrentDisplay(), outFile(0) {}
 
 CaCurrentDisplay::~CaCurrentDisplay() { delete outFile; }
 
-void CaCurrentDisplay::duplicate(std::unique_ptr<CaCurrentDisplay>& dup) const
+void CaCurrentDisplay::duplicate(std::unique_ptr<CaCurrentDisplay>&& dup) const
 {
   dup.reset(new CaCurrentDisplay(*this));
 }
 
-void CaCurrentDisplay::duplicate(std::unique_ptr<Variable>& dup) const
+void CaCurrentDisplay::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
   dup.reset(new CaCurrentDisplay(*this));
 }
 
-void CaCurrentDisplay::duplicate(std::unique_ptr<CG_CaCurrentDisplay>& dup) const
+void CaCurrentDisplay::duplicate(std::unique_ptr<CG_CaCurrentDisplay>&& dup) const
 {
   dup.reset(new CaCurrentDisplay(*this));
 }

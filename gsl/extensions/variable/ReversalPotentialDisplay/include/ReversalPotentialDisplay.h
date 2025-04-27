@@ -21,16 +21,16 @@ class ReversalPotentialDisplay : public CG_ReversalPotentialDisplay
   void finalize(RNG& rng);
   virtual void dataCollection(Trigger* trigger, NDPairList* ndPairList);
   virtual void setUpPointers(
-      const String& CG_direction, const String& CG_component,
+      const CustomString& CG_direction, const CustomString& CG_component,
       NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
       Constant* CG_constant,
       CG_ReversalPotentialDisplayInAttrPSet* CG_inAttrPset,
       CG_ReversalPotentialDisplayOutAttrPSet* CG_outAttrPset);
   ReversalPotentialDisplay();
   virtual ~ReversalPotentialDisplay();
-  virtual void duplicate(std::unique_ptr<ReversalPotentialDisplay>& dup) const;
-  virtual void duplicate(std::unique_ptr<Variable>& dup) const;
-  virtual void duplicate(std::unique_ptr<CG_ReversalPotentialDisplay>& dup) const;
+  virtual void duplicate(std::unique_ptr<ReversalPotentialDisplay>&& dup) const;
+  virtual void duplicate(std::unique_ptr<Variable>&& dup) const;
+  virtual void duplicate(std::unique_ptr<CG_ReversalPotentialDisplay>&& dup) const;
 
   private:
   std::ofstream* outFile = 0;

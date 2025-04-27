@@ -23,12 +23,12 @@ class SpineAttachment_Vm : public CG_SpineAttachment_Vm
   void produceState(RNG& rng);
   void computeState(RNG& rng);
   virtual void setVoltagePointers(
-      const String& CG_direction, const String& CG_component,
+      const CustomString& CG_direction, const CustomString& CG_component,
       NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
       Constant* CG_constant, CG_SpineAttachment_VmInAttrPSet* CG_inAttrPset,
       CG_SpineAttachment_VmOutAttrPSet* CG_outAttrPset);
-  virtual void set_A_and_len(const String& CG_direction,
-                             const String& CG_component,
+  virtual void set_A_and_len(const CustomString& CG_direction,
+                             const CustomString& CG_component,
                              NodeDescriptor* CG_node, Edge* CG_edge,
                              VariableDescriptor* CG_variable,
                              Constant* CG_constant,

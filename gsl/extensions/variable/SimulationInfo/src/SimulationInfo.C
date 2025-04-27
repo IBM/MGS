@@ -64,17 +64,17 @@ SimulationInfo::~SimulationInfo()
 {
 }
 
-void SimulationInfo::duplicate(std::unique_ptr<SimulationInfo>& dup) const
+void SimulationInfo::duplicate(std::unique_ptr<SimulationInfo>&& dup) const
 {
    dup.reset(new SimulationInfo(*this));
 }
 
-void SimulationInfo::duplicate(std::unique_ptr<Variable>& dup) const
+void SimulationInfo::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
    dup.reset(new SimulationInfo(*this));
 }
 
-void SimulationInfo::duplicate(std::unique_ptr<CG_SimulationInfo>& dup) const
+void SimulationInfo::duplicate(std::unique_ptr<CG_SimulationInfo>&& dup) const
 {
    dup.reset(new SimulationInfo(*this));
 }

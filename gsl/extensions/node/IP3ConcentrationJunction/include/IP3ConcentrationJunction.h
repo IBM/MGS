@@ -21,13 +21,13 @@ class IP3ConcentrationJunction : public CG_IP3ConcentrationJunction
   void initializeJunction(RNG& rng);
   void predictJunction(RNG& rng);
   void correctJunction(RNG& rng);
-  virtual bool checkSite(const String& CG_direction, const String& CG_component,
+  virtual bool checkSite(const CustomString& CG_direction, const CustomString& CG_component,
                          NodeDescriptor* CG_node, Edge* CG_edge,
                          VariableDescriptor* CG_variable, Constant* CG_constant,
                          CG_IP3ConcentrationJunctionInAttrPSet* CG_inAttrPset,
                          CG_IP3ConcentrationJunctionOutAttrPSet* CG_outAttrPset);
   virtual bool confirmUniqueDeltaT(
-      const String& CG_direction, const String& CG_component,
+      const CustomString& CG_direction, const CustomString& CG_component,
       NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
       Constant* CG_constant,
       CG_IP3ConcentrationJunctionInAttrPSet* CG_inAttrPset,

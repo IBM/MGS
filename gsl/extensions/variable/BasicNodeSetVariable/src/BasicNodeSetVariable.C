@@ -83,17 +83,17 @@ BasicNodeSetVariable::~BasicNodeSetVariable()
 {
 }
 
-void BasicNodeSetVariable::duplicate(std::unique_ptr<BasicNodeSetVariable>& dup) const
+void BasicNodeSetVariable::duplicate(std::unique_ptr<BasicNodeSetVariable>&& dup) const
 {
    dup.reset(new BasicNodeSetVariable(*this));
 }
 
-void BasicNodeSetVariable::duplicate(std::unique_ptr<Variable>& dup) const
+void BasicNodeSetVariable::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
    dup.reset(new BasicNodeSetVariable(*this));
 }
 
-void BasicNodeSetVariable::duplicate(std::unique_ptr<CG_BasicNodeSetVariable>& dup) const
+void BasicNodeSetVariable::duplicate(std::unique_ptr<CG_BasicNodeSetVariable>&& dup) const
 {
    dup.reset(new BasicNodeSetVariable(*this));
 }

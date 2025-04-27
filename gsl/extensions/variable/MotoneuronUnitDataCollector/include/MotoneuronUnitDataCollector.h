@@ -23,12 +23,12 @@ class MotoneuronUnitDataCollector : public CG_MotoneuronUnitDataCollector
   void initialize(RNG& rng);
   void finalize(RNG& rng);
   virtual void dataCollection(Trigger* trigger, NDPairList* ndPairList);
-  virtual void getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_MotoneuronUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_MotoneuronUnitDataCollectorOutAttrPSet* CG_outAttrPset);
+  virtual void getNodeIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_MotoneuronUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_MotoneuronUnitDataCollectorOutAttrPSet* CG_outAttrPset);
   MotoneuronUnitDataCollector();
   virtual ~MotoneuronUnitDataCollector();
-  virtual void duplicate(std::unique_ptr<MotoneuronUnitDataCollector>& dup) const;
-  virtual void duplicate(std::unique_ptr<Variable>& dup) const;
-  virtual void duplicate(std::unique_ptr<CG_MotoneuronUnitDataCollector>& dup) const;
+  virtual void duplicate(std::unique_ptr<MotoneuronUnitDataCollector>&& dup) const;
+  virtual void duplicate(std::unique_ptr<Variable>&& dup) const;
+  virtual void duplicate(std::unique_ptr<CG_MotoneuronUnitDataCollector>&& dup) const;
  private:
   std::ofstream* d_V_m_last_file;
   std::ofstream* d_I_in_file;

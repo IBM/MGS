@@ -19,7 +19,7 @@ void VoltageJunctionPoint::produceVoltage(RNG& rng)
 {
 }
 
-void VoltageJunctionPoint::setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_VoltageJunctionPointInAttrPSet* CG_inAttrPset, CG_VoltageJunctionPointOutAttrPSet* CG_outAttrPset) 
+void VoltageJunctionPoint::setPointers(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_VoltageJunctionPointInAttrPSet* CG_inAttrPset, CG_VoltageJunctionPointOutAttrPSet* CG_outAttrPset) 
 {
   assert(getSharedMembers().voltageConnect);
   assert(getSharedMembers().voltageConnect->size()==1);    

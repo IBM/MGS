@@ -22,13 +22,13 @@ class BasicNodeSetVariable : public CG_BasicNodeSetVariable
       virtual void dca(Trigger* trigger, NDPairList* ndPairList);
       BasicNodeSetVariable();
       virtual ~BasicNodeSetVariable();
-      virtual void duplicate(std::unique_ptr<BasicNodeSetVariable>& dup) const;
-      virtual void duplicate(std::unique_ptr<Variable>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_BasicNodeSetVariable>& dup) const;
+      virtual void duplicate(std::unique_ptr<BasicNodeSetVariable>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Variable>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_BasicNodeSetVariable>&& dup) const;
    private:
       ShallowArray<float> _coords;
       int _updateCounter;
-      String _generalFileName;
+      CustomString _generalFileName;
 };
 
 #endif

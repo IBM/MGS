@@ -20,7 +20,7 @@ class ZhengSORNInhUnit : public CG_ZhengSORNInhUnit
       void initialize(RNG& rng);
       void update(RNG& rng);
       void fire(RNG& rng);
-      virtual void setIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ZhengSORNInhUnitInAttrPSet* CG_inAttrPset, CG_ZhengSORNInhUnitOutAttrPSet* CG_outAttrPset);
+      virtual void setIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ZhengSORNInhUnitInAttrPSet* CG_inAttrPset, CG_ZhengSORNInhUnitOutAttrPSet* CG_outAttrPset);
       void inputWeights(std::ifstream& fsE2I, int col, float weight);
       void outputWeights(std::ofstream& fsE2I);
       void inputTI(float val);

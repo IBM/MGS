@@ -357,7 +357,7 @@ void SpineIAFUnitDataCollector::dataCollection(Trigger* trigger, NDPairList* ndP
     }
 }
 
-void SpineIAFUnitDataCollector::getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_SpineIAFUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_SpineIAFUnitDataCollectorOutAttrPSet* CG_outAttrPset)
+void SpineIAFUnitDataCollector::getNodeIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_SpineIAFUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_SpineIAFUnitDataCollectorOutAttrPSet* CG_outAttrPset)
 {
   ShallowArray<unsigned,3,2> coords;
   CG_node->getNode()->getNodeCoords(coords);
@@ -376,17 +376,17 @@ SpineIAFUnitDataCollector::~SpineIAFUnitDataCollector()
 {
 }
 
-void SpineIAFUnitDataCollector::duplicate(std::unique_ptr<SpineIAFUnitDataCollector>& dup) const
+void SpineIAFUnitDataCollector::duplicate(std::unique_ptr<SpineIAFUnitDataCollector>&& dup) const
 {
   dup.reset(new SpineIAFUnitDataCollector(*this));
 }
 
-void SpineIAFUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
+void SpineIAFUnitDataCollector::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
   dup.reset(new SpineIAFUnitDataCollector(*this));
 }
 
-void SpineIAFUnitDataCollector::duplicate(std::unique_ptr<CG_SpineIAFUnitDataCollector>& dup) const
+void SpineIAFUnitDataCollector::duplicate(std::unique_ptr<CG_SpineIAFUnitDataCollector>&& dup) const
 {
   dup.reset(new SpineIAFUnitDataCollector(*this));
 }

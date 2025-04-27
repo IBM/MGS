@@ -175,7 +175,7 @@ void NazeSORNExcUnit::fire(RNG& rng)
   a = (a>1.0) ? 1.0 : a;
 }
 
-void NazeSORNExcUnit::checkForSynapse(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NazeSORNExcUnitInAttrPSet* CG_inAttrPset, CG_NazeSORNExcUnitOutAttrPSet* CG_outAttrPset) 
+void NazeSORNExcUnit::checkForSynapse(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NazeSORNExcUnitInAttrPSet* CG_inAttrPset, CG_NazeSORNExcUnitOutAttrPSet* CG_outAttrPset) 
 {
   if (CG_inAttrPset->condition<CG_inAttrPset->conditionalFraction) {
     lateralExcInputs[lateralExcInputs.size()-1].synapse=true;
@@ -183,7 +183,7 @@ void NazeSORNExcUnit::checkForSynapse(const String& CG_direction, const String& 
   else lateralExcInputs[lateralExcInputs.size()-1].weight=0.0;
 }
 
-void NazeSORNExcUnit::checkForInhSynapse(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NazeSORNExcUnitInAttrPSet* CG_inAttrPset, CG_NazeSORNExcUnitOutAttrPSet* CG_outAttrPset) 
+void NazeSORNExcUnit::checkForInhSynapse(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NazeSORNExcUnitInAttrPSet* CG_inAttrPset, CG_NazeSORNExcUnitOutAttrPSet* CG_outAttrPset) 
 {
   if (CG_inAttrPset->condition<CG_inAttrPset->conditionalFraction) {
     lateralInhInputs[lateralInhInputs.size()-1].synapse=true;
@@ -191,19 +191,19 @@ void NazeSORNExcUnit::checkForInhSynapse(const String& CG_direction, const Strin
   else lateralInhInputs[lateralInhInputs.size()-1].weight=0.0;
 }
 
-void NazeSORNExcUnit::setE2EIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NazeSORNExcUnitInAttrPSet* CG_inAttrPset, CG_NazeSORNExcUnitOutAttrPSet* CG_outAttrPset) 
+void NazeSORNExcUnit::setE2EIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NazeSORNExcUnitInAttrPSet* CG_inAttrPset, CG_NazeSORNExcUnitOutAttrPSet* CG_outAttrPset) 
 {
   lateralExcInputs[lateralExcInputs.size()-1].row = getGlobalIndex()+1; // +1 is for Matlab
   lateralExcInputs[lateralExcInputs.size()-1].col = CG_node->getGlobalIndex()+1;
 }
 
-void NazeSORNExcUnit::setI2EIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NazeSORNExcUnitInAttrPSet* CG_inAttrPset, CG_NazeSORNExcUnitOutAttrPSet* CG_outAttrPset) 
+void NazeSORNExcUnit::setI2EIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NazeSORNExcUnitInAttrPSet* CG_inAttrPset, CG_NazeSORNExcUnitOutAttrPSet* CG_outAttrPset) 
 {
   lateralInhInputs[lateralInhInputs.size()-1].row = getGlobalIndex()+1; // +1 is for Matlab
   lateralInhInputs[lateralInhInputs.size()-1].col = CG_node->getGlobalIndex()+1;
 }
 
-bool NazeSORNExcUnit::checkInitWeights(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NazeSORNExcUnitInAttrPSet* CG_inAttrPset, CG_NazeSORNExcUnitOutAttrPSet* CG_outAttrPset) 
+bool NazeSORNExcUnit::checkInitWeights(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NazeSORNExcUnitInAttrPSet* CG_inAttrPset, CG_NazeSORNExcUnitOutAttrPSet* CG_outAttrPset) 
 {
   if (SHD.initWeights.size()==0) return true;
   else {

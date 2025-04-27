@@ -22,9 +22,9 @@ class NodeSetSPMVariable : public CG_NodeSetSPMVariable
       virtual void dca(Trigger* trigger, NDPairList* ndPairList);
       NodeSetSPMVariable();
       virtual ~NodeSetSPMVariable();
-      virtual void duplicate(std::unique_ptr<NodeSetSPMVariable>& dup) const;
-      virtual void duplicate(std::unique_ptr<Variable>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_NodeSetSPMVariable>& dup) const;
+      virtual void duplicate(std::unique_ptr<NodeSetSPMVariable>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Variable>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_NodeSetSPMVariable>&& dup) const;
 
    private:
       unsigned dimx;

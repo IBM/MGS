@@ -10,7 +10,6 @@
 // (C) Copyright 2018 New Jersey Institute of Technology. All rights reserved.
 // 
 // =============================================================================
-*/
 
 #ifndef ChannelKDR_H
 #define ChannelKDR_H

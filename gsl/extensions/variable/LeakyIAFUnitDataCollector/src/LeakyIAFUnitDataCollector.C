@@ -145,7 +145,7 @@ void LeakyIAFUnitDataCollector::dataCollectionOther(Trigger* trigger, NDPairList
     }  
 }
 
-void LeakyIAFUnitDataCollector::getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_LeakyIAFUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_LeakyIAFUnitDataCollectorOutAttrPSet* CG_outAttrPset) 
+void LeakyIAFUnitDataCollector::getNodeIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_LeakyIAFUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_LeakyIAFUnitDataCollectorOutAttrPSet* CG_outAttrPset) 
 {
   ShallowArray<unsigned,3,2> coords;
   CG_node->getNode()->getNodeCoords(coords);
@@ -164,17 +164,17 @@ LeakyIAFUnitDataCollector::~LeakyIAFUnitDataCollector()
 {
 }
 
-void LeakyIAFUnitDataCollector::duplicate(std::unique_ptr<LeakyIAFUnitDataCollector>& dup) const
+void LeakyIAFUnitDataCollector::duplicate(std::unique_ptr<LeakyIAFUnitDataCollector>&& dup) const
 {
   dup.reset(new LeakyIAFUnitDataCollector(*this));
 }
 
-void LeakyIAFUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
+void LeakyIAFUnitDataCollector::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
   dup.reset(new LeakyIAFUnitDataCollector(*this));
 }
 
-void LeakyIAFUnitDataCollector::duplicate(std::unique_ptr<CG_LeakyIAFUnitDataCollector>& dup) const
+void LeakyIAFUnitDataCollector::duplicate(std::unique_ptr<CG_LeakyIAFUnitDataCollector>&& dup) const
 {
   dup.reset(new LeakyIAFUnitDataCollector(*this));
 }

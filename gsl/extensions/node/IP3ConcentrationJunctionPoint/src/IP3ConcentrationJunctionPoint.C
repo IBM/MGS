@@ -19,7 +19,7 @@ void IP3ConcentrationJunctionPoint::produceIP3Concentration(RNG& rng)
 {
 }
 
-void IP3ConcentrationJunctionPoint::setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_IP3ConcentrationJunctionPointInAttrPSet* CG_inAttrPset, CG_IP3ConcentrationJunctionPointOutAttrPSet* CG_outAttrPset) 
+void IP3ConcentrationJunctionPoint::setPointers(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_IP3ConcentrationJunctionPointInAttrPSet* CG_inAttrPset, CG_IP3ConcentrationJunctionPointOutAttrPSet* CG_outAttrPset) 
 {
   assert(getSharedMembers().IP3ConcentrationConnect);
   assert(getSharedMembers().IP3ConcentrationConnect->size()==1);

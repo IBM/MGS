@@ -83,13 +83,13 @@ void NazeSORNInhUnit::fire(RNG& rng)
   ya = (ya>1.0) ? 1.0 : ya;
 }
 
-void NazeSORNInhUnit::setExcIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NazeSORNInhUnitInAttrPSet* CG_inAttrPset, CG_NazeSORNInhUnitOutAttrPSet* CG_outAttrPset) 
+void NazeSORNInhUnit::setExcIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NazeSORNInhUnitInAttrPSet* CG_inAttrPset, CG_NazeSORNInhUnitOutAttrPSet* CG_outAttrPset) 
 {
   lateralExcInputs[lateralExcInputs.size()-1].row = getGlobalIndex()+1; // +1 is for Matlab
   lateralExcInputs[lateralExcInputs.size()-1].col = CG_node->getGlobalIndex()+1;
 }
 
-void NazeSORNInhUnit::setInhIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NazeSORNInhUnitInAttrPSet* CG_inAttrPset, CG_NazeSORNInhUnitOutAttrPSet* CG_outAttrPset) 
+void NazeSORNInhUnit::setInhIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NazeSORNInhUnitInAttrPSet* CG_inAttrPset, CG_NazeSORNInhUnitOutAttrPSet* CG_outAttrPset) 
 {
   lateralInhInputs[lateralInhInputs.size()-1].row = getGlobalIndex()+1; // +1 is for Matlab
   lateralInhInputs[lateralInhInputs.size()-1].col = CG_node->getGlobalIndex()+1;

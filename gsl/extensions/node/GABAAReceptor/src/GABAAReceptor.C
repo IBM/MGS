@@ -10,8 +10,6 @@
 // (C) Copyright 2018 New Jersey Institute of Technology. All rights reserved.
 // 
 // =============================================================================
-*/
-
 
 #include "Lens.h"
 #include "GABAAReceptor.h"
@@ -79,8 +77,8 @@ void GABAAReceptor::updateGABAA(RNG& rng)
   I = g * ((*Vpost)[indexPost] - getSharedMembers().E);
 }
 
-void GABAAReceptor::setPostIndex(const String& CG_direction,
-                                 const String& CG_component,
+void GABAAReceptor::setPostIndex(const CustomString& CG_direction,
+                                 const CustomString& CG_component,
                                  NodeDescriptor* CG_node, Edge* CG_edge,
                                  VariableDescriptor* CG_variable,
                                  Constant* CG_constant,
@@ -111,8 +109,8 @@ void GABAAReceptor::setPostIndex(const String& CG_direction,
   }
 }
 
-void GABAAReceptor::setPrePostIndex(const String& CG_direction,
-    const String& CG_component,
+void GABAAReceptor::setPrePostIndex(const CustomString& CG_direction,
+    const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge,
     VariableDescriptor* CG_variable,
     Constant* CG_constant,

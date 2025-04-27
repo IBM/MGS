@@ -233,8 +233,8 @@ void NMDAReceptor::updateNMDADepPlasticity(RNG& rng)
   }
 }
 
-void NMDAReceptor::setPostIndex(const String& CG_direction,
-                                const String& CG_component,
+void NMDAReceptor::setPostIndex(const CustomString& CG_direction,
+                                const CustomString& CG_component,
                                 NodeDescriptor* CG_node, Edge* CG_edge,
                                 VariableDescriptor* CG_variable,
                                 Constant* CG_constant,
@@ -266,8 +266,8 @@ void NMDAReceptor::setPostIndex(const String& CG_direction,
 
 
 NMDAReceptor::~NMDAReceptor() {}
-void NMDAReceptor::setPrePostIndex(const String& CG_direction,
-                                const String& CG_component,
+void NMDAReceptor::setPrePostIndex(const CustomString& CG_direction,
+                                const CustomString& CG_component,
                                 NodeDescriptor* CG_node, Edge* CG_edge,
                                 VariableDescriptor* CG_variable,
                                 Constant* CG_constant,
@@ -290,7 +290,7 @@ void NMDAReceptor::setPrePostIndex(const String& CG_direction,
 
 
 #ifdef MICRODOMAIN_CALCIUM
-void NMDAReceptor::setCalciumMicrodomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NMDAReceptorInAttrPSet* CG_inAttrPset, CG_NMDAReceptorOutAttrPSet* CG_outAttrPset) 
+void NMDAReceptor::setCalciumMicrodomain(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NMDAReceptorInAttrPSet* CG_inAttrPset, CG_NMDAReceptorOutAttrPSet* CG_outAttrPset) 
 {
   microdomainName = CG_inAttrPset->domainName;
   int idxFound = 0;

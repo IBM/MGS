@@ -2197,7 +2197,7 @@ $(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/
 
     def getAllTarget(self):
         retStr = "cleanfirst:\n"
-        retStr += "\t-rm $(BIN_DIR)/$(EXE_FILE)\n\n"
+        retStr += "\t-rm -f $(BIN_DIR)/$(EXE_FILE)\n\n"
         if self.options.colab is True:
             retStr += "final: cleanfirst $(OBJS) $(LENS_LIBS_EXT) "
         else:

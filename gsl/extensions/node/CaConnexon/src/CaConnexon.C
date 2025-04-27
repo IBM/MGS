@@ -27,7 +27,7 @@ void CaConnexon::computeState(RNG& rng)
   I_Ca=g*(V+E_Ca);
 }
 
-void CaConnexon::setCaPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConnexonInAttrPSet* CG_inAttrPset, CG_CaConnexonOutAttrPSet* CG_outAttrPset) 
+void CaConnexon::setCaPointers(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConnexonInAttrPSet* CG_inAttrPset, CG_CaConnexonOutAttrPSet* CG_outAttrPset) 
 {
   if (CG_inAttrPset->idx>=0) {
     index=CG_inAttrPset->idx;
@@ -40,7 +40,7 @@ void CaConnexon::setCaPointers(const String& CG_direction, const String& CG_comp
   Cai = &((*(getSharedMembers().CaConcentrationConnect))[index]);
 }
 
-void CaConnexon::setVoltagePointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConnexonInAttrPSet* CG_inAttrPset, CG_CaConnexonOutAttrPSet* CG_outAttrPset) 
+void CaConnexon::setVoltagePointers(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConnexonInAttrPSet* CG_inAttrPset, CG_CaConnexonOutAttrPSet* CG_outAttrPset) 
 {
   int index=CG_inAttrPset->idx;
   assert(getSharedMembers().voltageConnect);

@@ -23,7 +23,7 @@ void VoltageEndPoint::produceFinishedVoltage(RNG& rng)
 {
 }
 
-void VoltageEndPoint::setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_VoltageEndPointInAttrPSet* CG_inAttrPset, CG_VoltageEndPointOutAttrPSet* CG_outAttrPset) 
+void VoltageEndPoint::setPointers(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_VoltageEndPointInAttrPSet* CG_inAttrPset, CG_VoltageEndPointOutAttrPSet* CG_outAttrPset) 
 {
   if (CG_inAttrPset->identifier=="distalEnd") {
     assert(getSharedMembers().voltageConnect);

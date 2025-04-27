@@ -17,7 +17,7 @@ void LypCollector::update(RNG& rng)
   for (iter=inputs.begin(); iter!=end; ++iter) output+=**iter;
 }
 
-void LypCollector::setIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_LypCollectorInAttrPSet* CG_inAttrPset, CG_LypCollectorOutAttrPSet* CG_outAttrPset) 
+void LypCollector::setIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_LypCollectorInAttrPSet* CG_inAttrPset, CG_LypCollectorOutAttrPSet* CG_outAttrPset) 
 {
   std::ofstream ofs;
   ofs.open ("GlobColCons.dat", std::ofstream::out | std::ofstream::app);

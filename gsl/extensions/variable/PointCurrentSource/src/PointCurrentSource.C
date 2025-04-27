@@ -35,17 +35,17 @@ PointCurrentSource::~PointCurrentSource()
 {
 }
 
-void PointCurrentSource::duplicate(std::unique_ptr<PointCurrentSource>& dup) const
+void PointCurrentSource::duplicate(std::unique_ptr<PointCurrentSource>&& dup) const
 {
    dup.reset(new PointCurrentSource(*this));
 }
 
-void PointCurrentSource::duplicate(std::unique_ptr<Variable>& dup) const
+void PointCurrentSource::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
    dup.reset(new PointCurrentSource(*this));
 }
 
-void PointCurrentSource::duplicate(std::unique_ptr<CG_PointCurrentSource>& dup) const
+void PointCurrentSource::duplicate(std::unique_ptr<CG_PointCurrentSource>&& dup) const
 {
    dup.reset(new PointCurrentSource(*this));
 }

@@ -7,13 +7,13 @@
 /* whether everythings should use SimulationInfo or not, e.g. TimeStep, CurrenTime */
 //#define USE_SIMULATION_INFO
 
-#ifdef USE_DOUBLES
- #define dyn_var_t double
+//#ifdef USE_DOUBLES
+//#define dyn_var_t double
 //using dyn_var_t = double;
-#else
- #define dyn_var_t float
+//#else
+//#define dyn_var_t float
 //using dyn_var_t = float;
-#endif
+//#endif
 
 /* self-prediction, i.e. learning from random-repeated input */
 #define RUN_PREDICT_SELF_GENERATED_TOP_DOWN_INPUT 1

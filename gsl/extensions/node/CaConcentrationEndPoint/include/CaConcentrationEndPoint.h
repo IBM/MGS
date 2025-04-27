@@ -19,7 +19,7 @@ class CaConcentrationEndPoint : public CG_CaConcentrationEndPoint
       void produceInitialState(RNG& rng);
       void produceSolvedCaConcentration(RNG& rng);
       void produceFinishedCaConcentration(RNG& rng);
-      virtual void setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationEndPointInAttrPSet* CG_inAttrPset, CG_CaConcentrationEndPointOutAttrPSet* CG_outAttrPset);
+      virtual void setPointers(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationEndPointInAttrPSet* CG_inAttrPset, CG_CaConcentrationEndPointOutAttrPSet* CG_outAttrPset);
       virtual ~CaConcentrationEndPoint();
 };
 

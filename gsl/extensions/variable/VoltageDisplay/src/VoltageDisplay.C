@@ -131,8 +131,8 @@ void VoltageDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList)
   }
 }
 
-void VoltageDisplay::setUpPointers(const String& CG_direction,
-    const String& CG_component,
+void VoltageDisplay::setUpPointers(const CustomString& CG_direction,
+    const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge,
     VariableDescriptor* CG_variable,
     Constant* CG_constant,
@@ -188,17 +188,17 @@ VoltageDisplay::VoltageDisplay() : CG_VoltageDisplay(), outFile(0) {}
 
 VoltageDisplay::~VoltageDisplay() { delete outFile; }
 
-void VoltageDisplay::duplicate(std::unique_ptr<VoltageDisplay>& dup) const
+void VoltageDisplay::duplicate(std::unique_ptr<VoltageDisplay>&& dup) const
 {
   dup.reset(new VoltageDisplay(*this));
 }
 
-void VoltageDisplay::duplicate(std::unique_ptr<Variable>& dup) const
+void VoltageDisplay::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
   dup.reset(new VoltageDisplay(*this));
 }
 
-void VoltageDisplay::duplicate(std::unique_ptr<CG_VoltageDisplay>& dup) const
+void VoltageDisplay::duplicate(std::unique_ptr<CG_VoltageDisplay>&& dup) const
 {
   dup.reset(new VoltageDisplay(*this));
 }

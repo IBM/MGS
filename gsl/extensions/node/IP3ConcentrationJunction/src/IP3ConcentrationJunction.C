@@ -422,7 +422,7 @@ void IP3ConcentrationJunction::printDebugHH(std::string phase)
 //  Even if we retain (x,y,z) this value change with the #capsule per compartment
 //   and geometric sampling --> so not a good choice
 bool IP3ConcentrationJunction::checkSite(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_IP3ConcentrationJunctionInAttrPSet* CG_inAttrPset,
     CG_IP3ConcentrationJunctionOutAttrPSet* CG_outAttrPset)
@@ -436,7 +436,7 @@ bool IP3ConcentrationJunction::checkSite(
 }
 
 bool IP3ConcentrationJunction::confirmUniqueDeltaT(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_IP3ConcentrationJunctionInAttrPSet* CG_inAttrPset,
     CG_IP3ConcentrationJunctionOutAttrPSet* CG_outAttrPset)

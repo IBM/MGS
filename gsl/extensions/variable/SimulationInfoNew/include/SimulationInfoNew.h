@@ -12,9 +12,9 @@ class SimulationInfoNew : public CG_SimulationInfoNew
       void calculateInfo(RNG& rng);
       SimulationInfoNew();
       virtual ~SimulationInfoNew();
-      virtual void duplicate(std::unique_ptr<SimulationInfoNew>& dup) const;
-      virtual void duplicate(std::unique_ptr<Variable>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_SimulationInfoNew>& dup) const;
+      virtual void duplicate(std::unique_ptr<SimulationInfoNew>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Variable>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_SimulationInfoNew>&& dup) const;
 };
 
 #endif

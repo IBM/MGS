@@ -1209,7 +1209,7 @@ void MotoneuronUnitDataCollector::dataCollection(Trigger* trigger, NDPairList* n
 #endif // saveSimple
 }
  
-void MotoneuronUnitDataCollector::getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_MotoneuronUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_MotoneuronUnitDataCollectorOutAttrPSet* CG_outAttrPset) 
+void MotoneuronUnitDataCollector::getNodeIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_MotoneuronUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_MotoneuronUnitDataCollectorOutAttrPSet* CG_outAttrPset) 
 {
   ShallowArray<unsigned,3,2> coords;
   CG_node->getNode()->getNodeCoords(coords);
@@ -1228,17 +1228,17 @@ MotoneuronUnitDataCollector::~MotoneuronUnitDataCollector()
 {
 }
 
-void MotoneuronUnitDataCollector::duplicate(std::unique_ptr<MotoneuronUnitDataCollector>& dup) const
+void MotoneuronUnitDataCollector::duplicate(std::unique_ptr<MotoneuronUnitDataCollector>&& dup) const
 {
   dup.reset(new MotoneuronUnitDataCollector(*this));
 }
 
-void MotoneuronUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
+void MotoneuronUnitDataCollector::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
   dup.reset(new MotoneuronUnitDataCollector(*this));
 }
 
-void MotoneuronUnitDataCollector::duplicate(std::unique_ptr<CG_MotoneuronUnitDataCollector>& dup) const
+void MotoneuronUnitDataCollector::duplicate(std::unique_ptr<CG_MotoneuronUnitDataCollector>&& dup) const
 {
   dup.reset(new MotoneuronUnitDataCollector(*this));
 }

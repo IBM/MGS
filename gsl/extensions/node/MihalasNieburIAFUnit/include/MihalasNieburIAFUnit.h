@@ -21,7 +21,7 @@ class MihalasNieburIAFUnit : public CG_MihalasNieburIAFUnit
       void update(RNG& rng);
       void threshold(RNG& rng);
       void outputWeights(std::ofstream& fs);
-      virtual void setIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_MihalasNieburIAFUnitInAttrPSet* CG_inAttrPset, CG_MihalasNieburIAFUnitOutAttrPSet* CG_outAttrPset);
+      virtual void setIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_MihalasNieburIAFUnitInAttrPSet* CG_inAttrPset, CG_MihalasNieburIAFUnitOutAttrPSet* CG_outAttrPset);
       virtual ~MihalasNieburIAFUnit();
 };
 

@@ -54,8 +54,8 @@ void SpineAttachment_VmCai::computeInitialState(RNG& rng)
   assert(Raxial > MIN_RESISTANCE_VALUE);
   dyn_var_t A = std::abs(Ai - *Aj); //[um^2]
   dyn_var_t distance;
-  String typeDenShaft("den-shaft");
-  String typeSpineNeck("spine-neck");
+  CustomString typeDenShaft("den-shaft");
+  CustomString typeSpineNeck("spine-neck");
   if (typeCpt == typeDenShaft)
   {
    distance = (*leni + *lenj / 2.0); //[um]
@@ -130,7 +130,7 @@ void SpineAttachment_VmCai::computeState(RNG& rng)
 }
 
 void SpineAttachment_VmCai::setVoltagePointers(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_SpineAttachment_VmCaiInAttrPSet* CG_inAttrPset,
     CG_SpineAttachment_VmCaiOutAttrPSet* CG_outAttrPset)
@@ -162,7 +162,7 @@ void SpineAttachment_VmCai::setVoltagePointers(
 }
 
 void SpineAttachment_VmCai::setCaPointers(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_SpineAttachment_VmCaiInAttrPSet* CG_inAttrPset,
     CG_SpineAttachment_VmCaiOutAttrPSet* CG_outAttrPset)
@@ -180,7 +180,7 @@ void SpineAttachment_VmCai::setCaPointers(
 
 
 void SpineAttachment_VmCai::set_A_and_len(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_SpineAttachment_VmCaiInAttrPSet* CG_inAttrPset,
     CG_SpineAttachment_VmCaiOutAttrPSet* CG_outAttrPset)
@@ -198,9 +198,9 @@ void SpineAttachment_VmCai::set_A_and_len(
 	  _gotAssigned = true;
   }
   assert(getSharedMembers().dimensionsConnect);
-  String cptType = CG_inAttrPset->typeCpt;
-  String typeDenShaft("den-shaft");
-  String typeSpineNeck("spine-neck");
+  CustomString cptType = CG_inAttrPset->typeCpt;
+  CustomString typeDenShaft("den-shaft");
+  CustomString typeSpineNeck("spine-neck");
   DimensionStruct* dimension = (*(getSharedMembers().dimensionsConnect))[index];
   if (cptType == typeDenShaft)
   {

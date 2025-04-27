@@ -27,14 +27,14 @@ class VoltageVisualization : public CG_VoltageVisualization
   void finalize(RNG& rng);
   virtual void dataCollection(Trigger* trigger, NDPairList* ndPairList);
   virtual void setUpPointers(
-      const String& CG_direction, const String& CG_component,
+      const CustomString& CG_direction, const CustomString& CG_component,
       NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
       Constant* CG_constant, CG_VoltageVisualizationInAttrPSet* CG_inAttrPset,
       CG_VoltageVisualizationOutAttrPSet* CG_outAttrPset);
   virtual ~VoltageVisualization();
-  virtual void duplicate(std::unique_ptr<VoltageVisualization>& dup) const;
-  virtual void duplicate(std::unique_ptr<Variable>& dup) const;
-  virtual void duplicate(std::unique_ptr<CG_VoltageVisualization>& dup) const;
+  virtual void duplicate(std::unique_ptr<VoltageVisualization>&& dup) const;
+  virtual void duplicate(std::unique_ptr<Variable>&& dup) const;
+  virtual void duplicate(std::unique_ptr<CG_VoltageVisualization>&& dup) const;
 
   private:
   float swapByteOrder(float*);

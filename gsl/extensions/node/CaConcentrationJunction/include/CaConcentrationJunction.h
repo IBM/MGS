@@ -21,28 +21,28 @@ class CaConcentrationJunction : public CG_CaConcentrationJunction
   void initializeJunction(RNG& rng);
   void predictJunction(RNG& rng);
   void correctJunction(RNG& rng);
-  virtual bool checkSite(const String& CG_direction, const String& CG_component,
+  virtual bool checkSite(const CustomString& CG_direction, const CustomString& CG_component,
                          NodeDescriptor* CG_node, Edge* CG_edge,
                          VariableDescriptor* CG_variable, Constant* CG_constant,
                          CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset,
                          CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset);
   virtual bool confirmUniqueDeltaT(
-      const String& CG_direction, const String& CG_component,
+      const CustomString& CG_direction, const CustomString& CG_component,
       NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
       Constant* CG_constant,
       CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset,
       CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset);
   virtual ~CaConcentrationJunction();
 #ifdef MICRODOMAIN_CALCIUM
-  virtual void createMicroDomainData(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset);
-  virtual void setupCurrent2Microdomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset);
+  virtual void createMicroDomainData(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset);
+  virtual void setupCurrent2Microdomain(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset);
   std::map<int, int> _mapCurrentToMicrodomainIndex; // first 'int' = index in channelCaCurrents_microdomain
   //second 'int' = index of Ca_microdomain that this current is supposed to project to
   std::map<int, int> _mapFluxToMicrodomainIndex; // first 'int' = index in channelCaFluxes_microdomain
-  virtual void setupFlux2Microdomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset);
+  virtual void setupFlux2Microdomain(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset);
   void updateMicrodomains(double& LHS, double& RHS);
   void updateMicrodomains_Ca();
-  virtual void setupReceptorCurrent2Microdomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset);
+  virtual void setupReceptorCurrent2Microdomain(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset);
   std::map<int, int> _mapReceptorCurrentToMicrodomainIndex; // first 'int' = index in receptorCaCurrents_microdomain
   //second 'int' = index of Ca_microdomain that this current is supposed to project to
 #endif

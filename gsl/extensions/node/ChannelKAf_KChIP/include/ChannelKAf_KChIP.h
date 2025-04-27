@@ -40,7 +40,7 @@ class ChannelKAf_KChIP : public CG_ChannelKAf_KChIP
   virtual ~ChannelKAf_KChIP();
   static void initialize_others();  // new
 #ifdef MICRODOMAIN_CALCIUM
-  virtual void setCalciumMicrodomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ChannelKAf_KChIPInAttrPSet* CG_inAttrPset, CG_ChannelKAf_KChIPOutAttrPSet* CG_outAttrPset);
+  virtual void setCalciumMicrodomain(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ChannelKAf_KChIPInAttrPSet* CG_inAttrPset, CG_ChannelKAf_KChIPOutAttrPSet* CG_outAttrPset);
   int _offset; //the offset due to the presence of different Ca2+-microdomain
   void KChIP_modulation(dyn_var_t v, unsigned i, 
       dyn_var_t& gbarAdj, dyn_var_t& vm_shift, dyn_var_t& vm_slope_shift);

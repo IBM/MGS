@@ -32,44 +32,44 @@ class CaConcentration : public CG_CaConcentration
   void solve(RNG& rng);
   void finish(RNG& rng);
   virtual void setReceptorCaCurrent(
-      const String& CG_direction, const String& CG_component,
+      const CustomString& CG_direction, const CustomString& CG_component,
       NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
       Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset,
       CG_CaConcentrationOutAttrPSet* CG_outAttrPset);
   virtual void setInjectedCaCurrent(
-      const String& CG_direction, const String& CG_component,
+      const CustomString& CG_direction, const CustomString& CG_component,
       NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
       Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset,
       CG_CaConcentrationOutAttrPSet* CG_outAttrPset);
   virtual void setProximalJunction(
-      const String& CG_direction, const String& CG_component,
+      const CustomString& CG_direction, const CustomString& CG_component,
       NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
       Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset,
       CG_CaConcentrationOutAttrPSet* CG_outAttrPset);
   virtual void setTargetAttachCaConcentration(
-      const String& CG_direction, const String& CG_component,
+      const CustomString& CG_direction, const CustomString& CG_component,
       NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
       Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset,
       CG_CaConcentrationOutAttrPSet* CG_outAttrPset);
-  virtual bool checkSite(const String& CG_direction, const String& CG_component,
+  virtual bool checkSite(const CustomString& CG_direction, const CustomString& CG_component,
                          NodeDescriptor* CG_node, Edge* CG_edge,
                          VariableDescriptor* CG_variable, Constant* CG_constant,
                          CG_CaConcentrationInAttrPSet* CG_inAttrPset,
                          CG_CaConcentrationOutAttrPSet* CG_outAttrPset);
   virtual bool confirmUniqueDeltaT(
-      const String& CG_direction, const String& CG_component,
+      const CustomString& CG_direction, const CustomString& CG_component,
       NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
       Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset,
       CG_CaConcentrationOutAttrPSet* CG_outAttrPset);
   virtual ~CaConcentration();
 #ifdef MICRODOMAIN_CALCIUM
   virtual void createMicroDomainData(
-      const String& CG_direction, const String& CG_component,
+      const CustomString& CG_direction, const CustomString& CG_component,
       NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
       Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset,
       CG_CaConcentrationOutAttrPSet* CG_outAttrPset);
   virtual void setupCurrent2Microdomain(
-      const String& CG_direction, const String& CG_component,
+      const CustomString& CG_direction, const CustomString& CG_component,
       NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
       Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset,
       CG_CaConcentrationOutAttrPSet* CG_outAttrPset);
@@ -78,7 +78,7 @@ class CaConcentration : public CG_CaConcentration
                                       // channelCaCurrents_microdomain
 // second 'int' = index of Ca_microdomain that this current is supposed to project to
   std::map<int, int> _mapFluxToMicrodomainIndex; // first 'int' = index in channelCaFluxes_microdomain
-  virtual void setupFlux2Microdomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset, CG_CaConcentrationOutAttrPSet* CG_outAttrPset);
+  virtual void setupFlux2Microdomain(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset, CG_CaConcentrationOutAttrPSet* CG_outAttrPset);
   void updateMicrodomains();
   void updateMicrodomains_Ca();
 #endif

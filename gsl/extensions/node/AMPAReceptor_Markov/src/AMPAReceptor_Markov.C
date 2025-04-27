@@ -85,7 +85,7 @@ void AMPAReceptor_Markov::initializeAMPA(RNG& rng)
     std::ostringstream os;
     std::ostringstream os2;
     std::string fileName = "AMPAR_Markov.dat";
-    os << fileName << StringUtils::random_string(3) << getSimulation().getRank();
+    os << fileName << CustomStringUtils::random_string(3) << getSimulation().getRank();
     outFile = new std::ofstream(os.str().c_str());
     outFile->precision(decimal_places);
     (*outFile) << "#Time" << fieldDelimiter << ": States";
@@ -138,7 +138,7 @@ void AMPAReceptor_Markov::updateAMPA(RNG& rng)
 }
 
 void AMPAReceptor_Markov::setPostIndex(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_AMPAReceptor_MarkovInAttrPSet* CG_inAttrPset,
     CG_AMPAReceptor_MarkovOutAttrPSet* CG_outAttrPset)
@@ -181,7 +181,7 @@ AMPAReceptor_Markov::AMPAReceptor_Markov()
 #endif
 
 void AMPAReceptor_Markov::setPrePostIndex(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_AMPAReceptor_MarkovInAttrPSet* CG_inAttrPset,
     CG_AMPAReceptor_MarkovOutAttrPSet* CG_outAttrPset)

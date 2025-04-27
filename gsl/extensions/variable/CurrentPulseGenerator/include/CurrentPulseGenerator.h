@@ -14,9 +14,9 @@ class CurrentPulseGenerator : public CG_CurrentPulseGenerator
       void finalize(RNG& rng);
       CurrentPulseGenerator();
       virtual ~CurrentPulseGenerator();
-      virtual void duplicate(std::unique_ptr<CurrentPulseGenerator>& dup) const;
-      virtual void duplicate(std::unique_ptr<Variable>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_CurrentPulseGenerator>& dup) const;
+      virtual void duplicate(std::unique_ptr<CurrentPulseGenerator>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Variable>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_CurrentPulseGenerator>&& dup) const;
    private:
       void update_PeriodicProtocol(RNG& , float currentTime);
       void update_DualExpProtocol(RNG& , float currentTime);

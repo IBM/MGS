@@ -189,7 +189,7 @@ ChannelBK::~ChannelBK()
 }
 
 #ifdef MICRODOMAIN_CALCIUM
-void ChannelBK::setCalciumMicrodomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ChannelBKInAttrPSet* CG_inAttrPset, CG_ChannelBKOutAttrPSet* CG_outAttrPset) 
+void ChannelBK::setCalciumMicrodomain(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ChannelBKInAttrPSet* CG_inAttrPset, CG_ChannelBKOutAttrPSet* CG_outAttrPset) 
 {
   microdomainName = CG_inAttrPset->domainName;
   int idxFound = 0;

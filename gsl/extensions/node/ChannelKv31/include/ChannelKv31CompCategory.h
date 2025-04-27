@@ -6,8 +6,6 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 // 
 // =============================================================================
-*/
-
 
 #ifndef ChannelKv31CompCategory_H
 #define ChannelKv31CompCategory_H

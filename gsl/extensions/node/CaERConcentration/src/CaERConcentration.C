@@ -177,7 +177,7 @@ void CaERConcentration::backwardSolve7(RNG& rng)
 #endif
 
 bool CaERConcentration::confirmUniqueDeltaT(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_CaERConcentrationInAttrPSet* CG_inAttrPset,
     CG_CaERConcentrationOutAttrPSet* CG_outAttrPset)
@@ -191,7 +191,7 @@ bool CaERConcentration::confirmUniqueDeltaT(
 //  Even if we retain (x,y,z) this value change with the #capsule per compartment
 //   and geometric sampling --> so not a good choice
 bool CaERConcentration::checkSite(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_CaERConcentrationInAttrPSet* CG_inAttrPset,
     CG_CaERConcentrationOutAttrPSet* CG_outAttrPset)
@@ -204,7 +204,7 @@ bool CaERConcentration::checkSite(
 }
 
 void CaERConcentration::setProximalJunction(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_CaERConcentrationInAttrPSet* CG_inAttrPset,
     CG_CaERConcentrationOutAttrPSet* CG_outAttrPset)
@@ -635,7 +635,7 @@ dyn_var_t CaERConcentration::getAij(DimensionStruct* a, DimensionStruct* b,
 }
 
 // void CaERConcentration::setReceptorCaCurrent(
-//    const String& CG_direction, const String& CG_component,
+//    const CustomString& CG_direction, const CustomString& CG_component,
 //    NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
 //    Constant* CG_constant, CG_CaERConcentrationInAttrPSet* CG_inAttrPset,
 //    CG_CaERConcentrationOutAttrPSet* CG_outAttrPset)
@@ -648,7 +648,7 @@ dyn_var_t CaERConcentration::getAij(DimensionStruct* a, DimensionStruct* b,
 //}
 
 void CaERConcentration::setInjectedCaCurrent(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_CaERConcentrationInAttrPSet* CG_inAttrPset,
     CG_CaERConcentrationOutAttrPSet* CG_outAttrPset)
@@ -719,7 +719,7 @@ void CaERConcentration::setInjectedCaCurrent(
 CaERConcentration::~CaERConcentration() {}
 
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
-void CaERConcentration::setTargetAttachCaConcentration(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaERConcentrationInAttrPSet* CG_inAttrPset, CG_CaERConcentrationOutAttrPSet* CG_outAttrPset)
+void CaERConcentration::setTargetAttachCaConcentration(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaERConcentrationInAttrPSet* CG_inAttrPset, CG_CaERConcentrationOutAttrPSet* CG_outAttrPset)
 {
 #ifdef DEBUG_ASSERT
   assert(targetAttachCaConcentration.size() > 0);

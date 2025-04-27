@@ -19,7 +19,7 @@ void PreSynapticPoint::produceState(RNG& rng)
 {
 }
 
-void PreSynapticPoint::setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_PreSynapticPointInAttrPSet* CG_inAttrPset, CG_PreSynapticPointOutAttrPSet* CG_outAttrPset) 
+void PreSynapticPoint::setPointers(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_PreSynapticPointInAttrPSet* CG_inAttrPset, CG_PreSynapticPointOutAttrPSet* CG_outAttrPset) 
 {
   if (CG_inAttrPset->idx>=0) {
     index=CG_inAttrPset->idx;

@@ -178,7 +178,7 @@ void IP3Concentration::backwardSolve7(RNG& rng)
 #endif
 
 bool IP3Concentration::confirmUniqueDeltaT(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_IP3ConcentrationInAttrPSet* CG_inAttrPset,
     CG_IP3ConcentrationOutAttrPSet* CG_outAttrPset)
@@ -191,8 +191,8 @@ bool IP3Concentration::confirmUniqueDeltaT(
 //   if we don't retain the dimension's (x,y,z) coordinate
 //  Even if we retain (x,y,z) this value change with the #capsule per compartment
 //   and geometric sampling --> so not a good choice
-bool IP3Concentration::checkSite(const String& CG_direction,
-                                const String& CG_component,
+bool IP3Concentration::checkSite(const CustomString& CG_direction,
+                                const CustomString& CG_component,
                                 NodeDescriptor* CG_node, Edge* CG_edge,
                                 VariableDescriptor* CG_variable,
                                 Constant* CG_constant,
@@ -207,7 +207,7 @@ bool IP3Concentration::checkSite(const String& CG_direction,
 }
 
 void IP3Concentration::setProximalJunction(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_IP3ConcentrationInAttrPSet* CG_inAttrPset,
     CG_IP3ConcentrationOutAttrPSet* CG_outAttrPset)
@@ -979,7 +979,7 @@ dyn_var_t IP3Concentration::getAij(DimensionStruct* a, DimensionStruct* b,
 
 
 void IP3Concentration::setReceptorIP3Current(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_IP3ConcentrationInAttrPSet* CG_inAttrPset,
     CG_IP3ConcentrationOutAttrPSet* CG_outAttrPset)
@@ -993,7 +993,7 @@ void IP3Concentration::setReceptorIP3Current(
 // to be called at connection-setup time
 //    check MDL for what kind of connection then it is called
 void IP3Concentration::setInjectedIP3Current(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_IP3ConcentrationInAttrPSet* CG_inAttrPset,
     CG_IP3ConcentrationOutAttrPSet* CG_outAttrPset)
@@ -1155,7 +1155,7 @@ dyn_var_t IP3Concentration::getHalfDistance (int index)
 
 
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
-void IP3Concentration::setTargetAttachIP3Concentration(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_IP3ConcentrationInAttrPSet* CG_inAttrPset, CG_IP3ConcentrationOutAttrPSet* CG_outAttrPset)
+void IP3Concentration::setTargetAttachIP3Concentration(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_IP3ConcentrationInAttrPSet* CG_inAttrPset, CG_IP3ConcentrationOutAttrPSet* CG_outAttrPset)
 {
 #ifdef DEBUG_ASSERT
   assert(targetAttachIP3Concentration.size() > 0);

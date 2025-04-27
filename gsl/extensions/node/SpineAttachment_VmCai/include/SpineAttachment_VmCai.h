@@ -24,17 +24,17 @@ class SpineAttachment_VmCai : public CG_SpineAttachment_VmCai
   void produceState(RNG& rng);
   void computeState(RNG& rng);
   virtual void setCaPointers(
-      const String& CG_direction, const String& CG_component,
+      const CustomString& CG_direction, const CustomString& CG_component,
       NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
       Constant* CG_constant, CG_SpineAttachment_VmCaiInAttrPSet* CG_inAttrPset,
       CG_SpineAttachment_VmCaiOutAttrPSet* CG_outAttrPset);
   virtual void setVoltagePointers(
-      const String& CG_direction, const String& CG_component,
+      const CustomString& CG_direction, const CustomString& CG_component,
       NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
       Constant* CG_constant, CG_SpineAttachment_VmCaiInAttrPSet* CG_inAttrPset,
       CG_SpineAttachment_VmCaiOutAttrPSet* CG_outAttrPset);
   virtual void set_A_and_len(
-      const String& CG_direction, const String& CG_component,
+      const CustomString& CG_direction, const CustomString& CG_component,
       NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
       Constant* CG_constant, CG_SpineAttachment_VmCaiInAttrPSet* CG_inAttrPset,
       CG_SpineAttachment_VmCaiOutAttrPSet* CG_outAttrPset);

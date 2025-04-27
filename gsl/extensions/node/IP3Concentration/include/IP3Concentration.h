@@ -23,28 +23,28 @@ class IP3Concentration : public CG_IP3Concentration
     void solve(RNG& rng);
     void finish(RNG& rng);
     virtual void setReceptorIP3Current(
-        const String& CG_direction, const String& CG_component,
+        const CustomString& CG_direction, const CustomString& CG_component,
         NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
         Constant* CG_constant, CG_IP3ConcentrationInAttrPSet* CG_inAttrPset,
         CG_IP3ConcentrationOutAttrPSet* CG_outAttrPset);
     virtual void setInjectedIP3Current(
-        const String& CG_direction, const String& CG_component,
+        const CustomString& CG_direction, const CustomString& CG_component,
         NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
         Constant* CG_constant, CG_IP3ConcentrationInAttrPSet* CG_inAttrPset,
         CG_IP3ConcentrationOutAttrPSet* CG_outAttrPset);
     virtual void setProximalJunction(
-        const String& CG_direction, const String& CG_component,
+        const CustomString& CG_direction, const CustomString& CG_component,
         NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
         Constant* CG_constant, CG_IP3ConcentrationInAttrPSet* CG_inAttrPset,
         CG_IP3ConcentrationOutAttrPSet* CG_outAttrPset);
-      virtual void setTargetAttachIP3Concentration(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_IP3ConcentrationInAttrPSet* CG_inAttrPset, CG_IP3ConcentrationOutAttrPSet* CG_outAttrPset);
-    virtual bool checkSite(const String& CG_direction, const String& CG_component,
+      virtual void setTargetAttachIP3Concentration(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_IP3ConcentrationInAttrPSet* CG_inAttrPset, CG_IP3ConcentrationOutAttrPSet* CG_outAttrPset);
+    virtual bool checkSite(const CustomString& CG_direction, const CustomString& CG_component,
         NodeDescriptor* CG_node, Edge* CG_edge,
         VariableDescriptor* CG_variable, Constant* CG_constant,
         CG_IP3ConcentrationInAttrPSet* CG_inAttrPset,
         CG_IP3ConcentrationOutAttrPSet* CG_outAttrPset);
     virtual bool confirmUniqueDeltaT(
-        const String& CG_direction, const String& CG_component,
+        const CustomString& CG_direction, const CustomString& CG_component,
         NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
         Constant* CG_constant, CG_IP3ConcentrationInAttrPSet* CG_inAttrPset,
         CG_IP3ConcentrationOutAttrPSet* CG_outAttrPset);

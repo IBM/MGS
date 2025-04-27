@@ -134,7 +134,7 @@ void RabinovichWinnerlessUnitDataCollector::dataCollection(Trigger* trigger, NDP
         }
     }
 }
-void RabinovichWinnerlessUnitDataCollector::getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_RabinovichWinnerlessUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_RabinovichWinnerlessUnitDataCollectorOutAttrPSet* CG_outAttrPset) 
+void RabinovichWinnerlessUnitDataCollector::getNodeIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_RabinovichWinnerlessUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_RabinovichWinnerlessUnitDataCollectorOutAttrPSet* CG_outAttrPset) 
 {
     ShallowArray<unsigned,3,2> coords;
     CG_node->getNode()->getNodeCoords(coords);
@@ -153,17 +153,17 @@ RabinovichWinnerlessUnitDataCollector::~RabinovichWinnerlessUnitDataCollector()
 {
 }
 
-void RabinovichWinnerlessUnitDataCollector::duplicate(std::unique_ptr<RabinovichWinnerlessUnitDataCollector>& dup) const
+void RabinovichWinnerlessUnitDataCollector::duplicate(std::unique_ptr<RabinovichWinnerlessUnitDataCollector>&& dup) const
 {
    dup.reset(new RabinovichWinnerlessUnitDataCollector(*this));
 }
 
-void RabinovichWinnerlessUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
+void RabinovichWinnerlessUnitDataCollector::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
    dup.reset(new RabinovichWinnerlessUnitDataCollector(*this));
 }
 
-void RabinovichWinnerlessUnitDataCollector::duplicate(std::unique_ptr<CG_RabinovichWinnerlessUnitDataCollector>& dup) const
+void RabinovichWinnerlessUnitDataCollector::duplicate(std::unique_ptr<CG_RabinovichWinnerlessUnitDataCollector>&& dup) const
 {
    dup.reset(new RabinovichWinnerlessUnitDataCollector(*this));
 }

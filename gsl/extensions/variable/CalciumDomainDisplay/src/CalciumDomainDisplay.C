@@ -141,7 +141,7 @@ void CalciumDomainDisplay::dataCollection(Trigger* trigger,
 }
 
 void CalciumDomainDisplay::setUpPointers(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_CalciumDomainDisplayInAttrPSet* CG_inAttrPset,
     CG_CalciumDomainDisplayOutAttrPSet* CG_outAttrPset)
@@ -168,7 +168,7 @@ void CalciumDomainDisplay::setUpPointers(
       ind.push_back(i);
   }
 
-  String domain_name = CG_inAttrPset->domainName;
+  CustomString domain_name = CG_inAttrPset->domainName;
   int index_domain = 0;
   bool domainFound = false;
   for (; index_domain < tmp_microdomainNames->size(); index_domain++)
@@ -205,16 +205,16 @@ void CalciumDomainDisplay::setUpPointers(
 CalciumDomainDisplay::CalciumDomainDisplay() : CG_CalciumDomainDisplay(), outFile(0) {}
 CalciumDomainDisplay::~CalciumDomainDisplay() { delete outFile; }
 void CalciumDomainDisplay::duplicate(
-    std::unique_ptr<CalciumDomainDisplay>& dup) const
+    std::unique_ptr<CalciumDomainDisplay>&& dup) const
 {
   dup.reset(new CalciumDomainDisplay(*this));
 }
-void CalciumDomainDisplay::duplicate(std::unique_ptr<Variable>& dup) const
+void CalciumDomainDisplay::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
   dup.reset(new CalciumDomainDisplay(*this));
 }
 void CalciumDomainDisplay::duplicate(
-    std::unique_ptr<CG_CalciumDomainDisplay>& dup) const
+    std::unique_ptr<CG_CalciumDomainDisplay>&& dup) const
 {
   dup.reset(new CalciumDomainDisplay(*this));
 }

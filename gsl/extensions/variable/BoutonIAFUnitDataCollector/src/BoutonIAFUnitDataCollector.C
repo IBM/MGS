@@ -299,7 +299,7 @@ void BoutonIAFUnitDataCollector::dataCollection(Trigger* trigger, NDPairList* nd
     }
 }
 
-void BoutonIAFUnitDataCollector::getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_BoutonIAFUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_BoutonIAFUnitDataCollectorOutAttrPSet* CG_outAttrPset)
+void BoutonIAFUnitDataCollector::getNodeIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_BoutonIAFUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_BoutonIAFUnitDataCollectorOutAttrPSet* CG_outAttrPset)
 {
   ShallowArray<unsigned,3,2> coords;
   CG_node->getNode()->getNodeCoords(coords);
@@ -318,17 +318,17 @@ BoutonIAFUnitDataCollector::~BoutonIAFUnitDataCollector()
 {
 }
 
-void BoutonIAFUnitDataCollector::duplicate(std::unique_ptr<BoutonIAFUnitDataCollector>& dup) const
+void BoutonIAFUnitDataCollector::duplicate(std::unique_ptr<BoutonIAFUnitDataCollector>&& dup) const
 {
   dup.reset(new BoutonIAFUnitDataCollector(*this));
 }
 
-void BoutonIAFUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
+void BoutonIAFUnitDataCollector::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
   dup.reset(new BoutonIAFUnitDataCollector(*this));
 }
 
-void BoutonIAFUnitDataCollector::duplicate(std::unique_ptr<CG_BoutonIAFUnitDataCollector>& dup) const
+void BoutonIAFUnitDataCollector::duplicate(std::unique_ptr<CG_BoutonIAFUnitDataCollector>&& dup) const
 {
   dup.reset(new BoutonIAFUnitDataCollector(*this));
 }

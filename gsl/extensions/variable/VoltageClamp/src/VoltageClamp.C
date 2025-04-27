@@ -506,22 +506,22 @@ VoltageClamp::~VoltageClamp()
   delete outFile;
 }
 
-void VoltageClamp::duplicate(std::unique_ptr<VoltageClamp>& dup) const
+void VoltageClamp::duplicate(std::unique_ptr<VoltageClamp>&& dup) const
 {
    dup.reset(new VoltageClamp(*this));
 }
 
-void VoltageClamp::duplicate(std::unique_ptr<Variable>& dup) const
+void VoltageClamp::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
    dup.reset(new VoltageClamp(*this));
 }
 
-void VoltageClamp::duplicate(std::unique_ptr<CG_VoltageClamp>& dup) const
+void VoltageClamp::duplicate(std::unique_ptr<CG_VoltageClamp>&& dup) const
 {
    dup.reset(new VoltageClamp(*this));
 }
 
-void VoltageClamp::setInjectedCurrent(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_VoltageClampInAttrPSet* CG_inAttrPset, CG_VoltageClampOutAttrPSet* CG_outAttrPset)
+void VoltageClamp::setInjectedCurrent(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_VoltageClampInAttrPSet* CG_inAttrPset, CG_VoltageClampOutAttrPSet* CG_outAttrPset)
 {
   idx = CG_inAttrPset->idx;
   if (idx < 0 or

@@ -47,7 +47,7 @@ void ZhengSORNInhUnit::fire(RNG& rng)
   ya = SHD.tau_STDP * ( (y>0) ? 1.0 : 0.0 );
 }
 
-void ZhengSORNInhUnit::setIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ZhengSORNInhUnitInAttrPSet* CG_inAttrPset, CG_ZhengSORNInhUnitOutAttrPSet* CG_outAttrPset) 
+void ZhengSORNInhUnit::setIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ZhengSORNInhUnitInAttrPSet* CG_inAttrPset, CG_ZhengSORNInhUnitOutAttrPSet* CG_outAttrPset) 
 {
   lateralExcInputs[lateralExcInputs.size()-1].row = getGlobalIndex()+1; // +1 is for Matlab
   lateralExcInputs[lateralExcInputs.size()-1].col = CG_node->getGlobalIndex()+1;

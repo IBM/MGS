@@ -514,7 +514,7 @@ void CalciumVisualization::dataCollection(Trigger* trigger,
 }
 
 void CalciumVisualization::setUpPointers(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_CalciumVisualizationInAttrPSet* CG_inAttrPset,
     CG_CalciumVisualizationOutAttrPSet* CG_outAttrPset)
@@ -532,18 +532,18 @@ CalciumVisualization::~CalciumVisualization()
 }
 
 void CalciumVisualization::duplicate(
-    std::unique_ptr<CalciumVisualization>& dup) const
+    std::unique_ptr<CalciumVisualization>&& dup) const
 {
   dup.reset(new CalciumVisualization(*this));
 }
 
-void CalciumVisualization::duplicate(std::unique_ptr<Variable>& dup) const
+void CalciumVisualization::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
   dup.reset(new CalciumVisualization(*this));
 }
 
 void CalciumVisualization::duplicate(
-    std::unique_ptr<CG_CalciumVisualization>& dup) const
+    std::unique_ptr<CG_CalciumVisualization>&& dup) const
 {
   dup.reset(new CalciumVisualization(*this));
 }

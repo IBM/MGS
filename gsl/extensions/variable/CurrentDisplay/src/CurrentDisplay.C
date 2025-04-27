@@ -158,8 +158,8 @@ void CurrentDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList)
   }
 }
 
-void CurrentDisplay::setUpPointers(const String& CG_direction,
-                                   const String& CG_component,
+void CurrentDisplay::setUpPointers(const CustomString& CG_direction,
+                                   const CustomString& CG_component,
                                    NodeDescriptor* CG_node, Edge* CG_edge,
                                    VariableDescriptor* CG_variable,
                                    Constant* CG_constant,
@@ -179,17 +179,17 @@ CurrentDisplay::CurrentDisplay() : CG_CurrentDisplay(), outFile(0) {}
 
 CurrentDisplay::~CurrentDisplay() { delete outFile; }
 
-void CurrentDisplay::duplicate(std::unique_ptr<CurrentDisplay>& dup) const
+void CurrentDisplay::duplicate(std::unique_ptr<CurrentDisplay>&& dup) const
 {
   dup.reset(new CurrentDisplay(*this));
 }
 
-void CurrentDisplay::duplicate(std::unique_ptr<Variable>& dup) const
+void CurrentDisplay::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
   dup.reset(new CurrentDisplay(*this));
 }
 
-void CurrentDisplay::duplicate(std::unique_ptr<CG_CurrentDisplay>& dup) const
+void CurrentDisplay::duplicate(std::unique_ptr<CG_CurrentDisplay>&& dup) const
 {
   dup.reset(new CurrentDisplay(*this));
 }

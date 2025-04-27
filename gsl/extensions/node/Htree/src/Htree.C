@@ -155,7 +155,7 @@ void Htree::finalize(RNG& rng)
     if (tree != NULL) free (tree);
 }
 
-void Htree::setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HtreeInAttrPSet* CG_inAttrPset, CG_HtreeOutAttrPSet* CG_outAttrPset) 
+void Htree::setPointers(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HtreeInAttrPSet* CG_inAttrPset, CG_HtreeOutAttrPSet* CG_outAttrPset) 
 {
     // add connection (array of state variables from a single NVU) to list of all variables
     NVUinputs[NVUinputs.size() - 1].NVUstateVariables = getSharedMembers().tempStateVariables;

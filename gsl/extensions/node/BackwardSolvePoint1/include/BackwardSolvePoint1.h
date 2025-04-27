@@ -19,7 +19,7 @@ class BackwardSolvePoint1 : public CG_BackwardSolvePoint1
       void produceInitialState(RNG& rng);
       void produceArea(RNG& rng);
       void produceBackwardSolution(RNG& rng);
-      virtual void setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_BackwardSolvePoint1InAttrPSet* CG_inAttrPset, CG_BackwardSolvePoint1OutAttrPSet* CG_outAttrPset);
+      virtual void setPointers(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_BackwardSolvePoint1InAttrPSet* CG_inAttrPset, CG_BackwardSolvePoint1OutAttrPSet* CG_outAttrPset);
       virtual ~BackwardSolvePoint1();
 };
 

@@ -360,7 +360,7 @@ void CaERConcentrationJunction::printDebugHH(std::string phase)
 //  Even if we retain (x,y,z) this value change with the #capsule per compartment
 //   and geometric sampling --> so not a good choice
 bool CaERConcentrationJunction::checkSite(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant,
     CG_CaERConcentrationJunctionInAttrPSet* CG_inAttrPset,
@@ -375,7 +375,7 @@ bool CaERConcentrationJunction::checkSite(
 }
 
 bool CaERConcentrationJunction::confirmUniqueDeltaT(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant,
     CG_CaERConcentrationJunctionInAttrPSet* CG_inAttrPset,

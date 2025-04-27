@@ -34,14 +34,14 @@ class NMDAReceptor_Markov : public CG_NMDAReceptor_Markov
       void initializeNMDA(RNG& rng);
       void updateNMDA(RNG& rng);
       void updateNMDADepPlasticity(RNG& rng);
-      virtual void setPostIndex(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NMDAReceptor_MarkovInAttrPSet* CG_inAttrPset, CG_NMDAReceptor_MarkovOutAttrPSet* CG_outAttrPset);
-      virtual void setPrePostIndex(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NMDAReceptor_MarkovInAttrPSet* CG_inAttrPset, CG_NMDAReceptor_MarkovOutAttrPSet* CG_outAttrPset);
+      virtual void setPostIndex(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NMDAReceptor_MarkovInAttrPSet* CG_inAttrPset, CG_NMDAReceptor_MarkovOutAttrPSet* CG_outAttrPset);
+      virtual void setPrePostIndex(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NMDAReceptor_MarkovInAttrPSet* CG_inAttrPset, CG_NMDAReceptor_MarkovOutAttrPSet* CG_outAttrPset);
       virtual ~NMDAReceptor_Markov();
   #ifdef DEBUG_CHAN
       NMDAReceptor_Markov();
   #endif
   #ifdef MICRODOMAIN_CALCIUM
-  virtual void setCalciumMicrodomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NMDAReceptor_MarkovInAttrPSet* CG_inAttrPset, CG_NMDAReceptor_MarkovOutAttrPSet* CG_outAttrPset);
+  virtual void setCalciumMicrodomain(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NMDAReceptor_MarkovInAttrPSet* CG_inAttrPset, CG_NMDAReceptor_MarkovOutAttrPSet* CG_outAttrPset);
   int _offset; //the offset due to the presence of different Ca2+-microdomain
   #endif
 

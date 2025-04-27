@@ -119,7 +119,7 @@ void NazeSORNUnitDataCollector::dataCollection(Trigger* trigger, NDPairList* ndP
     }
 }
 
-void NazeSORNUnitDataCollector::getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NazeSORNUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_NazeSORNUnitDataCollectorOutAttrPSet* CG_outAttrPset) 
+void NazeSORNUnitDataCollector::getNodeIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NazeSORNUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_NazeSORNUnitDataCollectorOutAttrPSet* CG_outAttrPset) 
 {
   ShallowArray<unsigned,3,2> coords;
   CG_node->getNode()->getNodeCoords(coords);
@@ -137,17 +137,17 @@ NazeSORNUnitDataCollector::~NazeSORNUnitDataCollector()
 {
 }
 
-void NazeSORNUnitDataCollector::duplicate(std::unique_ptr<NazeSORNUnitDataCollector>& dup) const
+void NazeSORNUnitDataCollector::duplicate(std::unique_ptr<NazeSORNUnitDataCollector>&& dup) const
 {
    dup.reset(new NazeSORNUnitDataCollector(*this));
 }
 
-void NazeSORNUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
+void NazeSORNUnitDataCollector::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
    dup.reset(new NazeSORNUnitDataCollector(*this));
 }
 
-void NazeSORNUnitDataCollector::duplicate(std::unique_ptr<CG_NazeSORNUnitDataCollector>& dup) const
+void NazeSORNUnitDataCollector::duplicate(std::unique_ptr<CG_NazeSORNUnitDataCollector>&& dup) const
 {
    dup.reset(new NazeSORNUnitDataCollector(*this));
 }

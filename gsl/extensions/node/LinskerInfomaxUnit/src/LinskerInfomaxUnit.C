@@ -110,7 +110,7 @@ void LinskerInfomaxUnit::copy(RNG& rng)
   ePublic=e;
 }
 
-void LinskerInfomaxUnit::setIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_LinskerInfomaxUnitInAttrPSet* CG_inAttrPset, CG_LinskerInfomaxUnitOutAttrPSet* CG_outAttrPset) 
+void LinskerInfomaxUnit::setIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_LinskerInfomaxUnitInAttrPSet* CG_inAttrPset, CG_LinskerInfomaxUnitOutAttrPSet* CG_outAttrPset) 
 {
   int row = getGlobalIndex()+1; // +1 is for Matlab
   int col = CG_node->getGlobalIndex()+1;

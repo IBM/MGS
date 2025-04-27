@@ -23,7 +23,7 @@ void IP3ConcentrationEndPoint::produceFinishedIP3Concentration(RNG& rng)
 {
 }
 
-void IP3ConcentrationEndPoint::setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_IP3ConcentrationEndPointInAttrPSet* CG_inAttrPset, CG_IP3ConcentrationEndPointOutAttrPSet* CG_outAttrPset) 
+void IP3ConcentrationEndPoint::setPointers(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_IP3ConcentrationEndPointInAttrPSet* CG_inAttrPset, CG_IP3ConcentrationEndPointOutAttrPSet* CG_outAttrPset) 
 {
   if (CG_inAttrPset->identifier=="distalEnd") {
     assert(getSharedMembers().IP3ConcentrationConnect);

@@ -26,10 +26,10 @@ class VoltageClamp : public CG_VoltageClamp
       virtual void toggle(Trigger* trigger, NDPairList* ndPairList);
       VoltageClamp();
       virtual ~VoltageClamp();
-      virtual void duplicate(std::unique_ptr<VoltageClamp>& dup) const;
-      virtual void duplicate(std::unique_ptr<Variable>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_VoltageClamp>& dup) const;
-      virtual void setInjectedCurrent(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_VoltageClampInAttrPSet* CG_inAttrPset, CG_VoltageClampOutAttrPSet* CG_outAttrPset);
+      virtual void duplicate(std::unique_ptr<VoltageClamp>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Variable>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_VoltageClamp>&& dup) const;
+      virtual void setInjectedCurrent(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_VoltageClampInAttrPSet* CG_inAttrPset, CG_VoltageClampOutAttrPSet* CG_outAttrPset);
    private:
       std::ofstream* outFile = 0;
       float _timeStart; //time point when start Vclamp

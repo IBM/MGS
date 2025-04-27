@@ -39,8 +39,8 @@ void CaExtrusion::update(RNG& rng) {
 }
 
 
-void CaExtrusion::setPointers(const String& CG_direction,
-                              const String& CG_component,
+void CaExtrusion::setPointers(const CustomString& CG_direction,
+                              const CustomString& CG_component,
                               NodeDescriptor* CG_node, Edge* CG_edge,
                               VariableDescriptor* CG_variable,
                               Constant* CG_constant,

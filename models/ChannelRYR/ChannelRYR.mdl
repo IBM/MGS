@@ -14,7 +14,7 @@ Node SingleChannelRYR Implements BranchDataProducer,
    //ConductanceArrayProducer, 
    //CaCurrentArrayProducer
 {
-  /*{{{*/
+  //{{{
   //DATA
   //{{{ 
   // Markov-based formula
@@ -31,7 +31,8 @@ Node SingleChannelRYR Implements BranchDataProducer,
   //Combined2MarkovState_t *[] matK_channelstate_fromto;
   long * [] matK_channelstate_fromto;
   ClusterStateIndex_t * [] matK_indx;
-  dyn_var_t * [] matChannelTransitionRate;// numChanStates*numChanStates matrix
+
+  dyn_var_t * [] matChannelTransitionRate; // numChanStates*numChanStates matrix
   ClusterStateIndex_t [] currentStateIndex;
   dyn_var_t* [] probStateTransition;
   // RyR specific

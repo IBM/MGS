@@ -406,7 +406,7 @@ void ChannelKAf_KChIP::initialize_others()
 ChannelKAf_KChIP::~ChannelKAf_KChIP() {}
 
 #ifdef MICRODOMAIN_CALCIUM
-void ChannelKAf_KChIP::setCalciumMicrodomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ChannelKAf_KChIPInAttrPSet* CG_inAttrPset, CG_ChannelKAf_KChIPOutAttrPSet* CG_outAttrPset) 
+void ChannelKAf_KChIP::setCalciumMicrodomain(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ChannelKAf_KChIPInAttrPSet* CG_inAttrPset, CG_ChannelKAf_KChIPOutAttrPSet* CG_outAttrPset) 
 {
   microdomainName = CG_inAttrPset->domainName;
   int idxFound = 0;

@@ -24,9 +24,9 @@ class FSIIAFUnit : public CG_FSIIAFUnit
       void outputPSPs(std::ofstream& fs);
       void outputWeights(std::ofstream& fs);
       void outputGJs(std::ofstream& fs);
-      virtual void setIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_FSIIAFUnitInAttrPSet* CG_inAttrPset, CG_FSIIAFUnitOutAttrPSet* CG_outAttrPset);
-      virtual bool bidirectional1(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_FSIIAFUnitInAttrPSet* CG_inAttrPset, CG_FSIIAFUnitOutAttrPSet* CG_outAttrPset);
-      virtual bool bidirectional2(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_FSIIAFUnitInAttrPSet* CG_inAttrPset, CG_FSIIAFUnitOutAttrPSet* CG_outAttrPset);
+      virtual void setIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_FSIIAFUnitInAttrPSet* CG_inAttrPset, CG_FSIIAFUnitOutAttrPSet* CG_outAttrPset);
+      virtual bool bidirectional1(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_FSIIAFUnitInAttrPSet* CG_inAttrPset, CG_FSIIAFUnitOutAttrPSet* CG_outAttrPset);
+      virtual bool bidirectional2(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_FSIIAFUnitInAttrPSet* CG_inAttrPset, CG_FSIIAFUnitOutAttrPSet* CG_outAttrPset);
       virtual ~FSIIAFUnit();
 };
 

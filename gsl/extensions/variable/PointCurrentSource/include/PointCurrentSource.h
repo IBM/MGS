@@ -20,9 +20,9 @@ class PointCurrentSource : public CG_PointCurrentSource
       virtual void setCurrent(Trigger* trigger, NDPairList* ndPairList);
       PointCurrentSource();
       virtual ~PointCurrentSource();
-      virtual void duplicate(std::unique_ptr<PointCurrentSource>& dup) const;
-      virtual void duplicate(std::unique_ptr<Variable>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_PointCurrentSource>& dup) const;
+      virtual void duplicate(std::unique_ptr<PointCurrentSource>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Variable>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_PointCurrentSource>&& dup) const;
 };
 
 #endif

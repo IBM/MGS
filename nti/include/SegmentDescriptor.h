@@ -9,7 +9,8 @@
 #ifndef SEGMENTDESCRIPTOR_H
 #define SEGMENTDESCRIPTOR_H
 
-#include "../../nti/include/MaxComputeOrder.h"
+#include "MaxComputeOrder.h"
+#include "Segment.h"
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif

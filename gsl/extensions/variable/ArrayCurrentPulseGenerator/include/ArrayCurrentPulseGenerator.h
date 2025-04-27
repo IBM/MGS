@@ -14,9 +14,9 @@ class ArrayCurrentPulseGenerator : public CG_ArrayCurrentPulseGenerator
       void finalize(RNG& rng);
       ArrayCurrentPulseGenerator();
       virtual ~ArrayCurrentPulseGenerator();
-      virtual void duplicate(std::unique_ptr<ArrayCurrentPulseGenerator>& dup) const;
-      virtual void duplicate(std::unique_ptr<Variable>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_ArrayCurrentPulseGenerator>& dup) const;
+      virtual void duplicate(std::unique_ptr<ArrayCurrentPulseGenerator>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Variable>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_ArrayCurrentPulseGenerator>&& dup) const;
    private:
       void update_PeriodicProtocol(RNG& , float currentTime);
       void update_DualExpProtocol(RNG& , float currentTime);

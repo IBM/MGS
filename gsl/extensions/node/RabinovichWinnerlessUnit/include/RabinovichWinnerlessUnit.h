@@ -21,10 +21,10 @@ class RabinovichWinnerlessUnit : public CG_RabinovichWinnerlessUnit
       void update(RNG& rng);
       void copy(RNG& rng);
       void outputWeights(std::ofstream& fsLN, std::ofstream& fsDR, std::ofstream& fsNS);
-      virtual void checkForCorticalSynapse(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_RabinovichWinnerlessUnitInAttrPSet* CG_inAttrPset, CG_RabinovichWinnerlessUnitOutAttrPSet* CG_outAttrPset);
-      virtual void setLateralIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_RabinovichWinnerlessUnitInAttrPSet* CG_inAttrPset, CG_RabinovichWinnerlessUnitOutAttrPSet* CG_outAttrPset);
-      virtual void setModulatoryIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_RabinovichWinnerlessUnitInAttrPSet* CG_inAttrPset, CG_RabinovichWinnerlessUnitOutAttrPSet* CG_outAttrPset);
-      virtual void assymetric(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_RabinovichWinnerlessUnitInAttrPSet* CG_inAttrPset, CG_RabinovichWinnerlessUnitOutAttrPSet* CG_outAttrPset);
+      virtual void checkForCorticalSynapse(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_RabinovichWinnerlessUnitInAttrPSet* CG_inAttrPset, CG_RabinovichWinnerlessUnitOutAttrPSet* CG_outAttrPset);
+      virtual void setLateralIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_RabinovichWinnerlessUnitInAttrPSet* CG_inAttrPset, CG_RabinovichWinnerlessUnitOutAttrPSet* CG_outAttrPset);
+      virtual void setModulatoryIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_RabinovichWinnerlessUnitInAttrPSet* CG_inAttrPset, CG_RabinovichWinnerlessUnitOutAttrPSet* CG_outAttrPset);
+      virtual void assymetric(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_RabinovichWinnerlessUnitInAttrPSet* CG_inAttrPset, CG_RabinovichWinnerlessUnitOutAttrPSet* CG_outAttrPset);
       virtual ~RabinovichWinnerlessUnit();
 };
 

@@ -122,8 +122,8 @@ void CalciumDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList)
   }
 }
 
-void CalciumDisplay::setUpPointers(const String& CG_direction,
-                                   const String& CG_component,
+void CalciumDisplay::setUpPointers(const CustomString& CG_direction,
+                                   const CustomString& CG_component,
                                    NodeDescriptor* CG_node, Edge* CG_edge,
                                    VariableDescriptor* CG_variable,
                                    Constant* CG_constant,
@@ -175,17 +175,17 @@ CalciumDisplay::CalciumDisplay() : CG_CalciumDisplay(), outFile(0) {}
 
 CalciumDisplay::~CalciumDisplay() { delete outFile; }
 
-void CalciumDisplay::duplicate(std::unique_ptr<CalciumDisplay>& dup) const
+void CalciumDisplay::duplicate(std::unique_ptr<CalciumDisplay>&& dup) const
 {
   dup.reset(new CalciumDisplay(*this));
 }
 
-void CalciumDisplay::duplicate(std::unique_ptr<Variable>& dup) const
+void CalciumDisplay::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
   dup.reset(new CalciumDisplay(*this));
 }
 
-void CalciumDisplay::duplicate(std::unique_ptr<CG_CalciumDisplay>& dup) const
+void CalciumDisplay::duplicate(std::unique_ptr<CG_CalciumDisplay>&& dup) const
 {
   dup.reset(new CalciumDisplay(*this));
 }

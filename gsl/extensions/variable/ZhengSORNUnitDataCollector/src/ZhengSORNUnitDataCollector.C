@@ -119,7 +119,7 @@ void ZhengSORNUnitDataCollector::dataCollection(Trigger* trigger, NDPairList* nd
     }
 }
 
-void ZhengSORNUnitDataCollector::getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ZhengSORNUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_ZhengSORNUnitDataCollectorOutAttrPSet* CG_outAttrPset) 
+void ZhengSORNUnitDataCollector::getNodeIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ZhengSORNUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_ZhengSORNUnitDataCollectorOutAttrPSet* CG_outAttrPset) 
 {
   ShallowArray<unsigned,3,2> coords;
   CG_node->getNode()->getNodeCoords(coords);
@@ -137,17 +137,17 @@ ZhengSORNUnitDataCollector::~ZhengSORNUnitDataCollector()
 {
 }
 
-void ZhengSORNUnitDataCollector::duplicate(std::unique_ptr<ZhengSORNUnitDataCollector>& dup) const
+void ZhengSORNUnitDataCollector::duplicate(std::unique_ptr<ZhengSORNUnitDataCollector>&& dup) const
 {
    dup.reset(new ZhengSORNUnitDataCollector(*this));
 }
 
-void ZhengSORNUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
+void ZhengSORNUnitDataCollector::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
    dup.reset(new ZhengSORNUnitDataCollector(*this));
 }
 
-void ZhengSORNUnitDataCollector::duplicate(std::unique_ptr<CG_ZhengSORNUnitDataCollector>& dup) const
+void ZhengSORNUnitDataCollector::duplicate(std::unique_ptr<CG_ZhengSORNUnitDataCollector>&& dup) const
 {
    dup.reset(new ZhengSORNUnitDataCollector(*this));
 }

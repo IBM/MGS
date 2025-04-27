@@ -212,7 +212,7 @@ void RabinovichWinnerlessUnit::outputWeights(std::ofstream& fsLN, std::ofstream&
     fsNS<<iter3->row<<" "<<iter3->col<<" "<<iter3->weight<<std::endl;
 }
 
-void RabinovichWinnerlessUnit::assymetric(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_RabinovichWinnerlessUnitInAttrPSet* CG_inAttrPset, CG_RabinovichWinnerlessUnitOutAttrPSet* CG_outAttrPset) 
+void RabinovichWinnerlessUnit::assymetric(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_RabinovichWinnerlessUnitInAttrPSet* CG_inAttrPset, CG_RabinovichWinnerlessUnitOutAttrPSet* CG_outAttrPset) 
 {
   // N.B.: this function assumes both layers are in the same grid and therefore
   // of the same size.
@@ -264,7 +264,7 @@ void RabinovichWinnerlessUnit::assymetric(const String& CG_direction, const Stri
     }
 }
 
-void RabinovichWinnerlessUnit::checkForCorticalSynapse(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_RabinovichWinnerlessUnitInAttrPSet* CG_inAttrPset, CG_RabinovichWinnerlessUnitOutAttrPSet* CG_outAttrPset) 
+void RabinovichWinnerlessUnit::checkForCorticalSynapse(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_RabinovichWinnerlessUnitInAttrPSet* CG_inAttrPset, CG_RabinovichWinnerlessUnitOutAttrPSet* CG_outAttrPset) 
 {
   if (CG_inAttrPset->connection < CG_inAttrPset->connectionFraction)
     corticalInputs[corticalInputs.size()-1].synapse=true;
@@ -275,13 +275,13 @@ void RabinovichWinnerlessUnit::checkForCorticalSynapse(const String& CG_directio
   corticalInputs[corticalInputs.size()-1].col = CG_node->getGlobalIndex()+1;
 }
 
-void RabinovichWinnerlessUnit::setLateralIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_RabinovichWinnerlessUnitInAttrPSet* CG_inAttrPset, CG_RabinovichWinnerlessUnitOutAttrPSet* CG_outAttrPset) 
+void RabinovichWinnerlessUnit::setLateralIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_RabinovichWinnerlessUnitInAttrPSet* CG_inAttrPset, CG_RabinovichWinnerlessUnitOutAttrPSet* CG_outAttrPset) 
 {
   lateralInputs[lateralInputs.size()-1].row =  getGlobalIndex()+1; // +1 is for Matlab 
   lateralInputs[lateralInputs.size()-1].col = CG_node->getGlobalIndex()+1;
 }
 
-void RabinovichWinnerlessUnit::setModulatoryIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_RabinovichWinnerlessUnitInAttrPSet* CG_inAttrPset, CG_RabinovichWinnerlessUnitOutAttrPSet* CG_outAttrPset) 
+void RabinovichWinnerlessUnit::setModulatoryIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_RabinovichWinnerlessUnitInAttrPSet* CG_inAttrPset, CG_RabinovichWinnerlessUnitOutAttrPSet* CG_outAttrPset) 
 {
   dopamineInputs[dopamineInputs.size()-1].row =  getGlobalIndex()+1; // +1 is for Matlab 
   dopamineInputs[dopamineInputs.size()-1].col = CG_node->getGlobalIndex()+1;

@@ -98,11 +98,11 @@ void __global__ DNEdgeSet_kernel_initialize(
 
    , bool* readyForward
    , bool* readyBackward
-   , String* transferFunctionName
+   , CustomString* transferFunctionName
    , bool* momentum
    , bool* rmsprop
    , unsigned size
-   , ShallowArray< String > optimization
+   , ShallowArray< CustomString > optimization
    , double beta
    , double alpha
    , double eta
@@ -211,11 +211,11 @@ void __global__ DNEdgeSet_kernel_update(
 
    , bool* readyForward
    , bool* readyBackward
-   , String* transferFunctionName
+   , CustomString* transferFunctionName
    , bool* momentum
    , bool* rmsprop
    , unsigned size
-   , ShallowArray< String > optimization
+   , ShallowArray< CustomString > optimization
    , double beta
    , double alpha
    , double eta

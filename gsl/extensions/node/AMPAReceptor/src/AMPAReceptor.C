@@ -102,8 +102,8 @@ void AMPAReceptor::updateAMPA(RNG& rng)
   //I = NEUROTRANSMITTER;
 }
 
-void AMPAReceptor::setPostIndex(const String& CG_direction,
-                                const String& CG_component,
+void AMPAReceptor::setPostIndex(const CustomString& CG_direction,
+                                const CustomString& CG_component,
                                 NodeDescriptor* CG_node, Edge* CG_edge,
                                 VariableDescriptor* CG_variable,
                                 Constant* CG_constant,
@@ -129,8 +129,8 @@ void AMPAReceptor::setPostIndex(const String& CG_direction,
 }
 
 AMPAReceptor::~AMPAReceptor() {}
-void AMPAReceptor::setPrePostIndex(const String& CG_direction,
-                                const String& CG_component,
+void AMPAReceptor::setPrePostIndex(const CustomString& CG_direction,
+                                const CustomString& CG_component,
                                 NodeDescriptor* CG_node, Edge* CG_edge,
                                 VariableDescriptor* CG_variable,
                                 Constant* CG_constant,

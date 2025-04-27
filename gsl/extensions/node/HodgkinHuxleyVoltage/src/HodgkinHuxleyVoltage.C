@@ -580,7 +580,7 @@ void HodgkinHuxleyVoltage::forwardSolve7_corrector(RNG& rng)
 #endif
 
 bool HodgkinHuxleyVoltage::confirmUniqueDeltaT(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset,
     CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset)
@@ -594,7 +594,7 @@ bool HodgkinHuxleyVoltage::confirmUniqueDeltaT(
 //  Even if we retain (x,y,z) this value change with the #capsule per compartment
 //   and geometric sampling --> so not a good choice
 bool HodgkinHuxleyVoltage::checkSite(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset,
     CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset)
@@ -607,7 +607,7 @@ bool HodgkinHuxleyVoltage::checkSite(
 }
 
 void HodgkinHuxleyVoltage::setProximalJunction(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset,
     CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset)
@@ -1714,7 +1714,7 @@ dyn_var_t HodgkinHuxleyVoltage::getAij_child(DimensionStruct* a, DimensionStruct
 
 
 void HodgkinHuxleyVoltage::setReceptorCurrent(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset,
     CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset)
@@ -1728,7 +1728,7 @@ void HodgkinHuxleyVoltage::setReceptorCurrent(
 // to be called at connection-setup time
 //    check MDL for what kind of connection then it is called
 void HodgkinHuxleyVoltage::setInjectedCurrent(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset,
     CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset)
@@ -1902,7 +1902,7 @@ dyn_var_t HodgkinHuxleyVoltage::getHalfDistance (int index)
 
 //#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
 #if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
-void HodgkinHuxleyVoltage::updateSpineCount(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset) 
+void HodgkinHuxleyVoltage::updateSpineCount(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset) 
 {
   unsigned size = branchData->size;  //# of compartments
   if (countSpineConnected.size() != size) 
@@ -1914,7 +1914,7 @@ void HodgkinHuxleyVoltage::updateSpineCount(const String& CG_direction, const St
   countSpineConnected[CG_inAttrPset->idx]++;
 }
 
-void HodgkinHuxleyVoltage::updateGapJunctionCount(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset) 
+void HodgkinHuxleyVoltage::updateGapJunctionCount(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset) 
 {
   unsigned size = branchData->size;  //# of compartments
   if (countGapJunctionConnected.size() != size) 
@@ -1928,7 +1928,7 @@ void HodgkinHuxleyVoltage::updateGapJunctionCount(const String& CG_direction, co
 #endif
 
 #ifdef CONSIDER_DI_DV 
-void HodgkinHuxleyVoltage::add_zero_didv(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset)
+void HodgkinHuxleyVoltage::add_zero_didv(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset)
 {
     for (int i = _tmp_index; i < injectedCurrents.size(); ++i)
     {

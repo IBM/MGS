@@ -19,12 +19,12 @@ class ZhengSORNUnitDataCollectorSuppl : public CG_ZhengSORNUnitDataCollectorSupp
       void initialize(RNG& rng);
       void finalize(RNG& rng);
       virtual void dataCollection(Trigger* trigger, NDPairList* ndPairList);
-      virtual void getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ZhengSORNUnitDataCollectorSupplInAttrPSet* CG_inAttrPset, CG_ZhengSORNUnitDataCollectorSupplOutAttrPSet* CG_outAttrPset);
+      virtual void getNodeIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ZhengSORNUnitDataCollectorSupplInAttrPSet* CG_inAttrPset, CG_ZhengSORNUnitDataCollectorSupplOutAttrPSet* CG_outAttrPset);
       ZhengSORNUnitDataCollectorSuppl();
       virtual ~ZhengSORNUnitDataCollectorSuppl();
-      virtual void duplicate(std::unique_ptr<ZhengSORNUnitDataCollectorSuppl>& dup) const;
-      virtual void duplicate(std::unique_ptr<Variable>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_ZhengSORNUnitDataCollectorSuppl>& dup) const;
+      virtual void duplicate(std::unique_ptr<ZhengSORNUnitDataCollectorSuppl>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Variable>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_ZhengSORNUnitDataCollectorSuppl>&& dup) const;
  private:
       std::ofstream* thresholdsFile;
 };

@@ -19,12 +19,12 @@ class CleftAstrocyteIAFUnitDataCollector : public CG_CleftAstrocyteIAFUnitDataCo
   void initialize(RNG& rng);
   void finalize(RNG& rng);
   virtual void dataCollection(Trigger* trigger, NDPairList* ndPairList);
-  virtual void getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CleftAstrocyteIAFUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_CleftAstrocyteIAFUnitDataCollectorOutAttrPSet* CG_outAttrPset);
+  virtual void getNodeIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CleftAstrocyteIAFUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_CleftAstrocyteIAFUnitDataCollectorOutAttrPSet* CG_outAttrPset);
   CleftAstrocyteIAFUnitDataCollector();
   virtual ~CleftAstrocyteIAFUnitDataCollector();
-  virtual void duplicate(std::unique_ptr<CleftAstrocyteIAFUnitDataCollector>& dup) const;
-  virtual void duplicate(std::unique_ptr<Variable>& dup) const;
-  virtual void duplicate(std::unique_ptr<CG_CleftAstrocyteIAFUnitDataCollector>& dup) const;
+  virtual void duplicate(std::unique_ptr<CleftAstrocyteIAFUnitDataCollector>&& dup) const;
+  virtual void duplicate(std::unique_ptr<Variable>&& dup) const;
+  virtual void duplicate(std::unique_ptr<CG_CleftAstrocyteIAFUnitDataCollector>&& dup) const;
  private:
   std::ofstream* neurotransmitter_file;
   std::ofstream* eCB_file;

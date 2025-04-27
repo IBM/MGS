@@ -232,7 +232,7 @@ void LFPDataAnalyzer::setContributions(Trigger* trigger, NDPairList* ndPairList)
 }
 
 
-void LFPDataAnalyzer::getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_LFPDataAnalyzerInAttrPSet* CG_inAttrPset, CG_LFPDataAnalyzerOutAttrPSet* CG_outAttrPset) 
+void LFPDataAnalyzer::getNodeIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_LFPDataAnalyzerInAttrPSet* CG_inAttrPset, CG_LFPDataAnalyzerOutAttrPSet* CG_outAttrPset) 
 {
   ShallowArray<unsigned,3,2> coords;
   CG_node->getNode()->getNodeCoords(coords);
@@ -251,17 +251,17 @@ LFPDataAnalyzer::~LFPDataAnalyzer()
 {
 }
 
-void LFPDataAnalyzer::duplicate(std::unique_ptr<LFPDataAnalyzer>& dup) const
+void LFPDataAnalyzer::duplicate(std::unique_ptr<LFPDataAnalyzer>&& dup) const
 {
   dup.reset(new LFPDataAnalyzer(*this));
 }
 
-void LFPDataAnalyzer::duplicate(std::unique_ptr<Variable>& dup) const
+void LFPDataAnalyzer::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
   dup.reset(new LFPDataAnalyzer(*this));
 }
 
-void LFPDataAnalyzer::duplicate(std::unique_ptr<CG_LFPDataAnalyzer>& dup) const
+void LFPDataAnalyzer::duplicate(std::unique_ptr<CG_LFPDataAnalyzer>&& dup) const
 {
   dup.reset(new LFPDataAnalyzer(*this));
 }

@@ -19,7 +19,7 @@ class MihalasNieburSynapseIAFUnit : public CG_MihalasNieburSynapseIAFUnit
   void initialize(RNG& rng);
   void update(RNG& rng);
   void threshold(RNG& rng);
-  virtual void setAMPAIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_MihalasNieburSynapseIAFUnitInAttrPSet* CG_inAttrPset, CG_MihalasNieburSynapseIAFUnitOutAttrPSet* CG_outAttrPset);
+  virtual void setAMPAIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_MihalasNieburSynapseIAFUnitInAttrPSet* CG_inAttrPset, CG_MihalasNieburSynapseIAFUnitOutAttrPSet* CG_outAttrPset);
   virtual ~MihalasNieburSynapseIAFUnit();
 };
 

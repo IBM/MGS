@@ -77,17 +77,17 @@ NodeSetSPMVariable::~NodeSetSPMVariable()
 {
 }
 
-void NodeSetSPMVariable::duplicate(std::unique_ptr<NodeSetSPMVariable>& dup) const
+void NodeSetSPMVariable::duplicate(std::unique_ptr<NodeSetSPMVariable>&& dup) const
 {
    dup.reset(new NodeSetSPMVariable(*this));
 }
 
-void NodeSetSPMVariable::duplicate(std::unique_ptr<Variable>& dup) const
+void NodeSetSPMVariable::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
    dup.reset(new NodeSetSPMVariable(*this));
 }
 
-void NodeSetSPMVariable::duplicate(std::unique_ptr<CG_NodeSetSPMVariable>& dup) const
+void NodeSetSPMVariable::duplicate(std::unique_ptr<CG_NodeSetSPMVariable>&& dup) const
 {
    dup.reset(new NodeSetSPMVariable(*this));
 }

@@ -65,7 +65,7 @@ void LinskerInfomaxUnitDataCollector::dataCollection(Trigger* trigger, NDPairLis
   output<<std::endl;
 }
 
-void LinskerInfomaxUnitDataCollector::getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_LinskerInfomaxUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_LinskerInfomaxUnitDataCollectorOutAttrPSet* CG_outAttrPset) 
+void LinskerInfomaxUnitDataCollector::getNodeIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_LinskerInfomaxUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_LinskerInfomaxUnitDataCollectorOutAttrPSet* CG_outAttrPset) 
 {
   ShallowArray<unsigned,3,2> coords;
   CG_node->getNode()->getNodeCoords(coords);
@@ -83,17 +83,17 @@ LinskerInfomaxUnitDataCollector::~LinskerInfomaxUnitDataCollector()
 {
 }
 
-void LinskerInfomaxUnitDataCollector::duplicate(std::unique_ptr<LinskerInfomaxUnitDataCollector>& dup) const
+void LinskerInfomaxUnitDataCollector::duplicate(std::unique_ptr<LinskerInfomaxUnitDataCollector>&& dup) const
 {
    dup.reset(new LinskerInfomaxUnitDataCollector(*this));
 }
 
-void LinskerInfomaxUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
+void LinskerInfomaxUnitDataCollector::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
    dup.reset(new LinskerInfomaxUnitDataCollector(*this));
 }
 
-void LinskerInfomaxUnitDataCollector::duplicate(std::unique_ptr<CG_LinskerInfomaxUnitDataCollector>& dup) const
+void LinskerInfomaxUnitDataCollector::duplicate(std::unique_ptr<CG_LinskerInfomaxUnitDataCollector>&& dup) const
 {
    dup.reset(new LinskerInfomaxUnitDataCollector(*this));
 }

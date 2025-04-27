@@ -11,12 +11,12 @@ class ToneUnitDataCollector : public CG_ToneUnitDataCollector
       void initialize(RNG& rng);
       void finalize(RNG& rng);
       virtual void dataCollection(Trigger* trigger, NDPairList* ndPairList);
-      virtual void getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ToneUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_ToneUnitDataCollectorOutAttrPSet* CG_outAttrPset);
+      virtual void getNodeIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ToneUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_ToneUnitDataCollectorOutAttrPSet* CG_outAttrPset);
       ToneUnitDataCollector();
       virtual ~ToneUnitDataCollector();
-      virtual void duplicate(std::unique_ptr<ToneUnitDataCollector>& dup) const;
-      virtual void duplicate(std::unique_ptr<Variable>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_ToneUnitDataCollector>& dup) const;
+      virtual void duplicate(std::unique_ptr<ToneUnitDataCollector>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Variable>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_ToneUnitDataCollector>&& dup) const;
 };
 
 #endif

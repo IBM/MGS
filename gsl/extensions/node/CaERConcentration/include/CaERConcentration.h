@@ -22,29 +22,29 @@ class CaERConcentration : public CG_CaERConcentration
   void solve(RNG& rng);
   void finish(RNG& rng);
   //  virtual void setReceptorCaCurrent(
-  //      const String& CG_direction, const String& CG_component,
+  //      const CustomString& CG_direction, const CustomString& CG_component,
   //      NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor*
   //      CG_variable,
   //      Constant* CG_constant, CG_CaERConcentrationInAttrPSet* CG_inAttrPset,
   //      CG_CaERConcentrationOutAttrPSet* CG_outAttrPset);
   virtual void setInjectedCaCurrent(
-      const String& CG_direction, const String& CG_component,
+      const CustomString& CG_direction, const CustomString& CG_component,
       NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
       Constant* CG_constant, CG_CaERConcentrationInAttrPSet* CG_inAttrPset,
       CG_CaERConcentrationOutAttrPSet* CG_outAttrPset);
   virtual void setProximalJunction(
-      const String& CG_direction, const String& CG_component,
+      const CustomString& CG_direction, const CustomString& CG_component,
       NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
       Constant* CG_constant, CG_CaERConcentrationInAttrPSet* CG_inAttrPset,
       CG_CaERConcentrationOutAttrPSet* CG_outAttrPset);
-  virtual void setTargetAttachCaConcentration(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaERConcentrationInAttrPSet* CG_inAttrPset, CG_CaERConcentrationOutAttrPSet* CG_outAttrPset);
-  virtual bool checkSite(const String& CG_direction, const String& CG_component,
+  virtual void setTargetAttachCaConcentration(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaERConcentrationInAttrPSet* CG_inAttrPset, CG_CaERConcentrationOutAttrPSet* CG_outAttrPset);
+  virtual bool checkSite(const CustomString& CG_direction, const CustomString& CG_component,
                          NodeDescriptor* CG_node, Edge* CG_edge,
                          VariableDescriptor* CG_variable, Constant* CG_constant,
                          CG_CaERConcentrationInAttrPSet* CG_inAttrPset,
                          CG_CaERConcentrationOutAttrPSet* CG_outAttrPset);
   virtual bool confirmUniqueDeltaT(
-      const String& CG_direction, const String& CG_component,
+      const CustomString& CG_direction, const CustomString& CG_component,
       NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
       Constant* CG_constant, CG_CaERConcentrationInAttrPSet* CG_inAttrPset,
       CG_CaERConcentrationOutAttrPSet* CG_outAttrPset);

@@ -287,7 +287,7 @@ void NMDAReceptor_Markov::updateNMDADepPlasticity(RNG& rng)
   }
 }
 
-void NMDAReceptor_Markov::setPostIndex(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NMDAReceptor_MarkovInAttrPSet* CG_inAttrPset, CG_NMDAReceptor_MarkovOutAttrPSet* CG_outAttrPset) 
+void NMDAReceptor_Markov::setPostIndex(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NMDAReceptor_MarkovInAttrPSet* CG_inAttrPset, CG_NMDAReceptor_MarkovOutAttrPSet* CG_outAttrPset) 
 {
   indexPost = CG_inAttrPset->idx;
   if (indexPrePost.size() % 2)
@@ -309,7 +309,7 @@ void NMDAReceptor_Markov::setPostIndex(const String& CG_direction, const String&
   }
 }
 
-void NMDAReceptor_Markov::setPrePostIndex(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NMDAReceptor_MarkovInAttrPSet* CG_inAttrPset, CG_NMDAReceptor_MarkovOutAttrPSet* CG_outAttrPset) 
+void NMDAReceptor_Markov::setPrePostIndex(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NMDAReceptor_MarkovInAttrPSet* CG_inAttrPset, CG_NMDAReceptor_MarkovOutAttrPSet* CG_outAttrPset) 
 {
   NodeProxyBase* node = dynamic_cast<NodeProxyBase*>(CG_node->getNode());
   if (node == 0)
@@ -344,7 +344,7 @@ NMDAReceptor_Markov::NMDAReceptor_Markov()
 #endif
 
 #ifdef MICRODOMAIN_CALCIUM
-void NMDAReceptor_Markov::setCalciumMicrodomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NMDAReceptor_MarkovInAttrPSet* CG_inAttrPset, CG_NMDAReceptor_MarkovOutAttrPSet* CG_outAttrPset) 
+void NMDAReceptor_Markov::setCalciumMicrodomain(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NMDAReceptor_MarkovInAttrPSet* CG_inAttrPset, CG_NMDAReceptor_MarkovOutAttrPSet* CG_outAttrPset) 
 {
   microdomainName = CG_inAttrPset->domainName;
   int idxFound = 0;

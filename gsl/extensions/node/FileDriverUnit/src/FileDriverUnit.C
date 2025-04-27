@@ -32,7 +32,7 @@ void FileDriverUnit::updateOutput(RNG& rng)
     output = SHD.input[channel] * SHD.scale;
 }
 
-void FileDriverUnit::setIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_FileDriverUnitInAttrPSet* CG_inAttrPset, CG_FileDriverUnitOutAttrPSet* CG_outAttrPset) 
+void FileDriverUnit::setIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_FileDriverUnitInAttrPSet* CG_inAttrPset, CG_FileDriverUnitOutAttrPSet* CG_outAttrPset) 
 {
 }
 

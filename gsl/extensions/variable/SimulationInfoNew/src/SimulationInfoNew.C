@@ -19,17 +19,17 @@ SimulationInfoNew::~SimulationInfoNew()
 {
 }
 
-void SimulationInfoNew::duplicate(std::unique_ptr<SimulationInfoNew>& dup) const
+void SimulationInfoNew::duplicate(std::unique_ptr<SimulationInfoNew>&& dup) const
 {
    dup.reset(new SimulationInfoNew(*this));
 }
 
-void SimulationInfoNew::duplicate(std::unique_ptr<Variable>& dup) const
+void SimulationInfoNew::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
    dup.reset(new SimulationInfoNew(*this));
 }
 
-void SimulationInfoNew::duplicate(std::unique_ptr<CG_SimulationInfoNew>& dup) const
+void SimulationInfoNew::duplicate(std::unique_ptr<CG_SimulationInfoNew>&& dup) const
 {
    dup.reset(new SimulationInfoNew(*this));
 }

@@ -10,8 +10,6 @@
 // (C) Copyright 2018 New Jersey Institute of Technology. All rights reserved.
 // 
 // =============================================================================
-*/
-
 
 #ifndef ChannelNat_H
 #define ChannelNat_H

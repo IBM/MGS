@@ -137,7 +137,7 @@ void ReversalPotentialDisplay::dataCollection(Trigger* trigger,
 }
 
 void ReversalPotentialDisplay::setUpPointers(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_ReversalPotentialDisplayInAttrPSet* CG_inAttrPset,
     CG_ReversalPotentialDisplayOutAttrPSet* CG_outAttrPset)
@@ -161,18 +161,18 @@ ReversalPotentialDisplay::ReversalPotentialDisplay()
 ReversalPotentialDisplay::~ReversalPotentialDisplay() { delete outFile; }
 
 void ReversalPotentialDisplay::duplicate(
-    std::unique_ptr<ReversalPotentialDisplay>& dup) const
+    std::unique_ptr<ReversalPotentialDisplay>&& dup) const
 {
   dup.reset(new ReversalPotentialDisplay(*this));
 }
 
-void ReversalPotentialDisplay::duplicate(std::unique_ptr<Variable>& dup) const
+void ReversalPotentialDisplay::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
   dup.reset(new ReversalPotentialDisplay(*this));
 }
 
 void ReversalPotentialDisplay::duplicate(
-    std::unique_ptr<CG_ReversalPotentialDisplay>& dup) const
+    std::unique_ptr<CG_ReversalPotentialDisplay>&& dup) const
 {
   dup.reset(new ReversalPotentialDisplay(*this));
 }

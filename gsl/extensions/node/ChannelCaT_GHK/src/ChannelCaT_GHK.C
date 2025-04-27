@@ -315,7 +315,7 @@ void ChannelCaT_GHK::initialize_others()
 
 ChannelCaT_GHK::~ChannelCaT_GHK() {}
 #ifdef MICRODOMAIN_CALCIUM
-void ChannelCaT_GHK::setCalciumMicrodomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ChannelCaT_GHKInAttrPSet* CG_inAttrPset, CG_ChannelCaT_GHKOutAttrPSet* CG_outAttrPset) 
+void ChannelCaT_GHK::setCalciumMicrodomain(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ChannelCaT_GHKInAttrPSet* CG_inAttrPset, CG_ChannelCaT_GHKOutAttrPSet* CG_outAttrPset) 
 {
   microdomainName = CG_inAttrPset->domainName;
   int idxFound = 0;

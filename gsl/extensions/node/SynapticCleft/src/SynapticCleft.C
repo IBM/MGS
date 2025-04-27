@@ -10,7 +10,6 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 // 
 // =============================================================================
-*/
 
 #include "MaxComputeOrder.h"
 #include "NodeProxyBase.h"
@@ -140,8 +139,8 @@ void SynapticCleft::produceState(RNG& rng)
   }
 }
 
-void SynapticCleft::setPointers(const String& CG_direction,
-                                const String& CG_component,
+void SynapticCleft::setPointers(const CustomString& CG_direction,
+                                const CustomString& CG_component,
                                 NodeDescriptor* CG_node, Edge* CG_edge,
                                 VariableDescriptor* CG_variable,
                                 Constant* CG_constant,

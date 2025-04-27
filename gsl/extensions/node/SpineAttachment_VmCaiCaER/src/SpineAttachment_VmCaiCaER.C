@@ -51,8 +51,8 @@ void SpineAttachment_VmCaiCaER::computeInitialState(RNG& rng)
   assert(Raxial > MIN_RESISTANCE_VALUE);
   dyn_var_t A = std::abs(Ai - *Aj); //[um^2]
   dyn_var_t distance;
-  String typeDenShaft("den-shaft");
-  String typeSpineNeck("spine-neck");
+  CustomString typeDenShaft("den-shaft");
+  CustomString typeSpineNeck("spine-neck");
   if (typeCpt == typeDenShaft)
   {
    distance = (*leni + *lenj / 2.0); //[um]
@@ -142,7 +142,7 @@ void SpineAttachment_VmCaiCaER::computeState(RNG& rng)
 }
 
 void SpineAttachment_VmCaiCaER::setVoltagePointers(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant,
     CG_SpineAttachment_VmCaiCaERInAttrPSet* CG_inAttrPset,
@@ -175,7 +175,7 @@ void SpineAttachment_VmCaiCaER::setVoltagePointers(
 }
 
 void SpineAttachment_VmCaiCaER::setCaPointers(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant,
     CG_SpineAttachment_VmCaiCaERInAttrPSet* CG_inAttrPset,
@@ -193,7 +193,7 @@ void SpineAttachment_VmCaiCaER::setCaPointers(
 }
 
 void SpineAttachment_VmCaiCaER::setCaERPointers(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant,
     CG_SpineAttachment_VmCaiCaERInAttrPSet* CG_inAttrPset,
@@ -211,7 +211,7 @@ void SpineAttachment_VmCaiCaER::setCaERPointers(
 }
 
 void SpineAttachment_VmCaiCaER::set_A_and_len(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant,
     CG_SpineAttachment_VmCaiCaERInAttrPSet* CG_inAttrPset,
@@ -225,9 +225,9 @@ void SpineAttachment_VmCaiCaER::set_A_and_len(
 	  _gotAssigned = true;
   }
   assert(getSharedMembers().dimensionsConnect);
-  String cptType (CG_inAttrPset->typeCpt);
-  String typeDenShaft("den-shaft");
-  String typeSpineNeck("spine-neck");
+  CustomString cptType (CG_inAttrPset->typeCpt);
+  CustomString typeDenShaft("den-shaft");
+  CustomString typeSpineNeck("spine-neck");
   DimensionStruct* dimension = (*(getSharedMembers().dimensionsConnect))[index];
   if (cptType == typeDenShaft)
   {

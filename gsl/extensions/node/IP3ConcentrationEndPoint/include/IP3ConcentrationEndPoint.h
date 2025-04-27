@@ -19,7 +19,7 @@ class IP3ConcentrationEndPoint : public CG_IP3ConcentrationEndPoint
       void produceInitialState(RNG& rng);
       void produceSolvedIP3Concentration(RNG& rng);
       void produceFinishedIP3Concentration(RNG& rng);
-      virtual void setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_IP3ConcentrationEndPointInAttrPSet* CG_inAttrPset, CG_IP3ConcentrationEndPointOutAttrPSet* CG_outAttrPset);
+      virtual void setPointers(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_IP3ConcentrationEndPointInAttrPSet* CG_inAttrPset, CG_IP3ConcentrationEndPointOutAttrPSet* CG_outAttrPset);
       virtual ~IP3ConcentrationEndPoint();
 };
 

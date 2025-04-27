@@ -34,9 +34,9 @@ class VariableType : public InstanceFactory
       virtual Variable* allocateVariable()=0;
       virtual VariableCompCategoryBase* getCompCategoryBase() =0;
       virtual std::string getModelName() const =0;
-      virtual void getInitializationParameterSet(std::unique_ptr<ParameterSet>& initPSet) = 0;
-      virtual void getInAttrParameterSet(std::unique_ptr<ParameterSet>& inAttrPSet) = 0;
-      virtual void getOutAttrParameterSet(std::unique_ptr<ParameterSet>& outAttrPSet) = 0;
+      virtual void getInitializationParameterSet(std::unique_ptr<ParameterSet>&& initPSet) = 0;
+      virtual void getInAttrParameterSet(std::unique_ptr<ParameterSet>&& inAttrPSet) = 0;
+      virtual void getOutAttrParameterSet(std::unique_ptr<ParameterSet>&& outAttrPSet) = 0;
       virtual ~VariableType();
       virtual void getInstance(std::unique_ptr<DataItem> & adi, 
 			       std::vector<DataItem*> const * args, 

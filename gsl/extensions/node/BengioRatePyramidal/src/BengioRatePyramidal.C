@@ -47,7 +47,7 @@ void BengioRatePyramidal::update_Vs(RNG& rng) // Vs is plural (V_A and V_B)
   }
 }
 
-void BengioRatePyramidal::setLateralIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_BengioRatePyramidalInAttrPSet* CG_inAttrPset, CG_BengioRatePyramidalOutAttrPSet* CG_outAttrPset) 
+void BengioRatePyramidal::setLateralIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_BengioRatePyramidalInAttrPSet* CG_inAttrPset, CG_BengioRatePyramidalOutAttrPSet* CG_outAttrPset) 
 {
 }
 

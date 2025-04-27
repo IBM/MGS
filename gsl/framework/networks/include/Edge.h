@@ -34,11 +34,11 @@ class Edge : public Publishable, public ServiceAcceptor,
       virtual ~Edge() {}
 
       virtual void getInitializationParameterSet(
-	 std::unique_ptr<ParameterSet> & r_aptr) const = 0;
+	 std::unique_ptr<ParameterSet>&& r_aptr) const = 0;
       virtual void getInAttrParameterSet(
-	 std::unique_ptr<ParameterSet> & r_aptr) const = 0;
+	 std::unique_ptr<ParameterSet>&& r_aptr) const = 0;
       virtual void getOutAttrParameterSet(
-	 std::unique_ptr<ParameterSet> & r_aptr) const = 0;
+	 std::unique_ptr<ParameterSet>&& r_aptr) const = 0;
 
       virtual void addPreConstant(Constant* c, ParameterSet* InAttrPSet) = 0;
       virtual void addPreVariable(VariableDescriptor* v, ParameterSet* InAttrPSet) = 0;

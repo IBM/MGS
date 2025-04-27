@@ -176,7 +176,7 @@ void LensConnector::variableToNodeSet(
        if (toPartitionId == myRank) {
 	 source->getVariableType()->allocateProxy(fromPartitionId, source);
 	 v=source->getVariable();
-	 v->getOutAttrParameterSet(outAttrPSet);
+	 v->getOutAttrParameterSet(std::move(outAttrPSet));
 	 outAttrPSet->set(*sourceOutAttr);
 	 (*it)->getGridLayerDescriptor()->getNodeType()->getInAttrParameterSet(std::move(inAttrPSet));
 	 inAttrPSet->set(*destinationInAttr);
@@ -188,7 +188,7 @@ void LensConnector::variableToNodeSet(
    else if (nodes.size()>0) {
 #endif
      std::unique_ptr<ParameterSet> outAttrPSet;
-     source->getVariable()->getOutAttrParameterSet(outAttrPSet);
+     source->getVariable()->getOutAttrParameterSet(std::move(outAttrPSet));
      outAttrPSet->set(*sourceOutAttr);
      std::unique_ptr<ParameterSet> inAttrPSet;
 
@@ -244,10 +244,10 @@ void LensConnector::variableToEdgeSet(
    else {
 #endif
      std::unique_ptr<ParameterSet> outAttrPSet;
-     source->getVariable()->getOutAttrParameterSet(outAttrPSet);
+     source->getVariable()->getOutAttrParameterSet(std::move(outAttrPSet));
      outAttrPSet->set(*sourceOutAttr);
      std::unique_ptr<ParameterSet> inAttrPSet;
-     (*it)->getInAttrParameterSet(inAttrPSet);
+     (*it)->getInAttrParameterSet(std::move(inAttrPSet));
      inAttrPSet->set(*destinationInAttr);
      for (; it != end; ++it) {
        if (*it) {
@@ -283,10 +283,10 @@ void LensConnector::variableToVariable(
 #endif
       // if both source and destination are in current memory space do nothing
       std::unique_ptr<ParameterSet> outAttrPSet;
-      from->getOutAttrParameterSet(outAttrPSet);
+      from->getOutAttrParameterSet(std::move(outAttrPSet));
       outAttrPSet->set(*sourceOutAttr);
       std::unique_ptr<ParameterSet> inAttrPSet;
-      destination->getVariable()->getInAttrParameterSet(inAttrPSet);
+      destination->getVariable()->getInAttrParameterSet(std::move(inAttrPSet));
       inAttrPSet->set(*destinationInAttr);
       
       from->addPostVariable(destination->getVariable(), outAttrPSet.get());
@@ -296,10 +296,10 @@ void LensConnector::variableToVariable(
    else if (!from && to) {
       // create a proxy for the source variable in current memory space
       std::unique_ptr<ParameterSet> outAttrPSet;
-      from->getOutAttrParameterSet(outAttrPSet);
+      from->getOutAttrParameterSet(std::move(outAttrPSet));
       outAttrPSet->set(*sourceOutAttr);
       std::unique_ptr<ParameterSet> inAttrPSet;
-      destination->getVariable()->getInAttrParameterSet(inAttrPSet);
+      destination->getVariable()->getInAttrParameterSet(std::move(inAttrPSet));
       inAttrPSet->set(*destinationInAttr);
       
       from->addPostVariable(destination->getVariable(), outAttrPSet.get());
@@ -330,7 +330,7 @@ void LensConnector::nodeSetToVariable(
        (*it)->getGridLayerDescriptor()->getNodeType()->getOutAttrParameterSet(std::move(outAttrPSet));
        outAttrPSet->set(*sourceOutAttr);
        std::unique_ptr<ParameterSet> inAttrPSet;
-       to->getInAttrParameterSet(inAttrPSet);
+       to->getInAttrParameterSet(std::move(inAttrPSet));
        inAttrPSet->set(*destinationInAttr);
    
        Node* from;
@@ -384,10 +384,10 @@ void LensConnector::edgeSetToVariable(
       std::vector<Edge*>::iterator it = edges.begin(), end = edges.end();
       if (edges.size()>0) {
 	std::unique_ptr<ParameterSet> outAttrPSet;
-	(*it)->getOutAttrParameterSet(outAttrPSet);
+	(*it)->getOutAttrParameterSet(std::move(outAttrPSet));
 	outAttrPSet->set(*sourceOutAttr);
 	std::unique_ptr<ParameterSet> inAttrPSet;
-	to->getInAttrParameterSet(inAttrPSet);
+	to->getInAttrParameterSet(std::move(inAttrPSet));
 	inAttrPSet->set(*destinationInAttr);
 	
 	for (; it != end; ++it) {

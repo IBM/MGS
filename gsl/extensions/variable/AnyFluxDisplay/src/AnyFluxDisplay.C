@@ -407,7 +407,7 @@ void AnyFluxDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList)
 
 
 #ifdef IDEA_CURRENTONCOMPT
-void AnyFluxDisplay::setUpPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_AnyFluxDisplayInAttrPSet* CG_inAttrPset, CG_AnyFluxDisplayOutAttrPSet* CG_outAttrPset) 
+void AnyFluxDisplay::setUpPointers(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_AnyFluxDisplayInAttrPSet* CG_inAttrPset, CG_AnyFluxDisplayOutAttrPSet* CG_outAttrPset) 
 {
   TissueSite& site = CG_inAttrPset->site;
   bool record = true;
@@ -461,7 +461,7 @@ void AnyFluxDisplay::setUpPointers(const String& CG_direction, const String& CG_
     return;
     //TUAN TODO: if we want to enable this, make sure use branchData_connect
   }
-  String type(CG_inAttrPset->type);
+  CustomString type(CG_inAttrPset->type);
   if (type == "")
     type = "unknown";
   if (CG_inAttrPset->identifier == "CHANNEL"
@@ -504,12 +504,12 @@ void AnyFluxDisplay::setUpPointers(const String& CG_direction, const String& CG_
 }
 #else
 void AnyFluxDisplay::setUpPointers(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_AnyFluxDisplayInAttrPSet* CG_inAttrPset,
     CG_AnyFluxDisplayOutAttrPSet* CG_outAttrPset)
 {
-  String type(CG_inAttrPset->type);
+  CustomString type(CG_inAttrPset->type);
   if (type == "")
     type = "unknown";
   if (CG_inAttrPset->identifier == "CHANNEL")
@@ -544,17 +544,17 @@ AnyFluxDisplay::~AnyFluxDisplay()
   delete outFile;
 }
 
-void AnyFluxDisplay::duplicate(std::unique_ptr<AnyFluxDisplay>& dup) const
+void AnyFluxDisplay::duplicate(std::unique_ptr<AnyFluxDisplay>&& dup) const
 {
    dup.reset(new AnyFluxDisplay(*this));
 }
 
-void AnyFluxDisplay::duplicate(std::unique_ptr<Variable>& dup) const
+void AnyFluxDisplay::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
    dup.reset(new AnyFluxDisplay(*this));
 }
 
-void AnyFluxDisplay::duplicate(std::unique_ptr<CG_AnyFluxDisplay>& dup) const
+void AnyFluxDisplay::duplicate(std::unique_ptr<CG_AnyFluxDisplay>&& dup) const
 {
    dup.reset(new AnyFluxDisplay(*this));
 }

@@ -20,8 +20,8 @@ class NazeSORNInhUnit : public CG_NazeSORNInhUnit
       void initialize(RNG& rng);
       void update(RNG& rng);
       void fire(RNG& rng);
-      virtual void setExcIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NazeSORNInhUnitInAttrPSet* CG_inAttrPset, CG_NazeSORNInhUnitOutAttrPSet* CG_outAttrPset);
-      virtual void setInhIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NazeSORNInhUnitInAttrPSet* CG_inAttrPset, CG_NazeSORNInhUnitOutAttrPSet* CG_outAttrPset);
+      virtual void setExcIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NazeSORNInhUnitInAttrPSet* CG_inAttrPset, CG_NazeSORNInhUnitOutAttrPSet* CG_outAttrPset);
+      virtual void setInhIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NazeSORNInhUnitInAttrPSet* CG_inAttrPset, CG_NazeSORNInhUnitOutAttrPSet* CG_outAttrPset);
       void inputWeights(std::ifstream& fsE2I, int col, float weight);
       void outputWeights(std::ofstream& fsE2I);
       void inputTI(float val);

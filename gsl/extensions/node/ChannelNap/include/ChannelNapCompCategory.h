@@ -6,8 +6,6 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 // 
 // =============================================================================
-*/
-
 
 #ifndef ChannelNapCompCategory_H
 #define ChannelNapCompCategory_H

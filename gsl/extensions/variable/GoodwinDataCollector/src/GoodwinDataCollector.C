@@ -191,7 +191,7 @@ void GoodwinDataCollector::dataCollection(Trigger* trigger, NDPairList* ndPairLi
     }
 }
 
-void GoodwinDataCollector::getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_GoodwinDataCollectorInAttrPSet* CG_inAttrPset, CG_GoodwinDataCollectorOutAttrPSet* CG_outAttrPset) 
+void GoodwinDataCollector::getNodeIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_GoodwinDataCollectorInAttrPSet* CG_inAttrPset, CG_GoodwinDataCollectorOutAttrPSet* CG_outAttrPset) 
 {
   ShallowArray<unsigned,3,2> coords;
   CG_node->getNode()->getNodeCoords(coords);
@@ -210,17 +210,17 @@ GoodwinDataCollector::~GoodwinDataCollector()
 {
 }
 
-void GoodwinDataCollector::duplicate(std::unique_ptr<GoodwinDataCollector>& dup) const
+void GoodwinDataCollector::duplicate(std::unique_ptr<GoodwinDataCollector>&& dup) const
 {
   dup.reset(new GoodwinDataCollector(*this));
 }
 
-void GoodwinDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
+void GoodwinDataCollector::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
   dup.reset(new GoodwinDataCollector(*this));
 }
 
-void GoodwinDataCollector::duplicate(std::unique_ptr<CG_GoodwinDataCollector>& dup) const
+void GoodwinDataCollector::duplicate(std::unique_ptr<CG_GoodwinDataCollector>&& dup) const
 {
   dup.reset(new GoodwinDataCollector(*this));
 }

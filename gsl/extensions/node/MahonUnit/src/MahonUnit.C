@@ -512,7 +512,7 @@ void MahonUnit::updateOutputs(RNG& rng)
 
 
 
-bool MahonUnit::ConnectP1(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_MahonUnitInAttrPSet* CG_inAttrPset, CG_MahonUnitOutAttrPSet* CG_outAttrPset) 
+bool MahonUnit::ConnectP1(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_MahonUnitInAttrPSet* CG_inAttrPset, CG_MahonUnitOutAttrPSet* CG_outAttrPset) 
 { 
   //unsigned n=3967;//getGridLayerData()->getNbrUnits();
 
@@ -605,7 +605,7 @@ void MahonUnit::derivs(const ShallowArray< double > & x, ShallowArray< double > 
 
 */
 
-void MahonUnit::setIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_MahonUnitInAttrPSet* CG_inAttrPset, CG_MahonUnitOutAttrPSet* CG_outAttrPset) 
+void MahonUnit::setIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_MahonUnitInAttrPSet* CG_inAttrPset, CG_MahonUnitOutAttrPSet* CG_outAttrPset) 
 {
 
   MSNNetInps[MSNNetInps.size()-1].row = getGlobalIndex()+1; // +1 is for Matlab

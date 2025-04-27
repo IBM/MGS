@@ -23,7 +23,7 @@ void ForwardSolvePoint3::produceForwardSolution(RNG& rng)
 {
 }
 
-void ForwardSolvePoint3::setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ForwardSolvePoint3InAttrPSet* CG_inAttrPset, CG_ForwardSolvePoint3OutAttrPSet* CG_outAttrPset) 
+void ForwardSolvePoint3::setPointers(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ForwardSolvePoint3InAttrPSet* CG_inAttrPset, CG_ForwardSolvePoint3OutAttrPSet* CG_outAttrPset) 
 {
   assert(getSharedMembers().dimensionsConnect);
   assert(getSharedMembers().dimensionsConnect->size()>0);    

@@ -281,7 +281,7 @@ void SingleChannelRYR::update(RNG& rng)
 SingleChannelRYR::~SingleChannelRYR() {}
 
 #ifdef MICRODOMAIN_CALCIUM
-void SingleChannelRYR::setCalciumMicrodomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_SingleChannelRYRInAttrPSet* CG_inAttrPset, CG_SingleChannelRYROutAttrPSet* CG_outAttrPset) 
+void SingleChannelRYR::setCalciumMicrodomain(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_SingleChannelRYRInAttrPSet* CG_inAttrPset, CG_SingleChannelRYROutAttrPSet* CG_outAttrPset) 
 {
   microdomainName = CG_inAttrPset->domainName;
   int idxFound = 0;

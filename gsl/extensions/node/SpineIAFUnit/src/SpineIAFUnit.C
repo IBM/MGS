@@ -125,13 +125,13 @@ void SpineIAFUnit::outputWeights(std::ofstream& fs)
   fs.write(reinterpret_cast<char *>(&temp), sizeof(temp));
 }
 
-void SpineIAFUnit::setNeurotransmitterIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_SpineIAFUnitInAttrPSet* CG_inAttrPset, CG_SpineIAFUnitOutAttrPSet* CG_outAttrPset)
+void SpineIAFUnit::setNeurotransmitterIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_SpineIAFUnitInAttrPSet* CG_inAttrPset, CG_SpineIAFUnitOutAttrPSet* CG_outAttrPset)
 {
   neurotransmitterInput[neurotransmitterInput.size()-1].row =  getIndex()+1; // +1 is for Matlab
   neurotransmitterInput[neurotransmitterInput.size()-1].col = CG_node->getIndex()+1;
 }
 
-void SpineIAFUnit::setPostSpikeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_SpineIAFUnitInAttrPSet* CG_inAttrPset, CG_SpineIAFUnitOutAttrPSet* CG_outAttrPset)
+void SpineIAFUnit::setPostSpikeIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_SpineIAFUnitInAttrPSet* CG_inAttrPset, CG_SpineIAFUnitOutAttrPSet* CG_outAttrPset)
 {
   postSpikeInput[postSpikeInput.size()-1].row =  getIndex()+1; // +1 is for Matlab
   postSpikeInput[postSpikeInput.size()-1].col = CG_node->getIndex()+1;

@@ -19,7 +19,7 @@ class MegaSynapticCleft : public CG_MegaSynapticCleft
       void produceInitialVoltage(RNG& rng);
       void produceVoltage(RNG& rng);
       void computeState(RNG& rng);
-      virtual void setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_MegaSynapticCleftInAttrPSet* CG_inAttrPset, CG_MegaSynapticCleftOutAttrPSet* CG_outAttrPset);
+      virtual void setPointers(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_MegaSynapticCleftInAttrPSet* CG_inAttrPset, CG_MegaSynapticCleftOutAttrPSet* CG_outAttrPset);
       virtual ~MegaSynapticCleft();
 };
 

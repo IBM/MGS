@@ -121,7 +121,7 @@ void PoissonIAFUnitDataCollector::dataCollection(Trigger* trigger, NDPairList* n
 
 }
 
-void PoissonIAFUnitDataCollector::getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_PoissonIAFUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_PoissonIAFUnitDataCollectorOutAttrPSet* CG_outAttrPset) 
+void PoissonIAFUnitDataCollector::getNodeIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_PoissonIAFUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_PoissonIAFUnitDataCollectorOutAttrPSet* CG_outAttrPset) 
 {
   ShallowArray<unsigned,3,2> coords;
   CG_node->getNode()->getNodeCoords(coords);
@@ -140,17 +140,17 @@ PoissonIAFUnitDataCollector::~PoissonIAFUnitDataCollector()
 {
 }
 
-void PoissonIAFUnitDataCollector::duplicate(std::unique_ptr<PoissonIAFUnitDataCollector>& dup) const
+void PoissonIAFUnitDataCollector::duplicate(std::unique_ptr<PoissonIAFUnitDataCollector>&& dup) const
 {
   dup.reset(new PoissonIAFUnitDataCollector(*this));
 }
 
-void PoissonIAFUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
+void PoissonIAFUnitDataCollector::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
   dup.reset(new PoissonIAFUnitDataCollector(*this));
 }
 
-void PoissonIAFUnitDataCollector::duplicate(std::unique_ptr<CG_PoissonIAFUnitDataCollector>& dup) const
+void PoissonIAFUnitDataCollector::duplicate(std::unique_ptr<CG_PoissonIAFUnitDataCollector>&& dup) const
 {
   dup.reset(new PoissonIAFUnitDataCollector(*this));
 }

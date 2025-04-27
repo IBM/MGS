@@ -273,7 +273,7 @@ void MahonUnitDataCollector::dataCollectionSpike(Trigger* trigger, NDPairList* n
 
 
 
-void MahonUnitDataCollector::getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_MahonUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_MahonUnitDataCollectorOutAttrPSet* CG_outAttrPset) 
+void MahonUnitDataCollector::getNodeIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_MahonUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_MahonUnitDataCollectorOutAttrPSet* CG_outAttrPset) 
 {
   ShallowArray<unsigned,3,2> coords;
   CG_node->getNode()->getNodeCoords(coords);
@@ -296,17 +296,17 @@ MahonUnitDataCollector::~MahonUnitDataCollector()
   if (x4_file) delete x4_file; 
 }
 
-void MahonUnitDataCollector::duplicate(std::unique_ptr<MahonUnitDataCollector>& dup) const
+void MahonUnitDataCollector::duplicate(std::unique_ptr<MahonUnitDataCollector>&& dup) const
 {
    dup.reset(new MahonUnitDataCollector(*this));
 }
 
-void MahonUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
+void MahonUnitDataCollector::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
    dup.reset(new MahonUnitDataCollector(*this));
 }
 
-void MahonUnitDataCollector::duplicate(std::unique_ptr<CG_MahonUnitDataCollector>& dup) const
+void MahonUnitDataCollector::duplicate(std::unique_ptr<CG_MahonUnitDataCollector>&& dup) const
 {
    dup.reset(new MahonUnitDataCollector(*this));
 }

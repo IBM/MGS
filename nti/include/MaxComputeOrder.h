@@ -61,7 +61,8 @@
 //typedef int32_t Combined2MarkovState_t; // 'long' for now
 #define MAXRANGE_MARKOVSTATE  SHRT_MAX
 //#define MarkovState_t short // few states
-#define ClusterStateIndex_t int // or long??
+#define ClusterStateIndex_t int
+// or long??
 
 //x = row, y=col
 //WIDTH=#col, HEIGHT=#row

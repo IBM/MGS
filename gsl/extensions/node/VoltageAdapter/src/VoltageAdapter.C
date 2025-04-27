@@ -12,7 +12,7 @@ void VoltageAdapter::produceVoltage(RNG& rng)
 }
 
 
-void VoltageAdapter::setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_VoltageAdapterInAttrPSet* CG_inAttrPset, CG_VoltageAdapterOutAttrPSet* CG_outAttrPset) 
+void VoltageAdapter::setPointers(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_VoltageAdapterInAttrPSet* CG_inAttrPset, CG_VoltageAdapterOutAttrPSet* CG_outAttrPset) 
 {
   if (CG_inAttrPset->idx>=0) {
     index=CG_inAttrPset->idx;

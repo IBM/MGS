@@ -90,7 +90,7 @@ void GranuleConnector::variableToNodeSet(
    std::vector<NodeDescriptor*>::iterator it = nodes.begin(), 
       end = nodes.end();
    std::unique_ptr<ParameterSet> outAttrPSet;
-   source->getVariable()->getOutAttrParameterSet(outAttrPSet);
+   source->getVariable()->getOutAttrParameterSet(std::move(outAttrPSet));
    outAttrPSet->set(*sourceOutAttr);
    std::unique_ptr<ParameterSet> inAttrPSet;
    (*it)->getGridLayerDescriptor()->getNodeType()->getInAttrParameterSet(std::move(inAttrPSet));
@@ -114,10 +114,10 @@ void GranuleConnector::variableToEdgeSet(
    std::vector<Edge*>& edges = destination->getEdges();
    std::vector<Edge*>::iterator it = edges.begin(), end = edges.end();
    std::unique_ptr<ParameterSet> outAttrPSet;
-   source->getVariable()->getOutAttrParameterSet(outAttrPSet);
+   source->getVariable()->getOutAttrParameterSet(std::move(outAttrPSet));
    outAttrPSet->set(*sourceOutAttr);
    std::unique_ptr<ParameterSet> inAttrPSet;
-   (*it)->getInAttrParameterSet(inAttrPSet);
+   (*it)->getInAttrParameterSet(std::move(inAttrPSet));
    inAttrPSet->set(*destinationInAttr);
 
    Granule *fromGran, *toGran;
@@ -135,10 +135,10 @@ void GranuleConnector::variableToVariable(
    NDPairList* destinationInAttr, Simulation* sim)
 {
    std::unique_ptr<ParameterSet> outAttrPSet;
-   source->getVariable()->getOutAttrParameterSet(outAttrPSet);
+   source->getVariable()->getOutAttrParameterSet(std::move(outAttrPSet));
    outAttrPSet->set(*sourceOutAttr);
    std::unique_ptr<ParameterSet> inAttrPSet;
-   destination->getVariable()->getInAttrParameterSet(inAttrPSet);
+   destination->getVariable()->getInAttrParameterSet(std::move(inAttrPSet));
    inAttrPSet->set(*destinationInAttr);
    
    Granule* fromGran = sim->getGranule(*source);
@@ -157,7 +157,7 @@ void GranuleConnector::nodeSetToVariable(
    (*it)->getGridLayerDescriptor()->getNodeType()->getOutAttrParameterSet(std::move(outAttrPSet));
    outAttrPSet->set(*sourceOutAttr);
    std::unique_ptr<ParameterSet> inAttrPSet;
-   destination->getVariable()->getInAttrParameterSet(inAttrPSet);
+   destination->getVariable()->getInAttrParameterSet(std::move(inAttrPSet));
    inAttrPSet->set(*destinationInAttr);
 
    Granule *fromGran, *toGran;
@@ -177,10 +177,10 @@ void GranuleConnector::edgeSetToVariable(
    std::vector<Edge*>& edges = source->getEdges();
    std::vector<Edge*>::iterator it = edges.begin(), end = edges.end();
    std::unique_ptr<ParameterSet> outAttrPSet;
-   (*it)->getOutAttrParameterSet(outAttrPSet);
+   (*it)->getOutAttrParameterSet(std::move(outAttrPSet));
    outAttrPSet->set(*sourceOutAttr);
    std::unique_ptr<ParameterSet> inAttrPSet;
-   destination->getVariable()->getInAttrParameterSet(inAttrPSet);
+   destination->getVariable()->getInAttrParameterSet(std::move(inAttrPSet));
    inAttrPSet->set(*destinationInAttr);
 
    Granule *fromGran, *toGran;

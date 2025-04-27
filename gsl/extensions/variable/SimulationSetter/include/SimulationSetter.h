@@ -21,9 +21,9 @@ class SimulationSetter : public CG_SimulationSetter
       virtual void switchPlasticityOnOff(Trigger* trigger, NDPairList* ndPairList);
       SimulationSetter();
       virtual ~SimulationSetter();
-      virtual void duplicate(std::unique_ptr<SimulationSetter>& dup) const;
-      virtual void duplicate(std::unique_ptr<Variable>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_SimulationSetter>& dup) const;
+      virtual void duplicate(std::unique_ptr<SimulationSetter>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Variable>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_SimulationSetter>&& dup) const;
 };
 
 #endif

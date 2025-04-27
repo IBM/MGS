@@ -48,7 +48,7 @@ void Goodwin::update(RNG& rng)
     }
 }
 
-void Goodwin::setInIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_GoodwinInAttrPSet* CG_inAttrPset, CG_GoodwinOutAttrPSet* CG_outAttrPset) 
+void Goodwin::setInIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_GoodwinInAttrPSet* CG_inAttrPset, CG_GoodwinOutAttrPSet* CG_outAttrPset) 
 {
   in1[in1.size()-1].row =  getIndex()+1; // +1 is for Matlab
   in1[in1.size()-1].col = CG_node->getIndex()+1;

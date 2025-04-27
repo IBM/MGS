@@ -20,8 +20,8 @@ class CalciumDisplay : public CG_CalciumDisplay
   void initialize(RNG& rng);
   void finalize(RNG& rng);
   virtual void dataCollection(Trigger* trigger, NDPairList* ndPairList);
-  virtual void setUpPointers(const String& CG_direction,
-                             const String& CG_component,
+  virtual void setUpPointers(const CustomString& CG_direction,
+                             const CustomString& CG_component,
                              NodeDescriptor* CG_node, Edge* CG_edge,
                              VariableDescriptor* CG_variable,
                              Constant* CG_constant,
@@ -29,9 +29,9 @@ class CalciumDisplay : public CG_CalciumDisplay
                              CG_CalciumDisplayOutAttrPSet* CG_outAttrPset);
   CalciumDisplay();
   virtual ~CalciumDisplay();
-  virtual void duplicate(std::unique_ptr<CalciumDisplay>& dup) const;
-  virtual void duplicate(std::unique_ptr<Variable>& dup) const;
-  virtual void duplicate(std::unique_ptr<CG_CalciumDisplay>& dup) const;
+  virtual void duplicate(std::unique_ptr<CalciumDisplay>&& dup) const;
+  virtual void duplicate(std::unique_ptr<Variable>&& dup) const;
+  virtual void duplicate(std::unique_ptr<CG_CalciumDisplay>&& dup) const;
 
   private:
   std::ofstream* outFile = 0;

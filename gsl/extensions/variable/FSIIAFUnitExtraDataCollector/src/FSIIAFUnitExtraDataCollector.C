@@ -266,7 +266,7 @@ void FSIIAFUnitExtraDataCollector::dataCollection(Trigger* trigger, NDPairList* 
   
 }
 
-void FSIIAFUnitExtraDataCollector::getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_FSIIAFUnitExtraDataCollectorInAttrPSet* CG_inAttrPset, CG_FSIIAFUnitExtraDataCollectorOutAttrPSet* CG_outAttrPset) 
+void FSIIAFUnitExtraDataCollector::getNodeIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_FSIIAFUnitExtraDataCollectorInAttrPSet* CG_inAttrPset, CG_FSIIAFUnitExtraDataCollectorOutAttrPSet* CG_outAttrPset) 
 {
   ShallowArray<unsigned,3,2> coords;
   CG_node->getNode()->getNodeCoords(coords);
@@ -285,17 +285,17 @@ FSIIAFUnitExtraDataCollector::~FSIIAFUnitExtraDataCollector()
 {
 }
 
-void FSIIAFUnitExtraDataCollector::duplicate(std::unique_ptr<FSIIAFUnitExtraDataCollector>& dup) const
+void FSIIAFUnitExtraDataCollector::duplicate(std::unique_ptr<FSIIAFUnitExtraDataCollector>&& dup) const
 {
   dup.reset(new FSIIAFUnitExtraDataCollector(*this));
 }
 
-void FSIIAFUnitExtraDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
+void FSIIAFUnitExtraDataCollector::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
   dup.reset(new FSIIAFUnitExtraDataCollector(*this));
 }
 
-void FSIIAFUnitExtraDataCollector::duplicate(std::unique_ptr<CG_FSIIAFUnitExtraDataCollector>& dup) const
+void FSIIAFUnitExtraDataCollector::duplicate(std::unique_ptr<CG_FSIIAFUnitExtraDataCollector>&& dup) const
 {
   dup.reset(new FSIIAFUnitExtraDataCollector(*this));
 }

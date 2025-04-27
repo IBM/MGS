@@ -90,14 +90,14 @@ void EpileptorNode::update(RNG& rng)
   u += du;
 }
 
-void EpileptorNode::setWeight(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_EpileptorNodeInAttrPSet* CG_inAttrPset, CG_EpileptorNodeOutAttrPSet* CG_outAttrPset) 
+void EpileptorNode::setWeight(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_EpileptorNodeInAttrPSet* CG_inAttrPset, CG_EpileptorNodeOutAttrPSet* CG_outAttrPset) 
 {
   unsigned row = getGlobalIndex()+1; // +1 is for Matlab
   unsigned col = CG_node->getGlobalIndex()+1;
   K[K.size()-1].weight=connectionMap[std::make_pair(row, col)];
 }
 
-bool EpileptorNode::checkConnection(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_EpileptorNodeInAttrPSet* CG_inAttrPset, CG_EpileptorNodeOutAttrPSet* CG_outAttrPset) 
+bool EpileptorNode::checkConnection(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_EpileptorNodeInAttrPSet* CG_inAttrPset, CG_EpileptorNodeOutAttrPSet* CG_outAttrPset) 
 {
   bool rval = true;
   unsigned row = getGlobalIndex()+1; // +1 is for Matlab

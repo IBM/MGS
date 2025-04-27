@@ -92,7 +92,7 @@ void GatedThalamoCorticalUnitDataCollector::dataCollection(Trigger* trigger, NDP
   y_out<<std::endl;
 }
 
-void GatedThalamoCorticalUnitDataCollector::getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_GatedThalamoCorticalUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_GatedThalamoCorticalUnitDataCollectorOutAttrPSet* CG_outAttrPset) 
+void GatedThalamoCorticalUnitDataCollector::getNodeIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_GatedThalamoCorticalUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_GatedThalamoCorticalUnitDataCollectorOutAttrPSet* CG_outAttrPset) 
 {
   ShallowArray<unsigned,3,2> coords;
   CG_node->getNode()->getNodeCoords(coords);
@@ -110,17 +110,17 @@ GatedThalamoCorticalUnitDataCollector::~GatedThalamoCorticalUnitDataCollector()
 {
 }
 
-void GatedThalamoCorticalUnitDataCollector::duplicate(std::unique_ptr<GatedThalamoCorticalUnitDataCollector>& dup) const
+void GatedThalamoCorticalUnitDataCollector::duplicate(std::unique_ptr<GatedThalamoCorticalUnitDataCollector>&& dup) const
 {
    dup.reset(new GatedThalamoCorticalUnitDataCollector(*this));
 }
 
-void GatedThalamoCorticalUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
+void GatedThalamoCorticalUnitDataCollector::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
    dup.reset(new GatedThalamoCorticalUnitDataCollector(*this));
 }
 
-void GatedThalamoCorticalUnitDataCollector::duplicate(std::unique_ptr<CG_GatedThalamoCorticalUnitDataCollector>& dup) const
+void GatedThalamoCorticalUnitDataCollector::duplicate(std::unique_ptr<CG_GatedThalamoCorticalUnitDataCollector>&& dup) const
 {
    dup.reset(new GatedThalamoCorticalUnitDataCollector(*this));
 }

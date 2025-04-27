@@ -32,17 +32,17 @@ SimulationSetter::~SimulationSetter()
 {
 }
 
-void SimulationSetter::duplicate(std::unique_ptr<SimulationSetter>& dup) const
+void SimulationSetter::duplicate(std::unique_ptr<SimulationSetter>&& dup) const
 {
    dup.reset(new SimulationSetter(*this));
 }
 
-void SimulationSetter::duplicate(std::unique_ptr<Variable>& dup) const
+void SimulationSetter::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
 {
    dup.reset(new SimulationSetter(*this));
 }
 
-void SimulationSetter::duplicate(std::unique_ptr<CG_SimulationSetter>& dup) const
+void SimulationSetter::duplicate(std::unique_ptr<CG_SimulationSetter>&& dup) const
 {
    dup.reset(new SimulationSetter(*this));
 }

@@ -194,7 +194,7 @@ void MihalasNieburIAFUnit::outputWeights(std::ofstream& fs)
     fs<<iter->row<<" "<<iter->col<<" "<<iter->weight<<std::endl;
 }
 
-void MihalasNieburIAFUnit::setIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_MihalasNieburIAFUnitInAttrPSet* CG_inAttrPset, CG_MihalasNieburIAFUnitOutAttrPSet* CG_outAttrPset) 
+void MihalasNieburIAFUnit::setIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_MihalasNieburIAFUnitInAttrPSet* CG_inAttrPset, CG_MihalasNieburIAFUnitOutAttrPSet* CG_outAttrPset) 
 {
   driverInputs[driverInputs.size()-1].row = getGlobalIndex()+1; // +1 is for Matlab
   driverInputs[driverInputs.size()-1].col = CG_node->getGlobalIndex()+1; 

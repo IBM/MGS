@@ -33,8 +33,8 @@ class AMPAReceptor : public CG_AMPAReceptor
    public:
       void updateAMPA(RNG& rng);
       void initializeAMPA(RNG& rng);
-      virtual void setPostIndex(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_AMPAReceptorInAttrPSet* CG_inAttrPset, CG_AMPAReceptorOutAttrPSet* CG_outAttrPset);
-      virtual void setPrePostIndex(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_AMPAReceptorInAttrPSet* CG_inAttrPset, CG_AMPAReceptorOutAttrPSet* CG_outAttrPset);
+      virtual void setPostIndex(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_AMPAReceptorInAttrPSet* CG_inAttrPset, CG_AMPAReceptorOutAttrPSet* CG_outAttrPset);
+      virtual void setPrePostIndex(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_AMPAReceptorInAttrPSet* CG_inAttrPset, CG_AMPAReceptorOutAttrPSet* CG_outAttrPset);
       virtual ~AMPAReceptor();
 };
 

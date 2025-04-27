@@ -19,7 +19,7 @@ class ForwardSolvePoint4 : public CG_ForwardSolvePoint4
       void produceInitialState(RNG& rng);
       void produceInitialCoefficients(RNG& rng);
       void produceForwardSolution(RNG& rng);
-      virtual void setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ForwardSolvePoint4InAttrPSet* CG_inAttrPset, CG_ForwardSolvePoint4OutAttrPSet* CG_outAttrPset);
+      virtual void setPointers(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ForwardSolvePoint4InAttrPSet* CG_inAttrPset, CG_ForwardSolvePoint4OutAttrPSet* CG_outAttrPset);
       virtual ~ForwardSolvePoint4();
 };
 
