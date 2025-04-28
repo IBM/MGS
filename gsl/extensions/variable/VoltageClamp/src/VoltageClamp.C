@@ -511,7 +511,7 @@ void VoltageClamp::duplicate(std::unique_ptr<VoltageClamp>&& dup) const
    dup.reset(new VoltageClamp(*this));
 }
 
-void VoltageClamp::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
+void VoltageClamp::duplicate(std::unique_ptr<Variable>&& dup) const
 {
    dup.reset(new VoltageClamp(*this));
 }

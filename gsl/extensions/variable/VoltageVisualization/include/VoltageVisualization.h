@@ -37,7 +37,7 @@ class VoltageVisualization : public CG_VoltageVisualization
   virtual void duplicate(std::unique_ptr<CG_VoltageVisualization>&& dup) const;
 
   private:
-  float swapByteOrder(float*);
+  void swapByteOrder(float*);
 
   FILE* _outFile;
   std::map<int, int> _fileOffsetMap;

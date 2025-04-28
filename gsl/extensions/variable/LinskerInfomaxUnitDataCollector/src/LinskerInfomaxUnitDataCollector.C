@@ -88,7 +88,7 @@ void LinskerInfomaxUnitDataCollector::duplicate(std::unique_ptr<LinskerInfomaxUn
    dup.reset(new LinskerInfomaxUnitDataCollector(*this));
 }
 
-void LinskerInfomaxUnitDataCollector::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
+void LinskerInfomaxUnitDataCollector::duplicate(std::unique_ptr<Variable>&& dup) const
 {
    dup.reset(new LinskerInfomaxUnitDataCollector(*this));
 }

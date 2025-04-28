@@ -290,7 +290,7 @@ void FSIIAFUnitExtraDataCollector::duplicate(std::unique_ptr<FSIIAFUnitExtraData
   dup.reset(new FSIIAFUnitExtraDataCollector(*this));
 }
 
-void FSIIAFUnitExtraDataCollector::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
+void FSIIAFUnitExtraDataCollector::duplicate(std::unique_ptr<Variable>&& dup) const
 {
   dup.reset(new FSIIAFUnitExtraDataCollector(*this));
 }

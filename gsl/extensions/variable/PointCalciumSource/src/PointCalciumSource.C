@@ -40,7 +40,7 @@ void PointCalciumSource::duplicate(std::unique_ptr<PointCalciumSource>&& dup) co
    dup.reset(new PointCalciumSource(*this));
 }
 
-void PointCalciumSource::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
+void PointCalciumSource::duplicate(std::unique_ptr<Variable>&& dup) const
 {
    dup.reset(new PointCalciumSource(*this));
 }

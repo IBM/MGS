@@ -140,7 +140,7 @@ void WaveDriverUnitDataCollector::duplicate(std::unique_ptr<WaveDriverUnitDataCo
   dup.reset(new WaveDriverUnitDataCollector(*this));
 }
 
-void WaveDriverUnitDataCollector::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
+void WaveDriverUnitDataCollector::duplicate(std::unique_ptr<Variable>&& dup) const
 {
   dup.reset(new WaveDriverUnitDataCollector(*this));
 }

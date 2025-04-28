@@ -210,7 +210,7 @@ void RampCurrentGenerator::duplicate(std::unique_ptr<RampCurrentGenerator>&& dup
    dup.reset(new RampCurrentGenerator(*this));
 }
 
-void RampCurrentGenerator::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
+void RampCurrentGenerator::duplicate(std::unique_ptr<Variable>&& dup) const
 {
    dup.reset(new RampCurrentGenerator(*this));
 }

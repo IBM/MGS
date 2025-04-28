@@ -37,7 +37,7 @@ class CalciumVisualization : public CG_CalciumVisualization
   virtual void duplicate(std::unique_ptr<CG_CalciumVisualization>&& dup) const;
 
   private:
-  float swapByteOrder(float*);
+  void swapByteOrder(float*);
 
   FILE* _outFile;
   std::map<int, int> _fileOffsetMap;

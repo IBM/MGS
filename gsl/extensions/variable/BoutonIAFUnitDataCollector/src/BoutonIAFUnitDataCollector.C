@@ -323,7 +323,7 @@ void BoutonIAFUnitDataCollector::duplicate(std::unique_ptr<BoutonIAFUnitDataColl
   dup.reset(new BoutonIAFUnitDataCollector(*this));
 }
 
-void BoutonIAFUnitDataCollector::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
+void BoutonIAFUnitDataCollector::duplicate(std::unique_ptr<Variable>&& dup) const
 {
   dup.reset(new BoutonIAFUnitDataCollector(*this));
 }

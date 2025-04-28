@@ -28,9 +28,9 @@ public:
                              CG_VoltageDisplayOutAttrPSet *CG_outAttrPset);
   VoltageDisplay();
   virtual ~VoltageDisplay();
-  virtual void duplicate(std::unique_ptr<VoltageDisplay> &dup) const;
-  virtual void duplicate(std::unique_ptr<Variable> &dup) const;
-  virtual void duplicate(std::unique_ptr<CG_VoltageDisplay> &dup) const;
+  virtual void duplicate(std::unique_ptr<VoltageDisplay>&& dup) const;
+  virtual void duplicate(std::unique_ptr<Variable>&& dup) const;
+  virtual void duplicate(std::unique_ptr<CG_VoltageDisplay>&& dup) const;
 
 private:
   std::ofstream *outFile = 0;

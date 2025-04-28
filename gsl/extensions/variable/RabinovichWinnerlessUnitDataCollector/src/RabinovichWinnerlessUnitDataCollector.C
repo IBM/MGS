@@ -158,7 +158,7 @@ void RabinovichWinnerlessUnitDataCollector::duplicate(std::unique_ptr<Rabinovich
    dup.reset(new RabinovichWinnerlessUnitDataCollector(*this));
 }
 
-void RabinovichWinnerlessUnitDataCollector::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
+void RabinovichWinnerlessUnitDataCollector::duplicate(std::unique_ptr<Variable>&& dup) const
 {
    dup.reset(new RabinovichWinnerlessUnitDataCollector(*this));
 }

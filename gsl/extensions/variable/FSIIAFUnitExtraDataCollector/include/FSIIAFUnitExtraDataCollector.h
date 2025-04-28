@@ -25,7 +25,7 @@ class FSIIAFUnitExtraDataCollector : public CG_FSIIAFUnitExtraDataCollector
   FSIIAFUnitExtraDataCollector();
   virtual ~FSIIAFUnitExtraDataCollector();
   virtual void duplicate(std::unique_ptr<FSIIAFUnitExtraDataCollector>&& dup) const;
-  virtual void duplicate(std::unique_ptr<Variable>&& dup) dup) const;
+  virtual void duplicate(std::unique_ptr<Variable>&& dup) const;
   virtual void duplicate(std::unique_ptr<CG_FSIIAFUnitExtraDataCollector>&& dup) const;
  private:
   std::ofstream* voltages_file;

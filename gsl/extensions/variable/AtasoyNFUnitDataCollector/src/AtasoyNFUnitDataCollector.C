@@ -29,7 +29,7 @@ void AtasoyNFUnitDataCollector::duplicate(std::unique_ptr<AtasoyNFUnitDataCollec
    dup.reset(new AtasoyNFUnitDataCollector(*this));
 }
 
-void AtasoyNFUnitDataCollector::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
+void AtasoyNFUnitDataCollector::duplicate(std::unique_ptr<Variable>&& dup) const
 {
    dup.reset(new AtasoyNFUnitDataCollector(*this));
 }

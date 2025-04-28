@@ -131,7 +131,7 @@ void ZhengSORNUnitDataCollectorSuppl::duplicate(std::unique_ptr<ZhengSORNUnitDat
    dup.reset(new ZhengSORNUnitDataCollectorSuppl(*this));
 }
 
-void ZhengSORNUnitDataCollectorSuppl::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
+void ZhengSORNUnitDataCollectorSuppl::duplicate(std::unique_ptr<Variable>&& dup) const
 {
    dup.reset(new ZhengSORNUnitDataCollectorSuppl(*this));
 }

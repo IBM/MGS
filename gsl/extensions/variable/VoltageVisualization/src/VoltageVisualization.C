@@ -12,6 +12,7 @@
 #include "CG_VoltageVisualization.h"
 #include "NeuronPartitioner.h"
 #include "MaxComputeOrder.h"
+#include "mpi.h"
 
 #include <cfloat>
 #include <cmath>
@@ -84,10 +85,10 @@ void VoltageVisualization::initialize(RNG& rng)
   {
     int sendToDest = 0;
     if (i == _rank % N_IO_NODES) sendToDest = _nSends;
-    MPI::COMM_WORLD.Reduce(&sendToDest, &_nVreceives, 1, MPI::INT, MPI::SUM,
-                           _ioNodes[i]);
-    MPI::COMM_WORLD.Reduce(&_nSends, &_nKreceives, 1, MPI::INT, MPI::SUM,
-                           _ioNodes[i]);
+    MPI_Reduce(&sendToDest, &_nVreceives, 1, MPI_INT, MPI_SUM,
+                           _ioNodes[i], MPI_COMM_WORLD);
+    MPI_Reduce(&_nSends, &_nKreceives, 1, MPI_INT, MPI_SUM,
+                           _ioNodes[i], MPI_COMM_WORLD);
   }
   _nBuffs = _isIoNode ? ((N_RECEIVE_BUFFS < _nVreceives) ? N_RECEIVE_BUFFS
                                                          : _nVreceives)
@@ -113,15 +114,15 @@ void VoltageVisualization::initialize(RNG& rng)
     {
       for (int pass = 0; pass < 2; ++pass)
       {
-        std::vector<std::pair<MPI::Request, double*> > requests(_nBuffs);
+        std::vector<std::pair<MPI_Request, double*> > requests(_nBuffs);
         std::map<double*, int> destIndices;
         for (int i = 0; i < _nBuffs; ++i)
         {
           requests[i].second = keyBuffs[i];
           destIndices[keyBuffs[i]] = 0;
         }
-        std::vector<std::pair<MPI::Request, double*> >::iterator riter, rend;
-        MPI::Status status;
+        std::vector<std::pair<MPI_Request, double*> >::iterator riter, rend;
+        MPI_Status status;
         voltageMapIter = voltageMap.begin();
         std::map<CompartmentKey, dyn_var_t*, CompartmentKey::compare>::iterator
             voltageMapEnd = voltageMap.end();
@@ -129,7 +130,7 @@ void VoltageVisualization::initialize(RNG& rng)
 
         for (riter = requests.begin(); riter != rend; ++riter)
         {
-          int scount;
+          int scount=0;
           double* sbuff = riter->second;
           assert(destIndices[sbuff] == 0);
           for (scount = 0;
@@ -140,16 +141,20 @@ void VoltageVisualization::initialize(RNG& rng)
                 SegmentDescriptor::segmentIndex, voltageMapIter->first._cptIdx,
                 voltageMapIter->first._key);
           }
-          riter->first = MPI::COMM_WORLD.Isend(sbuff, scount, MPI::DOUBLE,
-                                               _ioNodes[destIndices[sbuff]], 0);
+          MPI_Isend(sbuff, scount, MPI_DOUBLE,
+            _ioNodes[destIndices[sbuff]], 0, MPI_COMM_WORLD, &riter->first);
           if (++destIndices[sbuff] == N_IO_NODES) destIndices[sbuff] = 0;
         }
         while (voltageMapIter != voltageMapEnd)
         {
           riter = requests.begin();
-          while (0 == riter->first.Test(status))
-            if (++riter == rend) riter = requests.begin();
-          int scount;
+          int flag;
+          MPI_Test(&riter->first, &flag, &status);
+          while (flag==0) {
+            if (++riter == requests.end()) riter = requests.begin();
+            MPI_Test(&riter->first, &flag, &status);
+          }
+            int scount=0;
           double* sbuff = riter->second;
           if (destIndices[sbuff] == 0)
           {
@@ -160,11 +165,11 @@ void VoltageVisualization::initialize(RNG& rng)
                   SegmentDescriptor::segmentIndex,
                   voltageMapIter->first._cptIdx, voltageMapIter->first._key);
           }
-          riter->first = MPI::COMM_WORLD.Isend(sbuff, scount, MPI::DOUBLE,
-                                               _ioNodes[destIndices[sbuff]], 0);
+          MPI_Isend(sbuff, scount, MPI_DOUBLE,
+            _ioNodes[destIndices[sbuff]], 0, MPI_COMM_WORLD, &riter->first);
           if (++destIndices[sbuff] == N_IO_NODES) destIndices[sbuff] = 0;
         }
-        MPI::COMM_WORLD.Barrier();
+        MPI_Barrier(MPI_COMM_WORLD);
       }
     }
     else
@@ -191,15 +196,15 @@ void VoltageVisualization::initialize(RNG& rng)
       for (int pass = 0; pass < 2; ++pass)
       {
         keysRecvdCount = localDataSize;
-        std::vector<std::pair<MPI::Request, double*> > requests(_nBuffs);
+        std::vector<std::pair<MPI_Request, double*> > requests(_nBuffs);
         for (int i = 0; i < _nBuffs; ++i) requests[i].second = keyBuffs[i];
-        std::vector<std::pair<MPI::Request, double*> >::iterator riter;
-        MPI::Status status;
+        std::vector<std::pair<MPI_Request, double*> >::iterator riter;
+        MPI_Status status;
 
         for (riter = requests.begin() + 1; riter != requests.end();
              ++riter)  // leave first for self receive
-          riter->first = MPI::COMM_WORLD.Irecv(riter->second, BUFF_SIZE,
-                                               MPI::DOUBLE, MPI_ANY_SOURCE, 0);
+          MPI_Irecv(riter->second, BUFF_SIZE,
+            MPI_DOUBLE, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &riter->first);
 
         if (pass == 1)
         {
@@ -238,10 +243,14 @@ void VoltageVisualization::initialize(RNG& rng)
           else
           {
             riter = requests.begin();
-            while (0 == riter->first.Test(status))
+            int flag;
+            MPI_Test(&riter->first, &flag, &status);
+            while (flag==0) {
               if (++riter == requests.end()) riter = requests.begin();
-            sender = status.Get_source();
-            rcount = status.Get_count(MPI::DOUBLE);
+              MPI_Test(&riter->first, &flag, &status);
+            }
+            sender = status.MPI_SOURCE;
+            MPI_Get_count(&status, MPI_DOUBLE, &rcount);
             rbuff = riter->second;
             keysRecvdCount += rcount;
           }
@@ -289,12 +298,11 @@ void VoltageVisualization::initialize(RNG& rng)
           if (buffsRecvdCount + requests.size() <= _nKreceives)
           {
             if (buffsRecvdCount > _nSends)
-              riter->first = MPI::COMM_WORLD.Irecv(
-                  riter->second, BUFF_SIZE, MPI::DOUBLE, MPI_ANY_SOURCE, 0);
+              MPI_Irecv(riter->second, BUFF_SIZE, MPI_DOUBLE, 
+                  MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &riter->first);
             else if (buffsRecvdCount == _nSends)
-              requests[0].first =
-                  MPI::COMM_WORLD.Irecv(requests[0].second, BUFF_SIZE,
-                                        MPI::DOUBLE, MPI_ANY_SOURCE, 0);
+              MPI_Irecv(requests[0].second, BUFF_SIZE, MPI_DOUBLE, 
+                  MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &requests[0].first);
           }
           else
             requests.erase(riter);
@@ -305,7 +313,7 @@ void VoltageVisualization::initialize(RNG& rng)
             _demarshalPatterns[sender].push_back(buffPattern);
           }
         }
-        MPI::COMM_WORLD.Barrier();
+        MPI_Barrier(MPI_COMM_WORLD);
       }
 
       _outFile = fopen(outFileName.c_str(), "wb");
@@ -319,12 +327,14 @@ void VoltageVisualization::initialize(RNG& rng)
       if (N_IO_NODES > 1)
       {
         dataSize = 0;
-        MPI::Group world_group = MPI::COMM_WORLD.Get_group();
-        MPI::Group new_group =
-            world_group.Incl(_ioNodes.size(), _ioNodes.data());
-        MPI_Comm new_communicator = MPI::COMM_WORLD.Create(new_group);
-        MPI::COMM_WORLD.Reduce(&dataSize, &keysRecvdCount, 1,
-                               MPI::UNSIGNED_LONG, MPI::SUM, _ioNodes[0]);
+        MPI_Group world_group;
+        MPI_Comm_group(MPI_COMM_WORLD, &world_group);
+        MPI_Group new_group;
+        MPI_Group_incl(world_group, _ioNodes.size(), _ioNodes.data(), &new_group);
+        MPI_Comm new_communicator;
+        MPI_Comm_create(MPI_COMM_WORLD, new_group, &new_communicator);
+        MPI_Reduce(&dataSize, &keysRecvdCount, 1,
+                               MPI_UNSIGNED_LONG, MPI_SUM, _ioNodes[0], MPI_COMM_WORLD);
       }
       if (_rank == _ioNodes[0])
       {
@@ -373,10 +383,10 @@ void VoltageVisualization::dataCollection(Trigger* trigger,
     int destIO = _ioNodes[_rank % N_IO_NODES];
     if (!_isIoNode)
     {
-      std::vector<std::pair<MPI::Request, float*> > requests(_nBuffs);
+      std::vector<std::pair<MPI_Request, float*> > requests(_nBuffs);
       for (int i = 0; i < _nBuffs; ++i) requests[i].second = _voltageBuffs[i];
-      std::vector<std::pair<MPI::Request, float*> >::iterator riter;
-      MPI::Status status;
+      std::vector<std::pair<MPI_Request, float*> >::iterator riter;
+      MPI_Status status;
       std::vector<std::pair<dyn_var_t*, int> >::iterator
           marshallPatternIter = _marshallPatterns.begin(),
           marshallPatternEnd = _marshallPatterns.end();
@@ -394,14 +404,17 @@ void VoltageVisualization::dataCollection(Trigger* trigger,
                     &sbuff[scount]);
           scount += n;
         }
-        riter->first =
-            MPI::COMM_WORLD.Isend(sbuff, scount, MPI::FLOAT, destIO, 0);
+        MPI_Isend(sbuff, scount, MPI_FLOAT, destIO, 0, MPI_COMM_WORLD, &riter->first);
       }
       while (marshallPatternIter != marshallPatternEnd)
       {
         riter = requests.begin();
-        while (0 == riter->first.Test(status))
+        int flag;
+        MPI_Test(&riter->first, &flag, &status);
+        while (flag==0) {
           if (++riter == requests.end()) riter = requests.begin();
+          MPI_Test(&riter->first, &flag, &status);
+        }
         int scount = 0;
         float* sbuff = riter->second;
         for (; scount < BUFF_SIZE && marshallPatternIter != marshallPatternEnd;
@@ -414,8 +427,7 @@ void VoltageVisualization::dataCollection(Trigger* trigger,
                     &sbuff[scount]);
           scount += n;
         }
-        riter->first =
-            MPI::COMM_WORLD.Isend(sbuff, scount, MPI::FLOAT, destIO, 0);
+        MPI_Isend(sbuff, scount, MPI_FLOAT, destIO, 0, MPI_COMM_WORLD, &riter->first);
       }
     }
     else
@@ -431,15 +443,15 @@ void VoltageVisualization::dataCollection(Trigger* trigger,
       }
 
       std::vector<int> recvCounts(_size, 0);
-      std::vector<std::pair<MPI::Request, float*> > requests(_nBuffs);
+      std::vector<std::pair<MPI_Request, float*> > requests(_nBuffs);
       for (int i = 0; i < _nBuffs; ++i) requests[i].second = _voltageBuffs[i];
-      std::vector<std::pair<MPI::Request, float*> >::iterator riter;
-      MPI::Status status;
+      std::vector<std::pair<MPI_Request, float*> >::iterator riter;
+      MPI_Status status;
 
       for (riter = requests.begin() + 1; riter != requests.end();
            ++riter)  // leave first for self receive
-        riter->first = MPI::COMM_WORLD.Irecv(riter->second, BUFF_SIZE,
-                                             MPI::FLOAT, MPI_ANY_SOURCE, 0);
+        MPI_Irecv(riter->second, BUFF_SIZE,
+          MPI_FLOAT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &riter->first);
 
       int buffsRecvdCount = 0;
       while (buffsRecvdCount < _nVreceives)
@@ -470,9 +482,13 @@ void VoltageVisualization::dataCollection(Trigger* trigger,
         else
         {
           riter = requests.begin();
-          while (0 == riter->first.Test(status))
+          int flag;
+          MPI_Test(&riter->first, &flag, &status);
+          while (flag==0) {
             if (++riter == requests.end()) riter = requests.begin();
-          sender = status.Get_source();
+            MPI_Test(&riter->first, &flag, &status);
+          }
+          sender = status.MPI_SOURCE;
           rbuff = riter->second;
 #ifdef SWAP_BYTE_ORDER
           swapByteOrder(rbuff);
@@ -501,11 +517,11 @@ void VoltageVisualization::dataCollection(Trigger* trigger,
         if (buffsRecvdCount + requests.size() <= (unsigned)_nVreceives)
         {
           if (buffsRecvdCount > _nSends)
-            riter->first = MPI::COMM_WORLD.Irecv(riter->second, BUFF_SIZE,
-                                                 MPI::FLOAT, MPI_ANY_SOURCE, 0);
+            MPI_Irecv(riter->second, BUFF_SIZE,
+              MPI_FLOAT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &riter->first);
           else if (buffsRecvdCount == _nSends)
-            requests[0].first = MPI::COMM_WORLD.Irecv(
-                requests[0].second, BUFF_SIZE, MPI::FLOAT, MPI_ANY_SOURCE, 0);
+            MPI_Irecv(requests[0].second, BUFF_SIZE, MPI_FLOAT,
+              MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &requests[0].first);
         }
         else
           requests.erase(riter);
@@ -539,7 +555,7 @@ void VoltageVisualization::duplicate(
   dup.reset(new VoltageVisualization(*this));
 }
 
-void VoltageVisualization::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
+void VoltageVisualization::duplicate(std::unique_ptr<Variable>&& dup) const
 {
   dup.reset(new VoltageVisualization(*this));
 }
@@ -550,18 +566,17 @@ void VoltageVisualization::duplicate(
   dup.reset(new VoltageVisualization(*this));
 }
 
-float VoltageVisualization::swapByteOrder(float* buff)
+void VoltageVisualization::swapByteOrder(float* buff)
 {
-  unsigned base = sizeof(float);
   for (unsigned long ii = 0; ii < BUFF_SIZE; ++ii)
   {
-    unsigned char sw[base];
+    unsigned char sw[sizeof(float)];
     unsigned char* offset = reinterpret_cast<unsigned char*>(&buff[ii]);
-    // std::memcpy(sw, offset, base);
-    std::copy(offset, offset + base, sw);
-    for (unsigned jj = 0; jj < base; ++jj)
+    // std::memcpy(sw, offset, sizeof(float));
+    std::copy(offset, offset + sizeof(float), sw);
+    for (unsigned jj = 0; jj < sizeof(float); ++jj)
     {
-      offset[jj] = sw[base - jj - 1];
+      offset[jj] = sw[sizeof(float) - jj - 1];
     }
   }
 }

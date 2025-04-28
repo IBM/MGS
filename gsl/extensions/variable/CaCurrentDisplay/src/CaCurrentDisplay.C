@@ -193,7 +193,7 @@ void CaCurrentDisplay::duplicate(std::unique_ptr<CaCurrentDisplay>&& dup) const
   dup.reset(new CaCurrentDisplay(*this));
 }
 
-void CaCurrentDisplay::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
+void CaCurrentDisplay::duplicate(std::unique_ptr<Variable>&& dup) const
 {
   dup.reset(new CaCurrentDisplay(*this));
 }

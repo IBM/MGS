@@ -223,7 +223,7 @@ void MihalasNieburSynapseIAFUnitDataCollector::duplicate(std::unique_ptr<Mihalas
   dup.reset(new MihalasNieburSynapseIAFUnitDataCollector(*this));
 }
 
-void MihalasNieburSynapseIAFUnitDataCollector::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
+void MihalasNieburSynapseIAFUnitDataCollector::duplicate(std::unique_ptr<Variable>&& dup) const
 {
   dup.reset(new MihalasNieburSynapseIAFUnitDataCollector(*this));
 }

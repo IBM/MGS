@@ -25,7 +25,7 @@ class BoutonIAFUnitDataCollector : public CG_BoutonIAFUnitDataCollector
   BoutonIAFUnitDataCollector();
   virtual ~BoutonIAFUnitDataCollector();
   virtual void duplicate(std::unique_ptr<BoutonIAFUnitDataCollector>&& dup) const;
-  virtual void duplicate(std::unique_ptr<Variable>&& dup) dup) const;
+  virtual void duplicate(std::unique_ptr<Variable>&& dup) const;
   virtual void duplicate(std::unique_ptr<CG_BoutonIAFUnitDataCollector>&& dup) const;
  private:
   std::ofstream* neurotransmitter_file;

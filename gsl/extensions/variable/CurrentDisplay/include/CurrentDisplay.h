@@ -28,9 +28,9 @@ public:
                              CG_CurrentDisplayOutAttrPSet *CG_outAttrPset);
   CurrentDisplay();
   virtual ~CurrentDisplay();
-  virtual void duplicate(std::unique_ptr<CurrentDisplay> &dup) const;
-  virtual void duplicate(std::unique_ptr<Variable> &dup) const;
-  virtual void duplicate(std::unique_ptr<CG_CurrentDisplay> &dup) const;
+  virtual void duplicate(std::unique_ptr<CurrentDisplay>&& dup) const;
+  virtual void duplicate(std::unique_ptr<Variable>&& dup) const;
+  virtual void duplicate(std::unique_ptr<CG_CurrentDisplay>&& dup) const;
 
 private:
   std::ofstream *outFile = 0;

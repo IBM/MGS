@@ -25,7 +25,7 @@ class GoodwinDataCollector : public CG_GoodwinDataCollector
   GoodwinDataCollector();
   virtual ~GoodwinDataCollector();
   virtual void duplicate(std::unique_ptr<GoodwinDataCollector>&& dup) const;
-  virtual void duplicate(std::unique_ptr<Variable>&& dup) dup) const;
+  virtual void duplicate(std::unique_ptr<Variable>&& dup) const;
   virtual void duplicate(std::unique_ptr<CG_GoodwinDataCollector>&& dup) const;
  private:
   std::ofstream* X_file;  

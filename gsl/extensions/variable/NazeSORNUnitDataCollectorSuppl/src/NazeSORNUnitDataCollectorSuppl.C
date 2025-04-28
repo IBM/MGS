@@ -131,7 +131,7 @@ void NazeSORNUnitDataCollectorSuppl::duplicate(std::unique_ptr<NazeSORNUnitDataC
    dup.reset(new NazeSORNUnitDataCollectorSuppl(*this));
 }
 
-void NazeSORNUnitDataCollectorSuppl::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
+void NazeSORNUnitDataCollectorSuppl::duplicate(std::unique_ptr<Variable>&& dup) const
 {
    dup.reset(new NazeSORNUnitDataCollectorSuppl(*this));
 }

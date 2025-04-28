@@ -184,7 +184,7 @@ void CurrentDisplay::duplicate(std::unique_ptr<CurrentDisplay>&& dup) const
   dup.reset(new CurrentDisplay(*this));
 }
 
-void CurrentDisplay::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
+void CurrentDisplay::duplicate(std::unique_ptr<Variable>&& dup) const
 {
   dup.reset(new CurrentDisplay(*this));
 }

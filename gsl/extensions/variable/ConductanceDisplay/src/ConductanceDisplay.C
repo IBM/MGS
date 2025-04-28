@@ -166,7 +166,7 @@ void ConductanceDisplay::duplicate(std::unique_ptr<ConductanceDisplay>&& dup) co
   dup.reset(new ConductanceDisplay(*this));
 }
 
-void ConductanceDisplay::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
+void ConductanceDisplay::duplicate(std::unique_ptr<Variable>&& dup) const
 {
   dup.reset(new ConductanceDisplay(*this));
 }

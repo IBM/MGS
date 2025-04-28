@@ -145,7 +145,7 @@ void PoissonIAFUnitDataCollector::duplicate(std::unique_ptr<PoissonIAFUnitDataCo
   dup.reset(new PoissonIAFUnitDataCollector(*this));
 }
 
-void PoissonIAFUnitDataCollector::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
+void PoissonIAFUnitDataCollector::duplicate(std::unique_ptr<Variable>&& dup) const
 {
   dup.reset(new PoissonIAFUnitDataCollector(*this));
 }

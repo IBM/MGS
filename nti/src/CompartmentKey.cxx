@@ -41,7 +41,7 @@ CompartmentKey::compare::compare(int c) : _case(c)
 {
 }
 
-bool CompartmentKey::compare::operator()(const CompartmentKey& ck0, const CompartmentKey& ck1)
+bool CompartmentKey::compare::operator()(const CompartmentKey& ck0, const CompartmentKey& ck1) const
 {
   bool rval = false;
 

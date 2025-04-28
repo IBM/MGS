@@ -256,7 +256,7 @@ void LFPDataAnalyzer::duplicate(std::unique_ptr<LFPDataAnalyzer>&& dup) const
   dup.reset(new LFPDataAnalyzer(*this));
 }
 
-void LFPDataAnalyzer::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
+void LFPDataAnalyzer::duplicate(std::unique_ptr<Variable>&& dup) const
 {
   dup.reset(new LFPDataAnalyzer(*this));
 }

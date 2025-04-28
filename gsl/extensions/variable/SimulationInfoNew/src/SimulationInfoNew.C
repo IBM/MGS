@@ -24,7 +24,7 @@ void SimulationInfoNew::duplicate(std::unique_ptr<SimulationInfoNew>&& dup) cons
    dup.reset(new SimulationInfoNew(*this));
 }
 
-void SimulationInfoNew::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
+void SimulationInfoNew::duplicate(std::unique_ptr<Variable>&& dup) const
 {
    dup.reset(new SimulationInfoNew(*this));
 }

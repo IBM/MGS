@@ -157,7 +157,7 @@ void DetectDataChangeOneCompartment::duplicate(std::unique_ptr<DetectDataChangeO
    dup.reset(new DetectDataChangeOneCompartment(*this));
 }
 
-void DetectDataChangeOneCompartment::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
+void DetectDataChangeOneCompartment::duplicate(std::unique_ptr<Variable>&& dup) const
 {
    dup.reset(new DetectDataChangeOneCompartment(*this));
 }

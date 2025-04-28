@@ -15,7 +15,7 @@ class RampCurrentGenerator : public CG_RampCurrentGenerator
       RampCurrentGenerator();
       virtual ~RampCurrentGenerator();
       virtual void duplicate(std::unique_ptr<RampCurrentGenerator>&& dup) const;
-      virtual void duplicate(std::unique_ptr<Variable>&& dup) dup) const;
+      virtual void duplicate(std::unique_ptr<Variable>&& dup) const;
       virtual void duplicate(std::unique_ptr<CG_RampCurrentGenerator>&& dup) const;
    private:
       void update_RampProtocol(RNG& , float currentTime);

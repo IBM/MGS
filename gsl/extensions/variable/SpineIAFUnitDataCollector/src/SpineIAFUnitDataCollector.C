@@ -381,7 +381,7 @@ void SpineIAFUnitDataCollector::duplicate(std::unique_ptr<SpineIAFUnitDataCollec
   dup.reset(new SpineIAFUnitDataCollector(*this));
 }
 
-void SpineIAFUnitDataCollector::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
+void SpineIAFUnitDataCollector::duplicate(std::unique_ptr<Variable>&& dup) const
 {
   dup.reset(new SpineIAFUnitDataCollector(*this));
 }

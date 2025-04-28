@@ -272,7 +272,7 @@ void AnyConcentrationDisplay::duplicate(std::unique_ptr<AnyConcentrationDisplay>
    dup.reset(new AnyConcentrationDisplay(*this));
 }
 
-void AnyConcentrationDisplay::duplicate(std::unique_ptr<Variable>duplicate(std::unique_ptr<Variable>& dup)duplicate(std::unique_ptr<Variable>& dup) dup) const
+void AnyConcentrationDisplay::duplicate(std::unique_ptr<Variable>&& dup) const
 {
    dup.reset(new AnyConcentrationDisplay(*this));
 }

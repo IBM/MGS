@@ -14,7 +14,7 @@ class AtasoyNFUnitDataCollector : public CG_AtasoyNFUnitDataCollector
       AtasoyNFUnitDataCollector();
       virtual ~AtasoyNFUnitDataCollector();
       virtual void duplicate(std::unique_ptr<AtasoyNFUnitDataCollector>&& dup) const;
-      virtual void duplicate(std::unique_ptr<Variable>&& dup) dup) const;
+      virtual void duplicate(std::unique_ptr<Variable>&& dup) const;
       virtual void duplicate(std::unique_ptr<CG_AtasoyNFUnitDataCollector>&& dup) const;
 };
 

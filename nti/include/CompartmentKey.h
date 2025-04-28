@@ -31,7 +31,7 @@ class CompartmentKey
     public:
       compare();
       compare(int c);
-      bool operator()(const CompartmentKey& ck0, const CompartmentKey& ck1);
+      bool operator()(const CompartmentKey& ck0, const CompartmentKey& ck1) const;
     private:
       int _case;
     };
