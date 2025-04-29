@@ -27,7 +27,7 @@ Variable LFPDataAnalyzer
   int Zdim;
   bool dimSet;
   // Parameters about the LFP recording profile
-  int elecRadius;        // radius of electrode\'s recording tissue
+  int elecRadius;        // radius of electrodes recording tissue
   double elecSigma;      // the standard deviation of the 3D Gaussian recording profile
   // Parameters about where the location of the LFP electrodes are
   int numElecPerDimX;    // number of electrodes in the X dimension, ...

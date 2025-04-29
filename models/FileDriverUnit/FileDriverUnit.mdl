@@ -22,7 +22,7 @@ Node FileDriverUnit Implements OutputProducer
       unsigned n_channels;  // The number of channels in this file
       unsigned total_time;  // Length of data in the file
       double sf;            // Sampling frequency of file (i.e. how often to load)
-      unsigned period;      // Related to sf, how often to load. N.B. user doesn't have to set
+      unsigned period;      // Related to sf, how often to load. N.B. user doesnt have to set
       double scale;         // How much to scale the input by
       double [] input;      // Data read from the file (size=n_channels)
 

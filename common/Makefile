@@ -39,7 +39,7 @@ endif
 ifeq ($(shell uname), Darwin)
     # Add Darwin-specific include paths
    CFLAGS += -I/opt/homebrew/include -I/opt/homebrew/opt/gmp/include
-   LDFLAGS += -L/opt/homebrew/lib -lgmp -stdlib=libc++ -lc++
+   LDFLAGS += -L/opt/homebrew/lib -lgmp -stdlib=libc++ 
    # Add necessary runtime path
    LDFLAGS += -Wl,-rpath,/opt/homebrew/lib -L/opt/homebrew/opt/open-mpi/lib -lmpi
 else
