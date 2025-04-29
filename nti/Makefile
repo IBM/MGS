@@ -78,6 +78,18 @@ else # Linux
    CFLAGS  += -MMD
 endif
 
+ifeq ($(shell uname), Darwin)
+   # Add Darwin-specific include paths
+   CFLAGS += -I/opt/homebrew/include -I/opt/homebrew/opt/gmp/include
+   LDFLAGS += -L/opt/homebrew/lib -lgmp
+   # Add necessary runtime path
+   LDFLAGS += -Wl,-rpath,/opt/homebrew/lib
+   LDFLAGS += -lc++ -lc++abi
+else
+   CFLAGS += -lgmp 
+   LDFLAGS += -lgmp 
+endif
+
 ifeq ($(USE_SUITESPARSE), 1)
 OTHER_LIBS += -I$(SUITESPARSE)/include -L$(SUITESPARSE)/lib -lcxsparse
 OTHER_LIBS_HEADER += -I$(SUITESPARSE)/include -DUSE_SUITESPARSE
@@ -88,10 +100,14 @@ STD_FACTORIES_INC_PATH := ../gsl/framework/factories/include/
 
 CFLAGS += -I$(HEADER_DIR) ${OTHER_LIBS_HEADER}
 #Add support for GMP library
-CFLAGS += -std=c++11 -fPIC -Wno-deprecated-declarations \
+CFLAGS += -std=c++17 -fPIC -Wno-deprecated-declarations \
 	  -I../common/include -I./include -I$(STD_UTILS_INC_PATH) \
 	  -I$(STD_FACTORIES_INC_PATH)
-LDFLAGS += -lgmp -std=c++11 ${OTHER_LIBS} 
+ifeq ($(shell uname), Darwin)
+   CFLAGS += -include $(STD_UTILS_INC_PATH)/darwin_compat.h
+endif
+
+LDFLAGS += -std=c++17 ${OTHER_LIBS} 
 
 
 DEFINES = #-DVERBOSE -DBINARY64BITS
@@ -111,6 +127,14 @@ else
    TISSUE_LIB = ../gsl/lib/libnti_db.a
    TISSUE_LIB_SHARED = ../gsl/lib/libnti_db.so
    #TISSUE_LIB ERROR_MARKER== ../lib/libTissueSim.a
+endif
+
+ifeq ($(shell uname), Darwin)
+   # macOS uses different flags for shared libraries
+   SHARED_LIBRARY_FLAGS := -dynamiclib -install_name @rpath/$(notdir ${TISSUE_LIB_SHARED})
+else
+   # Linux uses --shared
+   SHARED_LIBRARY_FLAGS := --shared
 endif
 
 UTILS=-I../gsl/utils/std/include -I../common/include/
@@ -253,8 +277,8 @@ install: all
 library: ${TISSUE_LIB_OBJECTS}
 	ar rcs $(TISSUE_LIB) \
 	   $(TISSUE_LIB_OBJECTS)
-	$(LD) $(LDFLAGS) -o ${TISSUE_LIB_SHARED} --shared \
-	   $(TISSUE_LIB_OBJECTS_UNIQUE)
+	$(LD) $(LDFLAGS) -o ${TISSUE_LIB_SHARED}  $(SHARED_LIBRARY_FLAGS) \
+	   $(TISSUE_LIB_OBJECTS_UNIQUE) $(COMMON_OBJS)
 
 clean: ; -rm -f $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) $(NG_OBJECTS) $(ND_OBJECTS) $(TD_OBJECTS) TissueContext.o  $(BIN_DIR)/neuroGen $(BIN_DIR)/neuroDev $(BIN_DIR)/touchDetect $(OBJ_DIR)/*  $(HEADER_DIR)/Model2Use.h.gch
 realclean: clean

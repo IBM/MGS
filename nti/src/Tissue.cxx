@@ -24,12 +24,16 @@
 #include <map>
 #include <cstdlib>
 
-#define FIRST_CAPSULE_CONSIDER_AT_SOMA_BORDER
 
+
+#define FIRST_CAPSULE_CONSIDER_AT_SOMA_BORDER
 #define SUGGESTED_BIN_WIDTH 1.0
 #define MIN_COLUMN_DIM 0.000000000001
 //#define COMPOSITE_OUTPUT
 #define TISSUE_COORD_SWC_OUT
+#ifdef __APPLE__
+#define ftello64 ftello
+#endif
 
 Tissue::Tissue(int size, int rank, bool logTranslationHistory,
                bool logRotationHistory)

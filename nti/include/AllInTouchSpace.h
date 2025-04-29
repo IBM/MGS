@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #ifndef ALLINTOUCHSPACE_H
-#define ALLITTOUCHSPACE_H
+#define ALLINTOUCHSPACE_H
 #include "TouchSpace.h"
 #include "MaxComputeOrder.h"
 

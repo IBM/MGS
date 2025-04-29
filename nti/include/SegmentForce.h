@@ -9,6 +9,8 @@
 #ifndef SEGMENTFORCE_H
 #define SEGMENTFORCE_H
 
+#include "MaxComputeOrder.h"
+
 #include <mpi.h>
 #include <vector>
 

@@ -57,7 +57,7 @@ class Datatype {
 
 inline MPI_Aint Datatype::getAddress(void *pointer) {
 	MPI_Aint address;
-	MPI_Address(pointer, &address);
+	MPI_Get_address(pointer, &address);
 	return(address);
 }
 inline Datatype::Datatype(int n, void *start) {
@@ -88,7 +88,7 @@ inline void Datatype::set(int i, MPI_Datatype datatype, int length, void *addres
 }
 inline MPI_Datatype Datatype::create() {
 	if (fieldDatatype == MPI_DATATYPE_NULL) {
-		MPI_Type_struct(fieldN, fieldLengths, fieldDisplacements, fieldDatatypes, &fieldDatatype);
+		MPI_Type_create_struct(fieldN, fieldLengths, fieldDisplacements, fieldDatatypes, &fieldDatatype);
 	}
 	return(fieldDatatype);
 }

@@ -34,6 +34,7 @@ class Decomposition
 
   virtual void writeToFile(FILE*)=0;
   virtual void readFromFile(FILE*)=0;
+  virtual ~Decomposition() {};
 };
 
 #endif

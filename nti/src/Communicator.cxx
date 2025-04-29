@@ -10,7 +10,7 @@
 #include "Receiver.h"
 #include "Sender.h"
 #include "BG_AvailableMemory.h"
-
+#include <mpi.h>
 #include <cassert>
 #include <vector>
 
@@ -73,7 +73,8 @@ void Communicator::bcast(Sender* s, Receiver* r, int cycle, int phase)
 void Communicator::tableMerge(Sender* s, Receiver* r, int cycle, int phase) 
 {
   int rank=s->getRank();
-  int size=MPI::COMM_WORLD.Get_size();
+  int size=0;
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
 
   int recvRank[2] = {rank*2+1, rank*2+2};
   if (recvRank[0]>=size) recvRank[0]=-1;
@@ -84,13 +85,13 @@ void Communicator::tableMerge(Sender* s, Receiver* r, int cycle, int phase)
 
   if (recvRank[0]!=-1) {
     void* recvbuf[2] = {0, 0};
-    MPI::Datatype recvtype = *(r->getRecvtypes(cycle, phase));    
-    MPI::Request request[2];
+    MPI_Datatype recvtype = *(r->getRecvtypes(cycle, phase));    
+    MPI_Request request[2];
     recvbuf[0] = r->getRecvbuf(cycle, phase);
-    request[0] = MPI::COMM_WORLD.Irecv(recvbuf[0], MERGE_BUFF_SIZE, recvtype, recvRank[0], MPI_ANY_TAG);
+    MPI_Irecv(recvbuf[0], MERGE_BUFF_SIZE, recvtype, recvRank[0], MPI_ANY_TAG, MPI_COMM_WORLD, &request[0]);
     if (recvRank[1]!=-1) {
       recvbuf[1] = r->getRecvbuf(cycle, phase);
-      request[1] = MPI::COMM_WORLD.Irecv(recvbuf[1], MERGE_BUFF_SIZE, recvtype, recvRank[1], MPI_ANY_TAG);
+      MPI_Irecv(recvbuf[1], MERGE_BUFF_SIZE, recvtype, recvRank[1], MPI_ANY_TAG, MPI_COMM_WORLD, &request[1]);
     }
     bool flip=false;
     int recvcount=0;
@@ -99,21 +100,21 @@ void Communicator::tableMerge(Sender* s, Receiver* r, int cycle, int phase)
     if (recvRank[1]==-1) more[1]=0;
     int i=0;
     while (more[0] || more[1]) {
-      MPI::Status status;
+      MPI_Status status;
       for (int flag=0; flag==0; flip=!flip) {
-	i = flip ? 1 : 0;
-	if (more[i]==0) i = flip ? 0 : 1;
-	flag=request[i].Test(status);
-	if (flag) more[i] = status.Get_tag();	  
+        i = flip ? 1 : 0;
+        if (more[i]==0) i = flip ? 0 : 1;
+        MPI_Test(&request[i], &flag, &status);
+        if (flag) more[i] =  status.MPI_TAG;	  
       }
-      recvcount = status.Get_count(recvtype);
+      MPI_Get_count(&status, recvtype, &recvcount);
       s->mergeWithSendBuf(i, recvcount, cycle, phase);
-      if (more[i]) request[i] = MPI::COMM_WORLD.Irecv(recvbuf[i], MERGE_BUFF_SIZE, recvtype, recvRank[i], MPI_ANY_TAG);
+      if (more[i]) MPI_Irecv(recvbuf[i], MERGE_BUFF_SIZE, recvtype, recvRank[i], MPI_ANY_TAG, MPI_COMM_WORLD, &request[i]);
     }
   }
 
   if (sendRank!=-1) {
-    MPI::Datatype sendtype = *(s->getSendtypes(cycle, phase));
+    MPI_Datatype sendtype = *(s->getSendtypes(cycle, phase));
     int sendcount = *(s->getSendcounts(cycle, phase));
     int sendbufsize = MERGE_BUFF_SIZE;
     int tag = 1;
@@ -123,32 +124,37 @@ void Communicator::tableMerge(Sender* s, Receiver* r, int cycle, int phase)
       sendbufsize = sendcount;
       tag = 0;
     }
-    std::vector<MPI::Request> requestVector;
-    requestVector.push_back(MPI::COMM_WORLD.Isend(sendbufs[0], sendbufsize, sendtype, sendRank, tag));
+    std::vector<MPI_Request> requestVector;
+    MPI_Request request;
+    MPI_Isend(sendbufs[0], sendbufsize, sendtype, sendRank, tag, MPI_COMM_WORLD, &request);
+    requestVector.push_back(MPI_Request(request));
     while (tag) {
       bool reused=false;
       for (int i=0; i<requestVector.size(); ++i) {
-	MPI::Status status;
-	if (requestVector[i].Test(status)) {
-	  reused=true;
-	  s->getSendbuf(cycle, i);
-	  sendcount-=sendbufsize;
-	  if (sendcount<=sendbufsize) {
-	    sendbufsize = sendcount;
-	    tag=0;
-	  }
-	  requestVector[i] = MPI::COMM_WORLD.Isend(sendbufs[i], sendbufsize, sendtype, sendRank, tag);
-	}
+        int flag=0;
+	      MPI_Status status;
+        MPI_Test(&requestVector[i], &flag, &status);
+        if (flag) {
+	        reused=true;
+	        s->getSendbuf(cycle, i);
+	        sendcount-=sendbufsize;
+	        if (sendcount<=sendbufsize) {
+	          sendbufsize = sendcount;
+	          tag=0;
+	        }
+	        MPI_Isend(sendbufs[i], sendbufsize, sendtype, sendRank, tag, MPI_COMM_WORLD, &requestVector[i]);
+	      }
       }
       if (!reused && requestVector.size()<MAX_N_SEND_BUFFS) {
-	int idx = requestVector.size();
-	sendbufs.push_back(s->getSendbuf(cycle, idx));
-	sendcount-=sendbufsize;
-	if (sendcount<=sendbufsize) {
-	  sendbufsize = sendcount;
-	  tag=0;
-	}
-	requestVector.push_back(MPI::COMM_WORLD.Isend(sendbufs[idx], sendbufsize, sendtype, sendRank, tag));
+        int idx = requestVector.size();
+        sendbufs.push_back(s->getSendbuf(cycle, idx));
+        sendcount-=sendbufsize;
+        if (sendcount<=sendbufsize) {
+          sendbufsize = sendcount;
+          tag=0;
+        }
+        MPI_Isend(sendbufs[idx], sendbufsize, sendtype, sendRank, tag, MPI_COMM_WORLD, &request);
+      	requestVector.push_back(MPI_Request(request));
       }
     }
   }

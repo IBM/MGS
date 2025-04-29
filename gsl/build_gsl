@@ -74,7 +74,7 @@ elif [[ "$cpu" == "ppc64le" ]]; then
   fi
 fi
 }
-SUPPORTED_PLATFORMS="LINUX BGL BGP BGQ SMP"
+SUPPORTED_PLATFORMS="LINUX BGL BGP BGQ SMP MACOS"
 
 #########################################
 #   PRINT HELP
@@ -271,6 +271,9 @@ case $PLATFORM in
     ;;
   BGQ )
     PLATFORM_OPTS+="--with-mpi --blueGeneQ "
+    ;;
+  MACOS )
+    PLATFORM_OPTS+="--with-mpi --nowarning_dynamiccast"
     ;;
 esac
 

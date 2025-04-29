@@ -17,12 +17,12 @@ Rotation::Rotation(const Rotation& r) :
 {
 }
 
-bool Rotation::operator ==(const Rotation& r)
+bool Rotation::operator ==(const Rotation& r) const
 {
 	return (_index==r._index);
 }
 
-bool Rotation::operator <(const Rotation& r)
+bool Rotation::operator <(const Rotation& r) const
 {
 	return (_index<r._index);
 }

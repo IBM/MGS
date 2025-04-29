@@ -22,11 +22,11 @@ void Translation::setTranslation(double* translation) {
   // memcpy(_translation, translation, sizeof(double) * 3);
 }
 
-bool Translation::operator==(const Translation& t) {
+bool Translation::operator==(const Translation& t) const {
   return (_index == t._index);
 }
 
-bool Translation::operator<(const Translation& t) {
+bool Translation::operator<(const Translation& t) const {
   return (_index < t._index);
 }
 

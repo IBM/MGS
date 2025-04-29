@@ -12,8 +12,7 @@
 #include "CG_CalciumVisualization.h"
 #include "NeuronPartitioner.h"
 #include "MaxComputeOrder.h"
-#include "mpi.h"
-
+#include <mpi.h>
 #include <cfloat>
 #include <cmath>
 #include <memory>

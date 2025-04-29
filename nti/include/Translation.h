@@ -18,8 +18,8 @@ class Translation
 	 void setIndex(int index) {_index=index;}
    	 double* getTranslation() {return _translation;}
 	 int getIndex() {return _index;}
-	 bool operator==(const Translation& t);
-	 bool operator<(const Translation& t);
+	 bool operator==(const Translation& t) const;
+	 bool operator<(const Translation& t) const;
 	 void operator+=(const Translation& t);
    	 ~Translation();
    	 

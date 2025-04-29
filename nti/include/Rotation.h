@@ -18,8 +18,8 @@ class Rotation
 	 void setIndex(int index) {_index=index;}
    	 double getRotation() {return _rotation;}
    	 int getIndex() {return _index;}
-	 bool operator ==(const Rotation& r);
-	 bool operator <(const Rotation& r);
+	 bool operator ==(const Rotation& r) const;
+	 bool operator <(const Rotation& r) const;
 	 void operator +=(const Rotation& r);
   	 ~Rotation();
    	 

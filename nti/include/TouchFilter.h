@@ -18,6 +18,7 @@ class TouchFilter
  public:	
   virtual void filterTouches() = 0;
   virtual void setTouchAnalyzer(TouchAnalyzer*) = 0;
+  virtual ~TouchFilter() {};
 };
 
 #endif

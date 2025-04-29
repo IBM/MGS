@@ -1746,7 +1746,6 @@ CFLAGS += $(COLAB_CFLAGS) \
             
             # Warning suppressions
             retStr += " -Wno-deprecated-declarations"
-            retStr += " -Wno-error=c++11-extensions" 
             retStr += " -Wno-error=c++17-extensions"
             retStr += " -Wno-c++11-narrowing"
             retStr += " -Wno-deprecated-register"

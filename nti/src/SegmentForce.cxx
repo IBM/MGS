@@ -9,6 +9,8 @@
 #include "SegmentForce.h"
 #include <limits.h>
 #include "VecPrim.h"
+#include "SegmentDescriptor.h"
+#include "Sphere.h"
 
 #define BondEps 1e-7
 #define MAX_FORCE  1000.0

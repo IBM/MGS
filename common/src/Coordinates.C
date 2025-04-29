@@ -1,4 +1,3 @@
-/*
 // =============================================================================
 // (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
@@ -10,6 +9,7 @@
 // (C) Copyright University of Canterbury 2017-2018. All rights reserved.
 //
 // =============================================================================
+
 #include <algorithm>
 #include "Coordinates.h"
 

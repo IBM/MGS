@@ -119,20 +119,23 @@ template<typename T> class Block {
       fieldValue++;
       return(*this);
     }
-    const typename Block<T>::iterator &operator++() const {
+/*    const typename Block<T>::iterator &operator++() const {
       fieldValue++;
       return(*this);
     }
+*/
     typename Block<T>::iterator operator++(int) {
       typename Block<T>::iterator iterator(fieldValue);
       fieldValue++;
       return(iterator);
     }
+/*
     const typename Block<T>::iterator operator++(int) const {
       typename Block<T>::iterator iterator(fieldValue);
       fieldValue++;
       return(iterator);
     }
+  */
   };
   iterator begin() const {
     return(iterator(&fieldValues[0]));

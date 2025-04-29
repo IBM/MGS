@@ -180,11 +180,11 @@ void InferiorOliveGlomeruliDetector::findGlomeruli(TouchVector* touchVector) {
   _touchStatus.resize(nrTouches, AVAILABLE);
 
   bool globalDone = false, localDone = false;
-  MPI::Request request;
+  MPI_Request request;
   double recvbuf[4];
   double sendbuf[4];
-  request = MPI::COMM_WORLD.Irecv(recvbuf, 4, MPI::DOUBLE, MPI::ANY_SOURCE,
-                                  MPI::ANY_TAG);
+  MPI_Irecv(recvbuf, 4, MPI_DOUBLE, MPI_ANY_SOURCE,
+    MPI_ANY_TAG, MPI_COMM_WORLD, &request);
   int sentReceived[2] = {0, 0};
   Sphere sphere;
   sphere._radius = GlomerulusRadius + MinGlomeruliSpacing;
@@ -252,33 +252,36 @@ void InferiorOliveGlomeruliDetector::findGlomeruli(TouchVector* touchVector) {
                                         rend = ranks.end();
             for (; riter != rend; ++riter) {
               if (*riter == rank) continue;
-              MPI::COMM_WORLD.Isend(sendbuf, 4, MPI::DOUBLE, *riter, 0);
+              MPI_Isend(sendbuf, 4, MPI_DOUBLE, *riter, 0, 
+                MPI_COMM_WORLD, &request);
               ++sentReceived[0];
             }
           }
         }
-        MPI::Status status;
+        MPI_Status status;
         bool moreToDo = false;
-        while (request.Test(status)) {
+        int flag=0;
+        while (!flag) {
           ++sentReceived[1];
           moreToDo = (moreToDo || checkGlomeruli(recvbuf));
-          request = MPI::COMM_WORLD.Irecv(recvbuf, 4, MPI::DOUBLE,
-                                          MPI::ANY_SOURCE, MPI::ANY_TAG);
+          MPI_Irecv(recvbuf, 4, MPI_DOUBLE, MPI_ANY_SOURCE, MPI_ANY_TAG,
+            MPI_COMM_WORLD, &request);
+          MPI_Test(&request, &flag, &status);
         }
         localDone = (localDone && !moreToDo);
       }
     }
     int totalSentReceived[2];
-    MPI::COMM_WORLD.Allreduce((void*)sentReceived, (void*)totalSentReceived, 2,
-                              MPI::INT, MPI::SUM);
+    MPI_Allreduce((void*)sentReceived, (void*)totalSentReceived, 2,
+                              MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     localDone = globalDone = (totalSentReceived[0] == totalSentReceived[1]);
   }
-  request.Cancel();
+  MPI_Cancel(&request);
   int totalCount;
   ;
   int nGlomeruli = _glomeruli.size();
-  MPI::COMM_WORLD.Allreduce((void*)&nGlomeruli, (void*)&totalCount, 1, MPI::INT,
-                            MPI::SUM);
+  MPI_Allreduce((void*)&nGlomeruli, (void*)&totalCount, 1, MPI_INT,
+                            MPI_SUM, MPI_COMM_WORLD);
   if (_tissueContext->getRank() == 0)
     printf("Total Glomeruli = %d\n\n", totalCount);
   TouchVector newTouchVector;
@@ -287,8 +290,8 @@ void InferiorOliveGlomeruliDetector::findGlomeruli(TouchVector* touchVector) {
       newTouchVector.push_back(touches[i], 0);
   int nrGlomeruliTouches = newTouchVector.getCount();
   totalCount = 0;
-  MPI::COMM_WORLD.Allreduce((void*)&nrGlomeruliTouches, (void*)&totalCount, 1,
-                            MPI::INT, MPI::SUM);
+  MPI_Allreduce((void*)&nrGlomeruliTouches, (void*)&totalCount, 1,
+                            MPI_INT, MPI_SUM, MPI_COMM_WORLD);
   if (_tissueContext->getRank() == 0)
     printf("Total Glomeruli Touches = %d\n\n", totalCount);
   touches.clear();

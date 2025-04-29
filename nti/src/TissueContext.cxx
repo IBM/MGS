@@ -794,11 +794,11 @@ void TissueContext::correctTouchKeys(int rank)
       key_size_t capkey = _segmentDescriptor.getSegmentKey(mapiter->first, mask);
       if (!key1Fix)
       {
-        if (key1Fix = (capkey == key1)) titer->setKey1(mapiter->first);
+        if ((key1Fix = (capkey == key1))) titer->setKey1(mapiter->first);
       }
       if (!key2Fix)
       {
-        if (key2Fix = (capkey == key2)) titer->setKey2(mapiter->first);
+        if ((key2Fix = (capkey == key2))) titer->setKey2(mapiter->first);
       }
     }
     mapend = _secondPassCapsuleMap.end();
@@ -808,11 +808,11 @@ void TissueContext::correctTouchKeys(int rank)
       key_size_t capkey = _segmentDescriptor.getSegmentKey(mapiter->first, mask);
       if (!key1Fix)
       {
-        if (key1Fix = (capkey == key1)) titer->setKey1(mapiter->first);
+        if ((key1Fix = (capkey == key1))) titer->setKey1(mapiter->first);
       }
       if (!key2Fix)
       {
-        if (key2Fix = (capkey == key2)) titer->setKey2(mapiter->first);
+        if ((key2Fix = (capkey == key2))) titer->setKey2(mapiter->first);
       }
     }
     assert(key1Fix && key2Fix);

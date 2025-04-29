@@ -149,11 +149,16 @@ TouchDetector::TouchDetector(
   MPI_Type_commit(&typeCapsule);
 #else
   _typeSegments = new MPI_Datatype[1];
-  Datatype datatype(3, &capsule);
-  datatype.set(0, MPI_LB, 0);
-  datatype.set(1, MPI_DOUBLE, N_CAP_DATA, capsule.getData());
-  datatype.set(2, MPI_UB, sizeof(Capsule));
-  _typeSegments[0] = datatype.commit();
+  // Create the base type without bounds
+  Datatype baseCapsuleType(1, &capsule);
+  baseCapsuleType.set(0, MPI_DOUBLE, N_CAP_DATA, capsule.getData());
+  MPI_Datatype baseCapsuleTypeMPI = baseCapsuleType.commit();
+
+  // Then use MPI_Type_create_resized
+  MPI_Datatype finalCapsuleType;
+  MPI_Type_create_resized(baseCapsuleTypeMPI, 0, sizeof(capsule), &finalCapsuleType);
+  MPI_Type_commit(&finalCapsuleType);
+  _typeSegments[0] = finalCapsuleType;
   _sendBuf = new double[_sendBufSize];
 #endif
 
