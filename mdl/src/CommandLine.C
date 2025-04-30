@@ -14,7 +14,7 @@
 #include <iostream>
 
 CommandLine::CommandLine() 
-   : _fileName(""), _static(false), _skipIncludes(false)
+   : _fileName(""), _static(false), _skipIncludes(true)
 {
 }
 
@@ -32,11 +32,11 @@ bool CommandLine::parse(int argc, char** argv)
 
    Parser parser;
 
-   parser.addOption(Option('f', "mdlFile", Option::TYPE_NONE));
-   parser.addOption(Option('i', "includePath", Option::TYPE_REQUIRED));
-   parser.addOption(Option('s', "static", Option::TYPE_NONE));
-   parser.addOption(Option('n', "no-warning", Option::TYPE_NONE));
-   parser.addOption(Option('k', "skip-includes", Option::TYPE_NONE));
+   parser.addOption(Option('f', "mdl-file", Option::TYPE_NONE));
+   parser.addOption(Option('i', "include-path", Option::TYPE_REQUIRED));
+   parser.addOption(Option('s', "static-linking", Option::TYPE_NONE));
+   parser.addOption(Option('n', "no-warnings", Option::TYPE_NONE));
+   parser.addOption(Option('k', "keep-includes", Option::TYPE_NONE));
 
    // No arguments: show help and quit
    if (argc == 1) {
@@ -50,21 +50,24 @@ bool CommandLine::parse(int argc, char** argv)
          Option option = parameterVector[i].getOption();
          Parser::CustomString value = parameterVector[i].getValue();
          if (option == Option::OPTION_NONE) {
-            std::cout << "The input MDL File Name is " << value << "\n";
+            std::cout << "Input MDL filename : " << value << "\n";
             _fileName = value;
          } else if (option.getShortName() == 's') {
-            std::cout << "Static link will be applied\n";
+            std::cout << "-s: Static linking applied.\n";
             _static = true;
          } else if (option.getShortName() == 'n') {
-            std::cout << "No warning is printed\n";
+            std::cout << "-n: Warnings suppressed.\n";
             _printWarning = false;
          } else if (option.getShortName() == 'i') {
             mdl::tokenize(value, _includePath, ':');
+            std::cout<<"-i: Include path set to: "<<value<<".\n";
          } else if (option.getShortName() == 'k') {
-            _skipIncludes = true;
-         }      }
+            _skipIncludes = false;
+            std::cout<<"-k: Keeping included files current by regenerating.\n";
+         }
+      }
    } catch (Parser::Exception exception) {
-      std::cerr << "Exception: " << exception.getMessage() << "...exiting...\n";
+      std::cerr << "ERROR: " << exception.getMessage() << "...Exiting...\n";
    }
 
    return true;
