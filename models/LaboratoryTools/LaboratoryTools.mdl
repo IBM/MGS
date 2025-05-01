@@ -573,7 +573,7 @@ Variable AnyCurrentDisplay
 #else
   int [] indices; //assume print out current on ALL compartments in a branch
 #endif
-  dyn_var_t []* [] I_channel; // unit: (typically it's current density) [pA/um^2]
+  dyn_var_t []* [] I_channel; // unit: (typically its current density) [pA/um^2]
   dyn_var_t []* I_channelConnect;
   BranchDataStruct* [] channelBranchData;
 #ifdef IDEA_ILEAK
@@ -1574,7 +1574,7 @@ Variable SimulationInfo
 Variable DetectDataChangeOneCompartment
 {
 //GOAL: Detect the change in data (e.g. Voltage, Calcium)  in a Junction, e.g. Soma or Spine-Head
-//LIMITATION: With _MULTIPLE_SENSORS_DETECT_CHANGE  we don't have Limit to 1 Junction only
+//LIMITATION: With _MULTIPLE_SENSORS_DETECT_CHANGE  we dont have Limit to 1 Junction only
   //{{{
   //{{{passed by user
   float  criteria; // should be in the range 0.0 to 1.0 (percent of change threshold)

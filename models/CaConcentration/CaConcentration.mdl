@@ -28,14 +28,14 @@ Node CaConcentration Implements SolutionArrayProducer,
   //data members: reference
   // pointer to array of branch
   // help to identify the branch a Calcium(cyto)-compartment belong to 
-  BranchDataStruct* branchData; // pointer to branch's data
+  BranchDataStruct* branchData; // pointer to branchs data
   DimensionStruct* [] dimensions; // each branch has many compartments (whose center point represented by DimensionStruct)
   //data members: internal, but for solver
   //{{{
   //NOTE: array data become ShallowArray<dyn_var_t> Aii in C++ code
   dyn_var_t [] Aii; // TODO unit
   dyn_var_t [] Aip; // TODO unit
-  dyn_var_t [] Aim; // branch's distalmost compartment to junction coupling coefficient
+  dyn_var_t [] Aim; // branchs distalmost compartment to junction coupling coefficient
 
   dyn_var_t [] RHS; // [uM/ms]
   dyn_var_t [] Aij; // TODO unit
@@ -389,7 +389,7 @@ OPTION 3:
 }
 
 // represent an end-point (i.e. last compartment in the series of compartments along a branch)
-// thus don't hold real data, just a reference to that last segment
+// thus dont hold real data, just a reference to that last segment
 Node CaConcentrationEndPoint Implements CaConcentrationProducer, DimensionProducer
 {
 // For each regular compute-branch (i.e. not a junction), represented by CaConcentration 
@@ -400,7 +400,7 @@ Node CaConcentrationEndPoint Implements CaConcentrationProducer, DimensionProduc
   DimensionStruct* dimension; //reference to the struct representing the compartment
 
   Shared {
-    // so the two instances share the Branch's data
+    // so the two instances share the Branchs data
 		// an array but indeed is a scalar
     dyn_var_t []* CaConcentrationConnect;
     DimensionStruct* []* dimensionsConnect;
@@ -414,7 +414,7 @@ Node CaConcentrationEndPoint Implements CaConcentrationProducer, DimensionProduc
   }
 
   UserFunction setPointers;// which is called to create the proper memory reference for 'Ca(cyto)' of the end-point component which
-            // can be 'distalEnd' or 'proximalEnd' depending upon the incoming node's InAttrPset's identifier's value
+            // can be 'distalEnd' or 'proximalEnd' depending upon the incoming nodes InAttrPsets identifiers value
 
   // Connection setup (i.e. input)
   Connection Pre Node () Expects CaConcentrationArrayProducer, DimensionArrayProducer {
@@ -440,7 +440,7 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
 /*{{{single-compartment CB*/ 
 	//DATA
   //{{{
-  BranchDataStruct* branchData; // the proximal-side regular-branch's data
+  BranchDataStruct* branchData; // the proximal-side regular-branchs data
   DimensionStruct* [] dimensions;
     //{{{data members: internal, but for solver
   dyn_var_t* [] CaConcentrationInputs;
@@ -570,7 +570,7 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
   }	
 
   //{{{Connection setup 
-  // junction-branch connects to regular-branch through the regular-branch's endpoints
+  // junction-branch connects to regular-branch through the regular-branchs endpoints
   Connection Pre Node (PSet.identifier=="endpoint") Expects CaConcentrationProducer, 
     DimensionProducer, BranchDataProducer  {
     CaConcentrationProducer.Ca >> CaConcentrationInputs;

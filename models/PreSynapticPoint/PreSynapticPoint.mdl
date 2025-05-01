@@ -44,7 +44,7 @@ Node PreSynapticPoint Implements BranchDataProducer, IndexProducer
   //}}}
   Shared {
     dyn_var_t []* voltageConnect;
-    BranchDataStruct* branchDataConnect;//point to preSynaptic compartment's branch
+    BranchDataStruct* branchDataConnect;//point to preSynaptic compartments branch
   }
   //}}}
 

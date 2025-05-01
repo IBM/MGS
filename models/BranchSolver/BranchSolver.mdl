@@ -105,14 +105,14 @@ Interface CountInformationArrayProducer {
 Constant BranchData Implements BranchDataProducer {
 	// data members
 	BranchDataStruct branchData;
-	//output (just take reference, don't copy)
+	//output (just take reference, dont copy)
 	BranchDataProducer.branchData << &branchData;
 }
 
 Constant CompartmentDimension Implements DimensionProducer {
 	// data members
 	DimensionStruct dimension;
-	//output (just take reference, don't copy)
+	//output (just take reference, dont copy)
 	DimensionProducer.dimension << &dimension;
 }
 

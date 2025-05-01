@@ -9830,14 +9830,13 @@ bool TissueFunctor::isValidCategoryString(std::string category, std::string task
 //   return the Layer data (i.e. GridLayerDescriptor*)
 GridLayerDescriptor* TissueFunctor::getGridLayerDescriptor(std::string category, int typeIdx, bool esyn)
 {
-  GridLayerDescriptor* layer;
+  GridLayerDescriptor* layer=0;
   if (category=="BRANCH") layer=_compartmentVariableLayers[typeIdx];
   else if (category=="JUNCTION") layer=_junctionLayers[typeIdx];
   else if (category=="CHANNEL") layer=_channelLayers[typeIdx];
   else if (category=="SYNAPSE") layer = esyn ? _electricalSynapseLayers[typeIdx] : _chemicalSynapseLayers[typeIdx];
   else if (category == "CLEFT")
     layer = _synapticCleftLayers[typeIdx];
-
   return layer;
 }
 

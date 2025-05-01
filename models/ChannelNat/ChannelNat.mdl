@@ -17,7 +17,7 @@
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 
-//NOTE: Don't use CurrentArrayProducer as it causes conflict with GHK-formula
+//NOTE: Dont use CurrentArrayProducer as it causes conflict with GHK-formula
 //    Use IOCurrentArrayProducer instead
 Node ChannelNat Implements
      ConductanceArrayProducer, ReversalPotentialArrayProducer, // to Vm
@@ -226,7 +226,7 @@ Node ChannelNat Implements
 //}}}
 //}
 
-//NOTE: Don't use CurrentArrayProducer as it causes conflict with GHK-formula
+//NOTE: Dont use CurrentArrayProducer as it causes conflict with GHK-formula
 //    Use IOCurrentArrayProducer instead
 Node ChannelNat_AIS Implements
      ConductanceArrayProducer, ReversalPotentialArrayProducer, // to Vm

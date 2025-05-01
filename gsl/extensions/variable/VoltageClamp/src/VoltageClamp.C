@@ -231,7 +231,7 @@ void VoltageClamp::updateI(RNG& rng)
   if (inject) {
     if (type == 1 or type == 3)
     {
-      float goal;
+      float goal=0;
       if (type == 1)
       {
         //float goal = (*V)[idx] + (targetV - (*V)[idx])/2;
