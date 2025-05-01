@@ -147,8 +147,8 @@ void Zipper::userExecute(LensContext* CG_c, std::vector<DataItem*>::const_iterat
 
   std::string branchPropListName("");
   if (it!=end) {
-    StringDataItem* branchPropListNameDI=0;
-    branchPropListNameDI = dynamic_cast<StringDataItem*>(*it);    
+    CustomStringDataItem* branchPropListNameDI=0;
+    branchPropListNameDI = dynamic_cast<CustomStringDataItem*>(*it);    
     if (branchPropListNameDI==0)
       throw SyntaxErrorException("Argument 5 is non-compliant.\n" + mes);
     else

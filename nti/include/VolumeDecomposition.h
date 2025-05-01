@@ -22,9 +22,9 @@
 #include <stdlib.h>
 
 class Tissue;
-class Sphere;
 class Communicator;
 class TouchSpace;
+struct Sphere;
 
 class VolumeDecomposition : public Decomposition
 {

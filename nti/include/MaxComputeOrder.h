@@ -36,7 +36,7 @@
 #endif
 //#define USE_DOUBLES 
 
-//#define dyn_var_t double
+#define dyn_var_t double
 //NOTE: g++ -DUSE_DOUBLES=1 myprogram.cpp
 //NOTE: dyn_var_t = dynamical-variable-type
 //NOTE: we can't use typedef as MDL currently does not support type with new name like 'dyn_var_t'

@@ -28,7 +28,7 @@ void ConnectNodeSetsByVolumeFunctor::userInitialize(LensContext* CG_c)
 {
 }
 
-void ConnectNodeSetsByVolumeFunctor::userExecute(LensContext* CG_c, NodeSet*& source, NodeSet*& destination, String& center, float& radius, float& scale, Functor*& sourceOutAttr, Functor*& destinationInAttr) 
+void ConnectNodeSetsByVolumeFunctor::userExecute(LensContext* CG_c, NodeSet*& source, NodeSet*& destination, CustomString& center, float& radius, float& scale, Functor*& sourceOutAttr, Functor*& destinationInAttr) 
 {
   /*
    * NOTE: The problem is one nodeset uses Tissue-Coordinate

@@ -376,6 +376,10 @@ class TissueFunctor : public CG_TissueFunctorBase
   // std::map<Touch*, std::list<std::pair<int, int> > >
   // _generatedSpineBranch;
  
+  // NOTE:
+  // <key=lower-MPI-rank, map<key=higher-MPI-rank, RNG>>
+  std::map<int, std::map<int, RNG> > _synapseGeneratorMap;
+  
   //vector-index = layerindex-of-type-CHEMICALSYNAPSE-receptor
   //Touch* = touch
   //int    = density-index of that Receptor for the current _rank
@@ -404,9 +408,6 @@ class TissueFunctor : public CG_TissueFunctorBase
   };
   //end Zipper
 
-  // NOTE:
-  // <key=lower-MPI-rank, map<key=higher-MPI-rank, RNG>>
-  std::map<int, std::map<int, RNG> > _synapseGeneratorMap;
 
   // the list of names for all diffusible nodetypes pass through nodekind
   // argument
@@ -433,14 +434,14 @@ class TissueFunctor : public CG_TissueFunctorBase
   //     ForwardSolvePoints[...]
   //     BackwardSolvePoints[...]
   // NOTE: (*1) = we choose either to use in GSL (not both)
+  std::map<std::string, int> _bidirectionalConnectionTypesMap;
   std::map<std::string, int> _electricalSynapseTypesMap,
       _chemicalSynapseTypesMap;
-  std::map<std::string, int> _bidirectionalConnectionTypesMap;
   std::map<std::string, int> _compartmentVariableTypesMap, _junctionTypesMap;
   std::map<std::string, int> _channelTypesMap;
+  std::map<std::string, int> _synapticCleftTypesMap;
   std::map<std::string, int> _preSynapticPointTypesMap, _endPointTypesMap,
       _junctionPointTypesMap;
-  std::map<std::string, int> _synapticCleftTypesMap;
   std::map<int, std::map<std::string, int> > _forwardSolvePointTypesMap,
       _backwardSolvePointTypesMap;
 

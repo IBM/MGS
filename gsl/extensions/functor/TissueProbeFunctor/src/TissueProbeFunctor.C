@@ -62,7 +62,7 @@ std::unique_ptr<NodeSet> TissueProbeFunctor::userExecute(LensContext* CG_c)
     }
   }
   else{
-      _tissueFunctor->doProbe(CG_c, rval);
+      _tissueFunctor->doProbe(CG_c, std::move(rval));
   }
 
   return rval;

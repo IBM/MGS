@@ -208,10 +208,10 @@ TissueFunctor::TissueFunctor(TissueFunctor const& f)
       _capsuleCptPointIndexMap(f._capsuleCptPointIndexMap),
       _capsuleJctPointIndexMap(f._capsuleJctPointIndexMap),
       _channelBranchIndices1(f._channelBranchIndices1),
-      _channelBranchIndices2(f._channelBranchIndices2),
-      _channelJunctionIndices1(f._channelJunctionIndices1),
-      _channelJunctionIndices2(f._channelJunctionIndices2),
 #ifdef MICRODOMAIN_CALCIUM
+      _channelJunctionIndices1(f._channelJunctionIndices1),
+      _channelBranchIndices2(f._channelBranchIndices2),
+      _channelJunctionIndices2(f._channelJunctionIndices2),
       _microdomainOnBranch(f._microdomainOnBranch),
       _microdomainOnJunction(f._microdomainOnJunction),
 #endif
@@ -228,6 +228,7 @@ TissueFunctor::TissueFunctor(TissueFunctor const& f)
       _junctionPointTypeCounter(f._junctionPointTypeCounter),
       _forwardSolvePointTypeCounter(f._forwardSolvePointTypeCounter),
       _backwardSolvePointTypeCounter(f._backwardSolvePointTypeCounter),
+      
       _tissueParams(f._tissueParams),
       _synapseGeneratorMap(f._synapseGeneratorMap),
       _synapseReceptorMaps(f._synapseReceptorMaps),
@@ -235,14 +236,14 @@ TissueFunctor::TissueFunctor(TissueFunctor const& f)
       _probedLayoutsMap(f._probedLayoutsMap),
       _probedNodesMap(f._probedNodesMap),
       _compartmentVariableTypes(f._compartmentVariableTypes),
-      _electricalSynapseTypesMap(f._electricalSynapseTypesMap),
       _bidirectionalConnectionTypesMap(f._bidirectionalConnectionTypesMap),
+      _electricalSynapseTypesMap(f._electricalSynapseTypesMap),
       _chemicalSynapseTypesMap(f._chemicalSynapseTypesMap),
       _compartmentVariableTypesMap(f._compartmentVariableTypesMap),
       _junctionTypesMap(f._junctionTypesMap),
       _channelTypesMap(f._channelTypesMap),
-      _preSynapticPointTypesMap(f._preSynapticPointTypesMap),
       _synapticCleftTypesMap(f._synapticCleftTypesMap),
+      _preSynapticPointTypesMap(f._preSynapticPointTypesMap),
       _endPointTypesMap(f._endPointTypesMap),
       _junctionPointTypesMap(f._junctionPointTypesMap),
       _forwardSolvePointTypesMap(f._forwardSolvePointTypesMap),
@@ -251,13 +252,13 @@ TissueFunctor::TissueFunctor(TissueFunctor const& f)
       _segmentDescriptor(f._segmentDescriptor)
 #endif
 {
-  if (f._layoutFunctor.get()) f._layoutFunctor->duplicate(_layoutFunctor);
-  if (f._nodeInitFunctor.get()) f._nodeInitFunctor->duplicate(_nodeInitFunctor);
+  if (f._layoutFunctor.get()) f._layoutFunctor->duplicate(std::move(_layoutFunctor));
+  if (f._nodeInitFunctor.get()) f._nodeInitFunctor->duplicate(std::move(_nodeInitFunctor));
   if (f._connectorFunctor.get())
-    f._connectorFunctor->duplicate(_connectorFunctor);
-  if (f._probeFunctor.get()) f._probeFunctor->duplicate(_probeFunctor);
-  if (f._MGSifyFunctor.get()) f._MGSifyFunctor->duplicate(_MGSifyFunctor);
-  if (f._params.get()) f._params->duplicate(_params);
+    f._connectorFunctor->duplicate(std::move(_connectorFunctor));
+  if (f._probeFunctor.get()) f._probeFunctor->duplicate(std::move(_probeFunctor));
+  if (f._MGSifyFunctor.get()) f._MGSifyFunctor->duplicate(std::move(_MGSifyFunctor));
+  if (f._params.get()) f._params->duplicate(std::move(_params));
   _generatedChemicalSynapses = f._generatedChemicalSynapses;
   _nonGeneratedMixedChemicalSynapses = f._nonGeneratedMixedChemicalSynapses;
   _generatedSynapticClefts = f._generatedSynapticClefts;
@@ -273,8 +274,8 @@ TissueFunctor::TissueFunctor(TissueFunctor const& f)
 //     2.  detect touches
 //     3.  generate spines
 //  based on the inputs passed to the object
-//!void TissueFunctor::userInitialize(LensContext* CG_c, String& commandLineArgs1, String& commandLineArgs2, 
-//!				   String& compartmentParamFile, String& channelParamFile, String& synapseParamFile,
+//!void TissueFunctor::userInitialize(LensContext* CG_c, CustomString& commandLineArgs1, CustomString& commandLineArgs2, 
+//!				   CustomString& compartmentParamFile, CustomString& channelParamFile, CustomString& synapseParamFile,
 //!				   Functor*& layoutFunctor, Functor*& nodeInitFunctor, 
 //!				   Functor*& connectorFunctor, Functor*& probeFunctor,
 //!				   Functor*& MGSifyFunctor)
@@ -330,7 +331,7 @@ TissueFunctor::TissueFunctor(TissueFunctor const& f)
 //!  }
 //!
 //!#ifdef HAVE_MPI
-//!  String command = "NULL ";
+//!  CustomString command = "NULL ";
 //!  command += commandLineArgs1;
 //!  if (_tissueContext->_commandLine.parse(command.c_str()) == false)
 //!  {
@@ -419,9 +420,9 @@ TissueFunctor::TissueFunctor(TissueFunctor const& f)
 //!  }
 //!}
 void TissueFunctor::userInitialize(
-    LensContext* CG_c, String& commandLineArgs1, String& commandLineArgs2,
-    String& compartmentParamFile, String& channelParamFile,
-    String& synapseParamFile, Functor*& layoutFunctor,
+    LensContext* CG_c, CustomString& commandLineArgs1, CustomString& commandLineArgs2,
+    CustomString& compartmentParamFile, CustomString& channelParamFile,
+    CustomString& synapseParamFile, Functor*& layoutFunctor,
     Functor*& nodeInitFunctor, Functor*& connectorFunctor,
     Functor*& probeFunctor)
 {
@@ -429,10 +430,10 @@ void TissueFunctor::userInitialize(
   _size = CG_c->sim->getNumProcesses();
   _rank = CG_c->sim->getRank();
 #endif
-  layoutFunctor->duplicate(_layoutFunctor);
-  nodeInitFunctor->duplicate(_nodeInitFunctor);
-  connectorFunctor->duplicate(_connectorFunctor);
-  probeFunctor->duplicate(_probeFunctor);
+  layoutFunctor->duplicate(std::move(_layoutFunctor));
+  nodeInitFunctor->duplicate(std::move(_nodeInitFunctor));
+  connectorFunctor->duplicate(std::move(_connectorFunctor));
+  probeFunctor->duplicate(std::move(_probeFunctor));
 
   // Validate inputs
   {
@@ -475,7 +476,7 @@ void TissueFunctor::userInitialize(
   }
 
 #ifdef HAVE_MPI
-  String command = "NULL ";
+  CustomString command = "NULL ";
   command += commandLineArgs1;
   if (_tissueContext->_commandLine.parse(command.c_str()) == false)
   {
@@ -1771,7 +1772,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
             ConstantDataItem* cdi =
               dynamic_cast<ConstantDataItem*>(aptr_cst.get());
             std::unique_ptr<Constant> aptr_dim;
-            cdi->getConstant()->duplicate(aptr_dim);
+            cdi->getConstant()->duplicate(std::move(aptr_dim));
             Constant* dim = aptr_dim.release();
             dimensions.push_back(dynamic_cast<CG_CompartmentDimension*>(dim));
 
@@ -2088,7 +2089,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
       ct->getInstance(aptr_cst, dimParams, lc);
       ConstantDataItem* cdi = dynamic_cast<ConstantDataItem*>(aptr_cst.get());
       std::unique_ptr<Constant> aptr_dim;
-      cdi->getConstant()->duplicate(aptr_dim);
+      cdi->getConstant()->duplicate(std::move(aptr_dim));
       Constant* dim = aptr_dim.release();
       _tissueContext->_junctionDimensionMap[junctionCapsule] =
         dynamic_cast<CG_CompartmentDimension*>(dim);
@@ -2300,8 +2301,8 @@ void TissueFunctor::getNodekind(const NDPairList* ndpl,
   {
     if ((*ndpiter)->getName() == "nodekind")
     {
-      StringDataItem* nkDI =
-          dynamic_cast<StringDataItem*>((*ndpiter)->getDataItem());
+      CustomStringDataItem* nkDI =
+          dynamic_cast<CustomStringDataItem*>((*ndpiter)->getDataItem());
       if (nkDI == 0)
       {
         std::cerr << "TissueFunctor: nodekind parameter is not a string!"
@@ -2558,18 +2559,18 @@ void TissueFunctor::connect(Simulation* sim, Connector* connector,
 {
   std::unique_ptr<ParameterSet> inAttrPSet, outAttrPSet;
   to->getGridLayerDescriptor()->getNodeType()->getInAttrParameterSet(
-      inAttrPSet);
+    std::move(inAttrPSet));
   from->getGridLayerDescriptor()->getNodeType()->getOutAttrParameterSet(
-      outAttrPSet);
+    std::move(outAttrPSet));
   inAttrPSet->set(ndpl);
   connector->nodeToNode(from, outAttrPSet.get(), to, inAttrPSet.get(), sim);
 }
 
 std::unique_ptr<Functor> TissueFunctor::userExecute(LensContext* CG_c,
-                                                  String& tissueElement,
+                                                  CustomString& tissueElement,
                                                   NDPairList*& params)
 {
-  params->duplicate(_params);
+  params->duplicate(std::move(_params));
   std::unique_ptr<Functor> rval;
 
   if (tissueElement == "Layout")
@@ -2582,7 +2583,7 @@ std::unique_ptr<Functor> TissueFunctor::userExecute(LensContext* CG_c,
       //normal NTS "Layout"
       TissueElement* element = dynamic_cast<TissueElement*>(_layoutFunctor.get());
       element->setTissueFunctor(this);
-      _layoutFunctor->duplicate(rval);
+      _layoutFunctor->duplicate(std::move(rval));
     }
     else {
       //special "Layout" for being used in Zipper
@@ -2598,7 +2599,7 @@ std::unique_ptr<Functor> TissueFunctor::userExecute(LensContext* CG_c,
 
       TissueElement* element=dynamic_cast<TissueElement*>(_layoutFunctor.get());
       element->setTissueFunctor(this);
-      _layoutFunctor->duplicate(rval);
+      _layoutFunctor->duplicate(std::move(rval));
     }
   }
   else if (tissueElement == "NodeInit")
@@ -2606,20 +2607,20 @@ std::unique_ptr<Functor> TissueFunctor::userExecute(LensContext* CG_c,
     TissueElement* element =
         dynamic_cast<TissueElement*>(_nodeInitFunctor.get());
     element->setTissueFunctor(this);
-    _nodeInitFunctor->duplicate(rval);
+    _nodeInitFunctor->duplicate(std::move(rval));
   }
   else if (tissueElement == "Connector")
   {
     TissueElement* element =
         dynamic_cast<TissueElement*>(_connectorFunctor.get());
     element->setTissueFunctor(this);
-    _connectorFunctor->duplicate(rval);
+    _connectorFunctor->duplicate(std::move(rval));
   }
   else if (tissueElement == "Probe")
   {
     TissueElement* element = dynamic_cast<TissueElement*>(_probeFunctor.get());
     element->setTissueFunctor(this);
-    _probeFunctor->duplicate(rval);
+    _probeFunctor->duplicate(std::move(rval));
   }
   else if (tissueElement=="MGSify") 
   {
@@ -2630,7 +2631,7 @@ std::unique_ptr<Functor> TissueFunctor::userExecute(LensContext* CG_c,
       exit(-1);
     }
     element->setTissueFunctor(this);
-    _MGSifyFunctor->duplicate(rval);
+    _MGSifyFunctor->duplicate(std::move(rval));
   }
   else if (tissueElement=="Connect") {
     doConnector(CG_c);
@@ -2685,7 +2686,7 @@ ShallowArray<int> TissueFunctor::doLayoutHybrid(LensContext* lc)
   assert(ndp->getName()=="PROBED");
 
   if (ndp->getName()=="PROBED") {
-    StringDataItem* prDI = dynamic_cast<StringDataItem*>(ndp->getDataItem());
+    CustomStringDataItem* prDI = dynamic_cast<CustomStringDataItem*>(ndp->getDataItem());
     if (prDI == 0) {
       std::cerr<<"TissueFunctor: probed parameter is not a string!"<<std::endl;
       exit(-1);
@@ -4224,7 +4225,7 @@ void TissueFunctor::doNodeInit(LensContext* lc)
     if ((*node)->getNode())
     {
       NDPairList paramsLocal = *(_params.get());
-      (*gld)->getNodeType()->getInitializationParameterSet(initPset);
+      (*gld)->getNodeType()->getInitializationParameterSet(std::move(initPset));
       if (ifunctor) {
 	std::vector<DataItem*> nullArgs;
 	std::unique_ptr<DataItem> rval_ap;
@@ -4284,7 +4285,7 @@ void TissueFunctor::doNodeInit(LensContext* lc)
           ConstantDataItem* cdi =
               dynamic_cast<ConstantDataItem*>(aptr_cst.get());
           std::unique_ptr<Constant> aptr_brd;
-          cdi->getConstant()->duplicate(aptr_brd);
+          cdi->getConstant()->duplicate(std::move(aptr_brd));
           Constant* brd = aptr_brd.release();
           branchData = (dynamic_cast<CG_BranchData*>(brd));
           assert(branchData);
@@ -4368,7 +4369,7 @@ void TissueFunctor::doNodeInit(LensContext* lc)
           ConstantDataItem* cdi =
               dynamic_cast<ConstantDataItem*>(aptr_cst.get());
           std::unique_ptr<Constant> aptr_brd;
-          cdi->getConstant()->duplicate(aptr_brd);
+          cdi->getConstant()->duplicate(std::move(aptr_brd));
           Constant* brd = aptr_brd.release();
           branchData = (dynamic_cast<CG_BranchData*>(brd));
           assert(branchData);
@@ -7101,7 +7102,7 @@ void TissueFunctor::doConnector(LensContext* lc)
 //                    neuron based on the order given in neurons.txt
 //
 // NOTE: It is mainly used identify the data (to be recorded) 
-void TissueFunctor::doProbe(LensContext* lc, std::unique_ptr<NodeSet>& rval)
+void TissueFunctor::doProbe(LensContext* lc, std::unique_ptr<NodeSet>&& rval)
 {
   std::vector<SegmentDescriptor::SegmentKeyData> maskVector;
   NDPairList::iterator ndpiter = _params->end(),
@@ -7115,8 +7116,8 @@ void TissueFunctor::doProbe(LensContext* lc, std::unique_ptr<NodeSet>& rval)
               << std::endl;
     exit(EXIT_FAILURE);
   }
-  StringDataItem* categoryDI =
-      dynamic_cast<StringDataItem*>((*ndpiter)->getDataItem());
+  CustomStringDataItem* categoryDI =
+      dynamic_cast<CustomStringDataItem*>((*ndpiter)->getDataItem());
   if (categoryDI == 0)
   {
     std::cerr << "CATEGORY parameter of TissueProbe must be a string!"
@@ -7134,8 +7135,8 @@ void TissueFunctor::doProbe(LensContext* lc, std::unique_ptr<NodeSet>& rval)
     std::cerr << "Second parameter of TissueProbe must be TYPE!" << std::endl;
     exit(EXIT_FAILURE);
   }
-  StringDataItem* typeDI =
-      dynamic_cast<StringDataItem*>((*ndpiter)->getDataItem());
+  CustomStringDataItem* typeDI =
+      dynamic_cast<CustomStringDataItem*>((*ndpiter)->getDataItem());
   if (typeDI == 0)
   {
     std::cerr << "TYPE parameter of TissueProbe must be a string!" << std::endl;
@@ -7163,7 +7164,7 @@ void TissueFunctor::doProbe(LensContext* lc, std::unique_ptr<NodeSet>& rval)
     {
       NumericDataItem* ndi =
           dynamic_cast<NumericDataItem*>((*ndpiter)->getDataItem());
-      if (ndi <= 0)
+      if (ndi->getInt() <= 0)
       {
         std::cerr << "TissueProbe parameter specification must comprise "
                      "unsigned integers!" << std::endl;
@@ -7405,7 +7406,7 @@ Grid* TissueFunctor::doProbe(LensContext* lc, std::vector<NodeDescriptor*>& node
   int remaining=_params->size();
 
   assert((*ndpiter)->getName()=="PROBED");
-  StringDataItem* layoutDI = dynamic_cast<StringDataItem*>((*ndpiter)->getDataItem());
+  CustomStringDataItem* layoutDI = dynamic_cast<CustomStringDataItem*>((*ndpiter)->getDataItem());
   layout=layoutDI->getString();
 
   std::vector<float> vN;
@@ -7575,7 +7576,7 @@ Grid* TissueFunctor::doProbe_Number(LensContext* lc, std::vector<NodeDescriptor*
       unsigned int idx=-1;
       for (; ndpiter!=ndpend_reverse; --ndpiter, --remaining) {
         NumericDataItem* ndi=dynamic_cast<NumericDataItem*>((*ndpiter)->getDataItem());
-        if (ndi<=0) {
+        if (ndi->getInt() <= 0) {
           std::cerr<<"TissueProbe parameter specification must comprise unsigned integers!"<<std::endl;
           exit(0);
         }
@@ -7593,7 +7594,7 @@ Grid* TissueFunctor::doProbe_Number(LensContext* lc, std::vector<NodeDescriptor*
 
       mask=_segmentDescriptor.getMask(maskVector);
       targetKey=_segmentDescriptor.getSegmentKey(maskVector, ids);
-      delete ids;
+      delete [] ids;
     }
 
     //SELECTION PROCESS
@@ -7826,7 +7827,7 @@ Grid* TissueFunctor::doProbe_Region(LensContext* lc, std::vector<NodeDescriptor*
     unsigned int idx=-1;
     for (; ndpiter!=ndpend_reverse; --ndpiter, --remaining) {
       NumericDataItem* ndi=dynamic_cast<NumericDataItem*>((*ndpiter)->getDataItem());
-      if (ndi<=0) {
+      if (ndi->getInt() <= 0) {
         std::cerr<<"TissueProbe parameter specification must comprise unsigned integers!"<<std::endl;
         exit(0);
       }
@@ -7844,7 +7845,7 @@ Grid* TissueFunctor::doProbe_Region(LensContext* lc, std::vector<NodeDescriptor*
 
     mask=_segmentDescriptor.getMask(maskVector);
     targetKey=_segmentDescriptor.getSegmentKey(maskVector, ids);
-    delete ids;
+    delete [] ids;
   }
 
   //SELECTION PROCESS
@@ -8043,7 +8044,7 @@ void TissueFunctor::doMGSify(LensContext* lc)
       (*liter)->replaceDensityVector(mgsrval, _nbrGridNodes);
     }
   }
-  delete [] mgsrval;
+  delete mgsrval;
 }
 
 // GOAL: map the values from *.par file to the data member
@@ -8147,7 +8148,7 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
     //else if (tokens[0] == "string")
     //{
     //  ////////////
-		//	StringDataItem* paramDI = new StringDataItem(cpiter->second);
+		//	CustomStringDataItem* paramDI = new CustomStringDataItem(cpiter->second);
     //  std::unique_ptr<DataItem> paramDI_ap(paramDI);
     //  NDPair* ndp = new NDPair(varName, paramDI_ap);
     //  paramsLocal.push_back(ndp);
@@ -8207,7 +8208,7 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
     //else if (tokens[0] == "string")
     //{
     //  ////////////
-		//	StringDataItem* paramDI = new StringDataItem(cpiter->second);
+		//	CustomStringDataItem* paramDI = new CustomStringDataItem(cpiter->second);
     //  std::unique_ptr<DataItem> paramDI_ap(paramDI);
     //  NDPair* ndp = new NDPair(varName, paramDI_ap);
     //  paramsLocal.push_back(ndp);
@@ -8511,9 +8512,8 @@ bool TissueFunctor::setGenerated(
           // equal and must be on the same side (i.e. either both first keys or
           //                                    both second keys)
           // if (key_spineneck == key_inloop_spineneck)
-          if ((key_spineneck == key_inloop_spineneck)
+          if (key_spineneck == key_inloop_spineneck)
               //  and (isSide1 == isSide1_inloop)
-              )
           {
             if (0)
             {  // debug purpose
@@ -8718,9 +8718,8 @@ bool TissueFunctor::setGenerated(
             // or
             //                                    both second keys)
             // if (key_spinehead == key_inloop_spinehead)
-            if ((key_spinehead == key_inloop_spinehead)
+            if (key_spinehead == key_inloop_spinehead)
                 //  and (isSide1 == isSide1_inloop)
-                )
             {
               if (0)
               {
@@ -9710,7 +9709,7 @@ std::pair<std::string, std::string> TissueFunctor::getCategoryTypePair(NDPairLis
     std::cerr<<"First parameter of TissueProbe must be PROBED or CATEGORY!"<<std::endl;
     exit(0);
   }
-  StringDataItem* categoryDI = dynamic_cast<StringDataItem*>((*ndpiter)->getDataItem());
+  CustomStringDataItem* categoryDI = dynamic_cast<CustomStringDataItem*>((*ndpiter)->getDataItem());
   if (categoryDI==0) {
     std::cerr<<"CATEGORY parameter of TissueProbe must be a string!"<<std::endl;
     exit(0);
@@ -9727,7 +9726,7 @@ std::pair<std::string, std::string> TissueFunctor::getCategoryTypePair(NDPairLis
     std::cerr<<"Second parameter of TissueProbe must be TYPE!"<<std::endl;
     exit(0);
   }
-  StringDataItem* typeDI = dynamic_cast<StringDataItem*>((*ndpiter)->getDataItem());
+  CustomStringDataItem* typeDI = dynamic_cast<CustomStringDataItem*>((*ndpiter)->getDataItem());
   if (typeDI==0) {
     std::cerr<<"TYPE parameter of TissueProbe must be a string!"<<std::endl;
     exit(0);
