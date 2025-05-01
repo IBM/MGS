@@ -34,9 +34,11 @@
 #ifndef MAX_COMPUTE_ORDER
 #define MAX_COMPUTE_ORDER 0 
 #endif
-//#define USE_DOUBLES 
-
+#ifdef USE_DOUBLES
 #define dyn_var_t double
+#else
+#define dyn_var_t float
+#endif
 //NOTE: g++ -DUSE_DOUBLES=1 myprogram.cpp
 //NOTE: dyn_var_t = dynamical-variable-type
 //NOTE: we cant use typedef as MDL currently does not support type with new name like 'dyn_var_t'
