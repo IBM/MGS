@@ -2208,14 +2208,16 @@ $(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/
         retStr += " | $(BIN_DIR)"
         if self.options.colab is True:
             retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(NEEDED_OBJS) "
+        else:
+            retStr += "\n\t$(CC) $(FINAL_TARGET_FLAG) "
+        if self.operatingSystem == "Darwin":
+            retStr += "-v "
+        retStr += "$(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) $(COMMON_OBJS) $(LDFLAGS) $(LIBS) "
         if self.options.colab is True:
             pass
         elif (self.options.asNts is True) or (self.options.asNtsNVU is True):
             retStr += "$(NTI_OBJS) "
-        retStr += "\n\t$(CC) $(FINAL_TARGET_FLAG) "
-        if self.operatingSystem == "Darwin":
-            retStr += "-v "
-        retStr += "$(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) $(COMMON_OBJS) $(LDFLAGS) $(LIBS) -o $(BIN_DIR)/$(EXE_FILE) "
+        retStr += " -o $(BIN_DIR)/$(EXE_FILE) "
         return retStr
 
     def getDependfileTarget(self):
