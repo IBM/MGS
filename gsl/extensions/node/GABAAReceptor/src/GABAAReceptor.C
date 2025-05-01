@@ -11,7 +11,7 @@
 // 
 // =============================================================================
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "GABAAReceptor.h"
 #include "CG_GABAAReceptor.h"
 #include "rndm.h"

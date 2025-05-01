@@ -9,7 +9,7 @@
 #ifndef ReversalPotentialDisplay_H
 #define ReversalPotentialDisplay_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ReversalPotentialDisplay.h"
 #include <memory>
 #include <fstream>

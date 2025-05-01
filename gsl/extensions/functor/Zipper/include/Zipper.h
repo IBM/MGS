@@ -9,7 +9,7 @@
 #ifndef Zipper_H
 #define Zipper_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ZipperBase.h"
 #include "LensContext.h"
 #include <memory>

@@ -9,7 +9,7 @@
 #ifndef VoltageEndPoint_H
 #define VoltageEndPoint_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_VoltageEndPoint.h"
 #include "rndm.h"
 

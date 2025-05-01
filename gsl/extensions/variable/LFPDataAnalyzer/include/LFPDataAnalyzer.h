@@ -9,7 +9,7 @@
 #ifndef LFPDataAnalyzer_H
 #define LFPDataAnalyzer_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_LFPDataAnalyzer.h"
 #include <memory>
 #include <fstream>

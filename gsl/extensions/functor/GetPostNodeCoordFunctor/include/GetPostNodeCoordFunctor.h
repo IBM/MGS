@@ -8,7 +8,7 @@
 // =============================================================================
 #ifndef GetPostNodeCoordFunctor_H
 #define GetPostNodeCoordFunctor_H
-#include "Lens.h"
+#include "Mgs.h"
 
 #include "CG_GetPostNodeCoordFunctorBase.h"
 #include "LensContext.h"

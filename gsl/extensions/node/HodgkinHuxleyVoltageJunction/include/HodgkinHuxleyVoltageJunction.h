@@ -9,7 +9,7 @@
 #ifndef HodgkinHuxleyVoltageJunction_H
 #define HodgkinHuxleyVoltageJunction_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_HodgkinHuxleyVoltageJunction.h"
 #include "rndm.h"
 #include "MaxComputeOrder.h"

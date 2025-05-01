@@ -13,7 +13,7 @@
 // =============================================================================
 
 #include "CG_Htree.h"
-#include "Lens.h"
+#include "Mgs.h"
 #include "NVUMacros.h" // nvu index macros
 #include "matrixOperations.h"
 #include "rndm.h"

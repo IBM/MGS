@@ -9,7 +9,7 @@
 #ifndef TissueProbeFunctor_H
 #define TissueProbeFunctor_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_TissueProbeFunctorBase.h"
 #include "LensContext.h"
 #include "NodeSet.h"

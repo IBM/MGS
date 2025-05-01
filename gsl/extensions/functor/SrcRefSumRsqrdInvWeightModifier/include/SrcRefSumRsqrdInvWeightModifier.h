@@ -8,7 +8,7 @@
 // =============================================================================
 #ifndef SrcRefSumRsqrdInvWeightModifier_H
 #define SrcRefSumRsqrdInvWeightModifier_H
-#include "Lens.h"
+#include "Mgs.h"
 
 #include "CG_SrcRefSumRsqrdInvWeightModifierBase.h"
 #include "LensContext.h"

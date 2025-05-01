@@ -9,7 +9,7 @@
 #ifndef ChannelHCNCompCategory_H
 #define ChannelHCNCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelHCNCompCategory.h"
 #include "CountableModel.h"
 

@@ -9,7 +9,7 @@
 #ifndef VoltageClamp_H
 #define VoltageClamp_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_VoltageClamp.h"
 #include <fstream>
 #include <memory>

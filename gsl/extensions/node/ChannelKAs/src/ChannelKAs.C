@@ -14,7 +14,7 @@
 
 #include "CG_ChannelKAs.h"
 #include "ChannelKAs.h"
-#include "Lens.h"
+#include "Mgs.h"
 #include "rndm.h"
 
 #include "GlobalNTSConfig.h"

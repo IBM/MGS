@@ -6,7 +6,7 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
-#include "Lens.h"
+#include "Mgs.h"
 #include "HodgkinHuxleyVoltageJunction.h"
 #include "CG_HodgkinHuxleyVoltageJunction.h"
 #include "rndm.h"

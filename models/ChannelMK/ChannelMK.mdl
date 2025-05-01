@@ -1,5 +1,3 @@
-#ifndef ChannelMK_MDL
-#define ChannelMK_MDL
 // =============================================================================
 // (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
@@ -11,7 +9,8 @@
 // (C) Copyright 2018 New Jersey Institute of Technology. All rights reserved.
 //
 // =============================================================================
-
+#ifndef ChannelMK_MDL
+#define ChannelMK_MDL
 
 #include "../std/std.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"

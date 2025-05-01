@@ -9,7 +9,7 @@
 #ifndef MotoneuronUnit_H
 #define MotoneuronUnit_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_MotoneuronUnit.h"
 #include "rndm.h"
 

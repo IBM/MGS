@@ -14,7 +14,7 @@
 #ifndef ChannelMK_H
 #define ChannelMK_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelMK.h"
 #include "rndm.h"
 

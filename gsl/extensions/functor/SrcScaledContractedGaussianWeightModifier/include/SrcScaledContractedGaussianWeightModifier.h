@@ -9,7 +9,7 @@
 #ifndef SrcScaledContractedGaussianWeightModifier_H
 #define SrcScaledContractedGaussianWeightModifier_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_SrcScaledContractedGaussianWeightModifierBase.h"
 #include "LensContext.h"
 #include "ParameterSet.h"

@@ -10,7 +10,7 @@
 // 
 // =============================================================================
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "ChannelKDR.h"
 #include "CG_ChannelKDR.h"
 #include "rndm.h"

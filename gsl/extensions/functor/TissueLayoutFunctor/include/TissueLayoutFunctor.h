@@ -9,7 +9,7 @@
 #ifndef TissueLayoutFunctor_H
 #define TissueLayoutFunctor_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_TissueLayoutFunctorBase.h"
 #include "LensContext.h"
 #include "ShallowArray.h"

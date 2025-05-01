@@ -9,7 +9,7 @@
 #ifndef BoutonIAFUnitCompCategory_H
 #define BoutonIAFUnitCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_BoutonIAFUnitCompCategory.h"
 
 class NDPairList;

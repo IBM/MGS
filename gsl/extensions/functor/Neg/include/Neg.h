@@ -9,7 +9,7 @@
 #ifndef Neg_H
 #define Neg_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_NegBase.h"
 #include "LensContext.h"
 #include <memory>

@@ -9,7 +9,7 @@
 #ifndef CaConnexon_H
 #define CaConnexon_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_CaConnexon.h"
 #include "rndm.h"
 

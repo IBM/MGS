@@ -6,7 +6,7 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
-#include "Lens.h"
+#include "Mgs.h"
 #include "ZhengSORNUnitDataCollectorSuppl.h"
 #include "CG_ZhengSORNUnitDataCollectorSuppl.h"
 #include "NodeDescriptor.h"

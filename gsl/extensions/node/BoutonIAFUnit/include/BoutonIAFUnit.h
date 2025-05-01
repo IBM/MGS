@@ -9,7 +9,7 @@
 #ifndef BoutonIAFUnit_H
 #define BoutonIAFUnit_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_BoutonIAFUnit.h"
 #include "rndm.h"
 

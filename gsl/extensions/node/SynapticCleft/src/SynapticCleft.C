@@ -1,5 +1,5 @@
 #include "CG_SynapticCleft.h"
-#include "Lens.h"
+#include "Mgs.h"
 #include "SynapticCleft.h"
 #include "rndm.h"
 // =============================================================================

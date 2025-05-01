@@ -9,7 +9,7 @@
 #ifndef UniformDiscreteDist_H
 #define UniformDiscreteDist_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_UniformDiscreteDistBase.h"
 #include "LensContext.h"
 #include <memory>

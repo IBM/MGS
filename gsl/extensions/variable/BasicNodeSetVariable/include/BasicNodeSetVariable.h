@@ -8,7 +8,7 @@
 // =============================================================================
 #ifndef BasicNodeSetVariable_H
 #define BasicNodeSetVariable_H
-#include "Lens.h"
+#include "Mgs.h"
 
 #include "CG_BasicNodeSetVariable.h"
 #include <memory>

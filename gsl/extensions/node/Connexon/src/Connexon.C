@@ -6,7 +6,7 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
-#include "Lens.h"
+#include "Mgs.h"
 #include "Connexon.h"
 #include "CG_Connexon.h"
 #include "rndm.h"

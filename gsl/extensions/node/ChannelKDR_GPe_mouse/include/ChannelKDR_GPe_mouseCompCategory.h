@@ -6,7 +6,7 @@
 #ifndef ChannelKDR_GPe_mouseCompCategory_H
 #define ChannelKDR_GPe_mouseCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelKDR_GPe_mouseCompCategory.h"
 #include "CountableModel.h"
 class NDPairList;

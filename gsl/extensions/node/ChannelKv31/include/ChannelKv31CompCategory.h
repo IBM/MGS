@@ -10,7 +10,7 @@
 #ifndef ChannelKv31CompCategory_H
 #define ChannelKv31CompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelKv31CompCategory.h"
 #include "CountableModel.h"
 

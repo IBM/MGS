@@ -9,7 +9,7 @@
 #ifndef ModifyParameterSet_H
 #define ModifyParameterSet_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ModifyParameterSetBase.h"
 #include "LensContext.h"
 #include "ParameterSet.h"

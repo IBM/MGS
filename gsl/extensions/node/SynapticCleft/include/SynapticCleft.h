@@ -10,7 +10,7 @@
 // =============================================================================:wq
 
 #include "CG_SynapticCleft.h"
-#include "Lens.h"
+#include "Mgs.h"
 #include "rndm.h"
 
 #include "MaxComputeOrder.h"

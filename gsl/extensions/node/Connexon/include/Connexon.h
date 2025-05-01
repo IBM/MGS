@@ -9,7 +9,7 @@
 #ifndef Connexon_H
 #define Connexon_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_Connexon.h"
 #include "rndm.h"
 

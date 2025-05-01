@@ -9,7 +9,7 @@
 #ifndef CalChannel_H
 #define CalChannel_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_CalChannel.h"
 #include "rndm.h"
 

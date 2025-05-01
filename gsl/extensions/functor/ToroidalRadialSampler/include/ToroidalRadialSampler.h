@@ -8,7 +8,7 @@
 // =============================================================================
 #ifndef ToroidalRadialSampler_H
 #define ToroidalRadialSampler_H
-#include "Lens.h"
+#include "Mgs.h"
 
 #include "CG_ToroidalRadialSamplerBase.h"
 #include "LensContext.h"

@@ -9,7 +9,7 @@
 #ifndef FSIIAFUnitExtraDataCollector_H
 #define FSIIAFUnitExtraDataCollector_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_FSIIAFUnitExtraDataCollector.h"
 #include <memory>
 #include <fstream>

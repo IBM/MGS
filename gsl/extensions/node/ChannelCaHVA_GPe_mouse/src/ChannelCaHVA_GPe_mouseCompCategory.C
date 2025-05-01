@@ -3,7 +3,7 @@
 //
 // =============================================================================
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "ChannelCaHVA_GPe_mouseCompCategory.h"
 #include "NDPairList.h"
 #include "CG_ChannelCaHVA_GPe_mouseCompCategory.h"

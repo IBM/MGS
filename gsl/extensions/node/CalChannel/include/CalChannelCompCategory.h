@@ -9,7 +9,7 @@
 #ifndef CalChannelCompCategory_H
 #define CalChannelCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_CalChannelCompCategory.h"
 #include "CountableModel.h"
 

@@ -6,7 +6,7 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
-#include "Lens.h"
+#include "Mgs.h"
 #include "TissueMGSifyFunctor.h"
 #include "CG_TissueMGSifyFunctorBase.h"
 #include "LensContext.h"

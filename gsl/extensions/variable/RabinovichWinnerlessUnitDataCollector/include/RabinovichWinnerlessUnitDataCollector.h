@@ -9,7 +9,7 @@
 #ifndef RabinovichWinnerlessUnitDataCollector_H
 #define RabinovichWinnerlessUnitDataCollector_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_RabinovichWinnerlessUnitDataCollector.h"
 #include <memory>
 #include <fstream>

@@ -9,7 +9,7 @@
 #ifndef ConnexonCompCategory_H
 #define ConnexonCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ConnexonCompCategory.h"
 #include "CountableModel.h"
 

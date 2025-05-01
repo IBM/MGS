@@ -1,4 +1,4 @@
-#include "Lens.h"
+#include "Mgs.h"
 #include "CombineNVPairs.h"
 #include "CG_CombineNVPairsBase.h"
 #include "LensContext.h"

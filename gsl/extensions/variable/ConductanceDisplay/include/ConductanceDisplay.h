@@ -9,7 +9,7 @@
 #ifndef ConductanceDisplay_H
 #define ConductanceDisplay_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ConductanceDisplay.h"
 #include <memory>
 #include <fstream>

@@ -3,7 +3,7 @@
 //
 // =============================================================================
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "ChannelKv1_STR_FSI_mouse.h"
 #include "CG_ChannelKv1_STR_FSI_mouse.h"
 #include "rndm.h"

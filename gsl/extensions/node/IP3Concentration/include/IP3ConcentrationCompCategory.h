@@ -9,7 +9,7 @@
 #ifndef IP3ConcentrationCompCategory_H
 #define IP3ConcentrationCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_IP3ConcentrationCompCategory.h"
 #include "CountableModel.h"
 

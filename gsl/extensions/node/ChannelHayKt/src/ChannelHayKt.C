@@ -6,7 +6,7 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
-#include "Lens.h"
+#include "Mgs.h"
 #include "ChannelHayKt.h"
 #include "CG_ChannelHayKt.h"
 #include "rndm.h"

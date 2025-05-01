@@ -6,7 +6,7 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
-#include "Lens.h"
+#include "Mgs.h"
 #include "LifeNode.h"
 #include "CG_LifeNode.h"
 #if defined(HAVE_GPU) 

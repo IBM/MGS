@@ -9,7 +9,7 @@
 #ifndef FileDriverUnitCompCategory_H
 #define FileDriverUnitCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_FileDriverUnitCompCategory.h"
 #include <fstream>
 #include <sstream>

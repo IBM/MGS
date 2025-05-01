@@ -6,7 +6,7 @@
 #ifndef ChannelKIR_STR_MSN_mouseCompCategory_H
 #define ChannelKIR_STR_MSN_mouseCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelKIR_STR_MSN_mouseCompCategory.h"
 #include "CountableModel.h"
 

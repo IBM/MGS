@@ -9,7 +9,7 @@
 #ifndef MegaSynapticCleft_H
 #define MegaSynapticCleft_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_MegaSynapticCleft.h"
 #include "rndm.h"
 

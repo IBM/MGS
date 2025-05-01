@@ -8,7 +8,7 @@
 // =============================================================================
 #ifndef ServiceConnectorFunctor_H
 #define ServiceConnectorFunctor_H
-#include "Lens.h"
+#include "Mgs.h"
 
 #include "CG_ServiceConnectorFunctorBase.h"
 #include "LensContext.h"

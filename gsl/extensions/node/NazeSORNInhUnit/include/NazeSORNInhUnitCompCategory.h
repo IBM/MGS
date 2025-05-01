@@ -9,7 +9,7 @@
 #ifndef NazeSORNInhUnitCompCategory_H
 #define NazeSORNInhUnitCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_NazeSORNInhUnitCompCategory.h"
 
 class NDPairList;

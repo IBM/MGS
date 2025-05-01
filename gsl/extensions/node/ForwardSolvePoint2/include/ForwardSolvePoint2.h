@@ -9,7 +9,7 @@
 #ifndef ForwardSolvePoint2_H
 #define ForwardSolvePoint2_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ForwardSolvePoint2.h"
 #include "rndm.h"
 

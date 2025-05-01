@@ -14,7 +14,7 @@
 #ifndef ChannelCaHVA_H
 #define ChannelCaHVA_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelCaHVA.h"
 #include "rndm.h"
 

@@ -9,7 +9,7 @@
 #ifndef LifeNode_H
 #define LifeNode_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_LifeNode.h"
 #include "rndm.h"
 #include "NumberUtils.h"

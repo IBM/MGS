@@ -9,7 +9,7 @@
 #ifndef FSIIAFUnit_H
 #define FSIIAFUnit_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_FSIIAFUnit.h"
 #include "rndm.h"
 #include <fstream>

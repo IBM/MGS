@@ -9,7 +9,7 @@
 #ifndef SpineIAFUnit_H
 #define SpineIAFUnit_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_SpineIAFUnit.h"
 #include "rndm.h"
 

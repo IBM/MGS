@@ -9,7 +9,7 @@
 #ifndef LinskerInfomaxUnitCompCategory_H
 #define LinskerInfomaxUnitCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_LinskerInfomaxUnitCompCategory.h"
 
 class NDPairList;

@@ -9,7 +9,7 @@
 #ifndef PreSynapticPointCompCategory_H
 #define PreSynapticPointCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_PreSynapticPointCompCategory.h"
 #include "CountableModel.h"
 

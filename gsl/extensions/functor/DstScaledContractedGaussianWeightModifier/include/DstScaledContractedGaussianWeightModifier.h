@@ -9,7 +9,7 @@
 #ifndef DstScaledContractedGaussianWeightModifier_H
 #define DstScaledContractedGaussianWeightModifier_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_DstScaledContractedGaussianWeightModifierBase.h"
 #include "LensContext.h"
 #include "ParameterSet.h"

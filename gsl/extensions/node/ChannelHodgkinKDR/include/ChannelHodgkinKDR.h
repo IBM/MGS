@@ -9,7 +9,7 @@
 #ifndef ChannelHodgkinKDR_H
 #define ChannelHodgkinKDR_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelHodgkinKDR.h"
 #include "rndm.h"
 

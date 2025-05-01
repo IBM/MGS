@@ -6,7 +6,7 @@
 #ifndef ChannelNat_STR_FSI_mouseCompCategory_H
 #define ChannelNat_STR_FSI_mouseCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelNat_STR_FSI_mouseCompCategory.h"
 #include "CountableModel.h"
 class NDPairList;

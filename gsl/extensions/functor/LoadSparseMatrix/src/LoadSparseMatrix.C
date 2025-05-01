@@ -1,4 +1,4 @@
-#include "Lens.h"
+#include "Mgs.h"
 #include "LoadSparseMatrix.h"
 #include "CG_LoadSparseMatrixBase.h"
 #include "LensContext.h"

@@ -6,8 +6,8 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
-#ifndef LENS_H
-#define LENS_H
+#ifndef MGS_H
+#define MGS_H
 #include "RNG.h"
 #include "Copyright.h"
 #endif

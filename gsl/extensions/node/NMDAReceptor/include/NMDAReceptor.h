@@ -9,7 +9,7 @@
 #ifndef NMDAReceptor_H
 #define NMDAReceptor_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_NMDAReceptor.h"
 #include "rndm.h"
 

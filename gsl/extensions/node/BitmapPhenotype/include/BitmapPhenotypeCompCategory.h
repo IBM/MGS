@@ -9,7 +9,7 @@
 #ifndef BitmapPhenotypeCompCategory_H
 #define BitmapPhenotypeCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_BitmapPhenotypeCompCategory.h"
 
 class NDPairList;

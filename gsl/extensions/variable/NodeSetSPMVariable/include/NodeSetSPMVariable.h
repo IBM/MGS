@@ -8,7 +8,7 @@
 // =============================================================================
 #ifndef NodeSetSPMVariable_H
 #define NodeSetSPMVariable_H
-#include "Lens.h"
+#include "Mgs.h"
 
 #include "CG_NodeSetSPMVariable.h"
 #include <memory>

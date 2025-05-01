@@ -3,7 +3,7 @@
 //
 // =============================================================================
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "ChannelCaHVA_GPe_mouse.h"
 #include "CG_ChannelCaHVA_GPe_mouse.h"
 #include "rndm.h"

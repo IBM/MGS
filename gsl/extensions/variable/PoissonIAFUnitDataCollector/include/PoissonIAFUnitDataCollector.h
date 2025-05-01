@@ -9,7 +9,7 @@
 #ifndef PoissonIAFUnitDataCollector_H
 #define PoissonIAFUnitDataCollector_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_PoissonIAFUnitDataCollector.h"
 #include <memory>
 #include <fstream>

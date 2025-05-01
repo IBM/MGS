@@ -1,7 +1,16 @@
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
 #ifndef NMDAReceptor_Markov_H
 #define NMDAReceptor_Markov_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_NMDAReceptor_Markov.h"
 #include "rndm.h"
 

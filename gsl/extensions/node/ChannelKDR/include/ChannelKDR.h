@@ -14,7 +14,7 @@
 #ifndef ChannelKDR_H
 #define ChannelKDR_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelKDR.h"
 #include "rndm.h"
 

@@ -9,7 +9,7 @@
 #ifndef ChannelHayMK_H
 #define ChannelHayMK_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelHayMK.h"
 #include "rndm.h"
 

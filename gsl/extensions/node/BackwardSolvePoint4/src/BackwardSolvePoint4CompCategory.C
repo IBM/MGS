@@ -6,7 +6,7 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
-#include "Lens.h"
+#include "Mgs.h"
 #include "BackwardSolvePoint4CompCategory.h"
 #include "NDPairList.h"
 #include "CG_BackwardSolvePoint4CompCategory.h"

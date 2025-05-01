@@ -6,7 +6,7 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
-#include "Lens.h"
+#include "Mgs.h"
 #include "MihalasNieburIAFUnit.h"
 #include "CG_MihalasNieburIAFUnit.h"
 #include "rndm.h"

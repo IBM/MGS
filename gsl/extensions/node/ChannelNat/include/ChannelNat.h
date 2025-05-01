@@ -14,7 +14,7 @@
 #ifndef ChannelNat_H
 #define ChannelNat_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelNat.h"
 #include "rndm.h"
 

@@ -9,7 +9,7 @@
 #ifndef ZhengSORNUnitDataCollector_H
 #define ZhengSORNUnitDataCollector_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ZhengSORNUnitDataCollector.h"
 #include <memory>
 

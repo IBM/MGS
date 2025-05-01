@@ -7,7 +7,7 @@
 // 
 // =============================================================================
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "ChannelSKCompCategory.h"
 #include "NDPairList.h"
 #include "CG_ChannelSKCompCategory.h"

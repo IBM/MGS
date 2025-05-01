@@ -9,7 +9,7 @@
 #ifndef CaConcentration_H
 #define CaConcentration_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_CaConcentration.h"
 #include "SegmentDescriptor.h"
 #include "MaxComputeOrder.h"

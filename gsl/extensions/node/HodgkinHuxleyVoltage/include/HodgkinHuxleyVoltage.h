@@ -9,7 +9,7 @@
 #ifndef HodgkinHuxleyVoltage_H
 #define HodgkinHuxleyVoltage_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_HodgkinHuxleyVoltage.h"
 #include "SegmentDescriptor.h"
 #include "MaxComputeOrder.h"

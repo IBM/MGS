@@ -12,7 +12,7 @@
 // =============================================================================
 
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "ChannelKAf.h"
 #include "CG_ChannelKAf.h"
 #include "rndm.h"

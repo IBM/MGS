@@ -9,7 +9,7 @@
 #ifndef CleftAstrocyteIAFUnit_H
 #define CleftAstrocyteIAFUnit_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_CleftAstrocyteIAFUnit.h"
 #include "rndm.h"
 

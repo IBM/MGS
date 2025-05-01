@@ -6,7 +6,7 @@
 #ifndef ChannelKv1_STR_FSI_mouseCompCategory_H
 #define ChannelKv1_STR_FSI_mouseCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelKv1_STR_FSI_mouseCompCategory.h"
 #include "CountableModel.h"
 

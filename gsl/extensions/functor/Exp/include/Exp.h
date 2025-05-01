@@ -9,7 +9,7 @@
 #ifndef Exp_H
 #define Exp_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ExpBase.h"
 #include "LensContext.h"
 #include <memory>

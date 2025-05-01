@@ -9,7 +9,7 @@
 #ifndef ChannelSchweighoferNat_H
 #define ChannelSchweighoferNat_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelSchweighoferNat.h"
 #include "rndm.h"
 

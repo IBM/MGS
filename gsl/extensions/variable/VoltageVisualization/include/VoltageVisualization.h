@@ -10,7 +10,7 @@
 #define VoltageVisualization_H
 
 #include <mpi.h>
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_VoltageVisualization.h"
 #include "SegmentDescriptor.h"
 #include "CompartmentKey.h"

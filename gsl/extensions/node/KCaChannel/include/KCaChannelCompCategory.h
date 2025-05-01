@@ -9,7 +9,7 @@
 #ifndef KCaChannelCompCategory_H
 #define KCaChannelCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_KCaChannelCompCategory.h"
 #include "CountableModel.h"
 

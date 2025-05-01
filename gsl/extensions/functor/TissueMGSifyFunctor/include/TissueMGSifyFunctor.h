@@ -9,7 +9,7 @@
 #ifndef TissueMGSifyFunctor_H
 #define TissueMGSifyFunctor_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_TissueMGSifyFunctorBase.h"
 #include "LensContext.h"
 #include "TissueElement.h"

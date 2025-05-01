@@ -6,7 +6,7 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
-#include "Lens.h"
+#include "Mgs.h"
 #include "HCNChannelCompCategory.h"
 #include "NDPairList.h"
 #include "CG_HCNChannelCompCategory.h"

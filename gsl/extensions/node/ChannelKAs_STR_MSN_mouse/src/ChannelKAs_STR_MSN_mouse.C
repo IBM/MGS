@@ -3,7 +3,7 @@
 //
 // =============================================================================
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "ChannelKAs_STR_MSN_mouse.h"
 #include "CG_ChannelKAs_STR_MSN_mouse.h"
 #include "rndm.h"

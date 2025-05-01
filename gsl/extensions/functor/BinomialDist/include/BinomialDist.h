@@ -9,7 +9,7 @@
 #ifndef BinomialDist_H
 #define BinomialDist_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_BinomialDistBase.h"
 #include "LensContext.h"
 #include "rndm.h"

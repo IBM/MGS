@@ -9,7 +9,7 @@
 #ifndef CahChannel_H
 #define CahChannel_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_CahChannel.h"
 #include "rndm.h"
 

@@ -9,7 +9,7 @@
 #ifndef ChannelHayCaHVACompCategory_H
 #define ChannelHayCaHVACompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelHayCaHVACompCategory.h"
 #include "CountableModel.h"
 

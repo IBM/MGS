@@ -9,7 +9,7 @@
 #ifndef NaChannel_AIS_H
 #define NaChannel_AIS_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_NaChannel_AIS.h"
 #include "rndm.h"
 

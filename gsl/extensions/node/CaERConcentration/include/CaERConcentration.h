@@ -9,7 +9,7 @@
 #ifndef CaERConcentration_H
 #define CaERConcentration_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_CaERConcentration.h"
 #include "SegmentDescriptor.h"
 #include "MaxComputeOrder.h"

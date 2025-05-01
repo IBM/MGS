@@ -9,7 +9,7 @@
 #ifndef CaConcentrationJunction_H
 #define CaConcentrationJunction_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_CaConcentrationJunction.h"
 #include "rndm.h"
 #include "MaxComputeOrder.h"

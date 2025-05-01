@@ -9,7 +9,7 @@
 #ifndef WaveDriverUnit_H
 #define WaveDriverUnit_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_WaveDriverUnit.h"
 #include "rndm.h"
 

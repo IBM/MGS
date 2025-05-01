@@ -6,7 +6,7 @@
 #ifndef ChannelMK_GPe_mouse_H
 #define ChannelMK_GPe_mouse_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelMK_GPe_mouse.h"
 #include "rndm.h"
 

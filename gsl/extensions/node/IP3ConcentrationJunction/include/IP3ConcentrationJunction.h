@@ -9,7 +9,7 @@
 #ifndef IP3ConcentrationJunction_H
 #define IP3ConcentrationJunction_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_IP3ConcentrationJunction.h"
 #include "rndm.h"
 #include "MaxComputeOrder.h"

@@ -9,7 +9,7 @@
 #ifndef Log_H
 #define Log_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_LogBase.h"
 #include "LensContext.h"
 #include <memory>

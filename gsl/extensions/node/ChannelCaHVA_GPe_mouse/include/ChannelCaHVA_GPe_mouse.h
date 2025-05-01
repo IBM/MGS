@@ -6,7 +6,7 @@
 #ifndef ChannelCaHVA_GPe_mouse_H
 #define ChannelCaHVA_GPe_mouse_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelCaHVA_GPe_mouse.h"
 #include "rndm.h"
 

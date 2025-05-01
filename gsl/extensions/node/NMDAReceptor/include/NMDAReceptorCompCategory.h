@@ -9,7 +9,7 @@
 #ifndef NMDAReceptorCompCategory_H
 #define NMDAReceptorCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_NMDAReceptorCompCategory.h"
 #include "CountableModel.h"
 

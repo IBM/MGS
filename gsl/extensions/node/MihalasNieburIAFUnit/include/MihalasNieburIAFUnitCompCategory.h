@@ -9,7 +9,7 @@
 #ifndef MihalasNieburIAFUnitCompCategory_H
 #define MihalasNieburIAFUnitCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_MihalasNieburIAFUnitCompCategory.h"
 
 class NDPairList;

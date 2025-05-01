@@ -9,7 +9,7 @@
 #ifndef MihalasNieburSynapseIAFUnitCompCategory_H
 #define MihalasNieburSynapseIAFUnitCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_MihalasNieburSynapseIAFUnitCompCategory.h"
 
 class NDPairList;

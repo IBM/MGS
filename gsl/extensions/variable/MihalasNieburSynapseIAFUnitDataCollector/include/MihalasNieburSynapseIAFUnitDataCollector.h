@@ -9,7 +9,7 @@
 #ifndef MihalasNieburSynapseIAFUnitDataCollector_H
 #define MihalasNieburSynapseIAFUnitDataCollector_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_MihalasNieburSynapseIAFUnitDataCollector.h"
 #include <memory>
 #include <fstream>

@@ -9,7 +9,7 @@
 #ifndef IP3Concentration_H
 #define IP3Concentration_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_IP3Concentration.h"
 #include "SegmentDescriptor.h"
 #include "MaxComputeOrder.h"

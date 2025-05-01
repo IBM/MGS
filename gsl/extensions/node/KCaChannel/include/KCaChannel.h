@@ -9,7 +9,7 @@
 #ifndef KCaChannel_H
 #define KCaChannel_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_KCaChannel.h"
 #include "rndm.h"
 

@@ -8,7 +8,7 @@
 // =============================================================================
 #ifndef BidirectConnectNodeSetsFunctor_H
 #define BidirectConnectNodeSetsFunctor_H
-#include "Lens.h"
+#include "Mgs.h"
 
 #include "CG_BidirectConnectNodeSetsFunctorBase.h"
 #include "LensContext.h"

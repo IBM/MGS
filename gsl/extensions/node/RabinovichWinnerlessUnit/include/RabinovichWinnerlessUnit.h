@@ -9,7 +9,7 @@
 #ifndef RabinovichWinnerlessUnit_H
 #define RabinovichWinnerlessUnit_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_RabinovichWinnerlessUnit.h"
 #include "rndm.h"
 #include <fstream>

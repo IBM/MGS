@@ -8,7 +8,7 @@
 // =============================================================================
 #ifndef ReverseFunctor_H
 #define ReverseFunctor_H
-#include "Lens.h"
+#include "Mgs.h"
 
 #include "CG_ReverseFunctorBase.h"
 #include "LensContext.h"

@@ -9,7 +9,7 @@
 #ifndef ChannelHodgkinNatCompCategory_H
 #define ChannelHodgkinNatCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelHodgkinNatCompCategory.h"
 #include "CountableModel.h"
 

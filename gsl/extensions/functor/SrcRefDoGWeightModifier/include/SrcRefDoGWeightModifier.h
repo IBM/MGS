@@ -8,7 +8,7 @@
 // =============================================================================
 #ifndef SrcRefDoGWeightModifier_H
 #define SrcRefDoGWeightModifier_H
-#include "Lens.h"
+#include "Mgs.h"
 
 #include "CG_SrcRefDoGWeightModifierBase.h"
 #include "LensContext.h"

@@ -9,7 +9,7 @@
 #ifndef MihalasNieburSynapseIAFUnit_H
 #define MihalasNieburSynapseIAFUnit_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_MihalasNieburSynapseIAFUnit.h"
 #include "rndm.h"
 

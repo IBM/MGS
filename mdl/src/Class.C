@@ -838,7 +838,7 @@ void Class::generateHeader(const std::string& moduleName)
    std::ostringstream os;
    printBeginning(os); 
 
-   os << "#include \"Lens.h\"\n";          // added by Jizhu Lu on 01/06/2006
+   os << "#include \"Mgs.h\"\n";          // added by Jizhu Lu on 01/06/2006
    os << _macroConditional.getBeginning(); // #ifndef FOO_H, for example
 
    printHeaders(_headers, os); // #include "Foo.h", for example
@@ -950,7 +950,7 @@ void Class::generateSource(const std::string& moduleName)
 
    os << _macroConditional.getBeginning();
 
-   os << "#include \"Lens.h\"\n";            // added by Jizhu Lu on 01/06/2006
+   os << "#include \"Mgs.h\"\n";            // added by Jizhu Lu on 01/06/2006
    os << _sourceFileBeginning;
    addExtraSourceHeader("\"" + getName() + ".h\"");
    printHeaders(_extraSourceHeaders, os);

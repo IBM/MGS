@@ -9,7 +9,7 @@
 #ifndef ChannelHayCaHVA_H
 #define ChannelHayCaHVA_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelHayCaHVA.h"
 #include "rndm.h"
 

@@ -9,7 +9,7 @@
 #ifndef SpineAttachment_VmCai_H
 #define SpineAttachment_VmCai_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_SpineAttachment_VmCai.h"
 #include "rndm.h"
 

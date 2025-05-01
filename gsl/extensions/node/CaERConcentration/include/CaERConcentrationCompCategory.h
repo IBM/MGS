@@ -9,7 +9,7 @@
 #ifndef CaERConcentrationCompCategory_H
 #define CaERConcentrationCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_CaERConcentrationCompCategory.h"
 #include "CountableModel.h"
 

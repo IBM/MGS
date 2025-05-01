@@ -9,7 +9,7 @@
 #ifndef LinskerInfomaxUnit_H
 #define LinskerInfomaxUnit_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_LinskerInfomaxUnit.h"
 #include "rndm.h"
 #include <fstream>

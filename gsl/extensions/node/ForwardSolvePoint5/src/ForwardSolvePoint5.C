@@ -6,7 +6,7 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
-#include "Lens.h"
+#include "Mgs.h"
 #include "ForwardSolvePoint5.h"
 #include "CG_ForwardSolvePoint5.h"
 #include "rndm.h"

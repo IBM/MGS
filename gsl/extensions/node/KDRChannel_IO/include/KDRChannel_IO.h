@@ -9,7 +9,7 @@
 #ifndef KDRChannel_IO_H
 #define KDRChannel_IO_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_KDRChannel_IO.h"
 #include "rndm.h"
 

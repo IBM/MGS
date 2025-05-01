@@ -9,7 +9,7 @@
 #ifndef GABAAReceptorCompCategory_H
 #define GABAAReceptorCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_GABAAReceptorCompCategory.h"
 #include "CountableModel.h"
 

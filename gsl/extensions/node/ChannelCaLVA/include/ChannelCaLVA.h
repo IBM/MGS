@@ -9,7 +9,7 @@
 #ifndef ChannelCaLVA_H
 #define ChannelCaLVA_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelCaLVA.h"
 #include "rndm.h"
 #include "MaxComputeOrder.h"

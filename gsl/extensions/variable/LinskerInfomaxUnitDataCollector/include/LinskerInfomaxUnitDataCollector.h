@@ -9,7 +9,7 @@
 #ifndef LinskerInfomaxUnitDataCollector_H
 #define LinskerInfomaxUnitDataCollector_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_LinskerInfomaxUnitDataCollector.h"
 #include <memory>
 

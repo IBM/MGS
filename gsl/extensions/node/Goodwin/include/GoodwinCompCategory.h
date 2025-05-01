@@ -9,7 +9,7 @@
 #ifndef GoodwinCompCategory_H
 #define GoodwinCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_GoodwinCompCategory.h"
 
 class NDPairList;

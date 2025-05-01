@@ -9,7 +9,7 @@
 #ifndef SrcDimensionConstrainedSampler_H
 #define SrcDimensionConstrainedSampler_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_SrcDimensionConstrainedSamplerBase.h"
 #include "LensContext.h"
 #include <memory>

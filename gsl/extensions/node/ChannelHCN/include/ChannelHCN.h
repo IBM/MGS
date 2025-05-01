@@ -14,7 +14,7 @@
 #ifndef ChannelHCN_H
 #define ChannelHCN_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelHCN.h"
 #include "rndm.h"
 

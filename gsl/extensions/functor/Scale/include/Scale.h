@@ -9,7 +9,7 @@
 #ifndef Scale_H
 #define Scale_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ScaleBase.h"
 #include "LensContext.h"
 #include <memory>

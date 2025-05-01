@@ -9,7 +9,7 @@
 #ifndef NazeSORNUnitDataCollectorSuppl_H
 #define NazeSORNUnitDataCollectorSuppl_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_NazeSORNUnitDataCollectorSuppl.h"
 #include <memory>
 

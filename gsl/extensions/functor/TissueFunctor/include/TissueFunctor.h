@@ -10,7 +10,7 @@
 #define TissueFunctor_H
 
 #include "MaxComputeOrder.h"
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_TissueFunctorBase.h"
 #include "LensContext.h"
 #include "DataItemArrayDataItem.h"

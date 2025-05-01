@@ -9,7 +9,7 @@
 #ifndef ConcentrationDisplay_H
 #define ConcentrationDisplay_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ConcentrationDisplay.h"
 #include <memory>
 #include <fstream>

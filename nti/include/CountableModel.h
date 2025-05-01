@@ -9,7 +9,7 @@
 #ifndef CountableModel_H
 #define CountableModel_H
 
-#include "Lens.h"
+#include "Mgs.h"
 
 class CountableModel
 {

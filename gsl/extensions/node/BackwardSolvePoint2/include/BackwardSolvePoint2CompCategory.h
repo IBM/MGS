@@ -9,7 +9,7 @@
 #ifndef BackwardSolvePoint2CompCategory_H
 #define BackwardSolvePoint2CompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_BackwardSolvePoint2CompCategory.h"
 
 class NDPairList;

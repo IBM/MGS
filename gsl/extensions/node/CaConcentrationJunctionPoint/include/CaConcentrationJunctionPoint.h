@@ -9,7 +9,7 @@
 #ifndef CaConcentrationJunctionPoint_H
 #define CaConcentrationJunctionPoint_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_CaConcentrationJunctionPoint.h"
 #include "rndm.h"
 

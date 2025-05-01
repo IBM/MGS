@@ -10,7 +10,7 @@
 #ifndef ChannelLeakCompCategory_H
 #define ChannelLeakCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelLeakCompCategory.h"
 #include "CountableModel.h"
 

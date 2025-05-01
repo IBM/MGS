@@ -6,7 +6,7 @@
 #ifndef ChannelNat_STR_FSI_mouse_H
 #define ChannelNat_STR_FSI_mouse_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelNat_STR_FSI_mouse.h"
 #include "rndm.h"
 

@@ -9,7 +9,7 @@
 #ifndef NaChannel_AISCompCategory_H
 #define NaChannel_AISCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_NaChannel_AISCompCategory.h"
 #include "CountableModel.h"
 

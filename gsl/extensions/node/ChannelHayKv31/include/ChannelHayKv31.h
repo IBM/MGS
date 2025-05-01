@@ -9,7 +9,7 @@
 #ifndef ChannelHayKv31_H
 #define ChannelHayKv31_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelHayKv31.h"
 #include "rndm.h"
 

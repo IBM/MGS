@@ -9,7 +9,7 @@
 #ifndef DstDimensionConstrainedSampler_H
 #define DstDimensionConstrainedSampler_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_DstDimensionConstrainedSamplerBase.h"
 #include "LensContext.h"
 #include <memory>

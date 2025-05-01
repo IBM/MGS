@@ -9,7 +9,7 @@
 #ifndef FileDriverUnitDataCollector_H
 #define FileDriverUnitDataCollector_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_FileDriverUnitDataCollector.h"
 #include <memory>
 #include <fstream>

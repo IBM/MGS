@@ -9,7 +9,7 @@
 #ifndef BackwardSolvePoint5_H
 #define BackwardSolvePoint5_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_BackwardSolvePoint5.h"
 #include "rndm.h"
 

@@ -9,7 +9,7 @@
 #ifndef SpineIAFUnitDataCollector_H
 #define SpineIAFUnitDataCollector_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_SpineIAFUnitDataCollector.h"
 #include <memory>
 #include <fstream>

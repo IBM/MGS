@@ -9,7 +9,7 @@
 #ifndef TissueNodeInitFunctor_H
 #define TissueNodeInitFunctor_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_TissueNodeInitFunctorBase.h"
 #include "LensContext.h"
 #include "TissueElement.h"

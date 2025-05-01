@@ -1,4 +1,4 @@
-#include "Lens.h"
+#include "Mgs.h"
 #include "IsoSamplerHybrid.h"
 #include "CG_IsoSamplerHybridBase.h"
 #include "LensContext.h"

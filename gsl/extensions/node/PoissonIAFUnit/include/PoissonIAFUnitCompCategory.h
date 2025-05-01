@@ -9,7 +9,7 @@
 #ifndef PoissonIAFUnitCompCategory_H
 #define PoissonIAFUnitCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_PoissonIAFUnitCompCategory.h"
 
 class NDPairList;

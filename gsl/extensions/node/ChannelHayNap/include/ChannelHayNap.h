@@ -11,7 +11,7 @@
 
 #include "../../nti/include/MaxComputeOrder.h"
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelHayNap.h"
 #include "rndm.h"
 

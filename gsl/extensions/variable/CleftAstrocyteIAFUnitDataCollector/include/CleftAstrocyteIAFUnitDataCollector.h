@@ -9,7 +9,7 @@
 #ifndef CleftAstrocyteIAFUnitDataCollector_H
 #define CleftAstrocyteIAFUnitDataCollector_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_CleftAstrocyteIAFUnitDataCollector.h"
 #include <memory>
 

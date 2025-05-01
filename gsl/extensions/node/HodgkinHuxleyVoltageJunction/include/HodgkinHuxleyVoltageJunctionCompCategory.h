@@ -9,7 +9,7 @@
 #ifndef HodgkinHuxleyVoltageJunctionCompCategory_H
 #define HodgkinHuxleyVoltageJunctionCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_HodgkinHuxleyVoltageJunctionCompCategory.h"
 #include "CountableModel.h"
 

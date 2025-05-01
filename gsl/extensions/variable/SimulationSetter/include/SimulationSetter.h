@@ -9,7 +9,7 @@
 #ifndef SimulationSetter_H
 #define SimulationSetter_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_SimulationSetter.h"
 #include <memory>
 

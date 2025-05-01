@@ -10,7 +10,7 @@
 #define VoltageDisplay_H
 
 #include "CG_VoltageDisplay.h"
-#include "Lens.h"
+#include "Mgs.h"
 #include <fstream>
 #include <memory>
 

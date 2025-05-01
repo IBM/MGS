@@ -9,7 +9,7 @@
 #ifndef SpineIAFUnitCompCategory_H
 #define SpineIAFUnitCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_SpineIAFUnitCompCategory.h"
 
 class NDPairList;

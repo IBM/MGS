@@ -1,4 +1,4 @@
-#include "Lens.h"
+#include "Mgs.h"
 #include "SetSourceArrayIndexFunctor.h"
 #include "CG_SetSourceArrayIndexFunctorBase.h"
 #include "LensContext.h"

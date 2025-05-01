@@ -9,7 +9,7 @@
 #ifndef LifeDataCollector_H
 #define LifeDataCollector_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_LifeDataCollector.h"
 #include <memory>
 #include <fstream>

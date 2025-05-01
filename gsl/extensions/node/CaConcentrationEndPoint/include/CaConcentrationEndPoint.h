@@ -9,7 +9,7 @@
 #ifndef CaConcentrationEndPoint_H
 #define CaConcentrationEndPoint_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_CaConcentrationEndPoint.h"
 #include "rndm.h"
 

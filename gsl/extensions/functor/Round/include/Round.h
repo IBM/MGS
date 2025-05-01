@@ -9,7 +9,7 @@
 #ifndef Round_H
 #define Round_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_RoundBase.h"
 #include "LensContext.h"
 #include <memory>

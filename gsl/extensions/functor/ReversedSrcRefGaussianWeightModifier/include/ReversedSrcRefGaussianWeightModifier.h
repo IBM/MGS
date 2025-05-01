@@ -8,7 +8,7 @@
 // =============================================================================
 #ifndef ReversedSrcRefGaussianWeightModifier_H
 #define ReversedSrcRefGaussianWeightModifier_H
-#include "Lens.h"
+#include "Mgs.h"
 
 #include "CG_ReversedSrcRefGaussianWeightModifierBase.h"
 #include "LensContext.h"

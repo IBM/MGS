@@ -9,7 +9,7 @@
 #ifndef ChannelHodgkinKDRCompCategory_H
 #define ChannelHodgkinKDRCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelHodgkinKDRCompCategory.h"
 #include "CountableModel.h"
 

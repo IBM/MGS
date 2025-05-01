@@ -1,4 +1,4 @@
-#include "Lens.h"
+#include "Mgs.h"
 #include "GradientLayout.h"
 #include "CG_GradientLayoutBase.h"
 #include "LensContext.h"

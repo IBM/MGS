@@ -15,7 +15,7 @@
 #define ChannelKAf_H
 
 #include "CG_ChannelKAf.h"
-#include "Lens.h"
+#include "Mgs.h"
 #include "rndm.h"
 
 #include "MaxComputeOrder.h"

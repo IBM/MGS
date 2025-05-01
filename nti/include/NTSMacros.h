@@ -1,5 +1,3 @@
-#ifndef _NTSMacros_H
-#define _NTSMacros_H
 // =============================================================================
 // (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
@@ -8,7 +6,8 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
-
+#ifndef _NTSMacros_H
+#define _NTSMacros_H
 /// IMPORTANT: jump to USER-SELECTED section
 
 ///////////////////////////////////////////////////////////////////////

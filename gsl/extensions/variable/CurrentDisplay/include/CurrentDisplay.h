@@ -10,7 +10,7 @@
 #define CurrentDisplay_H
 
 #include "CG_CurrentDisplay.h"
-#include "Lens.h"
+#include "Mgs.h"
 #include <fstream>
 #include <memory>
 

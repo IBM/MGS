@@ -9,7 +9,7 @@
 #ifndef VoltageEndPointCompCategory_H
 #define VoltageEndPointCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_VoltageEndPointCompCategory.h"
 
 class NDPairList;

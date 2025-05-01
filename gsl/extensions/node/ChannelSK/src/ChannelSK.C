@@ -11,7 +11,7 @@
 // 
 // =============================================================================
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "ChannelSK.h"
 #include "CG_ChannelSK.h"
 #include "rndm.h"

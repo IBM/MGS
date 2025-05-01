@@ -9,7 +9,7 @@
 #ifndef FileDriverUnit_H
 #define FileDriverUnit_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_FileDriverUnit.h"
 #include "rndm.h"
 

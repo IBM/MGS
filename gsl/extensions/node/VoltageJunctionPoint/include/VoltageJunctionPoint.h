@@ -9,7 +9,7 @@
 #ifndef VoltageJunctionPoint_H
 #define VoltageJunctionPoint_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_VoltageJunctionPoint.h"
 #include "rndm.h"
 

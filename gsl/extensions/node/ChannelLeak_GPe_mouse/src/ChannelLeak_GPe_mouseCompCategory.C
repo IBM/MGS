@@ -3,7 +3,7 @@
 //
 // =============================================================================
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "ChannelLeak_GPe_mouseCompCategory.h"
 #include "NDPairList.h"
 #include "CG_ChannelLeak_GPe_mouseCompCategory.h"

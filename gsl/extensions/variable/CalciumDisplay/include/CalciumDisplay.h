@@ -9,7 +9,7 @@
 #ifndef CalciumDisplay_H
 #define CalciumDisplay_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_CalciumDisplay.h"
 #include <memory>
 #include <fstream>

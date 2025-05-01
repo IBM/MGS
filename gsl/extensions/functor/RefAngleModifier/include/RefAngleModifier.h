@@ -8,7 +8,7 @@
 // =============================================================================
 #ifndef RefAngleModifier_H
 #define RefAngleModifier_H
-#include "Lens.h"
+#include "Mgs.h"
 
 #include "CG_RefAngleModifierBase.h"
 #include "LensContext.h"

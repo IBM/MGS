@@ -9,7 +9,7 @@
 #ifndef CaConcentrationJunctionPointCompCategory_H
 #define CaConcentrationJunctionPointCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_CaConcentrationJunctionPointCompCategory.h"
 
 class NDPairList;

@@ -9,7 +9,7 @@
 #ifndef Threshold_H
 #define Threshold_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ThresholdBase.h"
 #include "LensContext.h"
 #include <memory>

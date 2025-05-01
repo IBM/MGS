@@ -9,7 +9,7 @@
 #ifndef NameReturnValue_H
 #define NameReturnValue_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_NameReturnValueBase.h"
 #include "LensContext.h"
 #include "NDPairList.h"

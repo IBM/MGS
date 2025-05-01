@@ -1,4 +1,4 @@
-#include "Lens.h"
+#include "Mgs.h"
 #include "RandomDispersalLayout.h"
 #include "CG_RandomDispersalLayoutBase.h"
 #include "LensContext.h"

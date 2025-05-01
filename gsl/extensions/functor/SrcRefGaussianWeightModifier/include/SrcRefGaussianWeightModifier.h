@@ -8,7 +8,7 @@
 // =============================================================================
 #ifndef SrcRefGaussianWeightModifier_H
 #define SrcRefGaussianWeightModifier_H
-#include "Lens.h"
+#include "Mgs.h"
 
 #include "CG_SrcRefGaussianWeightModifierBase.h"
 #include "LensContext.h"

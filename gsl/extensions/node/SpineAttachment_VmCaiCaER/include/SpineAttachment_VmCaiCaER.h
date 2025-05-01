@@ -1,7 +1,16 @@
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
 #ifndef SpineAttachment_VmCaiCaER_H
 #define SpineAttachment_VmCaiCaER_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_SpineAttachment_VmCaiCaER.h"
 #include "rndm.h"
 #include "SegmentDescriptor.h"

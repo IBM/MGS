@@ -8,7 +8,7 @@
 // =============================================================================
 #ifndef GetNodeCoordFunctor_H
 #define GetNodeCoordFunctor_H
-#include "Lens.h"
+#include "Mgs.h"
 
 #include "CG_GetNodeCoordFunctorBase.h"
 #include "LensContext.h"

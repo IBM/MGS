@@ -8,7 +8,7 @@
 // =============================================================================
 #ifndef DstScaledGaussianWeightModifier_H
 #define DstScaledGaussianWeightModifier_H
-#include "Lens.h"
+#include "Mgs.h"
 
 #include "CG_DstScaledGaussianWeightModifierBase.h"
 #include "LensContext.h"

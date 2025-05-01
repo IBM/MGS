@@ -9,7 +9,7 @@
 #ifndef TissueConnectorFunctor_H
 #define TissueConnectorFunctor_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_TissueConnectorFunctorBase.h"
 #include "LensContext.h"
 #include "TissueElement.h"

@@ -9,7 +9,7 @@
 #ifndef SpineAttachment_VmCompCategory_H
 #define SpineAttachment_VmCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_SpineAttachment_VmCompCategory.h"
 #include "CountableModel.h"
 

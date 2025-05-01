@@ -9,7 +9,7 @@
 #ifndef ZhengSORNExcUnit_H
 #define ZhengSORNExcUnit_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ZhengSORNExcUnit.h"
 #include "rndm.h"
 #include <fstream>

@@ -948,27 +948,25 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     if [ $? -eq 0 ] && [  `ls $GSLROOT/bin/gslparser` ]; then
       echoerr -e "\n\n\n${cc_blue}Congratulations! You have made ${TYPE} ...${cc_normal}
 
-    To run the test NTS tissue simulation :
-
-      1) type \"cd graphs/Compartmental\"/
+    To run a test ${TYPE} tissue simulation :\n"
+      if { [[  $TYPE == *"NTS"* ]] || [[ $TYPE == *"NVU"* ]] ; } ; then
+        echoerr -e "      1) type \"cd graphs/Compartmental\"/
       2) browse to http://neuromorpho.org/neuroMorpho/bylab.jsp
       3) click \"Markram,\" \"Select All,\" \"Get SWC files of selected neurons\"
       4) download and extract zipped .swc files to graphs/Compartmental/neurons/*.swc
       5) type \"mpiexec -n 2  ../../gsl/bin/gslparser Tissue1.gsl\"
-
-
-    To run a test MGS simulation :
-
-      1) type \"cd graphs/Life\"
+      \n\n"
+      elif [[ $TYPE == *"MGS"* ]]; then
+        echoerr -e "      1) type \"cd graphs/Life\"
       2) type \"mpiexec -n 1 ../../gsl/bin/gslparser -t 4 -f Life.gsl\"
-
-    To run a test NGS simulation :
-
-      1) type \"cd graphs/IAF\"
+      \n\n"
+      elif [[ $TYPE == *"NGS"* ]]; then
+        echoerr -e "      1) type \"cd graphs/IAF\"
       2) type \"mpiexec -n 1 ../../gsl/bin/gslparser -t 4 -f leakyIAF.gsl -s \`date +%s\`\"
       3) type \"cd ../../postprocess/IAF/\"
       4) run the MATLAB script \"leakyIAF.m\"
       \n\n"
+      fi
       if [ "$REBUILD" == "-rebuild" ] ;then
         cd $BASE_FOLDER
         touch .built && echo $BASE_FOLDER > .built

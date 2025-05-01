@@ -1,4 +1,4 @@
-#include "Lens.h"
+#include "Mgs.h"
 #include "ConnectNodeSetsByVolumeFunctor.h"
 #include "CG_ConnectNodeSetsByVolumeFunctorBase.h"
 #include "LensContext.h"

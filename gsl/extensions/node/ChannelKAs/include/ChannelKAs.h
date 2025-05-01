@@ -15,7 +15,7 @@
 #ifndef ChannelKAs_H
 #define ChannelKAs_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelKAs.h"
 #include "rndm.h"
 

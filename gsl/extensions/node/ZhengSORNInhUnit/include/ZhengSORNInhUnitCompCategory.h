@@ -9,7 +9,7 @@
 #ifndef ZhengSORNInhUnitCompCategory_H
 #define ZhengSORNInhUnitCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ZhengSORNInhUnitCompCategory.h"
 
 class NDPairList;

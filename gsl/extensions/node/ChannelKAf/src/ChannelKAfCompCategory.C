@@ -8,7 +8,7 @@
 // =============================================================================
 
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "ChannelKAfCompCategory.h"
 #include "NDPairList.h"
 #include "CG_ChannelKAfCompCategory.h"

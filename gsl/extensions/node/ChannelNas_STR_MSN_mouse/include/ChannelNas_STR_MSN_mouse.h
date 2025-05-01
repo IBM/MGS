@@ -6,7 +6,7 @@
 #ifndef ChannelNas_STR_MSN_mouse_H
 #define ChannelNas_STR_MSN_mouse_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelNas_STR_MSN_mouse.h"
 #include "rndm.h"
 

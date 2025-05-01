@@ -8,7 +8,7 @@
 // =============================================================================
 #ifndef PolyConnectorFunctor_H
 #define PolyConnectorFunctor_H
-#include "Lens.h"
+#include "Mgs.h"
 
 #include "CG_PolyConnectorFunctorBase.h"
 #include "LensContext.h"

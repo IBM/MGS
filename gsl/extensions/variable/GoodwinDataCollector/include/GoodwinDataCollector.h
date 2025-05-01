@@ -9,7 +9,7 @@
 #ifndef GoodwinDataCollector_H
 #define GoodwinDataCollector_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_GoodwinDataCollector.h"
 #include <memory>
 #include <fstream>

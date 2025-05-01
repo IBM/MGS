@@ -9,7 +9,7 @@
 #ifndef ForwardSolvePoint6CompCategory_H
 #define ForwardSolvePoint6CompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ForwardSolvePoint6CompCategory.h"
 
 class NDPairList;

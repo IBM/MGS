@@ -9,7 +9,7 @@
 #ifndef LeakyIAFUnitDataCollector_H
 #define LeakyIAFUnitDataCollector_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_LeakyIAFUnitDataCollector.h"
 #include <memory>
 #include <fstream>

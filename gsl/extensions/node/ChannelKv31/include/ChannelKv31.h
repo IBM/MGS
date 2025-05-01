@@ -14,7 +14,7 @@
 #ifndef ChannelKv31_H
 #define ChannelKv31_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelKv31.h"
 #include "rndm.h"
 

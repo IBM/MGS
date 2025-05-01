@@ -9,7 +9,7 @@
 #ifndef MotoneuronUnitCompCategory_H
 #define MotoneuronUnitCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_MotoneuronUnitCompCategory.h"
 
 class NDPairList;

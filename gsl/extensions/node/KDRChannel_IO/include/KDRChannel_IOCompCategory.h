@@ -9,7 +9,7 @@
 #ifndef KDRChannel_IOCompCategory_H
 #define KDRChannel_IOCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_KDRChannel_IOCompCategory.h"
 #include "CountableModel.h"
 

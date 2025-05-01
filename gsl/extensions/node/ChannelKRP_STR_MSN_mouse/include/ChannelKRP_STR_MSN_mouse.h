@@ -6,7 +6,7 @@
 #ifndef ChannelKRP_STR_MSN_mouse_H
 #define ChannelKRP_STR_MSN_mouse_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelKRP_STR_MSN_mouse.h"
 #include "rndm.h"
 

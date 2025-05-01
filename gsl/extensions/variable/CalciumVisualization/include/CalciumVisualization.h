@@ -10,7 +10,7 @@
 #define CalciumVisualization_H
 
 #include <mpi.h>
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_CalciumVisualization.h"
 #include "SegmentDescriptor.h"
 #include "CompartmentKey.h"

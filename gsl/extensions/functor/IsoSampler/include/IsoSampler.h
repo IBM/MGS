@@ -9,7 +9,7 @@
 #ifndef IsoSampler_H
 #define IsoSampler_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_IsoSamplerBase.h"
 #include "LensContext.h"
 #include <memory>

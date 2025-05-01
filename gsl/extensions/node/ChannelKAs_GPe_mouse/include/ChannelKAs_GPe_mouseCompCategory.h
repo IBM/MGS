@@ -6,7 +6,7 @@
 #ifndef ChannelKAs_GPe_mouseCompCategory_H
 #define ChannelKAs_GPe_mouseCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelKAs_GPe_mouseCompCategory.h"
 #include "CountableModel.h"
 

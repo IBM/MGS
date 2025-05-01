@@ -9,7 +9,7 @@
 #ifndef AMPAReceptorCompCategory_H
 #define AMPAReceptorCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_AMPAReceptorCompCategory.h"
 #include "CountableModel.h"
 

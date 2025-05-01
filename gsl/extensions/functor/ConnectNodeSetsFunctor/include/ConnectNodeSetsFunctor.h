@@ -8,7 +8,7 @@
 // =============================================================================
 #ifndef ConnectNodeSetsFunctor_H
 #define ConnectNodeSetsFunctor_H
-#include "Lens.h"
+#include "Mgs.h"
 
 #include "CG_ConnectNodeSetsFunctorBase.h"
 #include "LensContext.h"

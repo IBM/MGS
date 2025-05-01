@@ -7,7 +7,7 @@
 // 
 // =============================================================================
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "ChannelLeakCompCategory.h"
 #include "NDPairList.h"
 #include "CG_ChannelLeakCompCategory.h"

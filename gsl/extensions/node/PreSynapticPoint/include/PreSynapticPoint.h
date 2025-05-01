@@ -9,7 +9,7 @@
 #ifndef PreSynapticPoint_H
 #define PreSynapticPoint_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_PreSynapticPoint.h"
 #include "rndm.h"
 

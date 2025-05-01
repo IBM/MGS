@@ -8,7 +8,7 @@
 // =============================================================================
 #ifndef GetPreNodeCoordFunctor_H
 #define GetPreNodeCoordFunctor_H
-//#include "Lens.h"
+//#include "Mgs.h"
 
 #include "CG_GetPreNodeCoordFunctorBase.h"
 #include "LensContext.h"

@@ -9,7 +9,7 @@
 #ifndef CaCurrentDisplay_H
 #define CaCurrentDisplay_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_CaCurrentDisplay.h"
 #include <memory>
 #include <fstream>

@@ -9,7 +9,7 @@
 #ifndef WaveDriverUnitDataCollector_H
 #define WaveDriverUnitDataCollector_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_WaveDriverUnitDataCollector.h"
 #include <memory>
 #include <fstream>

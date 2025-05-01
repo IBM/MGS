@@ -9,7 +9,7 @@
 #ifndef IP3ConcentrationEndPointCompCategory_H
 #define IP3ConcentrationEndPointCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_IP3ConcentrationEndPointCompCategory.h"
 
 class NDPairList;

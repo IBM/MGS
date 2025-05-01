@@ -9,7 +9,7 @@
 #ifndef NaChannel_H
 #define NaChannel_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_NaChannel.h"
 #include "rndm.h"
 

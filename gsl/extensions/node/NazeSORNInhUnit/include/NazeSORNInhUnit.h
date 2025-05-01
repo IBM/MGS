@@ -9,7 +9,7 @@
 #ifndef NazeSORNInhUnit_H
 #define NazeSORNInhUnit_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_NazeSORNInhUnit.h"
 #include "rndm.h"
 #include <fstream>

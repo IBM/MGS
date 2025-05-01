@@ -9,7 +9,7 @@
 #ifndef BoutonIAFUnitDataCollector_H
 #define BoutonIAFUnitDataCollector_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_BoutonIAFUnitDataCollector.h"
 #include <memory>
 #include <fstream>

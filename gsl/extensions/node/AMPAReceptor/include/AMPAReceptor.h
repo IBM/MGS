@@ -9,7 +9,7 @@
 #ifndef AMPAReceptor_H
 #define AMPAReceptor_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_AMPAReceptor.h"
 #include "rndm.h"
 #include "MaxComputeOrder.h"

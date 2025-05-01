@@ -9,7 +9,7 @@
 #ifndef SpineAttachment_VmCaiCaERCompCategory_H
 #define SpineAttachment_VmCaiCaERCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_SpineAttachment_VmCaiCaERCompCategory.h"
 #include "CountableModel.h"
 

@@ -8,7 +8,7 @@
 // =============================================================================
 #ifndef DstRefDistanceModifier_H
 #define DstRefDistanceModifier_H
-#include "Lens.h"
+#include "Mgs.h"
 
 #include "CG_DstRefDistanceModifierBase.h"
 #include "LensContext.h"

@@ -7,7 +7,7 @@
 // 
 // =============================================================================
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "ChannelNapCompCategory.h"
 #include "NDPairList.h"
 #include "CG_ChannelNapCompCategory.h"

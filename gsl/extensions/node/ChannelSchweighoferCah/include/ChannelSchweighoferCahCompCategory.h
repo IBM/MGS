@@ -9,7 +9,7 @@
 #ifndef ChannelSchweighoferCahCompCategory_H
 #define ChannelSchweighoferCahCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelSchweighoferCahCompCategory.h"
 #include "CountableModel.h"
 

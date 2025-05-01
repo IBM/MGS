@@ -9,7 +9,7 @@
 #ifndef Goodwin_H
 #define Goodwin_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_Goodwin.h"
 #include "rndm.h"
 

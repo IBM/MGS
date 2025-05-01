@@ -9,7 +9,7 @@
 #ifndef MihalasNieburIAFUnitDataCollector_H
 #define MihalasNieburIAFUnitDataCollector_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_MihalasNieburIAFUnitDataCollector.h"
 #include <memory>
 #include <fstream>

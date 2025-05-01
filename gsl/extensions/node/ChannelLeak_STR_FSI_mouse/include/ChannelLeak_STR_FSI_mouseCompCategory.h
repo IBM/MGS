@@ -6,7 +6,7 @@
 #ifndef ChannelLeak_STR_FSI_mouseCompCategory_H
 #define ChannelLeak_STR_FSI_mouseCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelLeak_STR_FSI_mouseCompCategory.h"
 #include "CountableModel.h"
 

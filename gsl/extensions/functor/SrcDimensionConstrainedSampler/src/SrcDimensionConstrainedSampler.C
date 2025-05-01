@@ -6,7 +6,7 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
-#include "Lens.h"
+#include "Mgs.h"
 #include "SrcDimensionConstrainedSampler.h"
 #include "CG_SrcDimensionConstrainedSamplerBase.h"
 #include "LensContext.h"

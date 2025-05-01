@@ -9,7 +9,7 @@
 #ifndef LeakyIAFUnit_H
 #define LeakyIAFUnit_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_LeakyIAFUnit.h"
 #include "rndm.h"
 

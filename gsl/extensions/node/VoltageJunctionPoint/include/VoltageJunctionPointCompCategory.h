@@ -9,7 +9,7 @@
 #ifndef VoltageJunctionPointCompCategory_H
 #define VoltageJunctionPointCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_VoltageJunctionPointCompCategory.h"
 
 class NDPairList;

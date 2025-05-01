@@ -6,7 +6,7 @@
 #ifndef ChannelNap_STR_MSN_mouseCompCategory_H
 #define ChannelNap_STR_MSN_mouseCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelNap_STR_MSN_mouseCompCategory.h"
 #include "CountableModel.h"
 

@@ -9,7 +9,7 @@
 #ifndef IP3ConcentrationJunctionPointCompCategory_H
 #define IP3ConcentrationJunctionPointCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_IP3ConcentrationJunctionPointCompCategory.h"
 
 class NDPairList;

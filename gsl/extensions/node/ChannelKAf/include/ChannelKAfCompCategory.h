@@ -11,7 +11,7 @@
 #ifndef ChannelKAfCompCategory_H
 #define ChannelKAfCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelKAfCompCategory.h"
 #include "CountableModel.h"
 
