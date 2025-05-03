@@ -61,10 +61,10 @@ function print_help {
   --as-GPU                      a collection of models that support CUDA GPU - using gpu.mdf
 
 Examples:
-1) build_script -p LINUX --as-NTS   :          builds NTS in a LINUX environment using MPI
-2) build_script -p BGL --as-NGS	    :          builds NGS on Blue Gene/L
-3) build_script -p BGP		    :          builds custom MGS domain on Blue Gene/P as specified in mgs.mdf
-4) build_script -p BGQ		    :          builds both NTS and NGS on Blue Gene/Q if mgs.mdf include nts.mdf and ngs.mdf\n
+1) build_mgs -p LINUX --as-NTS   :          builds NTS in a LINUX environment using MPI
+2) build_mgs -p BGL --as-NGS	    :          builds NGS on Blue Gene/L
+3) build_mgs -p BGP		    :          builds custom MGS domain on Blue Gene/P as specified in mgs.mdf
+4) build_mgs -p BGQ		    :          builds both NTS and NGS on Blue Gene/Q if mgs.mdf include nts.mdf and ngs.mdf\n
 \n
 Extra Libraries:
   export SUITESPARSE=\`pwd\`/SuiteSparse/
@@ -453,8 +453,8 @@ if [  -f "${Model2Use}"  ]; then
 fi
 if [ $EMPTY_FILE -eq 1  ]; then
   touch ${Model2Use}
-  echo "//Please consider to define the following option, with MODEL_TO_USE is required" > ${Model2Use} 
-  echo "//IMPORTANT: any change is expected to have full rebuild" >> ${Model2Use}
+  echo "//Please the following define options, with MODEL_TO_USE always required." > ${Model2Use} 
+  echo "//IMPORTANT: any change is expected to be followed by a  full rebuild." >> ${Model2Use}
   echo "//--------------------" >> ${Model2Use}
   echo "#define MODEL_TO_USE _MSN_2000_MAHON //with <value> is a macro defined in NTSMacros.h" >> ${Model2Use}
   echo "//#define MAX_COMPUTE_ORDER <value> (range: 0-7)" >> ${Model2Use}
@@ -469,6 +469,18 @@ if [ $EMPTY_FILE -eq 1  ]; then
   echo "#endif" >> ${Model2Use} 
 fi 
 
+if [ ! -f "$MDLROOT/parser/mdl.tab.h" ]; then
+  touch "$MDLROOT/parser/mdl.tab.h"
+fi
+if [ ! -f "$MDLROOT/parser/mdl.tab.c" ]; then
+  touch "$MDLROOT/parser/mdl.tab.c"
+fi
+if [ ! -f "$GSLROOT/framework/parser/generated/speclang.tab.h" ]; then
+  touch "$GSLROOT/framework/parser/generated/speclang.tab.h"
+fi
+if [ ! -f "$GSLROOT/framework/parser/generated/speclang.tab.C" ]; then
+  touch "$GSLROOT/framework/parser/generated/speclang.tab.C"
+fi
 #}}}
 ########################################
 ### Check required tools ###
@@ -666,14 +678,14 @@ if [  -f ".built"  ]; then
   fi
 fi
 if [ $FIRST_BUILD -eq 1 ] && [[ "$REBUILD" != "-rebuild" && "$CLEAN" != "-clean" ]]; then
-  echoerr "First build. Auto run with --rebuild"
+#  echoerr "First build. Auto run with --rebuild"
   REBUILD="-rebuild"
 fi
 
 if [  -f ".built"  ]; then
   line=$(head -n 1 ".built")
   if  [ "$BASE_FOLDER" != "$line" ]; then
-    echoerr "Please run: source set_env"
+    echoerr "Please run the following before reattempting mgs_build: source set_env"
     rm .built
     exit 1
   fi
