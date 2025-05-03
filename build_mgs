@@ -475,12 +475,12 @@ fi
 if [ ! -f "$MDLROOT/parser/mdl.tab.c" ]; then
   touch "$MDLROOT/parser/mdl.tab.c"
 fi
-if [ ! -f "$GSLROOT/framework/parser/generated/speclang.tab.h" ]; then
-  touch "$GSLROOT/framework/parser/generated/speclang.tab.h"
-fi
-if [ ! -f "$GSLROOT/framework/parser/generated/speclang.tab.C" ]; then
-  touch "$GSLROOT/framework/parser/generated/speclang.tab.C"
-fi
+#if [ ! -f "$GSLROOT/framework/parser/generated/speclang.tab.h" ]; then
+#  touch "$GSLROOT/framework/parser/generated/speclang.tab.h"
+#fi
+#if [ ! -f "$GSLROOT/framework/parser/generated/speclang.tab.C" ]; then
+#  touch "$GSLROOT/framework/parser/generated/speclang.tab.C"
+#fi
 #}}}
 ########################################
 ### Check required tools ###

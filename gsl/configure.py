@@ -2134,11 +2134,11 @@ $(BIN_DIR)/createDF: $(DEPENDFILE_OBJS)
 # Parser targets
 speclang.tab.h:
 \tcd framework/parser/bison; $(BISON) -v -d speclang.y; \\
-\tmv speclang.tab.c ../generated/speclang.tab.C 2>/dev/null; mv speclang.tab.h ../generated
+\tmv speclang.tab.c ../generated/speclang.tab.C 2>/dev/null; mv speclang.tab.h ../generated/speclang.tab.h 2>/dev/null
 
 framework/parser/generated/speclang.tab.C: framework/parser/bison/speclang.y
 \tcd framework/parser/bison; $(BISON) -v -d speclang.y; \\
-\tmv speclang.tab.c ../generated/speclang.tab.C 2>/dev/null; mv speclang.tab.h ../generated
+\tmv speclang.tab.c ../generated/speclang.tab.C 2>/dev/null; mv speclang.tab.h ../generated/speclang.tab.h 2>/dev/null
 
 """
         if self.options.withGpu is True:
