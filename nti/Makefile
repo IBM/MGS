@@ -185,7 +185,7 @@ TD_UNSHARED_SOURCES = touchDetect.cxx \
 
 TD_SOURCES = AllInTouchSpace.cxx \
 AntiredundancyTouchFilter.cxx \
-MGSTissueSlicer.cxx \
+MgsTissueSlicer.cxx \
 DendriteTouchSpace.cxx \
 InferiorOliveGlomeruliDetector.cxx \
 NonautapticTouchSpace.cxx \
