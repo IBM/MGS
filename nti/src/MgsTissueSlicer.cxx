@@ -6,7 +6,7 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
-#include "MGSTissueSlicer.h"
+#include "MgsTissueSlicer.h"
 #include "Tissue.h"
 #include "Neuron.h"
 #include "Branch.h"
