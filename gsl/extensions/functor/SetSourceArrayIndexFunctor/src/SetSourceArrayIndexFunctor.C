@@ -1,7 +1,7 @@
 #include "Mgs.h"
 #include "SetSourceArrayIndexFunctor.h"
 #include "CG_SetSourceArrayIndexFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ConnectionContext.h"
 #include "ParameterSetDataItem.h"
 #include "NodeDescriptor.h"
@@ -13,12 +13,12 @@
 
 #include <memory>
 
-void SetSourceArrayIndexFunctor::userInitialize(LensContext* CG_c, Functor*& destinationInAttr) 
+void SetSourceArrayIndexFunctor::userInitialize(GslContext* CG_c, Functor*& destinationInAttr) 
 {
   destinationInAttr->duplicate(std::move(_destinationInAttr));
 }
 
-std::unique_ptr<ParameterSet> SetSourceArrayIndexFunctor::userExecute(LensContext* CG_c) 
+std::unique_ptr<ParameterSet> SetSourceArrayIndexFunctor::userExecute(GslContext* CG_c) 
 {
   ConnectionContext* cc = CG_c->connectionContext;
   if (cc->restart) _indexMap.clear();

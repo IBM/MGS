@@ -21,7 +21,7 @@
 #include "C_production.h"
 #include "ArgumentListHelper.h"
 
-void C_argument_argument_list::internalExecute(LensContext *c)
+void C_argument_argument_list::internalExecute(GslContext *c)
 {
    _arg_list->execute(c);
    if (_typeSpec) {

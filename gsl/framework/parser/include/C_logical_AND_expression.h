@@ -14,7 +14,7 @@
 #include "C_production_grid.h"
 
 class C_equality_expression;
-class LensContext;
+class GslContext;
 class GridLayerDescriptor;
 class Grid;
 class SyntaxError;
@@ -29,7 +29,7 @@ class C_logical_AND_expression : public C_production_grid
       std::list<C_equality_expression*>* releaseSet();
       virtual ~C_logical_AND_expression();
       virtual C_logical_AND_expression* duplicate() const;
-      virtual void internalExecute(LensContext *, Grid* g);
+      virtual void internalExecute(GslContext *, Grid* g);
       virtual void checkChildren();
       virtual void recursivePrint();
       const std::list<GridLayerDescriptor*>& getLayers() const;

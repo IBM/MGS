@@ -9,7 +9,7 @@
 #include "Mgs.h"
 #include "SrcScaledContractedGaussianWeightModifier.h"
 #include "CG_SrcScaledContractedGaussianWeightModifierBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ParameterSet.h"
 #include "NDPair.h"
 #include "NDPairList.h"
@@ -22,14 +22,14 @@
 #include "Grid.h"
 #include "GridLayerDescriptor.h"
 
-void SrcScaledContractedGaussianWeightModifier::userInitialize(LensContext* CG_c, Functor*& f, float& sigma, float& max, float& contract) 
+void SrcScaledContractedGaussianWeightModifier::userInitialize(GslContext* CG_c, Functor*& f, float& sigma, float& max, float& contract) 
 {
   _sigma=sigma;
   _max=max;
   _contract=contract;
 }
 
-std::unique_ptr<ParameterSet> SrcScaledContractedGaussianWeightModifier::userExecute(LensContext* CG_c) 
+std::unique_ptr<ParameterSet> SrcScaledContractedGaussianWeightModifier::userExecute(GslContext* CG_c) 
 {
    std::vector<DataItem*> nullArgs;
    std::unique_ptr<DataItem> rval_ap;

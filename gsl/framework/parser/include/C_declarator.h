@@ -14,7 +14,7 @@
 
 #include "C_production.h"
 
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_declarator : public C_production
@@ -24,7 +24,7 @@ class C_declarator : public C_production
       C_declarator(const C_declarator&);
       virtual ~C_declarator();
       virtual C_declarator* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

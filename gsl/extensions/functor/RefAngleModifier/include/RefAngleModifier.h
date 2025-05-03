@@ -11,15 +11,15 @@
 #include "Mgs.h"
 
 #include "CG_RefAngleModifierBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ParameterSet.h"
 #include <memory>
 
 class RefAngleModifier : public CG_RefAngleModifierBase
 {
    public:
-      void userInitialize(LensContext* CG_c, int& directionFlag, int& wrapFlag, Functor*& f);
-      std::unique_ptr<ParameterSet> userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c, int& directionFlag, int& wrapFlag, Functor*& f);
+      std::unique_ptr<ParameterSet> userExecute(GslContext* CG_c);
       RefAngleModifier();
       virtual ~RefAngleModifier();
       virtual void duplicate(std::unique_ptr<RefAngleModifier>&& dup) const;

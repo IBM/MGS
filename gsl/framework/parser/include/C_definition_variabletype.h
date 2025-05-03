@@ -19,7 +19,7 @@
 class C_declarator;
 class C_parameter_type;
 class C_parameter_type_list;
-class LensContext;
+class GslContext;
 class InstanceFactory;
 class SyntaxError;
 class C_phase_mapping_list;
@@ -35,7 +35,7 @@ class C_definition_variabletype : public C_definition
 				SyntaxError *);
       virtual ~C_definition_variabletype();
       virtual C_definition_variabletype* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

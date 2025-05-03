@@ -13,7 +13,7 @@
 #include "SyntaxError.h"
 #include "C_production.h"
 
-void C_argument_list::internalExecute(LensContext *c)
+void C_argument_list::internalExecute(GslContext *c)
 {
    _dataitem_list.clear();
    std::list<C_argument*>::iterator iter, end = _list->end();

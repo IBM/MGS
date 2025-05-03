@@ -11,14 +11,14 @@
 
 #include "Mgs.h"
 #include "CG_NegBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 
 class Neg : public CG_NegBase
 {
    public:
-      void userInitialize(LensContext* CG_c, Functor*& f);
-      double userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c, Functor*& f);
+      double userExecute(GslContext* CG_c);
       Neg();
       virtual ~Neg();
       virtual void duplicate(std::unique_ptr<Neg>&& dup) const;

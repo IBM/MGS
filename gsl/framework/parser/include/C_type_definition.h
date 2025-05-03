@@ -17,7 +17,7 @@
 class C_declarator;
 class C_grid_definition_body;
 class C_composite_definition_body;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_type_definition : public C_production
@@ -35,7 +35,7 @@ class C_type_definition : public C_production
       C_type_definition(SyntaxError *);
       virtual ~C_type_definition();
       virtual C_type_definition* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
    private:

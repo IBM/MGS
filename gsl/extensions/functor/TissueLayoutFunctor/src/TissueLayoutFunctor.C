@@ -9,16 +9,16 @@
 #include "Mgs.h"
 #include "TissueLayoutFunctor.h"
 #include "CG_TissueLayoutFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ShallowArray.h"
 #include "TissueFunctor.h"
 #include <memory>
 
-void TissueLayoutFunctor::userInitialize(LensContext* CG_c) 
+void TissueLayoutFunctor::userInitialize(GslContext* CG_c) 
 {
 }
 
-ShallowArray< int > TissueLayoutFunctor::userExecute(LensContext* CG_c) 
+ShallowArray< int > TissueLayoutFunctor::userExecute(GslContext* CG_c) 
 {
   return _tissueFunctor->doLayout(CG_c);
 }

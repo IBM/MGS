@@ -19,7 +19,7 @@ class NodeSet;
 class DataItem;
 class NodeSetDataItem;
 class C_argument;
-class LensContext;
+class GslContext;
 class C_gridset;
 class SyntaxError;
 
@@ -31,7 +31,7 @@ class C_argument_nodeset: public C_argument
       C_argument_nodeset(C_gridset *, SyntaxError *);
       virtual ~C_argument_nodeset();
       virtual C_argument_nodeset* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

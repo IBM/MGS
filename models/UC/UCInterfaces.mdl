@@ -6,13 +6,11 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
-
+// (C) University of Canterbury 2017-2018. All rights reserved.
+//
+// =============================================================================
 #ifndef UC_MDL
 #define UC_MDL
-/*
-@ University of Canterbury 2017-2018. All rights reserved.
- */
-
 
 Struct NVUinput {
   double* radius;

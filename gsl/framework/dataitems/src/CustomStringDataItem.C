@@ -60,7 +60,7 @@ std::string CustomStringDataItem::getString(Error* error) const
    return _data;
 }
 
-CustomString CustomStringDataItem::getLensString(Error* error) const
+CustomString CustomStringDataItem::getCustomString(Error* error) const
 {
    return CustomString(_data.c_str());
 }

@@ -12,14 +12,14 @@
 #include "SyntaxError.h"
 #include "C_production.h"
 #include "LoadPhase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 
 C_declaration* C_declaration_load_phases::duplicate() const
 {
    return new C_declaration_load_phases(*this);
 }
 
-void C_declaration_load_phases::internalExecute(LensContext *c)
+void C_declaration_load_phases::internalExecute(GslContext *c)
 {
    std::unique_ptr<Phase> phase(new LoadPhase());
    c->setCurrentPhase(phase);

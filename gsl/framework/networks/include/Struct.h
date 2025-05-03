@@ -14,7 +14,7 @@
 #include <vector>
 
 class DataItem;
-class LensContext;
+class GslContext;
 class NDPairList;
 
 class Struct
@@ -23,11 +23,11 @@ class Struct
    public:
       Struct();
       virtual void duplicate(std::unique_ptr<Struct>&& dup) const=0;
-      void initialize(LensContext *c, const std::vector<DataItem*>& args);
+      void initialize(GslContext *c, const std::vector<DataItem*>& args);
       void initialize(const NDPairList& ndplist);
       virtual ~Struct();
    protected:
-      virtual void doInitialize(LensContext *c, 
+      virtual void doInitialize(GslContext *c, 
 				const std::vector<DataItem*>& args) = 0;
       virtual void doInitialize(const NDPairList& ndplist) = 0;
 };

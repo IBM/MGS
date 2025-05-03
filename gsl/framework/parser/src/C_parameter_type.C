@@ -19,7 +19,7 @@ std::string const &C_parameter_type::getFunctorCategory()
 }
 
 
-void C_parameter_type::internalExecute(LensContext *c)
+void C_parameter_type::internalExecute(GslContext *c)
 {
    if(_type_specifier) _type_specifier->execute(c);
    if(_matrix_type_spec) _matrix_type_spec->execute(c);

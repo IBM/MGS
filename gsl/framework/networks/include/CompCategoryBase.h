@@ -21,7 +21,7 @@
 
 class WorkUnit;
 class Phase;
-class LensContext;
+class GslContext;
 class Node;
 class NodeDescriptor;
 
@@ -40,7 +40,7 @@ class CompCategoryBase : public CompCategory
 			   std::unique_ptr<Phase>& phase);
       std::string getSimulationPhaseName(const std::string& name);
       std::string getPhaseType(const std::string& name);
-      void setUnmappedPhases(LensContext* c);
+      void setUnmappedPhases(GslContext* c);
       std::map<std::string, bool> const & getPhaseCommunicationTable() {return _phaseCommunicationTable;}
       
    protected:

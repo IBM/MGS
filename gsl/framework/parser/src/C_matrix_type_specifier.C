@@ -11,7 +11,7 @@
 #include "SyntaxError.h"
 #include "C_production.h"
 
-void C_matrix_type_specifier::internalExecute(LensContext *c)
+void C_matrix_type_specifier::internalExecute(GslContext *c)
 {
    _typeSpecifier->execute(c);
 }

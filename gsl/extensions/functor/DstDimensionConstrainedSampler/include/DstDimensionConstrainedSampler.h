@@ -11,7 +11,7 @@
 
 #include "Mgs.h"
 #include "CG_DstDimensionConstrainedSamplerBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 #include <vector>
 
@@ -21,8 +21,8 @@ class NodeDescriptor;
 class DstDimensionConstrainedSampler : public CG_DstDimensionConstrainedSamplerBase
 {
    public:
-      void userInitialize(LensContext* CG_c, int& constrainedDim);
-      void userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c, int& constrainedDim);
+      void userExecute(GslContext* CG_c);
       DstDimensionConstrainedSampler();
       virtual ~DstDimensionConstrainedSampler();
       virtual void duplicate(std::unique_ptr<DstDimensionConstrainedSampler>&& dup) const;

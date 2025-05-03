@@ -11,7 +11,7 @@
 #include "C_production.h"
 #include <iostream>
 
-void C_functor_category::internalExecute(LensContext *c)
+void C_functor_category::internalExecute(GslContext *c)
 {
 }
 

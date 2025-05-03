@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "C_definition_constanttype.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_declarator.h"
 #include "Simulation.h"
 #include "ConstantType.h"
@@ -18,7 +18,7 @@
 
 #include <memory>
 
-void C_definition_constanttype::internalExecute(LensContext *c)
+void C_definition_constanttype::internalExecute(GslContext *c)
 {
    _declarator->execute(c);
 

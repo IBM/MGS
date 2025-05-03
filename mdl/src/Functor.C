@@ -236,7 +236,7 @@ void Functor::createInitMethod(std::unique_ptr<Method>&& method,
 			       bool userInit, bool hasRetVal)
 {
    method.reset(new Method("do" + funcName, "void") );
-   method->addParameter("LensContext *c");
+   method->addParameter("GslContext *c");
    method->addParameter("const std::vector<DataItem*>& args");
    method->setVirtual();
    method->setAccessType(AccessType::PROTECTED);
@@ -288,7 +288,7 @@ void Functor::createUserMethod(std::unique_ptr<Method>&& method,
 {
    method.reset(new Method("user" + funcName, retType) );
    MemberContainer<DataType>::const_iterator it, end = args.end();
-   method->addParameter("LensContext* " + PREFIX + "c");
+   method->addParameter("GslContext* " + PREFIX + "c");
    for (it = args.begin(); it != end; it++) {
       method->addParameter(it->second->getTypeString() + "& " + it->second->getName());
    }
@@ -317,7 +317,7 @@ void Functor::generateInstance()
 
    instance->addBaseClass(std::move(baseClass));
    instance->addHeader("\"" + baseName + ".h\"");
-   instance->addHeader("\"LensContext.h\"");
+   instance->addHeader("\"GslContext.h\"");
    instance->addHeader("<memory>");
    
    std::unique_ptr<Method> methodCup;

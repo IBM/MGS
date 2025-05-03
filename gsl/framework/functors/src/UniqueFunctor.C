@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "UniqueFunctor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "DataItem.h"
 #include "FunctorType.h"
 #include "Node.h"
@@ -42,7 +42,7 @@ UniqueFunctor::~UniqueFunctor()
 }
 
 
-void UniqueFunctor::doInitialize(LensContext *c, 
+void UniqueFunctor::doInitialize(GslContext *c, 
 				 const std::vector<DataItem*>& args)
 {
    // prototype SamplingFctr2 unique(SamplingFctr2 sf);
@@ -65,7 +65,7 @@ void UniqueFunctor::doInitialize(LensContext *c,
 }
 
 
-void UniqueFunctor::doExecute(LensContext *c, 
+void UniqueFunctor::doExecute(GslContext *c, 
 			      const std::vector<DataItem*>& args, 
 			      std::unique_ptr<DataItem>& rvalue)
 {

@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "NdplModifierFunctor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "DataItem.h"
 #include "FunctorType.h"
 #include "NDPairList.h"
@@ -50,7 +50,7 @@ NdplModifierFunctor::~NdplModifierFunctor()
 }
 
 
-void NdplModifierFunctor::doInitialize(LensContext *c, 
+void NdplModifierFunctor::doInitialize(GslContext *c, 
 				       const std::vector<DataItem*>& args)
 {
    if (args.size() != 2) {
@@ -85,7 +85,7 @@ void NdplModifierFunctor::doInitialize(LensContext *c,
 }
 
 
-void NdplModifierFunctor::doExecute(LensContext *c, 
+void NdplModifierFunctor::doExecute(GslContext *c, 
 				    const std::vector<DataItem*>& args, 
 				    std::unique_ptr<DataItem>& rvalue)
 {

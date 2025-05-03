@@ -9,14 +9,14 @@
 #include "Mgs.h"
 #include "Threshold.h"
 #include "CG_ThresholdBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 
-void Threshold::userInitialize(LensContext* CG_c, Functor*& f, double& threshold) 
+void Threshold::userInitialize(GslContext* CG_c, Functor*& f, double& threshold) 
 {
 }
 
-bool Threshold::userExecute(LensContext* CG_c) 
+bool Threshold::userExecute(GslContext* CG_c) 
 {
   std::vector<DataItem*> nullArgs;
   std::unique_ptr<DataItem> rval_ap;

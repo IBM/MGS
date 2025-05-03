@@ -14,7 +14,7 @@
 #include "C_production_grid.h"
 
 class C_argument_list;
-class LensContext;
+class GslContext;
 class Grid;
 class C_declarator;
 class C_grid_granule_volume;
@@ -29,7 +29,7 @@ class C_grid_function_name : public C_production_grid
       C_grid_function_name(C_declarator *, C_argument_list *, SyntaxError *);
       virtual ~C_grid_function_name();
       virtual C_grid_function_name* duplicate() const;
-      virtual void internalExecute(LensContext *, Grid* g);
+      virtual void internalExecute(GslContext *, Grid* g);
       virtual void checkChildren();
       virtual void recursivePrint();
 
@@ -37,8 +37,8 @@ class C_grid_function_name : public C_production_grid
       Type _type;
       /* representing 4 or 5 arguments passed to 'Layer' statement in GSL */
       C_argument_list *_argList;
-      void initNodes(LensContext *c, Grid* g);
-      void layers(LensContext *c, Grid* g);
+      void initNodes(GslContext *c, Grid* g);
+      void layers(GslContext *c, Grid* g);
       C_declarator *_declarator;
       C_grid_granule_volume *_gridGranule;
 };

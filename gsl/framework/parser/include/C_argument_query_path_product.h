@@ -18,7 +18,7 @@ class Publisher;
 class DataItem;
 class PublisherDataItem;
 class C_argument;
-class LensContext;
+class GslContext;
 class ServiceDataItem;
 class TriggerTypeDataItem;
 class SyntaxError;
@@ -30,7 +30,7 @@ class C_argument_query_path_product: public C_argument
       C_argument_query_path_product(C_query_path_product *, SyntaxError *);
       virtual ~C_argument_query_path_product();
       virtual C_argument_query_path_product* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

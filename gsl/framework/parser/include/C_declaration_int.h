@@ -15,7 +15,7 @@
 #include <map>
 
 class C_declarator;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_declaration_int : public C_declaration
@@ -25,7 +25,7 @@ class C_declaration_int : public C_declaration
       C_declaration_int(C_declarator *, int, SyntaxError *);
       virtual C_declaration_int* duplicate() const;
       virtual ~C_declaration_int();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

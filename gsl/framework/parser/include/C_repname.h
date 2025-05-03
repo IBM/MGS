@@ -15,7 +15,7 @@
 #include "C_production.h"
 
 class C_preamble;
-class LensContext;
+class GslContext;
 class Repertoire;
 class SyntaxError;
 
@@ -28,7 +28,7 @@ class C_repname : public C_production
       C_repname(SyntaxError *);
       virtual ~C_repname ();
       virtual C_repname* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       std::list<std::string>& getPath() {

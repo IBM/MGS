@@ -32,7 +32,7 @@ std::string StringType::getHeaderString(
 
 std::string StringType::getDataItemFunctionString() const
 {
-   return "getLensString()";
+   return "getCustomString()";
 }
 
 StringType::~StringType() 

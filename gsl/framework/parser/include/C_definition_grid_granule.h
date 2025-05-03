@@ -18,7 +18,7 @@
 class C_declarator;
 class C_parameter_type;
 class C_parameter_type_list;
-class LensContext;
+class GslContext;
 class InstanceFactory;
 class SyntaxError;
 
@@ -30,7 +30,7 @@ class C_definition_grid_granule : public C_definition
 			   SyntaxError *);
       virtual ~C_definition_grid_granule();
       virtual C_definition_grid_granule* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

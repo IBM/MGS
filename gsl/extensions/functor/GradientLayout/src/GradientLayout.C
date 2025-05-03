@@ -1,7 +1,7 @@
 #include "Mgs.h"
 #include "GradientLayout.h"
 #include "CG_GradientLayoutBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ShallowArray.h"
 #include "VolumeOdometer.h"
 #include "Grid.h"
@@ -11,11 +11,11 @@
 #include <memory>
 #include <cmath>
 
-void GradientLayout::userInitialize(LensContext* CG_c, int& total, double& slope, ShallowArray< int >& origin, int& originDensity, ShallowArray< bool >& gradientDimensions) 
+void GradientLayout::userInitialize(GslContext* CG_c, int& total, double& slope, ShallowArray< int >& origin, int& originDensity, ShallowArray< bool >& gradientDimensions) 
 {
 }
 
-ShallowArray< int > GradientLayout::userExecute(LensContext* CG_c) 
+ShallowArray< int > GradientLayout::userExecute(GslContext* CG_c) 
 {
   ShallowArray<int> rval;
   Grid* g = CG_c->layerContext->grid;

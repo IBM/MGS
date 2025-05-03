@@ -16,7 +16,7 @@
 class C_order;
 class C_steps;
 class C_stride;
-class LensContext;
+class GslContext;
 class StrideList;
 class SyntaxError;
 
@@ -27,7 +27,7 @@ class C_stride_list : public C_production, public StridesList
       C_stride_list(C_steps *, C_stride *,C_order *, SyntaxError *);
       virtual ~C_stride_list();
       virtual C_stride_list* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       const std::list<int>& getStepsListInt() const;

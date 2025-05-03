@@ -19,7 +19,7 @@ class C_declarator;
 class C_parameter_type;
 class C_parameter_type_list;
 class C_trigger;
-class LensContext;
+class GslContext;
 class InstanceFactory;
 class SyntaxError;
 
@@ -31,7 +31,7 @@ class C_definition_trigger : public C_definition
 			   SyntaxError *);
       virtual ~C_definition_trigger();
       virtual C_definition_trigger* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

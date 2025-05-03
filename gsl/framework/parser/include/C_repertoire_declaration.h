@@ -14,7 +14,7 @@
 #include "C_production.h"
 
 class C_declarator;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_repertoire_declaration : public C_production
@@ -25,7 +25,7 @@ class C_repertoire_declaration : public C_production
 			       SyntaxError *);
       virtual ~C_repertoire_declaration();
       virtual C_repertoire_declaration* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       std::string const getType();

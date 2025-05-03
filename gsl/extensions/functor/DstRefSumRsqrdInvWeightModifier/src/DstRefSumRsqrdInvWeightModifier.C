@@ -8,7 +8,7 @@
 // =============================================================================
 #include "DstRefSumRsqrdInvWeightModifier.h"
 #include "CG_DstRefSumRsqrdInvWeightModifierBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ParameterSet.h"
 #include "NDPair.h"
 #include "NDPairList.h"
@@ -19,7 +19,7 @@
 #include <list>
 #include <cmath>
 
-void DstRefSumRsqrdInvWeightModifier::userInitialize(LensContext* CG_c, Functor*& f, int& maxDim, bool& setDistance) 
+void DstRefSumRsqrdInvWeightModifier::userInitialize(GslContext* CG_c, Functor*& f, int& maxDim, bool& setDistance) 
 {
   assert(maxDim>0);
   _setDistance=setDistance;
@@ -68,7 +68,7 @@ void DstRefSumRsqrdInvWeightModifier::userInitialize(LensContext* CG_c, Functor*
   }
 }
 
-std::unique_ptr<ParameterSet> DstRefSumRsqrdInvWeightModifier::userExecute(LensContext* CG_c) 
+std::unique_ptr<ParameterSet> DstRefSumRsqrdInvWeightModifier::userExecute(GslContext* CG_c) 
 {
    std::vector<DataItem*> nullArgs;
    std::unique_ptr<DataItem> rval_ap;

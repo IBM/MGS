@@ -11,14 +11,14 @@
 
 #include "Mgs.h"
 #include "CG_LogBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 
 class Log : public CG_LogBase
 {
    public:
-      void userInitialize(LensContext* CG_c, Functor*& f);
-      double userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c, Functor*& f);
+      double userExecute(GslContext* CG_c);
       Log();
       virtual ~Log();
       virtual void duplicate(std::unique_ptr<Log>&& dup) const;

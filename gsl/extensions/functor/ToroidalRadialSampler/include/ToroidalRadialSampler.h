@@ -11,7 +11,7 @@
 #include "Mgs.h"
 
 #include "CG_ToroidalRadialSamplerBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ParameterSet.h"
 #include "NodeDescriptor.h"
 #include <memory>
@@ -20,8 +20,8 @@
 class ToroidalRadialSampler : public CG_ToroidalRadialSamplerBase
 {
    public:
-      void userInitialize(LensContext* CG_c, float& radius);
-      void userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c, float& radius);
+      void userExecute(GslContext* CG_c);
       ToroidalRadialSampler();
       virtual ~ToroidalRadialSampler();
       virtual void duplicate(std::unique_ptr<ToroidalRadialSampler>&& dup) const;

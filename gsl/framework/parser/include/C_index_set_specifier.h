@@ -14,7 +14,7 @@
 #include "C_production.h"
 
 class C_index_set;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_index_set_specifier : public C_production
@@ -24,7 +24,7 @@ class C_index_set_specifier : public C_production
       C_index_set_specifier(C_index_set *, SyntaxError *);
       virtual ~C_index_set_specifier();
       virtual C_index_set_specifier* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       const std::vector<int>& getIndices() const;

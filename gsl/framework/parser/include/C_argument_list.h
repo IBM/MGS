@@ -16,7 +16,7 @@
 #include "C_production.h"
 
 class C_argument;
-class LensContext;
+class GslContext;
 class DataItem;
 
 class C_argument_list : public C_production
@@ -28,7 +28,7 @@ class C_argument_list : public C_production
       std::list<C_argument*>* releaseList();
       virtual ~C_argument_list();
       virtual C_argument_list* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       std::vector<DataItem*>* getVectorDataItem() { 

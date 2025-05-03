@@ -10,7 +10,7 @@
 #include "C_type_definition.h"
 #include "SyntaxError.h"
 
-void C_definition_type::internalExecute(LensContext *c)
+void C_definition_type::internalExecute(GslContext *c)
 {
    _typeDefinition->execute(c);
 }

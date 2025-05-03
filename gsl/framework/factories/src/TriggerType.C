@@ -44,7 +44,7 @@ TriggerType::TriggerType(const std::string& modelName,
 
 void TriggerType::getInstance(std::unique_ptr<DataItem> & adi, 
 			      std::vector<DataItem*> const * args, 
-			      LensContext* c)
+			      GslContext* c)
 {
    TriggerDataItem* di = new TriggerDataItem();
    di->setTrigger(getTrigger(*args));
@@ -53,7 +53,7 @@ void TriggerType::getInstance(std::unique_ptr<DataItem> & adi,
 
 void TriggerType::getInstance(std::unique_ptr<DataItem> & adi, 
 			      const NDPairList& ndplist,
-			      LensContext* c)
+			      GslContext* c)
 {
    throw SyntaxErrorException(
       "Triggers can not be instantiated with Name-DataItem pair lists.");

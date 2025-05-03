@@ -8,7 +8,7 @@
 // =============================================================================
 #include "RefAngleModifier.h"
 #include "CG_RefAngleModifierBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ParameterSet.h"
 #include <memory>
 
@@ -19,7 +19,7 @@
 #include "NodeDescriptor.h"
 #include "ConnectionContext.h"
 #include <cmath>
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ParameterSet.h"
 #include <vector>
 #include "Grid.h"
@@ -27,7 +27,7 @@
 #include <math.h>
 
 
-std::unique_ptr<ParameterSet> RefAngleModifier::userExecute(LensContext* CG_c) 
+std::unique_ptr<ParameterSet> RefAngleModifier::userExecute(GslContext* CG_c) 
 {
    std::vector<DataItem*> nullArgs;
    std::unique_ptr<DataItem> rval_ap;
@@ -101,7 +101,7 @@ std::unique_ptr<ParameterSet> RefAngleModifier::userExecute(LensContext* CG_c)
    return pset;
 }
 
-void RefAngleModifier::userInitialize(LensContext* CG_c, int& directionFlag, int& wrapFlag, Functor*& f) 
+void RefAngleModifier::userInitialize(GslContext* CG_c, int& directionFlag, int& wrapFlag, Functor*& f) 
 {
 }
 

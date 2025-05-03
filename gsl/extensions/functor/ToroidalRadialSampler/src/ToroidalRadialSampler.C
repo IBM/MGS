@@ -11,7 +11,7 @@
 #endif
 #include "ToroidalRadialSampler.h"
 #include "CG_ToroidalRadialSamplerBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ConnectionContext.h"
 #include "ParameterSet.h"
 #include "NodeSet.h"
@@ -23,11 +23,11 @@
 #include <list>
 #include <cmath>
 
-void ToroidalRadialSampler::userInitialize(LensContext* CG_c, float& radius)
+void ToroidalRadialSampler::userInitialize(GslContext* CG_c, float& radius)
 {
 }
 
-void ToroidalRadialSampler::userExecute(LensContext* CG_c) 
+void ToroidalRadialSampler::userExecute(GslContext* CG_c) 
 {
    ConnectionContext *cc = CG_c->connectionContext;
    ConnectionContext::Responsibility resp = cc->current;

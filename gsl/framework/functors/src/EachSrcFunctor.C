@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "EachSrcFunctor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "DataItem.h"
 #include "FunctorType.h"
 #include "NodeDescriptor.h"
@@ -48,7 +48,7 @@ EachSrcFunctor::~EachSrcFunctor()
 }
 
 
-void EachSrcFunctor::doInitialize(LensContext *c, 
+void EachSrcFunctor::doInitialize(GslContext *c, 
 				  const std::vector<DataItem*>& args)
 {
    if (args.size() != 1) {
@@ -68,7 +68,7 @@ void EachSrcFunctor::doInitialize(LensContext *c,
 }
 
 
-void EachSrcFunctor::doExecute(LensContext *c, 
+void EachSrcFunctor::doExecute(GslContext *c, 
 			       const std::vector<DataItem*>& args, 
 			       std::unique_ptr<DataItem>& rvalue)
 {

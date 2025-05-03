@@ -12,7 +12,7 @@
 #include "SyntaxError.h"
 #include <memory>
 
-void C_argument_relative_nodeset::internalExecute(LensContext *c)
+void C_argument_relative_nodeset::internalExecute(GslContext *c)
 {
    _rel_nodeset->execute(c);
 

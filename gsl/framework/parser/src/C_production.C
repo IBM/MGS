@@ -74,7 +74,7 @@ void C_production::throwError(const std::string &mes)
    throw SyntaxErrorException("", true);
 }
 
-void C_production::execute(LensContext *c)
+void C_production::execute(GslContext *c)
 {
 #if HAVE_MPI
 //   int mySpaceId;

@@ -8,7 +8,7 @@
 // =============================================================================
 #include "SrcRefDoGWeightModifier.h"
 #include "CG_SrcRefDoGWeightModifierBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ParameterSet.h"
 #include "NDPair.h"
 #include "NDPairList.h"
@@ -21,7 +21,7 @@
 #include "Grid.h"
 #include "GridLayerDescriptor.h"
 
-void SrcRefDoGWeightModifier::userInitialize(LensContext* CG_c, Functor*& f, float& sigma1, float& max1, float& sigma2, float& max2, int& wrapDistance) 
+void SrcRefDoGWeightModifier::userInitialize(GslContext* CG_c, Functor*& f, float& sigma1, float& max1, float& sigma2, float& max2, int& wrapDistance) 
 {
   _sigma1=sigma1;
   _max1=max1;
@@ -30,7 +30,7 @@ void SrcRefDoGWeightModifier::userInitialize(LensContext* CG_c, Functor*& f, flo
   _wrapDistance=wrapDistance;
 }
 
-std::unique_ptr<ParameterSet> SrcRefDoGWeightModifier::userExecute(LensContext* CG_c) 
+std::unique_ptr<ParameterSet> SrcRefDoGWeightModifier::userExecute(GslContext* CG_c) 
 {
    std::vector<DataItem*> nullArgs;
    std::unique_ptr<DataItem> rval_ap;

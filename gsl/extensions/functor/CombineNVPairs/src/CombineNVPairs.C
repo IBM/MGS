@@ -1,16 +1,16 @@
 #include "Mgs.h"
 #include "CombineNVPairs.h"
 #include "CG_CombineNVPairsBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "NDPairList.h"
 #include "NDPairListDataItem.h"
 #include <memory>
 
-void CombineNVPairs::userInitialize(LensContext* CG_c, NDPairList*& l, DuplicatePointerArray< Functor >& fl) 
+void CombineNVPairs::userInitialize(GslContext* CG_c, NDPairList*& l, DuplicatePointerArray< Functor >& fl) 
 {
 }
 
-std::unique_ptr<NDPairList> CombineNVPairs::userExecute(LensContext* CG_c) 
+std::unique_ptr<NDPairList> CombineNVPairs::userExecute(GslContext* CG_c) 
 {
   DuplicatePointerArray< Functor >::iterator iter = init.fl.begin(), end = init.fl.end();
   std::unique_ptr<NDPairList> rval;

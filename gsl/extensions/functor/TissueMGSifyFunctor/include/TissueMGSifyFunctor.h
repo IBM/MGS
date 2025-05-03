@@ -11,15 +11,15 @@
 
 #include "Mgs.h"
 #include "CG_TissueMGSifyFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "TissueElement.h"
 #include <memory>
 
 class TissueMGSifyFunctor : public CG_TissueMGSifyFunctorBase, public TissueElement
 {
    public:
-      void userInitialize(LensContext* CG_c);
-      void userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c);
+      void userExecute(GslContext* CG_c);
       TissueMGSifyFunctor();
       virtual ~TissueMGSifyFunctor();
       virtual void duplicate(std::unique_ptr<TissueMGSifyFunctor>&& dup) const;

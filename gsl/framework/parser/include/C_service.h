@@ -17,7 +17,7 @@ class C_query_path_product;
 class C_argument_declarator;
 class C_argument_string;
 class C_declarator;
-class LensContext;
+class GslContext;
 class DataItem;
 class Service;
 class SyntaxError;
@@ -30,7 +30,7 @@ class C_service : public C_production
       C_service(C_declarator*, std::string*, SyntaxError *);
       virtual ~C_service();
       virtual C_service* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       Service* getService() { 

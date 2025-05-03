@@ -13,7 +13,7 @@
 #include "Repertoire.h"
 #include "RepertoireDataItem.h"
 #include "Grid.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 #include "C_production.h"
@@ -22,7 +22,7 @@
 #include "Simulation.h"
 #endif
 
-void C_grid_definition_body::internalExecute(LensContext *c)
+void C_grid_definition_body::internalExecute(GslContext *c)
 {
    _dimDecl->execute(c);
    // execute is not called on _gridTransUnit until we actually try to create 
@@ -76,7 +76,7 @@ C_grid_definition_body::~C_grid_definition_body()
 
 
 Repertoire* C_grid_definition_body::createRepertoire(
-   std::string const& repName, LensContext* c)
+   std::string const& repName, GslContext* c)
 {
 #ifdef DEBUG_TIMER 
    Simulation* sim = c->sim;

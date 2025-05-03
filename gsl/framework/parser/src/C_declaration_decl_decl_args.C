@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "C_declaration_decl_decl_args.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_declarator.h"
 #include "C_argument_list.h"
 #include "C_ndpair_clause_list.h"
@@ -26,7 +26,7 @@ std::string C_declaration_decl_decl_args::getName()
    return _nameDecl->getName();
 }
 
-void C_declaration_decl_decl_args::internalExecute(LensContext *c)
+void C_declaration_decl_decl_args::internalExecute(GslContext *c)
 {
    _userDefinedType->execute(c);
    _nameDecl->execute(c);

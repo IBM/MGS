@@ -11,7 +11,7 @@
 #include "SyntaxError.h"
 #include "C_production.h"
 
-void C_repertoire_declaration::internalExecute(LensContext *c)
+void C_repertoire_declaration::internalExecute(GslContext *c)
 {
    _typeName->execute(c);
    _instanceName->execute(c);

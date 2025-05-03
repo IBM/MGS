@@ -6,8 +6,8 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
-#ifndef _LENSSERVER_H_
-#define _LENSSERVER_H_
+#ifndef _MGSSERVER_H_
+#define _MGSSERVER_H_
 #include "Copyright.h"
 
 #include <memory>
@@ -51,7 +51,7 @@ class NDPairList;
 #include "Phase.h"
 #include "PhaseDataItem.h"
 #include "RuntimePhase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "Repertoire.h"
 #include "ConnectionSet.h"
 #include "Grid.h"
@@ -59,9 +59,9 @@ class NDPairList;
 #include "SyntaxErrorException.h"
 #endif
 
-class LENSServer : public TriggerableBase {
+class MgsServer : public TriggerableBase {
   public:
-  LENSServer(int p, Simulation& s);
+  MgsServer(int p, Simulation& s);
 
   void initSocket();
   void initDisplay();
@@ -80,7 +80,7 @@ class LENSServer : public TriggerableBase {
 
   void keepDataItem(std::unique_ptr<DataItem>& diap);
   int isConnected();
-  ~LENSServer();
+  ~MgsServer();
 
   protected:
   virtual TriggerableBase::EventType createTriggerableCaller(
@@ -141,11 +141,11 @@ class LENSServer : public TriggerableBase {
   std::vector<DataItem*> _dataItems;
 
   public:
-  class LENSServerEvent : public TriggerableCaller {
+  class MgsServerEvent : public TriggerableCaller {
 public:
-    LENSServerEvent(NDPairList* ndPairList,
-                    void (LENSServer::*triggerFunction)(Trigger*, NDPairList*),
-                    LENSServer* triggerable)
+    MgsServerEvent(NDPairList* ndPairList,
+                    void (MgsServer::*triggerFunction)(Trigger*, NDPairList*),
+                    MgsServer* triggerable)
         : TriggerableCaller(ndPairList),
           _triggerFunction(triggerFunction),
           _triggerable(triggerable) {}
@@ -154,17 +154,17 @@ public:
     }
     virtual Triggerable* getTriggerable() { return _triggerable; }
     virtual void duplicate(std::unique_ptr<TriggerableCaller>&& dup) const {
-      dup.reset(new LENSServerEvent(*this));
+      dup.reset(new MgsServerEvent(*this));
     }
 
 private:
-    void (LENSServer::*_triggerFunction)(Trigger*, NDPairList*);
-    LENSServer* _triggerable;
+    void (MgsServer::*_triggerFunction)(Trigger*, NDPairList*);
+    MgsServer* _triggerable;
   };
 };
 
 #ifndef AIX
-inline LENSServer::LENSServer(int p, Simulation& s)
+inline MgsServer::MgsServer(int p, Simulation& s)
     : _connected(0), _reconnect(0), _s(s), _serveBuff(0), _controlBuff(0) {
   Publisher* pubptr = s.getPublisher();
   Service* sptr = pubptr->getService("Iteration");
@@ -212,7 +212,7 @@ inline LENSServer::LENSServer(int p, Simulation& s)
   _controlBuff = new char[MAXBUFFSIZE];
 }
 
-inline LENSServer::~LENSServer() {
+inline MgsServer::~MgsServer() {
   delete _serveBuff;
   delete _controlBuff;
   std::vector<DataItem*>::iterator iter = _dataItems.begin();
@@ -220,14 +220,14 @@ inline LENSServer::~LENSServer() {
   for (; iter != end; ++iter) delete (*iter);
 }
 
-inline void LENSServer::initSocket() {
+inline void MgsServer::initSocket() {
   int sockfd;
   struct sockaddr_in my_addr;
   struct sockaddr_in their_addr;
   int sin_size;
   int yes = 1;
 
-  std::cout << "LENSServer: Setting up Socket..." << std::endl;
+  std::cout << "MgsServer: Setting up Socket..." << std::endl;
 
   if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
     perror("socket");
@@ -245,43 +245,43 @@ inline void LENSServer::initSocket() {
   my_addr.sin_addr.s_addr = INADDR_ANY;
   bzero(&(my_addr.sin_zero), 8);
 
-  std::cout << "LENSServer: Binding to socket.." << std::endl;
+  std::cout << "MgsServer: Binding to socket.." << std::endl;
 
   if (bind(sockfd, (struct sockaddr*)&my_addr, sizeof(struct sockaddr)) == 1) {
     perror("bind");
-    std::cerr << "LENSServer: can't bind" << std::endl;
+    std::cerr << "MgsServer: can't bind" << std::endl;
     exit(-1);
   }
 
-  std::cout << "LENSServer: Listening to port (BACKLOG = " << BACKLOG << ")..."
+  std::cout << "MgsServer: Listening to port (BACKLOG = " << BACKLOG << ")..."
             << std::endl;
 
   int listenValue = listen(sockfd, BACKLOG);
 
-  std::cout << "LENSServer: Listen returned: " << listenValue << std::endl;
+  std::cout << "MgsServer: Listen returned: " << listenValue << std::endl;
 
   if (listenValue == -1) {
-    std::cerr << "LENSServer: Error listening!" << std::endl;
+    std::cerr << "MgsServer: Error listening!" << std::endl;
     exit(-1);
   }
 
-  std::cout << "LENSServer: Listening for client connection" << std::endl;
+  std::cout << "MgsServer: Listening for client connection" << std::endl;
 
   sin_size = sizeof(struct sockaddr_in);
 
   if ((_controlSock = accept(sockfd, (struct sockaddr*)&their_addr,
                              (socklen_t*)&sin_size)) == -1) {
-    std::cerr << "LENSServer: Error accepting!" << std::endl;
+    std::cerr << "MgsServer: Error accepting!" << std::endl;
     exit(-1);
   }
 
-  std::cout << "LENSServer: sending connect..." << std::endl;
+  std::cout << "MgsServer: sending connect..." << std::endl;
   sendMsg("control connect");
 
   ///////////////////////////////////////////////////////////
   // now display socket
 
-  std::cout << "LENSServer: Accepting connection on sock2" << std::endl;
+  std::cout << "MgsServer: Accepting connection on sock2" << std::endl;
   if ((_displaySock = accept(sockfd, (struct sockaddr*)&their_addr,
                              (socklen_t*)&sin_size)) == -1) {
 
@@ -289,19 +289,19 @@ inline void LENSServer::initSocket() {
     exit(-1);
   }
 
-  std::cout << "LENSServer: Sending display connect" << std::endl;
+  std::cout << "MgsServer: Sending display connect" << std::endl;
 
   sendMsg("display connect");
   char buff2[MAXBUFFSIZE];
-  std::cout << "LENSServer: Waiting to hear back from client..." << std::endl;
+  std::cout << "MgsServer: Waiting to hear back from client..." << std::endl;
   recvMsg(buff2, 15, _displaySock);
 
   if (std::string(buff2) == std::string("display connect")) {
     //  if (strcmp(buff2, "display connect") == 0) {
-    std::cout << "LENSServer: Client successfully echoed connect..."
+    std::cout << "MgsServer: Client successfully echoed connect..."
               << std::endl;
   } else {
-    std::cout << "LENSServer: Incorrect client echo : " << buff2 << std::endl;
+    std::cout << "MgsServer: Incorrect client echo : " << buff2 << std::endl;
   }
   _connected = 1;
 
@@ -310,14 +310,14 @@ inline void LENSServer::initSocket() {
     _dataItems.clear();
   }
 
-  std::cout << "LENSServer: Closing original socket file descriptors.."
+  std::cout << "MgsServer: Closing original socket file descriptors.."
             << std::endl;
   close(sockfd);
 }
 
-inline int LENSServer::isConnected() { return (_connected); }
+inline int MgsServer::isConnected() { return (_connected); }
 
-inline void LENSServer::initDisplay() {
+inline void MgsServer::initDisplay() {
   // TUAN: temporary disable code
   /*
 sendToClient("display repertoires begin");
@@ -379,7 +379,7 @@ sendToClient("display button_behavior newsim");
 */
 }
 
-inline void LENSServer::initComposer() {
+inline void MgsServer::initComposer() {
   // TUAN: temporary disable code
   /*
 sendToClient("display composer clear registries");
@@ -409,13 +409,13 @@ facItr++;
 */
 }
 
-inline char* LENSServer::serve() {
+inline char* MgsServer::serve() {
   // TUAN: temporary disable code
   /*
 recvMsg(_serveBuff, 4, _controlSock);
 int msgSize = atoi(_serveBuff);
 if (MAXBUFFSIZE < msgSize) {
-std::cerr << "LENSServer: buffer too small!" << std::endl;
+std::cerr << "MgsServer: buffer too small!" << std::endl;
 sendMsg("control msg too big");
 strcpy(_serveBuff, "buffer overflow");
 } else {
@@ -428,19 +428,19 @@ isConnected()) {
 sendMsg(newMsg);
 }
 }
-std::cout << "LENSServer:  Received: " << _serveBuff << std::endl;
+std::cout << "MgsServer:  Received: " << _serveBuff << std::endl;
 return _serveBuff;
 */
   return 0;
 }
 
-inline void LENSServer::sendComposerError(const char* facName,
+inline void MgsServer::sendComposerError(const char* facName,
                                           const char* expectedType,
                                           const char* param2, int i,
                                           int errType) {
   // TUAN: temporary disable code
   /*
-std::cerr << "LENSServer: Dynamic cast of expected user entered parameter to "
+std::cerr << "MgsServer: Dynamic cast of expected user entered parameter to "
        "CustomStringDataItem and NumericDataItem failed!" << std::endl;
 std::ostringstream errstream;
 errstream
@@ -474,7 +474,7 @@ sendToClient(msgbuff);
 */
 }
 
-inline const char* LENSServer::composerMsgHandler(char* msg) {
+inline const char* MgsServer::composerMsgHandler(char* msg) {
   char composeBuff[MAXBUFFSIZE];
   composeBuff[0] = '\0';
   // TUAN: temporary disable code
@@ -491,7 +491,7 @@ inline const char* LENSServer::composerMsgHandler(char* msg) {
 
   if (strncmp(msg, "compose instance", 16) == 0) {
     std::cout
-        << "LENSServer: composerMsgHandler:  attempting to compose instance"
+        << "MgsServer: composerMsgHandler:  attempting to compose instance"
         << std::endl;
     strtok(msg, " ");
     strtok(NULL, " ");
@@ -528,7 +528,7 @@ inline const char* LENSServer::composerMsgHandler(char* msg) {
           return ("control composer bad parameter");
         }
 
-        // std::cout <<"[###LENSServer###] I guess the dynamic cast went
+        // std::cout <<"[###MgsServer###] I guess the dynamic cast went
         // smoothly" << std::endl;
         unMuter(value);
         if (sdi) sdi->setString(std::string(value));
@@ -546,7 +546,7 @@ inline const char* LENSServer::composerMsgHandler(char* msg) {
           return ("control composer bad parameter");
         }
       } else {
-        std::cerr << "LENSServer: composerMsgHandler: bad input,  paramType = "
+        std::cerr << "MgsServer: composerMsgHandler: bad input,  paramType = "
                   << paramType << std::endl;
         std::ostringstream errstream;
         errstream << "display extended_error <>The server has returned the "
@@ -561,7 +561,7 @@ inline const char* LENSServer::composerMsgHandler(char* msg) {
         return ("control composer bad parameter");
       }
     }
-    LensContext c(&_s);
+    GslContext c(&_s);
     std::unique_ptr<DataItem> apdi;
     ifc->getInstance(apdi, &args, &c);
     // sendToClient
@@ -582,17 +582,17 @@ inline const char* LENSServer::composerMsgHandler(char* msg) {
   return ("control display badmsg");
 }
 
-inline const char* LENSServer::loadType(char* bigType, char* specType) {
+inline const char* MgsServer::loadType(char* bigType, char* specType) {
   // TUAN: temporary disable code
   /*
-std::cout << "LENSServer: loadType: getting instance factories" << std::endl;
+std::cout << "MgsServer: loadType: getting instance factories" << std::endl;
 std::vector<InstanceFactoryRegistry*> const& v =
 _s.getInstanceFactoryRegistries();
 std::string regname = bigType;
 std::string tname = specType;
 InstanceFactory* f = 0;
 
-std::cout << "LENSServer: loadType: loading a " << specType << " from the "
+std::cout << "MgsServer: loadType: loading a " << specType << " from the "
     << bigType << " factory!";
 for (unsigned i = 0; i < v.size(); i++) {
 if (v[i]->getTypeName() == regname) {
@@ -619,7 +619,7 @@ return ("control display loaded");
   return 0;
 }
 
-inline char* LENSServer::controlMsgHandler(char* msg) {
+inline char* MgsServer::controlMsgHandler(char* msg) {
   _controlBuff[0] = '\0';
   std::ostringstream msgstream;
 
@@ -649,9 +649,9 @@ inline char* LENSServer::controlMsgHandler(char* msg) {
     _s.stop();
     shutdown();
   } else if (strcmp(msg, "disconnect") == 0) {
-    std::cout << "LENSServer: Shutting down..." << std::endl;
+    std::cout << "MgsServer: Shutting down..." << std::endl;
     sendMsg("control disconnect");
-    std::cout << "LENSServer Sent disconnect reply to control client"
+    std::cout << "MgsServer Sent disconnect reply to control client"
               << std::endl;
     sendToClient("display disconnect");
     strcpy(_controlBuff, "control disconnect");
@@ -705,7 +705,7 @@ inline char* LENSServer::controlMsgHandler(char* msg) {
   return _controlBuff;
 }
 
-inline void LENSServer::disconnect() {
+inline void MgsServer::disconnect() {
   _reconnect = 1;
 
   shutdown();
@@ -713,7 +713,7 @@ inline void LENSServer::disconnect() {
   initDisplay();
 }
 
-inline const char* LENSServer::msgHandler(char* msg) {
+inline const char* MgsServer::msgHandler(char* msg) {
   std::string rval="";
   std::string message(msg);
   static const std::string msg_disconnect("disconnect");
@@ -743,7 +743,7 @@ inline const char* LENSServer::msgHandler(char* msg) {
   return strdup(rval.c_str());
 }
 
-inline void LENSServer::recvMsg(char* msg, int size, int sockfd) {
+inline void MgsServer::recvMsg(char* msg, int size, int sockfd) {
   int numread = 0;
   do {
     numread += recv(sockfd, msg + numread, size - numread, 0);
@@ -751,7 +751,7 @@ inline void LENSServer::recvMsg(char* msg, int size, int sockfd) {
   msg[size] = '\0';
 }
 
-inline const char* LENSServer::sendToClient(const char* msg) {
+inline const char* MgsServer::sendToClient(const char* msg) {
   std::string rval="";
   sendMsg(msg);
   char buff[MAXBUFFSIZE];
@@ -764,15 +764,15 @@ inline const char* LENSServer::sendToClient(const char* msg) {
   return strdup(rval.c_str());
 }
 
-inline void LENSServer::sendMsg(const char* msg) {
-  // std::cout << "LENSServer::sendMsg: " << msg << std::endl;
+inline void MgsServer::sendMsg(const char* msg) {
+  // std::cout << "MgsServer::sendMsg: " << msg << std::endl;
   // note, the java readline method is going to expect a newline (or the
   // client
   // will hang)
   // TUAN: temporary disable code
   /*
 if ((strncmp(msg, "control", 7) == 0) || (strncmp(msg, "browse", 6) == 0)) {
-//     std::cout << "LENSServer Control Socket Sending: " << msg <<
+//     std::cout << "MgsServer Control Socket Sending: " << msg <<
 // std::endl;
 silencer(msg);
 // std::cout << "silenced: " << msg << std::endl;
@@ -792,20 +792,20 @@ std::string mesStr(msg);
 mesStr += "\n";
 socketSend(_displaySock, mesStr);
 } else if ((strncmp(msg, "display", 7) == 0)) {
-// std::cout << "LENSServer Display Socket Sending: " << msg << std::endl;
+// std::cout << "MgsServer Display Socket Sending: " << msg << std::endl;
 silencer(msg);
 std::string mesStr(msg);
 mesStr += "\n";
 socketSend(_displaySock, mesStr);
 } else {
-std::cerr << "LENSServer: msgHandler: don't know how to handle msg: "
+std::cerr << "MgsServer: msgHandler: don't know how to handle msg: "
           << msg << std::endl;
 }
   */
   return;
 }
 
-inline void LENSServer::socketSend(int fd, std::string& msg) {
+inline void MgsServer::socketSend(int fd, std::string& msg) {
   int size = msg.size();
   int sentSize;
   int totalSent = 0;
@@ -813,7 +813,7 @@ inline void LENSServer::socketSend(int fd, std::string& msg) {
   while (size != 0) {
     sentSize = send(fd, curPlace + totalSent, size, 0);
     if (sentSize == -1) {
-      std::cerr << "Error while LENSServer::socketSend, msg: " << msg
+      std::cerr << "Error while MgsServer::socketSend, msg: " << msg
                 << std::endl;
       break;
     }
@@ -822,14 +822,14 @@ inline void LENSServer::socketSend(int fd, std::string& msg) {
   }
 }
 
-inline void LENSServer::shutdown() {
+inline void MgsServer::shutdown() {
   _connected = 0;
   close(_controlSock);
   close(_displaySock);
-  std::cout << "LENSServer: shutdown: sockets closed" << std::endl;
+  std::cout << "MgsServer: shutdown: sockets closed" << std::endl;
 }
 
-inline void LENSServer::event(Trigger* trigger, NDPairList* ndPairList) {
+inline void MgsServer::event(Trigger* trigger, NDPairList* ndPairList) {
   // TUAN: temporary disable code
   /*
 if (!isConnected()) {
@@ -844,7 +844,7 @@ sendToClient(msgBuff);
 */
 }
 
-inline void LENSServer::repExpand(Repertoire* r) {
+inline void MgsServer::repExpand(Repertoire* r) {
   // TUAN: temporary disable code
   /*
 std::string name = r->getName();
@@ -931,7 +931,7 @@ itr++;
 */
 }
 
-inline void LENSServer::sendPDescription(
+inline void MgsServer::sendPDescription(
     const char* type1, const char* type2,
     std::vector<std::vector<std::pair<std::string, DataItem*> > > const& pd) {
 
@@ -966,7 +966,7 @@ sendToClient(sendbuff);
 */
 }
 
-inline void LENSServer::silencer(const char* s) {
+inline void MgsServer::silencer(const char* s) {
   // TUAN: temporary disable code
   /*
 char* ss = const_cast<char*>(s);
@@ -979,7 +979,7 @@ ss[i] = '\b';
 */
 }
 
-inline void LENSServer::muter(char* s) {
+inline void MgsServer::muter(char* s) {
   // TUAN: temporary disable code
   /*
 for (unsigned i = 0; i < strlen(s); i++) {
@@ -996,7 +996,7 @@ s[i] = '\a';
 */
 }
 
-inline void LENSServer::unMuter(char* s) {
+inline void MgsServer::unMuter(char* s) {
   // TUAN: temporary disable code
   /*
 for (unsigned i = 0; i < strlen(s); i++) {
@@ -1013,20 +1013,20 @@ s[i] = '>';
 */
 }
 
-inline void LENSServer::keepDataItem(std::unique_ptr<DataItem>& diap) {
+inline void MgsServer::keepDataItem(std::unique_ptr<DataItem>& diap) {
   _dataItems.push_back(diap.release());
 }
 
-inline TriggerableBase::EventType LENSServer::createTriggerableCaller(
+inline TriggerableBase::EventType MgsServer::createTriggerableCaller(
     const std::string& functionName, NDPairList* ndpList,
     std::unique_ptr<TriggerableCaller>&& triggerableCaller) {
   if (functionName != "event") {
     throw SyntaxErrorException(
         functionName +
-        " is not defined in LENSServer as a Triggerable function.");
+        " is not defined in MgsServer as a Triggerable function.");
   }
   triggerableCaller.reset(
-      new LENSServerEvent(ndpList, &LENSServer::event, this));
+      new MgsServerEvent(ndpList, &MgsServer::event, this));
   return TriggerableBase::_SERIAL;
 }
 #endif

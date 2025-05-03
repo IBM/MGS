@@ -14,7 +14,7 @@
 #include <memory>
 #include "C_argument.h"
 
-class LensContext;
+class GslContext;
 class DataItem;
 class C_declarator;
 class C_argument_list;
@@ -28,7 +28,7 @@ class C_argument_decl_args: public C_argument
 			   SyntaxError *);
       virtual ~C_argument_decl_args();
       virtual C_argument_decl_args* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

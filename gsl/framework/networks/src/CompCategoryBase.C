@@ -16,7 +16,7 @@
 #include "SyntaxErrorException.h"
 #include "PhaseDataItem.h"
 #include "Phase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 
 #include <cassert>
 #include <vector>
@@ -95,7 +95,7 @@ std::string CompCategoryBase::getPhaseType(const std::string& name)
    return "";
 }
 
-void CompCategoryBase::setUnmappedPhases(LensContext* c)
+void CompCategoryBase::setUnmappedPhases(GslContext* c)
 {
    std::map<std::string, Phase*>::iterator it, 
       end = _phaseMappings.end();

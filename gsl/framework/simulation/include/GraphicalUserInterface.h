@@ -16,14 +16,14 @@
 #include <string>
 #include <list>
 #include "UserInterface.h"
-#include "LENSServer.h"
+#include "MgsServer.h"
 #include "Simulation.h"
 
 class GraphicalUserInterface : public UserInterface
 {
    public:
       GraphicalUserInterface(int guiPort, Simulation& sim);
-      LENSServer* getServer();
+      MgsServer* getServer();
       void getUserInput(Simulation& sim);
       std::string getCommand();
       ~GraphicalUserInterface();
@@ -33,7 +33,7 @@ class GraphicalUserInterface : public UserInterface
       pthread_mutex_t _userInputMutex;
       pthread_mutex_t _commandMutex;
 
-      LENSServer* _server;
+      MgsServer* _server;
       std::string _user_input;
       std::list<std::string> _command;
       int _guiPort;
@@ -48,11 +48,11 @@ inline GraphicalUserInterface::GraphicalUserInterface(int guiPort, Simulation& s
    _user_input = "";
    _guiPort = guiPort;
    std::cout<<"GUI waiting for port setting from Browser..."<<std::endl;
-   _server = new LENSServer(_guiPort,sim);
+   _server = new MgsServer(_guiPort,sim);
    _server->initSocket();
 }
 
-inline LENSServer* GraphicalUserInterface::getServer()
+inline MgsServer* GraphicalUserInterface::getServer()
 {
    return (_server);
 }

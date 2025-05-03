@@ -9,7 +9,7 @@
 #include "Parser.h"
 
 void Parser::help() {
-   std::cout << "Usage: lensparser lensFile <options> <switches>\n" << std::endl;
+   std::cout << "Usage: gslparser gslFile <options> <switches>\n" << std::endl;
    std::cout << "  For options, a value is needed:" << std::endl;
    std::cout << "    -h :      Help" << std::endl;
 #ifndef DISABLE_PTHREADS
@@ -30,7 +30,7 @@ void Parser::help() {
    std::cout << "    -o :      Output graph partitioning to file" << std::endl;
    std::cout << "    -m :      Suppress full simulatation (partition only)" << std::endl;
    std::cout << std::endl;
-   std::cout << "  lensFile: the lens spec file to parse (mandatory)" << std::endl;
+   std::cout << "  gslFile: the gsl specification file to parse (mandatory)" << std::endl;
    std::cout << std::endl << std::endl;
 }
 

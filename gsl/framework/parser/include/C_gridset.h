@@ -14,7 +14,7 @@
 
 class C_repname;
 class C_gridnodeset;
-class LensContext;
+class GslContext;
 class GridSet;
 class SyntaxError;
 
@@ -25,7 +25,7 @@ class C_gridset : public C_production
       C_gridset(C_repname *, C_gridnodeset *, SyntaxError *);
       virtual ~C_gridset();
       virtual C_gridset* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       GridSet* getGridSet() {

@@ -13,7 +13,7 @@
 #include "NDPair.h"
 #include "SyntaxError.h"
 
-void C_argument_ndpair_clause::internalExecute(LensContext *c)
+void C_argument_ndpair_clause::internalExecute(GslContext *c)
 {
    _ndp_clause->execute(c);
 

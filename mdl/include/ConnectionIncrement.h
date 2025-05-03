@@ -1,4 +1,3 @@
-#include <memory>
 // =============================================================================
 // (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
@@ -7,6 +6,7 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
+#include <memory>
 #ifndef ConnectionIncrement_H
 #define ConnectionIncrement_H
 #include "Mdl.h"

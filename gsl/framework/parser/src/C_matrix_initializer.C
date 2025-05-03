@@ -12,7 +12,7 @@
 #include "SyntaxError.h"
 #include "C_production_adi.h"
 
-void C_matrix_initializer::internalExecute(LensContext *c, ArrayDataItem *adi)
+void C_matrix_initializer::internalExecute(GslContext *c, ArrayDataItem *adi)
 {
    _matrixInitList->execute(c, adi);
 }

@@ -11,14 +11,14 @@
 
 #include "Mgs.h"
 #include "CG_ThresholdBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 
 class Threshold : public CG_ThresholdBase
 {
    public:
-      void userInitialize(LensContext* CG_c, Functor*& f, double& threshold);
-      bool userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c, Functor*& f, double& threshold);
+      bool userExecute(GslContext* CG_c);
       Threshold();
       virtual ~Threshold();
       virtual void duplicate(std::unique_ptr<Threshold>&& dup) const;

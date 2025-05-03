@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "InstanceFactory.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "DataItem.h"
 
 InstanceFactory::InstanceFactory()

@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "C_declaration_repname.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_declarator.h"
 #include "C_repname.h"
 #include "RepertoireDataItem.h"
@@ -15,7 +15,7 @@
 #include "SyntaxErrorException.h"
 #include <memory>
 
-void C_declaration_repname::internalExecute(LensContext *c)
+void C_declaration_repname::internalExecute(GslContext *c)
 {
    _declarator->execute(c);
    _repname->execute(c);

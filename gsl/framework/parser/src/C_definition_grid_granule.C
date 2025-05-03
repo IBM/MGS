@@ -6,8 +6,9 @@
 // Version 2.0, January 2004.
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// =============================================================================#include "C_definition_grid_granule.h"
-#include "LensContext.h"
+// =============================================================================
+#include "C_definition_grid_granule.h"
+#include "GslContext.h"
 #include "C_definition_grid_granule.h"
 #include "C_parameter_type.h"
 #include "C_parameter_type_list.h"
@@ -21,7 +22,7 @@
 
 #include <memory>
 
-void C_definition_grid_granule::internalExecute(LensContext *c)
+void C_definition_grid_granule::internalExecute(GslContext *c)
 {
    // call executes
    _declarator->execute(c);

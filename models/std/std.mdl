@@ -1,6 +1,3 @@
-#ifndef std_MDL
-#define std_MDL 
-#include "../../nti/include/MaxComputeOrder.h"
 // =============================================================================
 // (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
@@ -9,6 +6,10 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
+#ifndef std_MDL
+#define std_MDL
+#include "../../nti/include/MaxComputeOrder.h"
+
 Interface NumSpikesProducer{
   int* numSpikes;
 }

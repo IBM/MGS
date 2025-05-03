@@ -33,7 +33,7 @@ C_production_adi::~C_production_adi()
 {
 }
 
-void C_production_adi::execute(LensContext *c, ArrayDataItem* adi)
+void C_production_adi::execute(GslContext *c, ArrayDataItem* adi)
 {
    try {
       internalExecute(c, adi);
@@ -47,14 +47,14 @@ void C_production_adi::execute(LensContext *c, ArrayDataItem* adi)
    }
 }
 
-void C_production_adi::internalExecute(LensContext *c)
+void C_production_adi::internalExecute(GslContext *c)
 {
    std::cerr << "Internal error, internalExecute of C_production_adi called, exiting..." 
 	     << std::endl;
    exit (-1);
 }
 
-void C_production_adi::execute(LensContext *c)
+void C_production_adi::execute(GslContext *c)
 {
    C_production::execute(c);
 }

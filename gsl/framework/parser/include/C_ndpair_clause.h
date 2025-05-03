@@ -16,7 +16,7 @@
 class C_name;
 class C_argument;
 class NDPair;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_ndpair_clause : public C_production
@@ -26,7 +26,7 @@ class C_ndpair_clause : public C_production
       C_ndpair_clause(C_name *, C_argument *, SyntaxError *);
       virtual ~C_ndpair_clause();
       virtual C_ndpair_clause* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       const NDPair& getNDPair() {

@@ -16,7 +16,7 @@
 class C_type_specifier;
 class C_matrix_type_specifier;
 class C_functor_category;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_parameter_type : public C_production
@@ -39,7 +39,7 @@ class C_parameter_type : public C_production
       C_parameter_type(C_functor_category *, std::string *id, SyntaxError *);
       virtual ~C_parameter_type ();
       virtual C_parameter_type* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       bool isSpecified() const {

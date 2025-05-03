@@ -10,7 +10,7 @@
 #include "C_parameter_type_list.h"
 #include "SyntaxError.h"
 
-void C_return_clause::internalExecute(LensContext *c)
+void C_return_clause::internalExecute(GslContext *c)
 {
    _ptl->execute(c);
 }

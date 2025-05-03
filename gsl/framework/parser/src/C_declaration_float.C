@@ -7,14 +7,14 @@
 //
 // =============================================================================
 #include "C_declaration_float.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_declarator.h"
 #include "C_constant.h"
 #include "FloatDataItem.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 
-void C_declaration_float::internalExecute(LensContext *c)
+void C_declaration_float::internalExecute(GslContext *c)
 {
    _constant->execute(c);
    _declarator->execute(c);

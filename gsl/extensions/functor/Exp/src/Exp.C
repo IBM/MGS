@@ -9,14 +9,14 @@
 #include "Mgs.h"
 #include "Exp.h"
 #include "CG_ExpBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 
-void Exp::userInitialize(LensContext* CG_c, Functor*& f) 
+void Exp::userInitialize(GslContext* CG_c, Functor*& f) 
 {
 }
 
-double Exp::userExecute(LensContext* CG_c) 
+double Exp::userExecute(GslContext* CG_c) 
 {
   std::vector<DataItem*> nullArgs;
   std::unique_ptr<DataItem> rval_ap;

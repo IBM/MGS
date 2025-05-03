@@ -11,7 +11,7 @@
 #include "C_int_constant_list.h"
 #include "C_matrix_type_specifier.h"
 #include "C_matrix_init_declarator.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_type_specifier.h"
 #include "IntArrayDataItem.h"
 #include "FloatArrayDataItem.h"
@@ -19,7 +19,7 @@
 #include "SyntaxErrorException.h"
 
 
-void C_declaration_matrix_type::internalExecute(LensContext *c)
+void C_declaration_matrix_type::internalExecute(GslContext *c)
 {
 
    _matrixTypeSpecifier->execute(c);

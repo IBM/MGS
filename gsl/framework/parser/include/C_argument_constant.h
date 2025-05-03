@@ -16,7 +16,7 @@
 
 class C_constant;
 class C_argument;
-class LensContext;
+class GslContext;
 class DataItem;
 class IntDataItem;
 class FloatDataItem;
@@ -28,7 +28,7 @@ class C_argument_constant: public C_argument
       C_argument_constant(C_constant *, SyntaxError *);
       virtual ~C_argument_constant();
       virtual C_argument_constant* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

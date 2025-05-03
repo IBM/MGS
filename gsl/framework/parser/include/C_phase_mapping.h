@@ -13,7 +13,7 @@
 #include <string>
 #include "C_production.h"
 
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_phase_mapping : public C_production
@@ -24,7 +24,7 @@ class C_phase_mapping : public C_production
 		      SyntaxError *);
       virtual ~C_phase_mapping();
       virtual C_phase_mapping* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       const std::string& getModelPhase() {

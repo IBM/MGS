@@ -9,7 +9,7 @@
 #include "Constant.h"
 #include "NDPairList.h"
 
-void Constant::initialize(LensContext *c, const std::vector<DataItem*>& args)
+void Constant::initialize(GslContext *c, const std::vector<DataItem*>& args)
 {
    doInitialize(c, args);
 }

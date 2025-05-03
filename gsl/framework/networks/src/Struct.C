@@ -13,7 +13,7 @@ Struct::Struct()
 {
 }
 
-void Struct::initialize(LensContext *c, const std::vector<DataItem*>& args)
+void Struct::initialize(GslContext *c, const std::vector<DataItem*>& args)
 {
    doInitialize(c, args);
 }

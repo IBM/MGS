@@ -1,4 +1,4 @@
-# The pathname is relative to the lens directory
+# The pathname is relative to the gsl directory
 # Define some common prefixes/suffixes for use
 THIS_DIR := utils/std
 THIS_STEM:= std
@@ -23,7 +23,7 @@ RandomOrderOdometer.C \
 SurfaceOdometer.C \
 SysTimer.C \
 VolumeOdometer.C \
-LensConnector.C \
+MgsConnector.C \
 MaxFloatFullPrecision.C \
 VectoredOdometer.C \
 VectoredCheckerboardOdometer.C \

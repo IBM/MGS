@@ -350,7 +350,7 @@ void Generatable::addDoInitializeMethods(
    instance.addExtraSourceHeader("\"SyntaxErrorException.h\"");
    instance.addExtraSourceHeader("<sstream>");
    std::unique_ptr<Method> doInitMethod(new Method("doInitialize", "void") );
-   doInitMethod->addParameter("LensContext *c");
+   doInitMethod->addParameter("GslContext *c");
    doInitMethod->addParameter("const std::vector<DataItem*>& args");
    doInitMethod->setVirtual();
    doInitMethod->setAccessType(AccessType::PROTECTED);

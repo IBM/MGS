@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "InAttrDefaultFunctor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "DataItem.h"
 #include "FunctorType.h"
 #include "NodeSet.h"
@@ -45,13 +45,13 @@ InAttrDefaultFunctor::~InAttrDefaultFunctor()
 }
 
 
-void InAttrDefaultFunctor::doInitialize(LensContext *c, 
+void InAttrDefaultFunctor::doInitialize(GslContext *c, 
 					const std::vector<DataItem*>& args)
 {
 }
 
 
-void InAttrDefaultFunctor::doExecute(LensContext *c, 
+void InAttrDefaultFunctor::doExecute(GslContext *c, 
 				     const std::vector<DataItem*>& args, 
 				     std::unique_ptr<DataItem>& rvalue)
 {

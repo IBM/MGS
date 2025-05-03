@@ -12,7 +12,7 @@
 
 #include "C_production.h"
 
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_definition : public C_production
@@ -22,7 +22,7 @@ class C_definition : public C_production
       C_definition(const C_definition&);
       virtual ~C_definition();
       virtual C_definition* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

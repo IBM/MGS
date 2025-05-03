@@ -11,7 +11,7 @@
 #include "SyntaxError.h"
 #include "C_production.h"
 
-void C_query_field_set::internalExecute(LensContext *c)
+void C_query_field_set::internalExecute(GslContext *c)
 {
    _queryFieldEntryList->execute(c);
 }

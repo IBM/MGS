@@ -37,7 +37,7 @@ StructType& StructType::operator=(const StructType& rv)
 
 void StructType::getInstance(std::unique_ptr<DataItem> & adi, 
 			     std::vector<DataItem*> const * args, 
-			     LensContext* c)
+			     GslContext* c)
 {
    StructDataItem* sdi = new StructDataItem;
 
@@ -50,7 +50,7 @@ void StructType::getInstance(std::unique_ptr<DataItem> & adi,
 
 void StructType::getInstance(std::unique_ptr<DataItem> & adi, 
 			     const NDPairList& ndplist, 
-			     LensContext* c)
+			     GslContext* c)
 {
    StructDataItem* sdi = new StructDataItem;
 

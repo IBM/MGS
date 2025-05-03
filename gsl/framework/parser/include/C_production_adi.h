@@ -12,7 +12,7 @@
 
 #include "C_production.h"
 
-class LensContext;
+class GslContext;
 class SyntaxError;
 class ArrayDataItem;
 
@@ -23,12 +23,12 @@ class C_production_adi : public C_production
       C_production_adi(const C_production_adi&);
       virtual ~C_production_adi();
       virtual C_production_adi* duplicate() const = 0;
-      virtual void execute(LensContext *);
-      virtual void execute(LensContext *, ArrayDataItem *);
+      virtual void execute(GslContext *);
+      virtual void execute(GslContext *, ArrayDataItem *);
       virtual void checkChildren() {};
       virtual void recursivePrint() {};
    protected:
-      virtual void internalExecute(LensContext *);
-      virtual void internalExecute(LensContext *, ArrayDataItem *) = 0;
+      virtual void internalExecute(GslContext *);
+      virtual void internalExecute(GslContext *, ArrayDataItem *) = 0;
 };
 #endif

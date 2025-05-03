@@ -10,7 +10,7 @@
 #include "CustomStringDataItem.h"
 #include "SyntaxError.h"
 
-void C_argument_string::internalExecute(LensContext *c)
+void C_argument_string::internalExecute(GslContext *c)
 {
    _str_dataitem = new CustomStringDataItem();
    _str_dataitem->setString(*_string);

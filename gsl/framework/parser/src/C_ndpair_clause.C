@@ -11,7 +11,7 @@
 #include "C_name.h"
 #include "C_argument.h"
 
-void C_ndpair_clause::internalExecute(LensContext *c)
+void C_ndpair_clause::internalExecute(GslContext *c)
 {
    _name->execute(c);
    _argument->execute(c);

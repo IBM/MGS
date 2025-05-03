@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "RadialDensitySamplerFunctor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ConnectionContext.h"
 #include "DataItem.h"
 #include "IntArrayDataItem.h"
@@ -52,7 +52,7 @@ RadialDensitySamplerFunctor::~RadialDensitySamplerFunctor()
 
 
 void RadialDensitySamplerFunctor::doInitialize(
-   LensContext *c, const std::vector<DataItem*>& args)
+   GslContext *c, const std::vector<DataItem*>& args)
 {
    /*
    Grab the int list
@@ -131,7 +131,7 @@ float RadialDensitySamplerFunctor::getRelativeProbability(
 
 
 void RadialDensitySamplerFunctor::doExecute(
-   LensContext *c, const std::vector<DataItem*>& args, 
+   GslContext *c, const std::vector<DataItem*>& args, 
    std::unique_ptr<DataItem>& rvalue)
 {
    ConnectionContext *cc = c->connectionContext;

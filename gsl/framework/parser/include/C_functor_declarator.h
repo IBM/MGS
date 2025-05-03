@@ -13,7 +13,7 @@
 #include <string>
 #include "C_production.h"
 
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_functor_declarator : public C_production
@@ -23,7 +23,7 @@ class C_functor_declarator : public C_production
       C_functor_declarator(const std::string&, SyntaxError *);
       virtual ~C_functor_declarator();
       virtual C_functor_declarator* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

@@ -1,5 +1,3 @@
-#ifndef ChannelKAf_MDL
-#define ChannelKAf_MDL
 // =============================================================================
 // (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
@@ -8,9 +6,10 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
+#ifndef ChannelKAf_MDL
+#define ChannelKAf_MDL
 
 #include "../../nti/include/MaxComputeOrder.h"
-
 #include "../std/std.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"

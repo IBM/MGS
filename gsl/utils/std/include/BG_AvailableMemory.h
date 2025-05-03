@@ -1,5 +1,3 @@
-#ifndef BG_AVAILABLEMEMORY
-#define BG_AVAILABLEMEMORY
 // =============================================================================
 // (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
@@ -8,7 +6,8 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 // 
 // =============================================================================
-*/
+#ifndef BG_AVAILABLEMEMORY
+#define BG_AVAILABLEMEMORY
 
 #ifdef USING_BLUEGENEP
 #include <sys/resource.h>

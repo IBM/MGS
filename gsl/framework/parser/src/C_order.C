@@ -11,7 +11,7 @@
 #include "SyntaxError.h"
 #include "C_production.h"
 
-void C_order::internalExecute(LensContext *c)
+void C_order::internalExecute(GslContext *c)
 {
    _cIntConstList->execute(c);
 }

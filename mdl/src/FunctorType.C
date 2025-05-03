@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "FunctorType.h"
-#include "LensType.h"
+#include "GslType.h"
 #include <string>
 #include "DataType.h"
 #include <memory>

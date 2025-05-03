@@ -7,14 +7,14 @@
 //
 // =============================================================================
 #include "C_declaration_int.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_declarator.h"
 #include "C_constant.h"
 #include "IntDataItem.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 
-void C_declaration_int::internalExecute(LensContext *c)
+void C_declaration_int::internalExecute(GslContext *c)
 {
    _declarator->execute(c);
 

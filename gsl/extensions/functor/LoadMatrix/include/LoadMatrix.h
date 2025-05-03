@@ -12,15 +12,15 @@
 
 #include "Mgs.h"
 #include "CG_LoadMatrixBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ShallowArray.h"
 #include <memory>
 
 class LoadMatrix : public CG_LoadMatrixBase
 {
    public:
-      void userInitialize(LensContext* CG_c, CustomString& filename, int& rows, int& cols);
-      ShallowArray< float > userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c, CustomString& filename, int& rows, int& cols);
+      ShallowArray< float > userExecute(GslContext* CG_c);
       LoadMatrix();
       virtual ~LoadMatrix();
       virtual void duplicate(std::unique_ptr<LoadMatrix>&& dup) const;

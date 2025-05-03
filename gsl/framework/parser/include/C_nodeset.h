@@ -16,7 +16,7 @@ class C_gridset;
 class C_nodeset_extension;
 class C_declarator;
 class C_declarator_nodeset_extension;
-class LensContext;
+class GslContext;
 class NodeSet;
 class SyntaxError;
 
@@ -30,7 +30,7 @@ class C_nodeset : public C_production
       C_nodeset(C_declarator_nodeset_extension *, SyntaxError *);
       virtual ~C_nodeset ();
       virtual C_nodeset* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       NodeSet* getNodeSet() {

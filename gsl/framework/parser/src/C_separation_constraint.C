@@ -8,7 +8,7 @@
 // =============================================================================
 #include "C_separation_constraint.h"
 
-#include "LensContext.h"
+#include "GslContext.h"
 #include "SyntaxError.h"
 #include "C_declarator.h"
 #include "C_nodeset.h"
@@ -19,7 +19,7 @@
 #include "VariableDataItem.h"
 
 
-void C_separation_constraint::internalExecute(LensContext *c)
+void C_separation_constraint::internalExecute(GslContext *c)
 {
    if (_declarator) {
       _declarator->execute(c);

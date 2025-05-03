@@ -103,7 +103,7 @@ cp gsl/extensions/variable/variables.mdf $DISTROOT/gsl/extensions/variable/
 cp gsl/extensions/struct/structs.mdf $DISTROOT/gsl/extensions/struct/
 cp gsl/extensions/functor/functors.mdf $DISTROOT/gsl/extensions/functor/
 
-cp gsl/framework/factories/include/Lens.h $DISTROOT/gsl/framework/factories/include/Lens.h
+cp gsl/framework/factories/include/Mgs.h $DISTROOT/gsl/framework/factories/include/Mgs.h
 
 cp nti/Makefile $DISTROOT/nti
 cp nti/MaxComputeOrder.h $DISTROOT/nti

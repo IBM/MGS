@@ -9,7 +9,7 @@
 #include "C_declaration.h"
 #include "C_production.h"
 
-void C_declaration::internalExecute(LensContext *c)
+void C_declaration::internalExecute(GslContext *c)
 {
 }
 

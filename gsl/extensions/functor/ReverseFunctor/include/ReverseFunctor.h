@@ -11,14 +11,14 @@
 #include "Mgs.h"
 
 #include "CG_ReverseFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 
 class ReverseFunctor : public CG_ReverseFunctorBase
 {
    public:
-      void userInitialize(LensContext* CG_c, Functor*& f);
-      void userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c, Functor*& f);
+      void userExecute(GslContext* CG_c);
       ReverseFunctor();
       virtual ~ReverseFunctor();
       virtual void duplicate(std::unique_ptr<ReverseFunctor>&& dup) const;

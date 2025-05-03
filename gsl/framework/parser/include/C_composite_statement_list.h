@@ -15,7 +15,7 @@
 
 class C_composite_statement;
 class C_composite_statement_list;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_composite_statement_list : public C_production
@@ -28,7 +28,7 @@ class C_composite_statement_list : public C_production
       std::list<C_composite_statement*>* releaseList();
       virtual ~C_composite_statement_list();
       virtual C_composite_statement_list* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       std::list<C_composite_statement*>* getListCompositeStatement() const { 

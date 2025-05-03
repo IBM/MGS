@@ -8,7 +8,7 @@
 // =============================================================================
 #include "BindBackFunctor.h"
 #include "FunctorType.h"
-#include "LensContext.h"
+#include "GslContext.h"
 //#include <iostream>
 #include "DataItem.h"
 #include "FunctorDataItem.h"
@@ -21,7 +21,7 @@ class Functor;
 class FunctorType;
 class Simulation;
 
-void BindBackFunctor::doInitialize(LensContext *c, 
+void BindBackFunctor::doInitialize(GslContext *c, 
 				   const std::vector<DataItem*>& args)
 {
 
@@ -49,7 +49,7 @@ void BindBackFunctor::doInitialize(LensContext *c,
 }
 
 
-void BindBackFunctor::doExecute(LensContext *c, 
+void BindBackFunctor::doExecute(GslContext *c, 
 				const std::vector<DataItem*>& args, 
 				std::unique_ptr<DataItem>& rvalue)
 {

@@ -12,9 +12,9 @@
 #include "MaxComputeOrder.h"
 #include "Mgs.h"
 #include "CG_TissueFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "DataItemArrayDataItem.h"
-#include "LensConnector.h"
+#include "MgsConnector.h"
 #include "GranuleConnector.h"
 #include "NoConnectConnector.h"
 #include "rndm.h"
@@ -55,17 +55,17 @@ class TissueFunctor : public CG_TissueFunctorBase
 
   public:
   //NDPairList* getParams(){ return _params; };
-  void userInitialize(LensContext* CG_c, CustomString& commandLineArgs1,
+  void userInitialize(GslContext* CG_c, CustomString& commandLineArgs1,
                       CustomString& commandLineArgs2, CustomString& compartmentParamFile,
                       CustomString& channelParamFile, CustomString& synapseParamFile,
                       Functor*& layoutFunctor, Functor*& nodeInitFunctor,
                       Functor*& connectorFunctor, Functor*& probeFunctor);
-  // void userInitialize(LensContext* CG_c, CustomString& commandLineArgs1, CustomString& commandLineArgs2, 
+  // void userInitialize(GslContext* CG_c, CustomString& commandLineArgs1, CustomString& commandLineArgs2, 
 	//	       CustomString& compartmentParamFile, CustomString& channelParamFile, CustomString& synapseParamFile,
 	//	       Functor*& layoutFunctor, Functor*& nodeInitFunctor,
 	//	       Functor*& connectorFunctor, Functor*& probeFunctor,
 	//	       Functor*& MGSifyFunctor); //idea abandoned - JamesK.
-  std::unique_ptr<Functor> userExecute(LensContext* CG_c, CustomString& tissueElement,
+  std::unique_ptr<Functor> userExecute(GslContext* CG_c, CustomString& tissueElement,
                                      NDPairList*& params);
 
   TissueFunctor();
@@ -92,17 +92,17 @@ class TissueFunctor : public CG_TissueFunctorBase
 #endif
 
   // perform neuron generating from a given set of parameters
-  void neuroGen(Params* params, LensContext* CG_c);
+  void neuroGen(Params* params, GslContext* CG_c);
   // perform neuron development
-  void neuroDev(Params* params, LensContext* CG_c);
+  void neuroDev(Params* params, GslContext* CG_c);
   // perform touch detection from
   //    1. the list of neurons (.swc files) and
   //    2. criteria for touch detection in DetParams file
-  void touchDetect(Params* params, LensContext* CG_c);
+  void touchDetect(Params* params, GslContext* CG_c);
   // perform spine creation
-  void createSpines(Params* params, LensContext* CG_c);
+  void createSpines(Params* params, GslContext* CG_c);
   //
-  int compartmentalize(LensContext* lc, NDPairList* params,
+  int compartmentalize(GslContext* lc, NDPairList* params,
                        std::string& nodeCategory, std::string& nodeType,
                        int nodeIndex, int densityIndex);
   //
@@ -111,10 +111,10 @@ class TissueFunctor : public CG_TissueFunctorBase
   // get StructDataItem
   // from a given point (represented by coordinate  (a pointer to double which
   // is expected to be 3-element array)+ radius + distance to soma)
-  StructDataItem* getDimension(LensContext* lc, double* cds, dyn_var_t radius,
+  StructDataItem* getDimension(GslContext* lc, double* cds, dyn_var_t radius,
                                dyn_var_t dist2soma, dyn_var_t surface_area,
                                dyn_var_t volume, dyn_var_t length);
-  StructDataItem* getDimension(LensContext* lc, double* cds1, double* cds2,
+  StructDataItem* getDimension(GslContext* lc, double* cds1, double* cds2,
                                dyn_var_t radius, dyn_var_t dist2soma,
                                dyn_var_t surface_area, dyn_var_t volume,
                                dyn_var_t length);
@@ -126,20 +126,20 @@ class TissueFunctor : public CG_TissueFunctorBase
   void connect(Simulation* sim, Connector* connector, NodeDescriptor* from,
                NodeDescriptor* to, NDPairList& ndpl);
 
-  ShallowArray<int> doLayout(LensContext* lc);
-  ShallowArray<int> doLayoutNTS(LensContext* lc);
-  ShallowArray<int> doLayoutHybrid(LensContext* lc);
-  void doNodeInit(LensContext* lc);
-  void doConnector(LensContext* lc);
-  void doProbe(LensContext* lc, std::unique_ptr<NodeSet>&& rval);
+  ShallowArray<int> doLayout(GslContext* lc);
+  ShallowArray<int> doLayoutNTS(GslContext* lc);
+  ShallowArray<int> doLayoutHybrid(GslContext* lc);
+  void doNodeInit(GslContext* lc);
+  void doConnector(GslContext* lc);
+  void doProbe(GslContext* lc, std::unique_ptr<NodeSet>&& rval);
   //Zipper purpose
-  Grid* doProbe(LensContext* lc, std::vector<NodeDescriptor*>& nodeDescriptors);
-  Grid* doProbe_Number(LensContext* lc, std::vector<NodeDescriptor*>& nodeDescriptors,
+  Grid* doProbe(GslContext* lc, std::vector<NodeDescriptor*>& nodeDescriptors);
+  Grid* doProbe_Number(GslContext* lc, std::vector<NodeDescriptor*>& nodeDescriptors,
         const std::string layout,
         NDPairList::iterator& ndpiter, NDPairList::iterator& ndpend_reverse,
         int& remaining,
         int NumCptsToExtract);
-  Grid* doProbe_Region(LensContext* lc, std::vector<NodeDescriptor*>& nodeDescriptors,
+  Grid* doProbe_Region(GslContext* lc, std::vector<NodeDescriptor*>& nodeDescriptors,
         const std::string layout,
         NDPairList::iterator& ndpiter, NDPairList::iterator& ndpend_reverse,
         int& remaining,
@@ -148,7 +148,7 @@ class TissueFunctor : public CG_TissueFunctorBase
   int getTypeLayerIdx(std::string category, std::string type, bool& esyn);
   GridLayerDescriptor* getGridLayerDescriptor(std::string category, int typeIdx, bool esyn);
   //end Zipper
-  void doMGSify(LensContext* lc);
+  void doMGSify(GslContext* lc);
   ComputeBranch* findBranch(int nodeIndex, int densityIndex,
                             std::string const& cptVariableType);
   std::vector<int>& findBranchIndices(ComputeBranch*,
@@ -321,7 +321,7 @@ class TissueFunctor : public CG_TissueFunctorBase
   int _junctionPointTypeCounter;
   int _forwardSolvePointTypeCounter;
   int _backwardSolvePointTypeCounter;
-  LensConnector _lensConnector;
+  MgsConnector _mgsConnector;
   GranuleConnector _granuleConnector;
   NoConnectConnector _noConnector;
 

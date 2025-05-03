@@ -11,7 +11,7 @@
 #include "IntDataItem.h"
 #include "FloatDataItem.h"
 
-void C_argument_constant::internalExecute(LensContext *c)
+void C_argument_constant::internalExecute(GslContext *c)
 {
    _constant->execute(c);
 

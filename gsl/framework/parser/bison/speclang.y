@@ -11,10 +11,10 @@
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
-#include "LensLexer.h"
-#include "LensParser.h"
-#include "LensParserClasses.h"
-#include "LensContext.h"
+#include "GslLexer.h"
+#include "GslParser.h"
+#include "GslParserClasses.h"
+#include "GslContext.h"
 #include "SimInitializer.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
@@ -35,12 +35,12 @@ using namespace std;
 //#define YYPARSE_PARAM parm
 //#define YYLEX_PARAM parm
 #define YYDEBUG 1
-#define CONTEXT ((LensContext *) parm)
-#define yyparse lensparse
-#define yyerror lenserror
-#define yylex   lenslex
-#define CURRENTFILE (((LensContext *) parm)->lexer)->currentFileName
-#define CURRENTLINE (((LensContext *) parm)->lexer)->lineCount
+#define CONTEXT ((GslContext *) parm)
+#define yyparse gslparse
+#define yyerror gslerror
+#define yylex   gsllex
+#define CURRENTFILE (((GslContext *) parm)->lexer)->currentFileName
+#define CURRENTLINE (((GslContext *) parm)->lexer)->lineCount
 
 // Error macros
 #define PRARGMISMATCH "possible paranthesis mismatch, use ( Argument )"
@@ -50,9 +50,9 @@ using namespace std;
 #define PRCRLMISMATCH "possible curly brackets mismatch use Declarator { GridDefinitionBody } or Declarator { GridDefinitionBody } Declarator"
 #define EXPDECLBEFCURL "expecting a declarator before {"
    
-   //void lenserror(const char *s);
-   void lenserror(YYLTYPE* llocp, void* parm, const char *s);
-   int lenslex(YYSTYPE *lvalp, YYLTYPE *locp, void *context);
+   //void gslerror(const char *s);
+   void gslerror(YYLTYPE* llocp, void* parm, const char *s);
+   int gsllex(YYSTYPE *lvalp, YYLTYPE *locp, void *context);
    inline void HIGH_LEVEL_EXECUTE(void* parm, C_production* l) {
 	 l->checkChildren();
 	 if (l->isError()) {
@@ -424,7 +424,7 @@ parser_line: definition {
    HIGH_LEVEL_EXECUTE(parm, $1);
 }
 | error ';' {
-   LensLexer *l = ((LensContext *) parm)->lexer;
+   GslLexer *l = ((GslContext *) parm)->lexer;
 
    cerr << "Error at file:" << l->currentFileName << ", line:" 
 	<< l->lineCount<< ", " << "unexpected token: " 
@@ -433,7 +433,7 @@ parser_line: definition {
    CONTEXT->setError();
 }
 | error {
-   LensLexer *l = ((LensContext *) parm)->lexer;
+   GslLexer *l = ((GslContext *) parm)->lexer;
 
    cerr << "Error at file:" << l->currentFileName << ", line:" 
 	<< l->lineCount<< ", " << "unexpected token: " 
@@ -2950,10 +2950,10 @@ phase_mapping_list: phase_mapping {
 
 %%
 
-inline int lenslex(YYSTYPE *lvalp, YYLTYPE *locp, void *context)
+inline int gsllex(YYSTYPE *lvalp, YYLTYPE *locp, void *context)
 {
-   return ((LensContext *) context)->
-      lexer->lex(lvalp, locp, (LensContext *) context);
+   return ((GslContext *) context)->
+      lexer->lex(lvalp, locp, (GslContext *) context);
 }
 
 int main(int argc, char** argv)
@@ -3004,11 +3004,11 @@ int main(int argc, char** argv)
    }
 }
 
-//void lenserror(const char *s)
+//void gslerror(const char *s)
 //{
 //   fprintf(stderr,"%s\n",s);
 //}
-void lenserror(YYLTYPE* llocp, void* parm, const char *s)
+void gslerror(YYLTYPE* llocp, void* parm, const char *s)
 {
    fprintf(stderr,"%s\n",s);
 }

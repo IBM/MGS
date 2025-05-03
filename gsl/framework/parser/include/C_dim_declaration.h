@@ -13,7 +13,7 @@
 #include "C_production.h"
 
 class C_int_constant_list;
-class LensContext;
+class GslContext;
 
 class C_dim_declaration: public C_production
 {
@@ -22,7 +22,7 @@ class C_dim_declaration: public C_production
       C_dim_declaration(C_int_constant_list *, SyntaxError *);
       virtual ~C_dim_declaration();
       virtual C_dim_declaration* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       const C_int_constant_list* getIntConstantList() const;

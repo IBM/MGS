@@ -12,11 +12,11 @@
 #include "C_production.h"
 #include "PhaseDataItem.h"
 #include "Phase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "SyntaxErrorException.h"
 
 
-void C_phase::internalExecute(LensContext *c)
+void C_phase::internalExecute(GslContext *c)
 {
    std::unique_ptr<Phase> dup;
    c->getCurrentPhase(dup);

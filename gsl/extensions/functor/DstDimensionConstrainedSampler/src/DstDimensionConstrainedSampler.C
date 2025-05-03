@@ -9,9 +9,9 @@
 #include "Mgs.h"
 #include "DstDimensionConstrainedSampler.h"
 #include "CG_DstDimensionConstrainedSamplerBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ConnectionContext.h"
 #include "ParameterSet.h"
 #include "NodeSet.h"
@@ -26,12 +26,12 @@
 #include <cmath>
 #include "VectorOstream.h"
 
-void DstDimensionConstrainedSampler::userInitialize(LensContext* CG_c, int& constrainedDstDim) 
+void DstDimensionConstrainedSampler::userInitialize(GslContext* CG_c, int& constrainedDstDim) 
 {
   _constrainedDstDim=constrainedDstDim;
 }
 
-void DstDimensionConstrainedSampler::userExecute(LensContext* CG_c) 
+void DstDimensionConstrainedSampler::userExecute(GslContext* CG_c) 
 {
   ConnectionContext *cc = CG_c->connectionContext;
   

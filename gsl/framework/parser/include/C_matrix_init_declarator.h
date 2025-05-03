@@ -16,7 +16,7 @@
 class C_declarator;
 class C_int_constant_list;
 class C_matrix_initializer;
-class LensContext;
+class GslContext;
 class ArrayDataItem;
 
 class C_matrix_init_declarator : public C_production_adi
@@ -27,7 +27,7 @@ class C_matrix_init_declarator : public C_production_adi
 			       C_matrix_initializer *, SyntaxError *);
       virtual ~C_matrix_init_declarator ();
       virtual C_matrix_init_declarator* duplicate() const;
-      virtual void internalExecute(LensContext *, ArrayDataItem *);
+      virtual void internalExecute(GslContext *, ArrayDataItem *);
       virtual void checkChildren();
       virtual void recursivePrint();
       C_declarator* getDeclarator() const {

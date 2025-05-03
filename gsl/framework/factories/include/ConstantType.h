@@ -34,10 +34,10 @@ class ConstantType : public InstanceFactory
       virtual ~ConstantType();
       virtual void getInstance(std::unique_ptr<DataItem> & adi, 
 			       std::vector<DataItem*> const * args, 
-			       LensContext* c);
+			       GslContext* c);
       virtual void getInstance(std::unique_ptr<DataItem> & adi, 
 			       const NDPairList& ndplist,
-			       LensContext* c);
+			       GslContext* c);
    protected:
       DuplicatePointerArray<Constant> _constantList;
 };

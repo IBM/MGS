@@ -1,7 +1,3 @@
-#include "CG_SynapticCleft.h"
-#include "Mgs.h"
-#include "SynapticCleft.h"
-#include "rndm.h"
 // =============================================================================
 // (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
@@ -10,7 +6,10 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 // 
 // =============================================================================
-
+#include "CG_SynapticCleft.h"
+#include "Mgs.h"
+#include "SynapticCleft.h"
+#include "rndm.h"
 #include "MaxComputeOrder.h"
 #include "NodeProxyBase.h"
 

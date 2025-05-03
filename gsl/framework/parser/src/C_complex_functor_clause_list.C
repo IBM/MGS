@@ -12,7 +12,7 @@
 #include "C_production.h"
 
 
-void C_complex_functor_clause_list::internalExecute(LensContext *c)
+void C_complex_functor_clause_list::internalExecute(GslContext *c)
 {
    std::list<C_complex_functor_clause*>::iterator i,end=_list->end();
    for(i = _list->begin(); i != end; ++i) {

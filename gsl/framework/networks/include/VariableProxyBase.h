@@ -120,7 +120,7 @@ class VariableProxyBase : public Variable
 	    name + " is not defined in variable proxy.");
 	 //return TriggerableBase::_UNALTERED;
       }
-      virtual void doInitialize(LensContext *c, 
+      virtual void doInitialize(GslContext *c, 
 				const std::vector<DataItem*>& args) {
 	 assert(false);
       }

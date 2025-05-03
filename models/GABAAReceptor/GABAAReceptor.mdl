@@ -1,5 +1,3 @@
-#ifndef GABAAReceptor_MDL
-#define GABAAReceptor_MDL
 // =============================================================================
 // (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
@@ -11,6 +9,8 @@
 // (C) Copyright 2018 New Jersey Institute of Technology. All rights reserved.
 //
 // =============================================================================
+#ifndef GABAAReceptor_MDL
+#define GABAAReceptor_MDL
 
 #include "../../nti/include/MaxComputeOrder.h"
 #include "../std/std.mdl"

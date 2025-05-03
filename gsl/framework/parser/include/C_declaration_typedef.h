@@ -13,7 +13,7 @@
 #include "C_declaration.h"
 
 class C_typedef_declaration;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_declaration_typedef : public C_declaration
@@ -23,7 +23,7 @@ class C_declaration_typedef : public C_declaration
       C_declaration_typedef(C_typedef_declaration *, SyntaxError *);
       virtual C_declaration_typedef* duplicate() const;
       virtual ~C_declaration_typedef();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

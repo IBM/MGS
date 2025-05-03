@@ -13,7 +13,7 @@
 #include <string>
 #include "C_production.h"
 
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_set_operation : public C_production
@@ -25,7 +25,7 @@ class C_set_operation : public C_production
       C_set_operation(std::string, SyntaxError *);
       virtual ~C_set_operation();
       virtual C_set_operation* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

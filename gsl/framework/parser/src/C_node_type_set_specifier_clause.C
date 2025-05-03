@@ -10,18 +10,18 @@
 #include "C_layer_set.h"
 #include "C_logical_OR_expression.h"
 #include "Grid.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "GridLayerDescriptor.h"
 #include "SyntaxError.h"
 #include "C_production.h"
 
-void C_node_type_set_specifier_clause::internalExecute(LensContext *c)
+void C_node_type_set_specifier_clause::internalExecute(GslContext *c)
 {
    delete _storedContext;
 
    // Note: executing this copy constructor can lead to recursion in 
    // ConnectionScripFunctor, for now we'll set to NULL
-   //_storedContext = new LensContext(c);
+   //_storedContext = new GslContext(c);
    _storedContext = 0;
 
 }
@@ -57,7 +57,7 @@ C_node_type_set_specifier_clause::C_node_type_set_specifier_clause(
       _layerSet = rv._layerSet->duplicate();
    }
    if (rv._storedContext) {
-      _storedContext = new LensContext(*rv._storedContext);
+      _storedContext = new GslContext(*rv._storedContext);
    }
 }
 

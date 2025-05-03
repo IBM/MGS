@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "C_definition_variabletype.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_declarator.h"
 #include "Simulation.h"
 #include "VariableType.h"
@@ -22,7 +22,7 @@
 
 #include <memory>
 
-void C_definition_variabletype::internalExecute(LensContext *c)
+void C_definition_variabletype::internalExecute(GslContext *c)
 {
    _declarator->execute(c);
 

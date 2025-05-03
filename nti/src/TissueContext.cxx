@@ -690,7 +690,7 @@ bool TissueContext::isMappedTouch(Touch& t,
 // GOAL: check if this MPI process (based on the given rank 'rank')
 //   should handle the given touch
 #ifdef IDEA1
-bool TissueContext::isLensTouch(Touch& t, int rank)
+bool TissueContext::isMgsTouch(Touch& t, int rank)
 {
   bool rval = false;
   //For each touch, it has 2 capsules
@@ -735,7 +735,7 @@ bool TissueContext::isLensTouch(Touch& t, int rank)
   return rval;
 }
 #else
-bool TissueContext::isLensTouch(Touch& t, int rank)
+bool TissueContext::isMgsTouch(Touch& t, int rank)
 {
   bool rval = false;
   //For each touch, it has 2 capsules

@@ -15,13 +15,13 @@
 
 SyntaxErrorException::SyntaxErrorException(std::string errCode, 
 					   bool first)
-   : _lensErrorCode(errCode), _first(first)
+   : _gslErrorCode(errCode), _first(first)
 {
 }
 
 
 SyntaxErrorException::SyntaxErrorException(const SyntaxErrorException& l)
-   : _lensErrorCode(l._lensErrorCode), _first(l._first)
+   : _gslErrorCode(l._gslErrorCode), _first(l._first)
 {
 }
 
@@ -29,7 +29,7 @@ SyntaxErrorException& SyntaxErrorException::operator=(
    const SyntaxErrorException& l)
 {
    if (this != &l) {
-      _lensErrorCode = l._lensErrorCode;
+      _gslErrorCode = l._gslErrorCode;
       _first = l._first;
    }
    return *this;
@@ -37,7 +37,7 @@ SyntaxErrorException& SyntaxErrorException::operator=(
 
 std::string SyntaxErrorException::getError()
 {
-   return(_lensErrorCode + " (SyntaxErrorException)");
+   return(_gslErrorCode + " (SyntaxErrorException)");
 }
 
 std::string SyntaxErrorException::what()
@@ -47,12 +47,12 @@ std::string SyntaxErrorException::what()
 
 void SyntaxErrorException::printError()
 {
-   if (_lensErrorCode != "") {
-      std::cerr << _lensErrorCode << std::endl;      
+   if (_gslErrorCode != "") {
+      std::cerr << _gslErrorCode << std::endl;      
    }
 }
 
 void SyntaxErrorException::resetError()
 {
-   _lensErrorCode = "";
+   _gslErrorCode = "";
 }

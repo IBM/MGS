@@ -14,7 +14,7 @@
 
 class C_declarator;
 class C_stride_list;
-class LensContext;
+class GslContext;
 class StridesList;
 class SyntaxError;
 
@@ -25,7 +25,7 @@ class C_declaration_stride : public C_declaration
       C_declaration_stride(C_declarator *, C_stride_list *, SyntaxError *);
       virtual C_declaration_stride* duplicate() const;
       virtual ~C_declaration_stride();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

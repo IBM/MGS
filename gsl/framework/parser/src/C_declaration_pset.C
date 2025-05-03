@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "C_declaration_pset.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_parameter_type_pair.h"
 #include "C_declarator.h"
 #include "C_ndpair_clause_list.h"
@@ -22,7 +22,7 @@
 
 #include <memory>
 
-void C_declaration_pset::internalExecute(LensContext *c)
+void C_declaration_pset::internalExecute(GslContext *c)
 {
    _parameterTypePair->execute(c);
    _declarator->execute(c);

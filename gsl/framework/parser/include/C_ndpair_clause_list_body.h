@@ -14,7 +14,7 @@
 #include "C_production.h"
 
 class C_ndpair_clause;
-class LensContext;
+class GslContext;
 class NDPairList;
 class SyntaxError;
 
@@ -28,7 +28,7 @@ class C_ndpair_clause_list_body : public C_production
       virtual ~C_ndpair_clause_list_body ();
       virtual C_ndpair_clause_list_body* duplicate() const;
       std::list<C_ndpair_clause*>* releaseList();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       NDPairList* getNDPairList(){

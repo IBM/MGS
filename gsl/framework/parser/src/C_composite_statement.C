@@ -10,13 +10,13 @@
 #include "C_declaration.h"
 #include "C_directive.h"
 #include <typeinfo>
-#include "LensContext.h"
+#include "GslContext.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 #include "C_production.h"
 
 
-void C_composite_statement::internalExecute(LensContext *c)
+void C_composite_statement::internalExecute(GslContext *c)
 {
    if(_declaration)
       _declaration->execute(c);

@@ -38,7 +38,7 @@ FunctorType::FunctorType()
 //    return *this;
 // }
 
-void FunctorType::getInstance(std::unique_ptr<DataItem> & adi, std::vector<DataItem*> const * args, LensContext* c)
+void FunctorType::getInstance(std::unique_ptr<DataItem> & adi, std::vector<DataItem*> const * args, GslContext* c)
 {
    FunctorDataItem* fdi = new FunctorDataItem;
 
@@ -58,7 +58,7 @@ void FunctorType::getInstance(std::unique_ptr<DataItem> & adi, std::vector<DataI
 
 void FunctorType::getInstance(std::unique_ptr<DataItem> & adi, 
 			      const NDPairList& ndplist,
-			      LensContext* c)
+			      GslContext* c)
 {
    throw SyntaxErrorException(
       "Functors can not be instantiated with Name-DataItem pair lists.");

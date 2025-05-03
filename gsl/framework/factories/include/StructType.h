@@ -35,10 +35,10 @@ class StructType : public InstanceFactory
       virtual ~StructType();
       virtual void getInstance(std::unique_ptr<DataItem>& adi, 
 			       std::vector<DataItem*> const * args, 
-			       LensContext* c);
+			       GslContext* c);
       virtual void getInstance(std::unique_ptr<DataItem>& adi, 
 			       const NDPairList& ndplist,
-			       LensContext* c);
+			       GslContext* c);
    protected:
       std::list<Struct*> _structList;      
    private:

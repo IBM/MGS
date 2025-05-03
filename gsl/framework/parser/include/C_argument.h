@@ -14,7 +14,7 @@
 #include <memory>
 #include "C_production.h"
 
-class LensContext;
+class GslContext;
 class DataItem;
 
 class C_argument : public C_production
@@ -49,7 +49,7 @@ class C_argument : public C_production
       C_argument(const C_argument&);
       virtual ~C_argument();
       virtual C_argument* duplicate() const = 0;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

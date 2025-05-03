@@ -14,7 +14,7 @@
 #include "SyntaxError.h"
 #include "C_production.h"
 
-void C_connection_script_definition_body::internalExecute(LensContext *c)
+void C_connection_script_definition_body::internalExecute(GslContext *c)
 {
    C_connection_script_declaration *current;
    std::list<C_connection_script_declaration*>::iterator i, end = _list->end();

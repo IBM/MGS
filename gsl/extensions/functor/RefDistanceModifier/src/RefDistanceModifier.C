@@ -14,7 +14,7 @@
 #include "NodeDescriptor.h"
 #include "ConnectionContext.h"
 #include <cmath>
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ParameterSet.h"
 #include <memory>
 #include <vector>
@@ -22,11 +22,11 @@
 #include "GridLayerDescriptor.h"
 
 
-void RefDistanceModifier::userInitialize(LensContext* CG_c, int& directionFlag, int& wrapFlag, Functor*& f) 
+void RefDistanceModifier::userInitialize(GslContext* CG_c, int& directionFlag, int& wrapFlag, Functor*& f) 
 {
 }
 
-std::unique_ptr<ParameterSet> RefDistanceModifier::userExecute(LensContext* CG_c) 
+std::unique_ptr<ParameterSet> RefDistanceModifier::userExecute(GslContext* CG_c) 
 {
    std::vector<DataItem*> nullArgs;
    std::unique_ptr<DataItem> rval_ap;

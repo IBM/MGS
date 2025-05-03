@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "SameFunctor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "DataItem.h"
 #include "FunctorType.h"
 #include "ParameterSetDataItem.h"
@@ -43,7 +43,7 @@ SameFunctor::~SameFunctor()
 }
 
 
-void SameFunctor::doInitialize(LensContext *c, 
+void SameFunctor::doInitialize(GslContext *c, 
 			       const std::vector<DataItem*>& args)
 {
    if (args.size() != 1) {
@@ -62,7 +62,7 @@ void SameFunctor::doInitialize(LensContext *c,
    }
 }
 
-void SameFunctor::doExecute(LensContext *c, 
+void SameFunctor::doExecute(GslContext *c, 
 			    const std::vector<DataItem*>& args, 
 			    std::unique_ptr<DataItem>& rvalue)
 {

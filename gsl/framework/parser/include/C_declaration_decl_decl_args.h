@@ -15,7 +15,7 @@
 class C_declarator;
 class C_argument_list;
 class C_ndpair_clause_list;
-class LensContext;
+class GslContext;
 class InstanceFactory;
 class DataItem;
 class SyntaxError;
@@ -30,7 +30,7 @@ class C_declaration_decl_decl_args : public C_declaration
 				   C_declarator *, SyntaxError *);
       virtual ~C_declaration_decl_decl_args();
       virtual C_declaration_decl_decl_args* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       std::string getName();

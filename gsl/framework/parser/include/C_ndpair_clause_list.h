@@ -16,7 +16,7 @@
 
 class NDPairList;
 class C_ndpair_clause_list_body;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_ndpair_clause_list : public C_production
@@ -30,7 +30,7 @@ class C_ndpair_clause_list : public C_production
       virtual ~C_ndpair_clause_list ();
       virtual C_ndpair_clause_list* duplicate() const;
       std::list<C_ndpair_clause_list_body*> * releaseList();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       NDPairList* getList() {

@@ -16,7 +16,7 @@
 class C_layer_set;
 class C_logical_OR_expression;
 class C_logical_NOT_expression;
-class LensContext;
+class GslContext;
 class Grid;
 class GridLayerDescriptor;
 class SyntaxError;
@@ -30,7 +30,7 @@ class C_primary_expression : public C_production_grid
       C_primary_expression(C_logical_NOT_expression *, SyntaxError *);
       virtual ~C_primary_expression();
       virtual C_primary_expression* duplicate() const;
-      virtual void internalExecute(LensContext *, Grid* g);
+      virtual void internalExecute(GslContext *, Grid* g);
       virtual void checkChildren();
       virtual void recursivePrint();
       const std::list<GridLayerDescriptor*>& getLayers() const;

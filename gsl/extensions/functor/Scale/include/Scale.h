@@ -11,14 +11,14 @@
 
 #include "Mgs.h"
 #include "CG_ScaleBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 
 class Scale : public CG_ScaleBase
 {
    public:
-      void userInitialize(LensContext* CG_c, Functor*& f, double& scale);
-      double userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c, Functor*& f, double& scale);
+      double userExecute(GslContext* CG_c);
       Scale();
       virtual ~Scale();
       virtual void duplicate(std::unique_ptr<Scale>&& dup) const;

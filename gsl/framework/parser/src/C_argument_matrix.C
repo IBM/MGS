@@ -8,7 +8,7 @@
 // =============================================================================
 #include "C_argument_list.h"
 #include "C_type_specifier.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_argument_matrix.h"
 #include "DataItem.h"
 #include "FloatDataItem.h"
@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <string>
 
-void C_argument_matrix::internalExecute(LensContext *c) {
+void C_argument_matrix::internalExecute(GslContext *c) {
   _arg_list->execute(c);
 
   std::vector<DataItem *> *vectorDI = _arg_list->getVectorDataItem();

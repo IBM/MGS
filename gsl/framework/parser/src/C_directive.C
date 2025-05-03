@@ -22,7 +22,7 @@ const DataItem* C_directive::getRVal() const
    return retval;
 }
 
-void C_directive::internalExecute(LensContext *c)
+void C_directive::internalExecute(GslContext *c)
 {
    if (_functorSpec) {
       _functorSpec->execute(c);

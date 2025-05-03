@@ -15,7 +15,7 @@
 
 class C_dim_declaration;
 class C_grid_translation_unit;
-class LensContext;
+class GslContext;
 class C_declarator;
 class Repertoire;
 class SyntaxError;
@@ -30,10 +30,10 @@ class C_grid_definition_body : public C_production, public RepertoireFactory
       virtual ~C_grid_definition_body();
       virtual C_grid_definition_body* duplicate() const;
       virtual void duplicate(std::unique_ptr<RepertoireFactory>& rv) const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
-      Repertoire* createRepertoire(std::string const& repName, LensContext* c);
+      Repertoire* createRepertoire(std::string const& repName, GslContext* c);
       void setTdError(SyntaxError *tdError);
 
    private:

@@ -8,13 +8,13 @@
 // =============================================================================
 #include "C_definition_functor.h"
 #include "C_functor_definition.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "FunctorTypeDataItem.h"
 #include "ScriptFunctorTypeDataItem.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 
-void C_definition_functor::internalExecute(LensContext *c)
+void C_definition_functor::internalExecute(GslContext *c)
 {
    // call executes
    _functor_def->execute(c);

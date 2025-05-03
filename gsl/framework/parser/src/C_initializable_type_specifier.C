@@ -7,12 +7,12 @@
 //
 // =============================================================================
 #include "C_initializable_type_specifier.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_parameter_type_pair.h"
 #include "SyntaxError.h"
 #include "C_production.h"
 
-void C_initializable_type_specifier::internalExecute(LensContext *c)
+void C_initializable_type_specifier::internalExecute(GslContext *c)
 {
    if (_parameterTypePair)
       _parameterTypePair->execute(c);

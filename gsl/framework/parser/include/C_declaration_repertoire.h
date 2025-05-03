@@ -15,7 +15,7 @@
 #include <map>
 
 class C_repertoire_declaration;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_declaration_repertoire : public C_declaration
@@ -25,7 +25,7 @@ class C_declaration_repertoire : public C_declaration
       C_declaration_repertoire(C_repertoire_declaration *, SyntaxError *);
       virtual C_declaration_repertoire* duplicate() const;
       virtual ~C_declaration_repertoire();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

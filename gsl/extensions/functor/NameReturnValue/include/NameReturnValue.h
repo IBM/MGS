@@ -11,15 +11,15 @@
 
 #include "Mgs.h"
 #include "CG_NameReturnValueBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "NDPairList.h"
 #include <memory>
 
 class NameReturnValue : public CG_NameReturnValueBase
 {
    public:
-      void userInitialize(LensContext* CG_c, CustomString& s, Functor*& f);
-      std::unique_ptr<NDPairList> userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c, CustomString& s, Functor*& f);
+      std::unique_ptr<NDPairList> userExecute(GslContext* CG_c);
       NameReturnValue();
       virtual ~NameReturnValue();
       virtual void duplicate(std::unique_ptr<NameReturnValue>&& dup) const;

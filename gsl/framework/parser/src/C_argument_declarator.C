@@ -7,14 +7,14 @@
 //
 // =============================================================================
 #include "C_argument_declarator.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_declarator.h"
 #include "DataItem.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 
 
-void C_argument_declarator::internalExecute(LensContext *c)
+void C_argument_declarator::internalExecute(GslContext *c)
 {
    _declarator->execute(c);
 

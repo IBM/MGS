@@ -1,7 +1,7 @@
 #include "Mgs.h"
 #include "RandomDispersalLayout.h"
 #include "CG_RandomDispersalLayoutBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ShallowArray.h"
 #include "Grid.h"
 #include "LayerDefinitionContext.h"
@@ -9,11 +9,11 @@
 #include <math.h>
 #include <memory>
 
-void RandomDispersalLayout::userInitialize(LensContext* CG_c, int& total)
+void RandomDispersalLayout::userInitialize(GslContext* CG_c, int& total)
 {
 }
 
-ShallowArray< int > RandomDispersalLayout::userExecute(LensContext* CG_c) 
+ShallowArray< int > RandomDispersalLayout::userExecute(GslContext* CG_c) 
 {
   ShallowArray<int> rval;
   Grid* g = CG_c->layerContext->grid;

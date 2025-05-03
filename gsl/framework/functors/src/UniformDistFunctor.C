@@ -10,7 +10,7 @@
 #include "FunctorType.h"
 #include "FunctorDataItem.h"
 #include "NumericDataItem.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "InstanceFactoryQueriable.h"
 //#include <iostream>
 #include "FloatDataItem.h"
@@ -25,7 +25,7 @@ class Simulation;
 
 //#define RNG ( (random()+0.1)/2147483648.0)
 
-void UniformDistFunctor::doInitialize(LensContext *c, 
+void UniformDistFunctor::doInitialize(GslContext *c, 
 				      const std::vector<DataItem*>& args)
 {
    // get min linit
@@ -47,7 +47,7 @@ void UniformDistFunctor::doInitialize(LensContext *c,
 }
 
 
-void UniformDistFunctor::doExecute(LensContext *c, 
+void UniformDistFunctor::doExecute(GslContext *c, 
 				   const std::vector<DataItem*>& args, 
 				   std::unique_ptr<DataItem>& rvalue)
 {

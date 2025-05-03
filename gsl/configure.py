@@ -65,8 +65,8 @@ USE = 1
 DONTUSE = 0
 UNDEF = -1
 
-PROJECT_NAME = "Lens"
-CONFIG_HEADER = "framework/factories/include/LensRootConfig.h"
+PROJECT_NAME = "Mgs"
+CONFIG_HEADER = "framework/factories/include/GslRootConfig.h"
 EXTENSIONS_MK = "./Extensions.mk"
 CLEAN_SCRIPT = "./clean.sh"
 CONFIG_LOG = "./config.log"
@@ -134,7 +134,7 @@ LINUX_DX_LITELIBS = "-L$(DX_BASE)/lib_linux " + COMMON_DX_LITELIBS
 
 EXTRA_PARSER_TARGERS_FOR_DX = "$(DX_DIR)/EdgeSetSubscriberSocket $(DX_DIR)/NodeSetSubscriberSocket $(OBJS_DIR)/socket.o"
 
-LENSPARSER_TARGETS = "$(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(BASE_OBJECTS) "
+GSLPARSER_TARGETS = "$(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(BASE_OBJECTS) "
 
 # # Pre python 2.3 compatibility
 # True = 1
@@ -1865,11 +1865,11 @@ CFLAGS += $(COLAB_CFLAGS) \
         retStr += "\n"
         return retStr
 
-    def getLensLibs(self):
-        retStr = "LENS_LIBS := "
+    def getMgsLibs(self):
+        retStr = "MGS_LIBS := "
         if self.options.domainLibrary is True:
-            # retStr += "lib/liblensdomain.a "
-            retStr += "lib/liblens.a\n"
+            # retStr += "lib/libGslParserdomain.a "
+            retStr += "lib/libGslParser.a\n"
         return retStr
 
     def getLibs(self):
@@ -1907,7 +1907,7 @@ CFLAGS += $(COLAB_CFLAGS) \
             added_libs.add("-lm")
         
         if self.operatingSystem == "AIX" or self.operatingSystem == "Linux" or self.operatingSystem == "Darwin":
-            retStr += "$(LENS_LIBS_EXT) "
+            retStr += "$(MGS_LIBS_EXT) "
         else:
             raise InternalError("Unknown OS " + self.operatingSystem)
         
@@ -2198,9 +2198,9 @@ $(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/
         retStr = "cleanfirst:\n"
         retStr += "\t-rm -f $(BIN_DIR)/$(EXE_FILE)\n\n"
         if self.options.colab is True:
-            retStr += "final: cleanfirst $(OBJS) $(LENS_LIBS_EXT) "
+            retStr += "final: cleanfirst $(OBJS) $(MGS_LIBS_EXT) "
         else:
-            retStr += "final: cleanfirst speclang.tab.h $(OBJS) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(LENS_LIBS_EXT) "
+            retStr += "final: cleanfirst speclang.tab.h $(OBJS) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(MGS_LIBS_EXT) "
         if self.options.dynamicLoading is True:
             retStr += " $(DEF_SYMBOLS) $(UNDEF_SYMBOLS) $(BIN_DIR)/createDF $(SHARED_OBJECTS) "
         if self.dx.exists is True:
@@ -2239,14 +2239,14 @@ library: speclang.tab.h  $(COLAB_OBJS)
 """
         return retStr
 
-    def getLibLensTarget(self):
+    def getLibMgsTarget(self):
         retStr = \
             """\
 # I could not find a way to ar it in one time in AIX, the command gets too
 # long, also I cannot do this with the foreach loop using BASE_MODULES because
 # it concatenates into one single line.
 """
-        retStr += "lib/liblens.a: $(BASE_OBJECTS)\n"
+        retStr += "lib/libmgs.a: $(BASE_OBJECTS)\n"
         moduleList = ["parser", "dca", "dataitems", "factories", "networks",
                       "simulation", "functors", "std", "img"]
         if self.options.withMpi is True:
@@ -2259,7 +2259,7 @@ library: speclang.tab.h  $(COLAB_OBJS)
         for i in moduleList:
             retStr += arCmd + " $(OBJ_" + i + ")\n"
         retStr += "\tranlib $@\n\n"
-        retStr += "lib/liblensext.a: $(EXTENSION_OBJECTS) $(LENS_LIBS)"
+        retStr += "lib/libmgsext.a: $(EXTENSION_OBJECTS) $(MGS_LIBS)"
         if self.options.dynamicLoading is False:
             retStr += " $(GENERATED_DL_OBJECTS)"
         retStr += "\n"
@@ -2272,23 +2272,23 @@ library: speclang.tab.h  $(COLAB_OBJS)
     def getMainDefTarget(self):
         retStr = \
             r"""\
-$(SO_DIR)/main.def: $(LENS_LIBS_EXT)
+$(SO_DIR)/main.def: $(MGS_LIBS_EXT)
 \techo \#\!. > $@
 \t$(SCRIPTS_DIR)/gen_def.sh $^ >> $@
 """
         return retStr
 
-    def getLensparserTarget(self):
+    def getGslParserTarget(self):
         retStr = "$(BIN_DIR)/$(EXE_FILE): cleanfirst "
 
         if self.operatingSystem == "AIX":
-            retStr += LENSPARSER_TARGETS
+            retStr += GSLPARSER_TARGETS
             if self.options.dynamicLoading is True:
                 retStr += "$(SO_DIR)/main.def "
             else:
-                retStr += "$(LENS_LIBS_EXT) "
+                retStr += "$(MGS_LIBS_EXT) "
         elif self.operatingSystem == "Linux" or self.operatingSystem == "Darwin":
-            retStr += LENSPARSER_TARGETS + "$(LENS_LIBS_EXT) "
+            retStr += GSLPARSER_TARGETS + "$(MGS_LIBS_EXT) "
         else:
             raise InternalError("Unknown OS " + self.operatingSystem)
         if self.options.dynamicLoading is True:
@@ -2340,8 +2340,8 @@ clean:
 \t-rm -f dx/NodeSetSubscriberSocket
 \t-rm -f $(BIN_DIR)/$(EXE_FILE)
 \t-rm -f $(BIN_DIR)/createDF
-\t-rm -f lib/liblens.a
-\t-rm -f lib/liblensext.a
+\t-rm -f lib/libmgs.a
+\t-rm -f lib/libmgsext.a
 \t-rm -f $(SO_DIR)/Dependfile
 \t-rm -f framework/parser/bison/speclang.output
 \t-rm -f framework/parser/generated/lex.yy.C
@@ -2447,7 +2447,7 @@ CFLAGS := ${CUDA_NVCC_FLAGS}
         else:
             fileBody += self.getCFlags()
         fileBody += "\n"
-        # fileBody += self.getLensLibs()
+        # fileBody += self.getMgsLibs()
         fileBody += self.getLibs()
         fileBody += "\n"
 
@@ -2474,13 +2474,13 @@ CFLAGS := ${CUDA_NVCC_FLAGS}
         if self.options.dynamicLoading is True:
             fileBody += self.getDependfileTarget()
             fileBody += "\n"
-        # fileBody += self.getLibLensTarget()
+        # fileBody += self.getLibMgsTarget()
         fileBody += self.getLibsTarget()
         fileBody += "\n"
         if self.options.dynamicLoading is True:
             fileBody += self.getMainDefTarget()
             fileBody += "\n"
-        fileBody += self.getLensparserTarget()
+        fileBody += self.getGslParserTarget()
         fileBody += "\n"
         fileBody += self.getSocketTarget()
         fileBody += "\n"

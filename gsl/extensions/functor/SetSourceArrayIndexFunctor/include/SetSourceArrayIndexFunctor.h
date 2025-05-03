@@ -12,7 +12,7 @@
 
 #include "Mgs.h"
 #include "CG_SetSourceArrayIndexFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 #include <map>
 
@@ -21,8 +21,8 @@ class NodeDescriptor;
 class SetSourceArrayIndexFunctor : public CG_SetSourceArrayIndexFunctorBase
 {
    public:
-      void userInitialize(LensContext* CG_c, Functor*& destinationInAttr);
-      std::unique_ptr<ParameterSet> userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c, Functor*& destinationInAttr);
+      std::unique_ptr<ParameterSet> userExecute(GslContext* CG_c);
       SetSourceArrayIndexFunctor();
       SetSourceArrayIndexFunctor(SetSourceArrayIndexFunctor const&);
       virtual ~SetSourceArrayIndexFunctor();

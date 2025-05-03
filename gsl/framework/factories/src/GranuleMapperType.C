@@ -21,7 +21,7 @@ GranuleMapperType::GranuleMapperType(Simulation& s, const std::string& name, con
 
 void GranuleMapperType::getInstance(std::unique_ptr<DataItem> & adi, 
 			      std::vector<DataItem*> const * args, 
-			      LensContext* c)
+			      GslContext* c)
 {
    GranuleMapperDataItem* di = new GranuleMapperDataItem();
    std::unique_ptr<GranuleMapper> apgm;
@@ -41,7 +41,7 @@ void GranuleMapperType::getInstance(std::unique_ptr<DataItem> & adi,
 
 void GranuleMapperType::getInstance(std::unique_ptr<DataItem> & adi, 
 			      const NDPairList& ndplist,
-			      LensContext* c)
+			      GslContext* c)
 {
    throw SyntaxErrorException(
       "GranuleMappers can not be instantiated with Name-DataItem pair lists.");

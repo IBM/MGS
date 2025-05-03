@@ -11,7 +11,7 @@
 #include "Mgs.h"
 
 #include "CG_SrcRefSumRsqrdInvWeightModifierBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ParameterSet.h"
 #include <memory>
 #include <map>
@@ -19,8 +19,8 @@
 class SrcRefSumRsqrdInvWeightModifier : public CG_SrcRefSumRsqrdInvWeightModifierBase
 {
    public:
-      void userInitialize(LensContext* CG_c, Functor*& f, int& maxDim, bool& setDistance);
-      std::unique_ptr<ParameterSet> userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c, Functor*& f, int& maxDim, bool& setDistance);
+      std::unique_ptr<ParameterSet> userExecute(GslContext* CG_c);
       SrcRefSumRsqrdInvWeightModifier();
       virtual ~SrcRefSumRsqrdInvWeightModifier();
       virtual void duplicate(std::unique_ptr<SrcRefSumRsqrdInvWeightModifier>&& dup) const;

@@ -12,7 +12,7 @@
 
 #include "C_production.h"
 
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_init_attr_type_edge : public C_production
@@ -22,7 +22,7 @@ class C_init_attr_type_edge : public C_production
       C_init_attr_type_edge(SyntaxError *);
       virtual ~C_init_attr_type_edge();
       virtual C_init_attr_type_edge* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

@@ -14,7 +14,7 @@
 #include "PhaseElement.h"
 #include "C_production.h"
 
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_machine_type : public C_production
@@ -24,7 +24,7 @@ class C_machine_type : public C_production
       C_machine_type(const std::string& , SyntaxError *);
       virtual ~C_machine_type();
       virtual C_machine_type* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       machineType getMachineType() {

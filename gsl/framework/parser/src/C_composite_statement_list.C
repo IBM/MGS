@@ -8,12 +8,12 @@
 // =============================================================================
 #include "C_composite_statement_list.h"
 #include "C_composite_statement.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "SyntaxError.h"
 #include "C_production.h"
-//#include "LensLexer.h"
+//#include "GslLexer.h"
 
-void C_composite_statement_list::internalExecute(LensContext *c)
+void C_composite_statement_list::internalExecute(GslContext *c)
 {
    std::list<C_composite_statement*>::iterator i, end = _list->end();
    for(i = _list->begin(); i != end; ++i) {

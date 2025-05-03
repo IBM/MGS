@@ -9,7 +9,7 @@
 #include "C_grid_function_name.h"
 #include "C_declarator.h"
 #include "FunctorDataItem.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "NDPairListDataItem.h"
 #include "NDPairList.h"
 #include "IntArrayDataItem.h"
@@ -34,7 +34,7 @@
 #include <stdio.h>
 #include <string>
 
-void C_grid_function_name::internalExecute(LensContext* c, Grid* grid) {
+void C_grid_function_name::internalExecute(GslContext* c, Grid* grid) {
   if (_declarator) _declarator->execute(c);
   _argList->execute(c);
   if (_type == _LAYER)
@@ -73,7 +73,7 @@ C_grid_function_name::~C_grid_function_name() {
   delete _argList;
 }
 
-void C_grid_function_name::initNodes(LensContext* c, Grid* grid) {
+void C_grid_function_name::initNodes(GslContext* c, Grid* grid) {
   const std::vector<DataItem*>* args = _argList->getVectorDataItem();
   if (args->size() < 2) {
     std::string mes =
@@ -125,7 +125,7 @@ void C_grid_function_name::initNodes(LensContext* c, Grid* grid) {
 /* being called when a 'Layers'
  * statement is detected in GSL
  */
-void C_grid_function_name::layers(LensContext* c, Grid* grid) {
+void C_grid_function_name::layers(GslContext* c, Grid* grid) {
   std::string name = _declarator->getName();
 
   const std::vector<DataItem*>* args = _argList->getVectorDataItem();

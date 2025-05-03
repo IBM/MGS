@@ -15,7 +15,7 @@
 #include <string>
 
 class C_composite_statement_list;
-class LensContext;
+class GslContext;
 class Repertoire;
 class SyntaxError;
 
@@ -27,10 +27,10 @@ class C_composite_definition_body : public C_production, public RepertoireFactor
       virtual ~C_composite_definition_body();
       virtual C_composite_definition_body* duplicate() const;
       virtual void duplicate(std::unique_ptr<RepertoireFactory>& rv) const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
-      Repertoire* createRepertoire(const std::string& repName, LensContext* c);
+      Repertoire* createRepertoire(const std::string& repName, GslContext* c);
       void setTdError(SyntaxError *tdError);
       
    private:

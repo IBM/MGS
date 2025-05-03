@@ -13,7 +13,7 @@
 #include <string>
 #include "C_production.h"
 
-class LensContext;
+class GslContext;
 class C_query_field_entry;
 class C_query_field_set;
 class SyntaxError;
@@ -27,7 +27,7 @@ class C_query : public C_production
       C_query(C_query_field_set *, SyntaxError *);
       virtual ~C_query ();
       virtual C_query* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       C_query_field_entry* getEntry() {

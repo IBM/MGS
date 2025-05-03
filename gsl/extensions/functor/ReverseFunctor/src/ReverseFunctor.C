@@ -8,16 +8,16 @@
 // =============================================================================
 #include "ReverseFunctor.h"
 #include "CG_ReverseFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ConnectionContext.h"
 #include "NodeDescriptor.h"
 #include <memory>
 
-void ReverseFunctor::userInitialize(LensContext* CG_c, Functor*& f) 
+void ReverseFunctor::userInitialize(GslContext* CG_c, Functor*& f) 
 {
 }
 
-void ReverseFunctor::userExecute(LensContext* CG_c) 
+void ReverseFunctor::userExecute(GslContext* CG_c) 
 {
    std::vector<DataItem*> nullArgs;
    std::unique_ptr<DataItem> rval_ap;

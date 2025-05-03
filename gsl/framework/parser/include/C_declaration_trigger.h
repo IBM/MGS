@@ -11,7 +11,7 @@
 #include "Copyright.h"
 
 #include "C_declaration.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <string>
 #include <memory>
 #include <map>
@@ -27,7 +27,7 @@ class C_declaration_trigger : public C_declaration
       C_declaration_trigger(C_declarator *, C_trigger *, SyntaxError *);
       virtual C_declaration_trigger* duplicate() const;
       virtual ~C_declaration_trigger();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

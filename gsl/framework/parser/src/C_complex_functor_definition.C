@@ -14,7 +14,7 @@
 #include "C_production.h"
 #include <iostream>
 
-void C_complex_functor_definition::internalExecute(LensContext *c)
+void C_complex_functor_definition::internalExecute(GslContext *c)
 {
    _functorCategory->execute(c);
    _declarator->execute(c);

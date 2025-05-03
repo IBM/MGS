@@ -10,7 +10,7 @@
 #include "SyntaxError.h"
 #include "C_production.h"
 
-void C_preamble::internalExecute(LensContext *c)
+void C_preamble::internalExecute(GslContext *c)
 {
 }
 

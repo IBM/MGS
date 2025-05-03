@@ -14,7 +14,7 @@
 
 class C_declarator;
 class C_repname;
-class LensContext;
+class GslContext;
 
 class C_declaration_repname : public C_declaration
 {
@@ -23,7 +23,7 @@ class C_declaration_repname : public C_declaration
       C_declaration_repname(C_declarator *, C_repname *, SyntaxError *);
       virtual C_declaration_repname* duplicate() const;
       virtual ~C_declaration_repname();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

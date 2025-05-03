@@ -9,7 +9,7 @@
 #include "OpenCircleLayoutFunctor.h"
 #include "FunctorType.h"
 #include "NumericDataItem.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "InstanceFactoryQueriable.h"
 #include "DataItemQueriable.h"
 #include "FunctorDataItem.h"
@@ -21,7 +21,7 @@
 //#include <iostream>
 #include <sstream>
 
-void OpenCircleLayoutFunctor::doInitialize(LensContext *c, 
+void OpenCircleLayoutFunctor::doInitialize(GslContext *c, 
 					   const std::vector<DataItem*>& args)
 {
    NumericDataItem* nbrPositionsDI = 
@@ -34,7 +34,7 @@ void OpenCircleLayoutFunctor::doInitialize(LensContext *c,
 }
 
 
-void OpenCircleLayoutFunctor::doExecute(LensContext *c, 
+void OpenCircleLayoutFunctor::doExecute(GslContext *c, 
 					const std::vector<DataItem*>& args, 
 					std::unique_ptr<DataItem>& rvalue)
 {

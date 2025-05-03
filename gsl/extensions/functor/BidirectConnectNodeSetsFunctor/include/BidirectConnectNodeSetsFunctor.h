@@ -11,18 +11,18 @@
 #include "Mgs.h"
 
 #include "CG_BidirectConnectNodeSetsFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 
 class NoConnectConnector;
 class GranuleConnector;
-class LensConnector;
+class MgsConnector;
 
 class BidirectConnectNodeSetsFunctor : public CG_BidirectConnectNodeSetsFunctorBase
 {
    public:
-      void userInitialize(LensContext* CG_c);
-      void userExecute(LensContext* CG_c, NodeSet*& source, NodeSet*& destination, Functor*& sampling, Functor*& sourceOutAttr, Functor*& destinationInAttr, Functor*& destinationOutAttr, Functor*& sourceInAttr);
+      void userInitialize(GslContext* CG_c);
+      void userExecute(GslContext* CG_c, NodeSet*& source, NodeSet*& destination, Functor*& sampling, Functor*& sourceOutAttr, Functor*& destinationInAttr, Functor*& destinationOutAttr, Functor*& sourceInAttr);
       BidirectConnectNodeSetsFunctor();
       virtual ~BidirectConnectNodeSetsFunctor();
       virtual void duplicate(std::unique_ptr<BidirectConnectNodeSetsFunctor>&& dup) const;
@@ -31,7 +31,7 @@ class BidirectConnectNodeSetsFunctor : public CG_BidirectConnectNodeSetsFunctorB
    private:
       NoConnectConnector* _noConnector;
       GranuleConnector* _granuleConnector;
-      LensConnector* _lensConnector;
+      MgsConnector* _mgsConnector;
 };
 
 #endif

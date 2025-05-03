@@ -8,9 +8,9 @@
 // =============================================================================
 #include "ConnectNodeSetsFunctor.h"
 #include "CG_ConnectNodeSetsFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "Connector.h"
-#include "LensConnector.h"
+#include "MgsConnector.h"
 #include "GranuleConnector.h"
 #include "NoConnectConnector.h"
 #include "ConnectionContext.h"
@@ -26,11 +26,11 @@
 #include <thread>
 #endif
 
-void ConnectNodeSetsFunctor::userInitialize(LensContext* CG_c) 
+void ConnectNodeSetsFunctor::userInitialize(GslContext* CG_c) 
 {
 }
 
-void ConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, NodeSet*& destination, Functor*& sampling, Functor*& sourceOutAttr, Functor*& destinationInAttr) 
+void ConnectNodeSetsFunctor::userExecute(GslContext* CG_c, NodeSet*& source, NodeSet*& destination, Functor*& sampling, Functor*& sourceOutAttr, Functor*& destinationInAttr) 
 {
 //#define DEBUG_TIMER
 #ifdef DEBUG_TIMER
@@ -73,7 +73,7 @@ void ConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, No
    } else if (CG_c->sim->isCostAggregationPass()) {
      lc=_granuleConnector;
    } else if (CG_c->sim->isSimulatePass()) {
-     lc=_lensConnector;
+     lc=_mgsConnector;
    } else {
      std::cerr<<"Error, ConnectNodeSetsFunctor : no connection context set!"<<std::endl;
      exit(0);
@@ -248,7 +248,7 @@ void ConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, No
 	} else if (CG_c->sim->isCostAggregationPass()) {
 	   msg = "_granuleConnector";
 	} else if (CG_c->sim->isSimulatePass()) {
-	   msg = "_lensConnector";
+	   msg = "_mgsConnector";
 	} 
 	std::cout << ".........." << msg << std::endl;
        CG_c->sim->benchmark_timelapsed(".. ConnectNodeSetsFunctor (userExecute() end)");
@@ -270,7 +270,7 @@ ConnectNodeSetsFunctor::ConnectNodeSetsFunctor()
 {
    _noConnector = new NoConnectConnector;
    _granuleConnector = new GranuleConnector;
-   _lensConnector = new LensConnector;
+   _mgsConnector = new MgsConnector;
 }
 
 ConnectNodeSetsFunctor::~ConnectNodeSetsFunctor() 

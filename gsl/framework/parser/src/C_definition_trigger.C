@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "C_definition_trigger.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_parameter_type.h"
 #include "C_parameter_type_list.h"
 #include "C_declarator.h"
@@ -22,7 +22,7 @@
 
 #include <memory>
 
-void C_definition_trigger::internalExecute(LensContext *c)
+void C_definition_trigger::internalExecute(GslContext *c)
 {
    // call executes
    _declarator->execute(c);

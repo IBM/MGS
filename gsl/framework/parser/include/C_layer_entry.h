@@ -15,7 +15,7 @@
 
 class C_name_range;
 class C_layer_name;
-class LensContext;
+class GslContext;
 class Grid;
 class GridLayerDescriptor;
 class SyntaxError;
@@ -28,7 +28,7 @@ class C_layer_entry : public C_production_grid
       C_layer_entry(C_layer_name *, SyntaxError *);
       virtual ~C_layer_entry ();
       virtual C_layer_entry* duplicate() const;
-      virtual void internalExecute(LensContext *, Grid* g);
+      virtual void internalExecute(GslContext *, Grid* g);
       virtual void checkChildren();
       virtual void recursivePrint();
       const std::list<GridLayerDescriptor*>& getLayers() const;

@@ -14,7 +14,7 @@
 #include "SyntaxError.h"
 #include <cassert>
 
-void C_argument_ndpair_clause_list::internalExecute(LensContext *c)
+void C_argument_ndpair_clause_list::internalExecute(GslContext *c)
 {
    if (_ndp_clause_list) {
       _ndp_clause_list->execute(c);

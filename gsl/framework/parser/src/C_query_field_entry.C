@@ -15,7 +15,7 @@
 #include "SyntaxError.h"
 #include "C_production.h"
 
-void C_query_field_entry::internalExecute(LensContext *c)
+void C_query_field_entry::internalExecute(GslContext *c)
 {
    if (_ndpClause) _ndpClause->execute(c);
    if (_constant) _constant->execute(c);

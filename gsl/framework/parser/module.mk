@@ -1,4 +1,4 @@
-# The pathname is relative to the lens directory
+# The pathname is relative to the gsl directory
 # Define some common prefixes/suffixes for use
 THIS_DIR := framework/parser
 THIS_STEM := parser
@@ -167,8 +167,8 @@ C_type_specifier.C \
 C_typedef_declaration.C \
 C_types.C \
 C_value.C \
-LensLexer.C \
-LensContext.C \
+GslLexer.C \
+GslContext.C \
 ScriptFunctorType.C \
 SymbolTable.C \
 ConnectionContext.C \

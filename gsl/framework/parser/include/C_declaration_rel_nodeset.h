@@ -13,7 +13,7 @@
 #include "C_declaration.h"
 class C_declarator;
 class C_relative_nodeset;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_declaration_rel_nodeset : public C_declaration
@@ -24,7 +24,7 @@ class C_declaration_rel_nodeset : public C_declaration
 				SyntaxError *);
       virtual C_declaration_rel_nodeset* duplicate() const;
       virtual ~C_declaration_rel_nodeset();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

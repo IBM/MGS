@@ -9,7 +9,7 @@
 #include "BindFrontFunctorType.h"
 #include "BindFrontFunctor.h"
 #include "FunctorType.h"
-#include "LensContext.h"
+#include "GslContext.h"
 //#include <iostream>
 #include "DataItem.h"
 #include "FunctorDataItem.h"

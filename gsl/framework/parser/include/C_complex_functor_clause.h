@@ -12,7 +12,7 @@
 
 #include "C_production.h"
 
-class LensContext;
+class GslContext;
 
 class C_complex_functor_clause : public C_production
 {
@@ -22,7 +22,7 @@ class C_complex_functor_clause : public C_production
       C_complex_functor_clause(Type t, SyntaxError* error);
       virtual ~C_complex_functor_clause();
       virtual C_complex_functor_clause* duplicate() const = 0;
-      virtual void internalExecute(LensContext *) = 0;
+      virtual void internalExecute(GslContext *) = 0;
       virtual void checkChildren();
       virtual void recursivePrint();
       Type getType() const {

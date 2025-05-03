@@ -13,7 +13,7 @@
 #include "C_production.h"
 
 class C_type_specifier;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_matrix_type_specifier: public C_production
@@ -23,7 +23,7 @@ class C_matrix_type_specifier: public C_production
       C_matrix_type_specifier(C_type_specifier *, SyntaxError *);
       virtual ~C_matrix_type_specifier();
       virtual C_matrix_type_specifier* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       C_type_specifier* getTypeSpecifier() const;

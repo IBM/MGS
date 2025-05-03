@@ -9,14 +9,14 @@
 #include "Mgs.h"
 #include "Neg.h"
 #include "CG_NegBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 
-void Neg::userInitialize(LensContext* CG_c, Functor*& f) 
+void Neg::userInitialize(GslContext* CG_c, Functor*& f) 
 {
 }
 
-double Neg::userExecute(LensContext* CG_c) 
+double Neg::userExecute(GslContext* CG_c) 
 {
   std::vector<DataItem*> nullArgs;
   std::unique_ptr<DataItem> rval_ap;

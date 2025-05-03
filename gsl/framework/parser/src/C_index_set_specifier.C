@@ -12,7 +12,7 @@
 #include "SyntaxError.h"
 #include "C_production.h"
 
-void C_index_set_specifier::internalExecute(LensContext *c)
+void C_index_set_specifier::internalExecute(GslContext *c)
 {
    _indexSet->execute(c);
 

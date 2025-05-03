@@ -12,7 +12,7 @@
 
 #include "C_production.h"
 
-class LensContext;
+class GslContext;
 
 class C_declaration : public C_production
 {
@@ -21,7 +21,7 @@ class C_declaration : public C_production
       C_declaration(const C_declaration&);
       virtual ~C_declaration();
       virtual C_declaration* duplicate() const = 0;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 };

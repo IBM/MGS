@@ -16,7 +16,7 @@
 
 class C_declarator;
 class C_index_set;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_declaration_index_set : public C_declaration
@@ -26,7 +26,7 @@ class C_declaration_index_set : public C_declaration
       C_declaration_index_set(C_declarator *,  C_index_set *, SyntaxError *);
       virtual C_declaration_index_set* duplicate() const;
       virtual ~C_declaration_index_set();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       C_index_set* getIndexSet();

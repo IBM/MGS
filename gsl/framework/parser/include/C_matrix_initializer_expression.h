@@ -15,7 +15,7 @@
 class ArrayDataItem;
 class C_constant_list;
 class C_int_constant_list;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 
@@ -26,7 +26,7 @@ class C_matrix_initializer_expression : public C_production_adi
       C_matrix_initializer_expression(C_int_constant_list *, SyntaxError *);
       virtual ~C_matrix_initializer_expression();
       virtual C_matrix_initializer_expression* duplicate() const;
-      virtual void internalExecute(LensContext *, ArrayDataItem *);
+      virtual void internalExecute(GslContext *, ArrayDataItem *);
       virtual void checkChildren();
       virtual void recursivePrint();
       const C_int_constant_list * getIntConstantList() const;

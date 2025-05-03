@@ -11,7 +11,7 @@
 #include "SyntaxError.h"
 #include "C_production.h"
 
-void C_index_set::internalExecute(LensContext *c)
+void C_index_set::internalExecute(GslContext *c)
 {
    std::list<C_index_entry*>::iterator iter, end = _listIndexEntry->end();
    for(iter = _listIndexEntry->begin(); iter != end; ++iter) {

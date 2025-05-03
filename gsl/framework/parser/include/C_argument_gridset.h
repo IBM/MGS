@@ -16,7 +16,7 @@
 
 class C_gridset;
 class C_argument;
-class LensContext;
+class GslContext;
 class DataItem;
 class GridSetDataItem;
 class SyntaxError;
@@ -28,7 +28,7 @@ class C_argument_gridset: public C_argument
       C_argument_gridset(C_gridset *, SyntaxError *);
       virtual ~C_argument_gridset ();
       virtual C_argument_gridset* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

@@ -16,7 +16,7 @@
 
 class C_query_path;
 class C_declarator;
-class LensContext;
+class GslContext;
 class Service;
 class TriggerType;
 class SyntaxError;
@@ -29,7 +29,7 @@ class C_query_path_product : public C_production
       C_query_path_product(C_query_path*, C_declarator*, SyntaxError *);
       virtual ~C_query_path_product();
       virtual C_query_path_product* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       Service* getService();

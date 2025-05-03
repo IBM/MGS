@@ -11,10 +11,10 @@
 #include "Mgs.h"
 
 #include "CG_PolyConnectorFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "NoConnectConnector.h"
 #include "GranuleConnector.h"
-#include "LensConnector.h"
+#include "MgsConnector.h"
 #include <memory>
 
 class Constant;
@@ -27,8 +27,8 @@ class Simulation;
 class PolyConnectorFunctor : public CG_PolyConnectorFunctorBase
 {
    public:
-      void userInitialize(LensContext* CG_c);
-      void userExecute(LensContext* CG_c, std::vector<DataItem*>::const_iterator begin, std::vector<DataItem*>::const_iterator end);
+      void userInitialize(GslContext* CG_c);
+      void userExecute(GslContext* CG_c, std::vector<DataItem*>::const_iterator begin, std::vector<DataItem*>::const_iterator end);
       PolyConnectorFunctor();
       virtual ~PolyConnectorFunctor();
       virtual void duplicate(std::unique_ptr<PolyConnectorFunctor>&& dup) const;
@@ -37,7 +37,7 @@ class PolyConnectorFunctor : public CG_PolyConnectorFunctorBase
    private:
       NoConnectConnector _noConnector;
       GranuleConnector _granuleConnector;
-      LensConnector _lensConnector;
+      MgsConnector _mgsConnector;
 };
 
 #endif

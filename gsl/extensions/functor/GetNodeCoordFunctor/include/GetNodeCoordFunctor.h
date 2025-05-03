@@ -11,7 +11,7 @@
 #include "Mgs.h"
 
 #include "CG_GetNodeCoordFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "Service.h"
 #include <memory>
 
@@ -21,8 +21,8 @@ class GetNodeCoordFunctor : public CG_GetNodeCoordFunctorBase,
 			    public Publishable
 {
    public:
-      void userInitialize(LensContext* CG_c);
-      Service* userExecute(LensContext* CG_c, Node*& node);
+      void userInitialize(GslContext* CG_c);
+      Service* userExecute(GslContext* CG_c, Node*& node);
       GetNodeCoordFunctor();
       GetNodeCoordFunctor(const GetNodeCoordFunctor& rv);
       GetNodeCoordFunctor& operator=(const GetNodeCoordFunctor& rv);

@@ -16,7 +16,7 @@
 #include <memory>
 #include "C_production.h"
 
-class LensContext;
+class GslContext;
 class C_initializable_type_specifier;
 class C_non_initializable_type_specifier;
 class DataItem;
@@ -56,7 +56,7 @@ class C_type_specifier : public C_production
       C_type_specifier(C_non_initializable_type_specifier *, SyntaxError *);
       virtual ~C_type_specifier();
       virtual C_type_specifier* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       DataItem* getValidArgument(DataItem *);

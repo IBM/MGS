@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "C_declaration_index_set.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_index_set.h"
 #include "C_declarator.h"
 #include "C_index_entry.h"
@@ -16,7 +16,7 @@
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 
-void C_declaration_index_set::internalExecute(LensContext *c)
+void C_declaration_index_set::internalExecute(GslContext *c)
 {
    _declarator->execute(c);
    _indexSet->execute(c);

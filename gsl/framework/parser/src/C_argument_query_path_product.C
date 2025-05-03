@@ -14,7 +14,7 @@
 #include "TriggerTypeDataItem.h"
 #include "SyntaxError.h"
 
-void C_argument_query_path_product::internalExecute(LensContext *c)
+void C_argument_query_path_product::internalExecute(GslContext *c)
 {
    _queryPathProduct->execute(c);
    if (_queryPathProduct->getType() == C_query_path_product::_SERVICE) {

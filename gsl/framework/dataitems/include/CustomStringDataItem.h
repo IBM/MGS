@@ -35,7 +35,7 @@ class CustomStringDataItem : public DataItem
 
       // Singlet Methods
       std::string getString(Error* error=0) const;
-      CustomString getLensString(Error* error=0) const;
+      CustomString getCustomString(Error* error=0) const;
       void setString(std::string i, Error* error=0);
 };
 #endif

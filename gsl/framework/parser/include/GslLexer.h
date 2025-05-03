@@ -6,29 +6,29 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
-#ifndef _lenslexer_h
-#define _lenslexer_h
+#ifndef GSLLEXER_H
+#define GSLLEXER_H
 #include "Copyright.h"
 
 #if !defined(yyFlexLexerOnce) 
 #include <FlexLexer.h>
 #endif 
-#include "LensParser.h"
+#include "GslParser.h"
 #include <string>
 #ifndef YYSTYPE_DEFINITION
 #define YYSTYPE_DEFINITION
 #include "speclang.tab.h"
 #endif
 
-class LensContext;
+class GslContext;
 
-class LensLexer : public yyFlexLexer
+class GslLexer : public yyFlexLexer
 {
    public:
-      LensLexer(std::istream * infile, std::ostream * outfile);
-      ~LensLexer();
+      GslLexer(std::istream * infile, std::ostream * outfile);
+      ~GslLexer();
 
-      int lex(YYSTYPE *lvaluep, YYLTYPE *locp, LensContext *context);
+      int lex(YYSTYPE *lvaluep, YYLTYPE *locp, GslContext *context);
       int yylex();
       void skip_proc(void);
 
@@ -36,13 +36,13 @@ class LensLexer : public yyFlexLexer
 
       YYSTYPE *yylval;
       YYLTYPE *yylloc;
-      LensContext *context;
+      GslContext *context;
       std::string currentFileName;
       std::string gcppLine;
       int lineCount;
 };
 
-inline int LensLexer::lex(YYSTYPE *lvaluep, YYLTYPE *locp, LensContext *c)
+inline int GslLexer::lex(YYSTYPE *lvaluep, YYLTYPE *locp, GslContext *c)
 {
    yylval = lvaluep;
    yylloc = locp;

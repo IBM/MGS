@@ -8,7 +8,7 @@
 // =============================================================================
 #include "C_declaration_trigger.h"
 #include "Trigger.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_declarator.h"
 #include "C_trigger.h"
 #include "TriggerDataItem.h"
@@ -17,7 +17,7 @@
 #include "SyntaxErrorException.h"
 #include <cassert>
 
-void C_declaration_trigger::internalExecute(LensContext *c)
+void C_declaration_trigger::internalExecute(GslContext *c)
 {
    // For now, remove later (don't forget the header cassert)
    assert(_trigger != 0);

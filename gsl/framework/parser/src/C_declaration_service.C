@@ -8,14 +8,14 @@
 // =============================================================================
 #include "C_declaration_service.h"
 #include "Service.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_declarator.h"
 #include "C_service.h"
 #include "ServiceDataItem.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 
-void C_declaration_service::internalExecute(LensContext *c)
+void C_declaration_service::internalExecute(GslContext *c)
 {
    _declarator->execute(c);
    _service->execute(c);

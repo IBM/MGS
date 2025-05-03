@@ -11,7 +11,7 @@
 #include "Copyright.h"
 
 #include "C_declaration.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <string>
 #include <memory>
 #include <map>
@@ -28,7 +28,7 @@ class C_declaration_grid_granule : public C_declaration
       C_declaration_grid_granule(C_declarator *, C_grid_granule *, SyntaxError *);
       virtual C_declaration_grid_granule* duplicate() const;
       virtual ~C_declaration_grid_granule();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

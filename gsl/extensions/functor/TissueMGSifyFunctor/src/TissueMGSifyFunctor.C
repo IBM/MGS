@@ -9,15 +9,15 @@
 #include "Mgs.h"
 #include "TissueMGSifyFunctor.h"
 #include "CG_TissueMGSifyFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "TissueFunctor.h"
 #include <memory>
 
-void TissueMGSifyFunctor::userInitialize(LensContext* CG_c) 
+void TissueMGSifyFunctor::userInitialize(GslContext* CG_c) 
 {
 }
 
-void TissueMGSifyFunctor::userExecute(LensContext* CG_c) 
+void TissueMGSifyFunctor::userExecute(GslContext* CG_c) 
 {
   _tissueFunctor->doMGSify(CG_c);
 }

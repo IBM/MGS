@@ -8,7 +8,7 @@
 // =============================================================================
 #include "GetPreNodeCoordFunctor.h"
 //#include "CG_GetPreNodeCoordFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "Service.h"
 #include <memory>
 
@@ -16,11 +16,11 @@
 #include "GenericService.h"
 //#include "CoordsStruct.h"
 
-void GetPreNodeCoordFunctor::userInitialize(LensContext* CG_c) 
+void GetPreNodeCoordFunctor::userInitialize(GslContext* CG_c) 
 {
 }
 
-Service* GetPreNodeCoordFunctor::userExecute(LensContext* CG_c, Edge*& edge) 
+Service* GetPreNodeCoordFunctor::userExecute(GslContext* CG_c, Edge*& edge) 
 {
    delete _service;
    NodeDescriptor* node = edge->getPreNode();

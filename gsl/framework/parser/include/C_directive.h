@@ -12,7 +12,7 @@
 
 #include "C_production.h"
 
-class LensContext;
+class GslContext;
 class C_functor_specifier;
 class C_trigger_specifier;
 class C_system_call;
@@ -28,7 +28,7 @@ class C_directive : public C_production
       C_directive(C_system_call*, SyntaxError * error);
       virtual ~C_directive();
       virtual C_directive* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

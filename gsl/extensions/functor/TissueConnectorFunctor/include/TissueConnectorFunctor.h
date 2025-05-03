@@ -11,15 +11,15 @@
 
 #include "Mgs.h"
 #include "CG_TissueConnectorFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "TissueElement.h"
 #include <memory>
 
 class TissueConnectorFunctor : public CG_TissueConnectorFunctorBase, public TissueElement
 {
    public:
-      void userInitialize(LensContext* CG_c);
-      void userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c);
+      void userExecute(GslContext* CG_c);
       TissueConnectorFunctor();
       TissueConnectorFunctor(TissueConnectorFunctor const &);
       virtual ~TissueConnectorFunctor();

@@ -27,7 +27,7 @@ class SyntaxErrorException
       bool isFirst() { return _first; };
       void setFirst() { _first = true; };
    private:
-      std::string _lensErrorCode;
+      std::string _gslErrorCode;
       bool _first;
 };
 #endif

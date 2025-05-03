@@ -11,15 +11,15 @@
 #include "Mgs.h"
 
 #include "CG_SrcScaledGaussianWeightModifierBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ParameterSet.h"
 #include <memory>
 
 class SrcScaledGaussianWeightModifier : public CG_SrcScaledGaussianWeightModifierBase
 {
    public:
-      void userInitialize(LensContext* CG_c, Functor*& f, float& sigma, float& max);
-      std::unique_ptr<ParameterSet> userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c, Functor*& f, float& sigma, float& max);
+      std::unique_ptr<ParameterSet> userExecute(GslContext* CG_c);
       SrcScaledGaussianWeightModifier();
       virtual ~SrcScaledGaussianWeightModifier();
       virtual void duplicate(std::unique_ptr<SrcScaledGaussianWeightModifier>&& dup) const;

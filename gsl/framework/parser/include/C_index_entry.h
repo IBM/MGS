@@ -12,7 +12,7 @@
 
 #include "C_production.h"
 
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_index_entry : public C_production
@@ -24,7 +24,7 @@ class C_index_entry : public C_production
       C_index_entry(int from, int increment, int to, SyntaxError *);
       virtual ~C_index_entry();
       virtual C_index_entry* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       int getTo() const {

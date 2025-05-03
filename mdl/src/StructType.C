@@ -224,7 +224,7 @@ void StructType::generateFlatDemarshaller()
    demarshallerInstance->addBaseClass(std::move(demarshallerBase));
 
    // Add member class for flat data structure
-   std::unique_ptr<Class> flatDataInstance(new Class(getTypeName()+"Data_LensReserved")); 
+   std::unique_ptr<Class> flatDataInstance(new Class(getTypeName()+"Data_MgsReserved")); 
    flatDataInstance->addAttributes(_members);
    demarshallerInstance->addMemberClass(std::move(flatDataInstance), AccessType::PRIVATE);
 
@@ -268,7 +268,7 @@ void StructType::generateFlatDemarshaller()
    std::unique_ptr<Method> doneMethod(new Method("done", "bool"));
    doneMethod->setInline();
    std::ostringstream doneMethodFB;
-   doneMethodFB << TAB << TAB << TAB << "return (_offset == sizeof("+getTypeName()+"Data_LensReserved));\n";
+   doneMethodFB << TAB << TAB << TAB << "return (_offset == sizeof("+getTypeName()+"Data_MgsReserved));\n";
    doneMethod->setFunctionBody(doneMethodFB.str());
    demarshallerInstance->addMethod(std::move(doneMethod));
 
@@ -277,7 +277,7 @@ void StructType::generateFlatDemarshaller()
    getBlocksMethod->addParameter("std::vector<int>& blengths");
    getBlocksMethod->addParameter("std::vector<MPI_Aint>& blocs");
    std::ostringstream getBlocksMethodFB;
-   getBlocksMethodFB << TAB << TAB << TAB << "blengths.push_back(sizeof(" <<getTypeName() << "Data_LensReserved));\n";
+   getBlocksMethodFB << TAB << TAB << TAB << "blengths.push_back(sizeof(" <<getTypeName() << "Data_MgsReserved));\n";
    getBlocksMethodFB << TAB << TAB << TAB << "MPI_Aint blockAddress;\n";
    getBlocksMethodFB << TAB << TAB << TAB << "MPI_Get_address(_destination, &blockAddress);\n"
 		     << TAB << TAB << TAB << "blocs.push_back(blockAddress);\n";
@@ -292,7 +292,7 @@ void StructType::generateFlatDemarshaller()
    std::ostringstream demarshallMethodFB;
    demarshallMethodFB << TAB << TAB << TAB << "int retval = size;\n";
    demarshallMethodFB << TAB << TAB << TAB << "if (!done()) {\n";
-   demarshallMethodFB << TAB << TAB << TAB << TAB << "int bytesRemaining = sizeof("+getTypeName()+"Data_LensReserved) - _offset;\n";
+   demarshallMethodFB << TAB << TAB << TAB << TAB << "int bytesRemaining = sizeof("+getTypeName()+"Data_MgsReserved) - _offset;\n";
    demarshallMethodFB << TAB << TAB << TAB << TAB << "int toTransfer = (bytesRemaining<size)?bytesRemaining:size;\n";
    //demarshallMethodFB << TAB << TAB << TAB << TAB << "memcpy(_destination+_offset, buffer, toTransfer);\n";
    demarshallMethodFB << TAB << TAB << TAB << TAB << "std::copy(buffer, buffer + toTransfer,  _destination+_offset);\n";
@@ -398,7 +398,7 @@ void StructType::generateFlatMarshaller()
 
    if (_members.size() != 0) {
      // Add member class for flat data structure
-     std::unique_ptr<Class> flatDataInstance(new Class(getTypeName()+"Data_LensReserved")); 
+     std::unique_ptr<Class> flatDataInstance(new Class(getTypeName()+"Data_MgsReserved")); 
      flatDataInstance->addAttributes(_members);
      marshallerInstance->addMemberClass(std::move(flatDataInstance), AccessType::PRIVATE);
 
@@ -408,7 +408,7 @@ void StructType::generateFlatMarshaller()
      marshallMethod->addParameter(getDescriptor() + " const& data");
      std::ostringstream os;
      os << TAB << TAB << TAB << "*stream << *(reinterpret_cast<" 
-	<< getTypeName() << "Data_LensReserved*>(const_cast<" 
+	<< getTypeName() << "Data_MgsReserved*>(const_cast<" 
 	<< _members.begin()->second->getTypeString() << "*>(&data." 
 	<< _members.begin()->second->getName() << ")));\n";
      
@@ -422,7 +422,7 @@ void StructType::generateFlatMarshaller()
      getBlocksMethod->addParameter(getDescriptor() + " const& data");
      os.str("");
      os.clear();
-     os << TAB << TAB << TAB << "blengths.push_back(sizeof(" <<getTypeName() << "Data_LensReserved));\n";
+     os << TAB << TAB << TAB << "blengths.push_back(sizeof(" <<getTypeName() << "Data_MgsReserved));\n";
      os << TAB << TAB << TAB << "MPI_Aint blockAddress;\n";
      os << TAB << TAB << TAB << "MPI_Get_address(const_cast<" 
 	<< _members.begin()->second->getTypeString() << "*>(&data." 

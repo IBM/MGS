@@ -8,10 +8,10 @@
 // =============================================================================
 #include "C_declaration_typedef.h"
 #include "C_typedef_declaration.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "SyntaxError.h"
 
-void C_declaration_typedef::internalExecute(LensContext *c)
+void C_declaration_typedef::internalExecute(GslContext *c)
 {
    _t->execute(c);
 }

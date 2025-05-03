@@ -8,7 +8,7 @@
 // =============================================================================
 #include "GetPostNodeCoordFunctor.h"
 #include "CG_GetPostNodeCoordFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "Service.h"
 #include <memory>
 
@@ -16,11 +16,11 @@
 #include "GenericService.h"
 #include "CoordsStruct.h"
 
-void GetPostNodeCoordFunctor::userInitialize(LensContext* CG_c) 
+void GetPostNodeCoordFunctor::userInitialize(GslContext* CG_c) 
 {
 }
 
-Service* GetPostNodeCoordFunctor::userExecute(LensContext* CG_c, Edge*& edge) 
+Service* GetPostNodeCoordFunctor::userExecute(GslContext* CG_c, Edge*& edge) 
 {
    delete _service;
    NodeDescriptor* node = edge->getPostNode();

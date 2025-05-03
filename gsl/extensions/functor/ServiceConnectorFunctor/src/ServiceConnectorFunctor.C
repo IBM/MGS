@@ -11,7 +11,7 @@
 #endif
 #include "ServiceConnectorFunctor.h"
 #include "CG_ServiceConnectorFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 #include <sstream>
 #include <cassert>
@@ -40,10 +40,10 @@
 
 //#include "CG_LifeNode.h"
 
-void ServiceConnectorFunctor::userInitialize(LensContext* CG_c) {}
+void ServiceConnectorFunctor::userInitialize(GslContext* CG_c) {}
 
 void ServiceConnectorFunctor::userExecute(
-    LensContext* CG_c, std::vector<DataItem*>::const_iterator begin,
+    GslContext* CG_c, std::vector<DataItem*>::const_iterator begin,
     std::vector<DataItem*>::const_iterator end)
 {
 #ifdef HAVE_MPI
@@ -238,7 +238,7 @@ void ServiceConnectorFunctor::connectToService(
     // create
     // an proxy. It is always that create an proxy for the pre-node or
     // pre-variable.
-    // similiar to the case in LensConnector: if both ends are not in current
+    // similiar to the case in MgsConnector: if both ends are not in current
     // memory
     // space we do nothing.
     Variable* av = _destinationVariableDI->getVariable()->getVariable();

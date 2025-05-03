@@ -15,10 +15,10 @@
 #include <list>
 #include <vector>
 class DataItem;
-class LensContext;
+class GslContext;
 class NoConnectConnector;
 class GranuleConnector;
-class LensConnector;
+class MgsConnector;
 
 class ConnectSets2Functor: public ConnectorFunctor
 {
@@ -27,14 +27,14 @@ class ConnectSets2Functor: public ConnectorFunctor
       virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
       virtual ~ConnectSets2Functor();
    protected:
-      virtual void doInitialize(LensContext *c, 
+      virtual void doInitialize(GslContext *c, 
 				const std::vector<DataItem*>& args);
-      virtual void doExecute(LensContext *c, 
+      virtual void doExecute(GslContext *c, 
 			     const std::vector<DataItem*>& args, 
 			     std::unique_ptr<DataItem>& rvalue);
    private:
       NoConnectConnector* _noConnector;
       GranuleConnector* _granuleConnector;
-      LensConnector* _lensConnector;
+      MgsConnector* _mgsConnector;
 };
 #endif

@@ -68,13 +68,13 @@ int Simulation::P2P_TAG = 21;
 #include "GraphicalUserInterface.h"
 
 
-#define LENS_PT_LOCK(x) pthread_mutex_lock(&x)
-#define LENS_PT_UNLOCK(x) pthread_mutex_unlock(&x)
+#define MGS_PT_LOCK(x) pthread_mutex_lock(&x)
+#define MGS_PT_UNLOCK(x) pthread_mutex_unlock(&x)
 
 #else
 
-#define LENS_PT_LOCK(x)
-#define LENS_PT_UNLOCK(x)
+#define MGS_PT_LOCK(x)
+#define MGS_PT_UNLOCK(x)
 
 #endif // DISABLE_PTHREADS
 
@@ -165,8 +165,8 @@ Simulation::Simulation(int numWorkUnits, unsigned seed, int gpuID)
    _etm = new TypeManager<EdgeType>();
 
 #ifdef HAVE_MPI
-   _phaseNames.push_back("FLUSH_LENS");
-   _communicatingPhases["FLUSH_LENS"]=true;
+   _phaseNames.push_back("FLUSH_MGS");
+   _communicatingPhases["FLUSH_MGS"]=true;
    MPI_Comm_rank(MPI_COMM_WORLD, &_rank);
    MPI_Comm_size(MPI_COMM_WORLD, &_nump);
 #else
@@ -174,12 +174,12 @@ Simulation::Simulation(int numWorkUnits, unsigned seed, int gpuID)
    _nump=1;
 #endif // HAVE_MPI
 
-   LENS_PT_LOCK(_timerMutex);
+   MGS_PT_LOCK(_timerMutex);
    std::pair<SysTimer, double>& simTimer = _simTimers.find("default")->second;
    SysTimer& sysTimer = simTimer.first;
    sysTimer.start();
    if (_rank==0) printf("Simulation construct start: t = %lf\n\n", sysTimer.lapWallTime());
-   LENS_PT_UNLOCK(_timerMutex);
+   MGS_PT_UNLOCK(_timerMutex);
 
 #if defined(HAVE_GPU) 
    int deviceCount = -1; // number of devices
@@ -222,10 +222,10 @@ Simulation::Simulation(int numWorkUnits, unsigned seed, int gpuID)
    _rng.reSeed(seed, _rank) ;
    _rngShared.reSeedShared(seed-1);
    _rngSeed=seed;
-   LENS_PT_LOCK(_timerMutex);
+   MGS_PT_LOCK(_timerMutex);
    if (_rank==0) printf("Simulation construct complete: t = %lf\n\n", sysTimer.lapWallTime());
    sysTimer.reset();
-   LENS_PT_UNLOCK(_timerMutex);
+   MGS_PT_UNLOCK(_timerMutex);
 }
 
 #if defined(HAVE_GPU) 
@@ -250,11 +250,11 @@ void Simulation::pauseHandler()
    //now perform all the browsing operations
    _triggeredPauseAction->startAction();
 
-   LENS_PT_LOCK(_stateMutex);
+   MGS_PT_LOCK(_stateMutex);
    if (_state != _STOP) {
       _state = _RUN;
    }
-   LENS_PT_UNLOCK(_stateMutex);
+   MGS_PT_UNLOCK(_stateMutex);
    return;
 }
 
@@ -289,21 +289,21 @@ void Simulation::resumeHandler()
 void Simulation::run()
 {
 
-   LENS_PT_LOCK(_stateMutex);
+   MGS_PT_LOCK(_stateMutex);
    _state = _RUN;
-   LENS_PT_UNLOCK(_stateMutex);
+   MGS_PT_UNLOCK(_stateMutex);
 
 }
 
 bool Simulation::start()
 {
-   LENS_PT_LOCK(_timerMutex);
+   MGS_PT_LOCK(_timerMutex);
    std::pair<SysTimer, double>& simTimer = _simTimers.find("default")->second;
    SysTimer& sysTimer = simTimer.first;
    double& mark = simTimer.second;
    sysTimer.start();
    if (_rank==0) printf("Initialization start: t = %lf\n\n", sysTimer.lapWallTime());
-   LENS_PT_UNLOCK(_timerMutex);
+   MGS_PT_UNLOCK(_timerMutex);
 #ifdef HAVE_MPI
    // set up the communication infrastructure
    std::vector<int> pIdList;
@@ -386,9 +386,9 @@ bool Simulation::start()
 	 // added mutex here because it wasn't always reading a changed state
 	 //when the server invoked the run() method from the UI thread
 	 // -DC 7/03
-	 LENS_PT_LOCK(_stateMutex);
+	 MGS_PT_LOCK(_stateMutex);
 	 simstate = _state;
-	 LENS_PT_UNLOCK(_stateMutex);
+	 MGS_PT_UNLOCK(_stateMutex);
 
       } while(simstate== _UNUSED);
 
@@ -431,7 +431,7 @@ bool Simulation::start()
 
 #ifdef HAVE_MPI
    if (_rank==0) printf("Flushing Proxies.\n\n");
-   _phaseName =  "FLUSH_LENS";
+   _phaseName =  "FLUSH_MGS";
    if (_communicatingPhases[_phaseName]) {
      bool rebuildRequested = _commEngine->Communicate();
      unsigned rebuild = rebuildRequested ? 1 : 0, recommunicate=0;
@@ -447,17 +447,17 @@ bool Simulation::start()
 #endif
 
    if (_rank==0) printf("Starting Simulation.\n\n");
-   LENS_PT_LOCK(_timerMutex);
+   MGS_PT_LOCK(_timerMutex);
    if (_rank==0) printf("Initialization complete: t = %lf\n\n", sysTimer.lapWallTime());
    sysTimer.reset();
    sysTimer.start();
-   LENS_PT_UNLOCK(_timerMutex);
+   MGS_PT_UNLOCK(_timerMutex);
    mark = 0;
    if (_rank==0) printf("Mark begin : t = 0\n\n");
 
-   LENS_PT_LOCK(_stateMutex);
+   MGS_PT_LOCK(_stateMutex);
    _state = _RUN;
-   LENS_PT_UNLOCK(_stateMutex);
+   MGS_PT_UNLOCK(_stateMutex);
 
    while (_state != _TERMINATE) {
       switch(_state) {
@@ -486,43 +486,43 @@ void Simulation::pause()
       return;
    }
 
-   LENS_PT_LOCK(_stateMutex);
+   MGS_PT_LOCK(_stateMutex);
    _state = _PAUSE;
-   LENS_PT_UNLOCK(_stateMutex);
-   LENS_PT_LOCK(_timerMutex);
+   MGS_PT_UNLOCK(_stateMutex);
+   MGS_PT_LOCK(_timerMutex);
    std::pair<SysTimer, double>& simTimer = _simTimers.find("default")->second;
    SysTimer& sysTimer = simTimer.first;
    double& mark = simTimer.second;
    if (_rank==0) std::cout << std::endl << "Mark pause : t + " << sysTimer.lapWallTime() - mark
 	     << std::endl << std::endl;
-   LENS_PT_UNLOCK(_timerMutex);
+   MGS_PT_UNLOCK(_timerMutex);
 }
 
 void Simulation::resume()
 {
-   LENS_PT_LOCK(_timerMutex);
+   MGS_PT_LOCK(_timerMutex);
    std::pair<SysTimer, double>& simTimer = _simTimers.find("default")->second;
    SysTimer& sysTimer = simTimer.first;
    double& mark = simTimer.second;
    mark = sysTimer.lapWallTime();
-   LENS_PT_UNLOCK(_timerMutex);
+   MGS_PT_UNLOCK(_timerMutex);
 
-   LENS_PT_LOCK(_stateMutex);
+   MGS_PT_LOCK(_stateMutex);
    if (_rank==0) std::cout << "Resuming simulation." << std::endl << std::endl << "Mark resume : t = " << mark << std::endl << std::endl;
    _state = _RUN;
-   LENS_PT_UNLOCK(_stateMutex);
+   MGS_PT_UNLOCK(_stateMutex);
 }
 
 void Simulation::stop()
 {
-   LENS_PT_LOCK(_stateMutex);
+   MGS_PT_LOCK(_stateMutex);
    _state = _STOP;
-   LENS_PT_UNLOCK(_stateMutex);
+   MGS_PT_UNLOCK(_stateMutex);
 }
 
 void Simulation::stopHandler()
 {
-   LENS_PT_LOCK(_socketsMutex);
+   MGS_PT_LOCK(_socketsMutex);
    if (_socketsInUse.size() > 0) {
       if (_rank==0) std::cerr << "Closing sockets." << std::endl;
       std::list<int>::iterator it, end = _socketsInUse.end();
@@ -530,8 +530,8 @@ void Simulation::stopHandler()
 	 close(*it);
       }
    }
-   LENS_PT_UNLOCK(_socketsMutex);
-   LENS_PT_LOCK(_timerMutex);
+   MGS_PT_UNLOCK(_socketsMutex);
+   MGS_PT_LOCK(_timerMutex);
    std::pair<SysTimer, double>& simTimer = _simTimers.find("default")->second;
    SysTimer& sysTimer = simTimer.first;
    if (_rank==0) {
@@ -539,16 +539,16 @@ void Simulation::stopHandler()
      printf("\nMark end : t = %lf\n\n", sysTimer.lapWallTime());
    }
    sysTimer.stop();
-   LENS_PT_UNLOCK(_timerMutex);
+   MGS_PT_UNLOCK(_timerMutex);
 
    if (_finalPhases.size() > 0) {
       if (_rank==0) printf("Running Final Phases.\n\n");
       runPhases(_finalPhases);
    }
 
-   LENS_PT_LOCK(_stateMutex);
+   MGS_PT_LOCK(_stateMutex);
    _state = _TERMINATE;
-   LENS_PT_UNLOCK(_stateMutex);
+   MGS_PT_UNLOCK(_stateMutex);
 }
 
 void Simulation::registerDistCompCat(DistributableCompCategoryBase* c)
@@ -568,17 +568,17 @@ void Simulation::registerEdgeCompCat(EdgeCompCategoryBase* c)
 
 float Simulation::getTime()
 {
-   LENS_PT_LOCK(_timerMutex);
+   MGS_PT_LOCK(_timerMutex);
    float rval = _simTimers["default"].first.lapWallTime();
-   LENS_PT_UNLOCK(_timerMutex);
+   MGS_PT_UNLOCK(_timerMutex);
    return rval;
 }
 
 void Simulation::addSocket(int fd)
 {
-   LENS_PT_LOCK(_socketsMutex);
+   MGS_PT_LOCK(_socketsMutex);
    _socketsInUse.push_back(fd);
-   LENS_PT_UNLOCK(_socketsMutex);
+   MGS_PT_UNLOCK(_socketsMutex);
 }
 
 Simulation::~Simulation()
@@ -977,7 +977,7 @@ void Simulation::resetInternals()
    _loadPhases.clear();
    _finalPhases.clear();
    _phaseNames.clear();
-   _phaseNames.push_back("FLUSH_LENS");
+   _phaseNames.push_back("FLUSH_MGS");
 
    _root = new Repertoire("Root");
    _publisher = new SimulationPublisher(*this);
@@ -1118,57 +1118,57 @@ void Simulation::setSeparationGranules()
 
 void Simulation::benchmark_start(const std::string& msg)
 {
-   LENS_PT_LOCK(_timerMutex);
+   MGS_PT_LOCK(_timerMutex);
    std::pair<SysTimer, double>& simTimer = _simTimers.find("default")->second;
    SysTimer& sysTimer = simTimer.first;
    double& prevTimeElapsed = simTimer.second;
    if (!sysTimer.isRunning()) sysTimer.start();
    if (_rank==0) printf("%s start: t = %lf\n\n", msg.c_str(),  sysTimer.lapWallTime());
    prevTimeElapsed  = sysTimer.lapWallTime();
-   LENS_PT_UNLOCK(_timerMutex);
+   MGS_PT_UNLOCK(_timerMutex);
 }
 
 double Simulation::benchmark_timelapsed(const std::string& msg)
 {
-   LENS_PT_LOCK(_timerMutex);
+   MGS_PT_LOCK(_timerMutex);
    std::pair<SysTimer, double>& simTimer = _simTimers.find("default")->second;
    SysTimer& sysTimer = simTimer.first;
    double& prevTimeElapsed = simTimer.second;
    if (_rank==0) printf("%s time elapsed: t = %lf\n\n", msg.c_str(),  sysTimer.lapWallTime());
    prevTimeElapsed  = sysTimer.lapWallTime();
-   LENS_PT_UNLOCK(_timerMutex);
+   MGS_PT_UNLOCK(_timerMutex);
    return prevTimeElapsed;
 }
 
 void Simulation::benchmark_set_timelapsed_diff(const std::string& msg)
 {
-   LENS_PT_LOCK(_timerMutex);
+   MGS_PT_LOCK(_timerMutex);
    std::pair<SysTimer, double>& simTimer = _simTimers.find("default")->second;
    SysTimer& sysTimer = simTimer.first;
    double& prevTimeElapsed = simTimer.second;
    prevTimeElapsed  = sysTimer.lapWallTime();
-   LENS_PT_UNLOCK(_timerMutex);
+   MGS_PT_UNLOCK(_timerMutex);
 }
 
 void Simulation::benchmark_timelapsed_diff(const std::string& msg)
 {
-   LENS_PT_LOCK(_timerMutex);
+   MGS_PT_LOCK(_timerMutex);
    std::pair<SysTimer, double>& simTimer = _simTimers.find("default")->second;
    SysTimer& sysTimer = simTimer.first;
    double& prevTimeElapsed = simTimer.second;
    if (_rank==0) printf("%s duration: t = %lf\n\n", msg.c_str(),  sysTimer.lapWallTime() - prevTimeElapsed);
    prevTimeElapsed  = sysTimer.lapWallTime();
-   LENS_PT_UNLOCK(_timerMutex);
+   MGS_PT_UNLOCK(_timerMutex);
 }
 
 void Simulation::benchmark_end(const std::string& msg)
 {
-   LENS_PT_LOCK(_timerMutex);
+   MGS_PT_LOCK(_timerMutex);
    std::pair<SysTimer, double>& simTimer = _simTimers.find("default")->second;
    SysTimer& sysTimer = simTimer.first;
    if (_rank==0) printf("%s complete: t = %lf\n\n", msg.c_str(), sysTimer.lapWallTime());
    sysTimer.reset();
-   LENS_PT_UNLOCK(_timerMutex);
+   MGS_PT_UNLOCK(_timerMutex);
 }
 
 #ifdef HAVE_MPI

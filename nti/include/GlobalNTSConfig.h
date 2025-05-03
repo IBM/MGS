@@ -1,5 +1,3 @@
-#ifndef _GlobalNTSConfig_H
-#define _GlobalNTSConfig_H
 // =============================================================================
 // (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
@@ -8,7 +6,8 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
-
+#ifndef _GlobalNTSConfig_H
+#define _GlobalNTSConfig_H
 class GlobalNTS{
   public:
     static const int anybranch_at_end = -1;

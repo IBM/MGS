@@ -10,7 +10,7 @@
 #include "DataItem.h"
 #include "SyntaxError.h"
 
-void C_argument_void::internalExecute(LensContext *c)
+void C_argument_void::internalExecute(GslContext *c)
 {
 }
 

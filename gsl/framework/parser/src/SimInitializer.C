@@ -34,8 +34,8 @@
 
 #include "Simulation.h"
 #include "Repertoire.h"
-#include "LensLexer.h"
-#include "LensContext.h"
+#include "GslLexer.h"
+#include "GslContext.h"
 #include "PauseActionable.h"
 #include "TriggeredPauseAction.h"
 #include "SyntaxErrorException.h"
@@ -50,7 +50,7 @@
 #include "BG_AvailableMemory.h"
 #endif
 
-extern int lensparse(void*);
+extern int gslparse(void*);
 extern int yydebug;
 
 #ifndef DISABLE_PTHREADS
@@ -108,8 +108,8 @@ bool SimInitializer::internalExecute(int argc, char** argv)
       return false;
    }
    std::unique_ptr<Simulation> sim;
-   std::unique_ptr<LensLexer> scanner;
-   std::unique_ptr<LensContext> context;
+   std::unique_ptr<GslLexer> scanner;
+   std::unique_ptr<GslContext> context;
    
    char const* infilename = commandLine.getGslFile().c_str();
    std::istream *infile;
@@ -235,7 +235,7 @@ bool SimInitializer::internalExecute(int argc, char** argv)
 
    Partitioner* partitioner=0;
    std::ostringstream fname;
-   fname<<"LENS.gph";
+   fname<<"MGS.gph";
    bool outputGraph=false;
    if (sim->getRank()==0 && commandLine.getOutputGraph()) outputGraph=true;
 
@@ -254,11 +254,11 @@ bool SimInitializer::internalExecute(int argc, char** argv)
    sim->setPartitioner(partitioner);
    if (partitioner->requiresCostAggregation()) sim->setCostAggregationPass();
 
-   scanner.reset(new LensLexer(infile,outfile));
-   context.reset(new LensContext(sim.get()));
+   scanner.reset(new GslLexer(infile,outfile));
+   context.reset(new GslContext(sim.get()));
    context->lexer = scanner.get();
 
-   lensparse(context.get());
+   gslparse(context.get());
 
    
    // If there was an error return w/o starting...Trivial error
@@ -293,7 +293,7 @@ bool SimInitializer::internalExecute(int argc, char** argv)
      std::cerr << "_connectionIncrement->_communicationBytes=" << _connectionIncrement->_communicationBytes << std::endl;
 #endif
 
-     std::unique_ptr<LensContext> firstPassContext;
+     std::unique_ptr<GslContext> firstPassContext;
      context->duplicate(firstPassContext);
      firstPassContext->addCurrentRepertoire(sim->getRootRepertoire());
      if (sim->getRank()==0)

@@ -13,7 +13,7 @@
 #include "C_declarator.h"
 #include "Service.h"
 #include "Publisher.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "SyntaxError.h"
 #include "C_production.h"
 #include "DataItem.h"
@@ -29,7 +29,7 @@
 
 #include <cassert>
 
-void C_service::internalExecute(LensContext* c)
+void C_service::internalExecute(GslContext* c)
 {
   if (_queryPathProduct)
   {

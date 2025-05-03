@@ -17,7 +17,7 @@
 
 class C_constant;
 class C_declarator;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_declaration_float : public C_declaration
@@ -27,7 +27,7 @@ class C_declaration_float : public C_declaration
       C_declaration_float(const C_declaration_float&);
       virtual C_declaration_float* duplicate() const;
       virtual ~C_declaration_float();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

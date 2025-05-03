@@ -1,5 +1,3 @@
-#ifndef BITMAPHEADER_H
-#define BITMAPHEADER_H
 // =============================================================================
 // (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
@@ -8,6 +6,9 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 // 
 // =============================================================================
+#ifndef BITMAPHEADER_H
+#define BITMAPHEADER_H
+
 #include <string>
 #include <inttypes.h>
 #include <memory>

@@ -6,7 +6,7 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
-#include "LENSTissueSlicer.h"
+#include "MGSTissueSlicer.h"
 #include "Tissue.h"
 #include "Neuron.h"
 #include "Branch.h"
@@ -25,7 +25,7 @@
 #include <utility>
 #include "MaxComputeOrder.h"
 
-LENSTissueSlicer::LENSTissueSlicer(const int rank, const int nSlicers,
+MGSTissueSlicer::MGSTissueSlicer(const int rank, const int nSlicers,
                                    const int nTouchDetectors,
                                    TissueContext* tissueContext, Params* params)
     : TissueSlicer(rank, nSlicers, nTouchDetectors, tissueContext->_tissue,
@@ -65,9 +65,9 @@ LENSTissueSlicer::LENSTissueSlicer(const int rank, const int nSlicers,
 #endif
 }
 
-LENSTissueSlicer::~LENSTissueSlicer() {}
+MGSTissueSlicer::~MGSTissueSlicer() {}
 
-void LENSTissueSlicer::sliceAllNeurons()
+void MGSTissueSlicer::sliceAllNeurons()
 {
   if (_tissueContext->_touchVector.getBlockCount() > 0 && !_sliced)
   {
@@ -88,7 +88,7 @@ void LENSTissueSlicer::sliceAllNeurons()
       Capsule& c1 = _tissueContext->_capsules[c1Idx];
       Capsule& c2 = _tissueContext->_capsules[c2Idx];
 
-      // Determine the volumeIndex of the key1 node's LENS touch element
+      // Determine the volumeIndex of the key1 node's MGS touch element
       int v1Idx = -1;
       int rank2HandleCapsule;
       TissueContext::CapsuleAtBranchStatus status;
@@ -114,7 +114,7 @@ void LENSTissueSlicer::sliceAllNeurons()
       else
         v1Idx = decomposition->getRank(c1.getSphere());
 
-      // Determine the volumeIndex of the key2 node's LENS touch element
+      // Determine the volumeIndex of the key2 node's MGS touch element
       int v2Idx = -1;
 #ifdef IDEA1
       //if (_tissueContext->isPartOfExplicitJunction(c2, *titer, status, rank2HandleCapsule))
@@ -176,7 +176,7 @@ void LENSTissueSlicer::sliceAllNeurons()
   _sliced = true;
 }
 
-void LENSTissueSlicer::writeBuff(int i, int j, int& writePos)
+void MGSTissueSlicer::writeBuff(int i, int j, int& writePos)
 {
   assert(writePos <= _sendBuffSize - _dataSize);
   std::copy(_tissueContext->_capsules[(_sliceSegmentIndices[i])[j]].getData(),
@@ -189,7 +189,7 @@ void LENSTissueSlicer::writeBuff(int i, int j, int& writePos)
   writePos += _dataSize;
 }
 
-void* LENSTissueSlicer::getSendBuff()
+void* MGSTissueSlicer::getSendBuff()
 {
 #ifdef A2AW
   return (void*)_tissueContext->_capsules;

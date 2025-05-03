@@ -9,16 +9,16 @@
 #include "Mgs.h"
 #include "UniformDiscreteDist.h"
 #include "CG_UniformDiscreteDistBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "rndm.h"
 #include "Simulation.h"
 #include <memory>
 
-void UniformDiscreteDist::userInitialize(LensContext* CG_c, double& n1, double& n2) 
+void UniformDiscreteDist::userInitialize(GslContext* CG_c, double& n1, double& n2) 
 {
 }
 
-int UniformDiscreteDist::userExecute(LensContext* CG_c) 
+int UniformDiscreteDist::userExecute(GslContext* CG_c) 
 {
   return irandom(int(init.n1), int(init.n2), CG_c->sim->getSharedFunctorRandomSeedGenerator());
 }

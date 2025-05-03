@@ -12,7 +12,7 @@
 #include "C_declarator.h"
 #include "C_declarator_nodeset_extension.h"
 #include "NodeSet.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_relative_nodeset.h"
 #include "RelativeNodeSetDataItem.h"
 #include "Grid.h"
@@ -21,7 +21,7 @@
 #include "SyntaxErrorException.h"
 #include "C_production.h"
 
-void C_nodeset::internalExecute(LensContext *c)
+void C_nodeset::internalExecute(GslContext *c)
 {
    // let children do work
    if(_gridSet) _gridSet->execute(c);

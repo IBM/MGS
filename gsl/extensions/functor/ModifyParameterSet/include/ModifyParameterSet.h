@@ -11,15 +11,15 @@
 
 #include "Mgs.h"
 #include "CG_ModifyParameterSetBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ParameterSet.h"
 #include <memory>
 
 class ModifyParameterSet : public CG_ModifyParameterSetBase
 {
    public:
-      void userInitialize(LensContext* CG_c, Functor*& f1, Functor*& f2);
-      std::unique_ptr<ParameterSet> userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c, Functor*& f1, Functor*& f2);
+      std::unique_ptr<ParameterSet> userExecute(GslContext* CG_c);
       ModifyParameterSet();
       virtual ~ModifyParameterSet();
       virtual void duplicate(std::unique_ptr<ModifyParameterSet>&& dup) const;

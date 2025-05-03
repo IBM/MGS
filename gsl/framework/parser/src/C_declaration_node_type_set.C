@@ -8,14 +8,14 @@
 // =============================================================================
 #include "C_declaration_node_type_set.h"
 #include "C_node_type_set_specifier_clause.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "Grid.h"
 #include "C_declarator.h"
 #include "NodeTypeSetDataItem.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 
-void C_declaration_node_type_set::internalExecute(LensContext *c)
+void C_declaration_node_type_set::internalExecute(GslContext *c)
 {
    _declarator->execute(c);
    _nodeTypeSetSpecifierClause->execute(c);

@@ -7,13 +7,13 @@
 //
 // =============================================================================
 #include "C_index_entry.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 #include "C_production.h"
 
 
-void C_index_entry::internalExecute(LensContext *c)
+void C_index_entry::internalExecute(GslContext *c)
 {
    if (_from > _to) {
       std::string mes = " inverted index entry : (from, to)";

@@ -8,7 +8,7 @@
 // =============================================================================
 #include "SrcScaledGaussianWeightModifier.h"
 #include "CG_SrcScaledGaussianWeightModifierBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ParameterSet.h"
 #include "NDPair.h"
 #include "NDPairList.h"
@@ -21,13 +21,13 @@
 #include "Grid.h"
 #include "GridLayerDescriptor.h"
 
-void SrcScaledGaussianWeightModifier::userInitialize(LensContext* CG_c, Functor*& f, float& sigma, float& max)
+void SrcScaledGaussianWeightModifier::userInitialize(GslContext* CG_c, Functor*& f, float& sigma, float& max)
 {
   _sigma=sigma;
   _max=max;
 }
 
-std::unique_ptr<ParameterSet> SrcScaledGaussianWeightModifier::userExecute(LensContext* CG_c) 
+std::unique_ptr<ParameterSet> SrcScaledGaussianWeightModifier::userExecute(GslContext* CG_c) 
 {
    std::vector<DataItem*> nullArgs;
    std::unique_ptr<DataItem> rval_ap;

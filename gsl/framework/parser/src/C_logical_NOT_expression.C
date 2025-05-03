@@ -14,7 +14,7 @@
 #include "C_production_grid.h"
 #include <algorithm>
 
-void C_logical_NOT_expression::internalExecute(LensContext *c, Grid* g)
+void C_logical_NOT_expression::internalExecute(GslContext *c, Grid* g)
 {
    _primaryExpression->execute(c, g);
 

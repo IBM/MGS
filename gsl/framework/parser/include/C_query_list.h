@@ -15,7 +15,7 @@
 #include "C_production.h"
 
 class C_query;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_query_list : public C_production
@@ -27,7 +27,7 @@ class C_query_list : public C_production
       C_query_list(C_query_list *, C_query *, SyntaxError *);
       virtual C_query_list* duplicate() const;
       std::list<C_query>* releaseList();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       virtual ~C_query_list ();

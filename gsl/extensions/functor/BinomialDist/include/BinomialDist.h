@@ -11,15 +11,15 @@
 
 #include "Mgs.h"
 #include "CG_BinomialDistBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "rndm.h"
 #include <memory>
 
 class BinomialDist : public CG_BinomialDistBase
 {
    public:
-      void userInitialize(LensContext* CG_c, double& prob, double& n1, double& n2, unsigned& seed);
-      double userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c, double& prob, double& n1, double& n2, unsigned& seed);
+      double userExecute(GslContext* CG_c);
       BinomialDist();
       BinomialDist(const BinomialDist&);
       virtual ~BinomialDist();

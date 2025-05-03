@@ -9,11 +9,11 @@
 #include "C_edgeset_extension.h"
 #include "C_declarator.h"
 #include "C_index_set_specifier.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "SyntaxError.h"
 #include "C_production.h"
 
-void C_edgeset_extension::internalExecute(LensContext *c)
+void C_edgeset_extension::internalExecute(GslContext *c)
 {
    if(_indexSetSpecifier) {
       _indexSetSpecifier->execute(c);

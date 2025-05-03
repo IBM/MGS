@@ -21,7 +21,7 @@ const DataItem* C_connection_script_declaration::getRVal() const
    return retval;
 }
 
-void C_connection_script_declaration::internalExecute(LensContext *c)
+void C_connection_script_declaration::internalExecute(GslContext *c)
 {
    if (_directive) _directive->execute(c);
    else _declaration->execute(c);

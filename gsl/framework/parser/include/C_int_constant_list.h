@@ -13,7 +13,7 @@
 #include <list>
 #include "C_production_adi.h"
 
-class LensContext;
+class GslContext;
 class ArrayDataItem;
 class SyntaxError;
 
@@ -25,10 +25,10 @@ class C_int_constant_list : public C_production_adi
       C_int_constant_list(C_int_constant_list*, int, SyntaxError *);
       virtual C_int_constant_list* duplicate() const;
       std::list<int>* releaseList();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
-      virtual void internalExecute(LensContext *, ArrayDataItem *);
+      virtual void internalExecute(GslContext *, ArrayDataItem *);
       virtual ~C_int_constant_list();
       std::list<int> * getList() const {
 	 return _list;

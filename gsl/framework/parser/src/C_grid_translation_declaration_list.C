@@ -8,12 +8,12 @@
 // =============================================================================
 #include "C_grid_translation_declaration_list.h"
 #include "C_grid_translation_declaration.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "SyntaxError.h"
 #include "C_production_grid.h"
 
 
-void C_grid_translation_declaration_list::internalExecute(LensContext *c, Grid* g)
+void C_grid_translation_declaration_list::internalExecute(GslContext *c, Grid* g)
 {
    std::list<C_grid_translation_declaration*>::iterator i, end =_list->end();
    for(i = _list->begin(); i != end; ++i) {

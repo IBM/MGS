@@ -133,7 +133,7 @@ class TissueContext
   bool isTouchToEnd(Capsule& c, Touch& t);
   bool isMappedTouch(Touch& t, std::map<key_size_t, int>::iterator& iter1,
                      std::map<key_size_t, int>::iterator& iter2);
-  bool isLensTouch(Touch& t, int rank);
+  bool isMgsTouch(Touch& t, int rank);
   int getCapsuleIndex(key_size_t key);
   void correctTouchKeys(int rank);
   DetectionPass getPass(key_size_t key);

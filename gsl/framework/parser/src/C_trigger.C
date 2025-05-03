@@ -13,7 +13,7 @@
 #include "TriggerDataItem.h"
 #include "Trigger.h"
 #include "Publisher.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "CompositeTrigger.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
@@ -21,7 +21,7 @@
 
 #include <assert.h>
 
-void C_trigger::internalExecute(LensContext *c)
+void C_trigger::internalExecute(GslContext *c)
 {
    if (_queryPathProduct) _queryPathProduct->execute(c);
    if (_declarator) _declarator->execute(c);

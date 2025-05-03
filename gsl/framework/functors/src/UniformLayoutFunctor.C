@@ -9,7 +9,7 @@
 #include "UniformLayoutFunctor.h"
 #include "FunctorType.h"
 #include "NumericDataItem.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "InstanceFactoryQueriable.h"
 #include "DataItemQueriable.h"
 #include "FunctorDataItem.h"
@@ -18,7 +18,7 @@
 class FunctorType;
 class Simulation;
 
-void UniformLayoutFunctor::doInitialize(LensContext *c, 
+void UniformLayoutFunctor::doInitialize(GslContext *c, 
 					const std::vector<DataItem*>& args)
 {
    NumericDataItem* densityDI = 
@@ -36,7 +36,7 @@ void UniformLayoutFunctor::doInitialize(LensContext *c,
 }
 
 
-void UniformLayoutFunctor::doExecute(LensContext *c, 
+void UniformLayoutFunctor::doExecute(GslContext *c, 
 				     const std::vector<DataItem*>& args, 
 				     std::unique_ptr<DataItem>& rvalue)
 {

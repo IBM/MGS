@@ -17,7 +17,7 @@
 #include <vector>
 
 class DataItem;
-class LensContext;
+class GslContext;
 class Functor;
 class NodeDescriptor;
 class NodeSet;
@@ -37,8 +37,8 @@ class EachAvgFunctor : public SampFctr1Functor
   virtual ~EachAvgFunctor();
 
   protected:
-  virtual void doInitialize(LensContext* c, const std::vector<DataItem*>& args);
-  virtual void doExecute(LensContext* c, const std::vector<DataItem*>& args,
+  virtual void doInitialize(GslContext* c, const std::vector<DataItem*>& args);
+  virtual void doExecute(GslContext* c, const std::vector<DataItem*>& args,
                          std::unique_ptr<DataItem>& rvalue);
 
   private:

@@ -9,23 +9,23 @@
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
-#include "LensLexer.h"
+#include "GslLexer.h"
 //#include <stdio.h>
 #include <iostream>
 #include <sstream>
 
-LensLexer::LensLexer(std::istream * infile, std::ostream * outfile)
+GslLexer::GslLexer(std::istream * infile, std::ostream * outfile)
 : yyFlexLexer(infile,outfile), yylval(0),lineCount(0)
 {
 }
 
 
-LensLexer::~LensLexer()
+GslLexer::~GslLexer()
 {
 }
 
 
-void LensLexer::skip_proc(void)
+void GslLexer::skip_proc(void)
 {
    // put input into a std::string
    std::string buffer;
@@ -52,7 +52,7 @@ void LensLexer::skip_proc(void)
 
 }
 
-const char* LensLexer::getToken() 
+const char* GslLexer::getToken() 
 {
    return yytext;
 }

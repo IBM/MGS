@@ -1,15 +1,14 @@
-#ifndef ChannelCaHVA_GPe_mouse_MDL
-#define ChannelCaHVA_GPe_mouse_MDL
-
-#include "../../nti/include/MaxComputeOrder.h"
-
-#include "../std/std.mdl"
-#include "../HodgkinHuxley/HodgkinHuxley.mdl"
-#include "../BranchSolver/BranchSolver.mdl"
 // =============================================================================
 // (C) Copyright 2018 New Jersey Institute of Technology. All rights reserved.
 //
 // =============================================================================
+#ifndef ChannelCaHVA_GPe_mouse_MDL
+#define ChannelCaHVA_GPe_mouse_MDL
+
+#include "../../nti/include/MaxComputeOrder.h"
+#include "../std/std.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+#include "../BranchSolver/BranchSolver.mdl"
 
 // NOTE: This channel is modeled using HH formula; 
 // and get data from 2 compartment variables: Voltage + Calcium

@@ -18,7 +18,7 @@
 class C_argument;
 class C_argument_list;
 class C_type_specifier;
-class LensContext;
+class GslContext;
 class DataItem;
 class DataItemArrayDataItem;
 class IntArrayDataItem;
@@ -34,7 +34,7 @@ class C_argument_argument_list: public C_argument
 			       SyntaxError *);
       virtual ~C_argument_argument_list();
       virtual C_argument_argument_list* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

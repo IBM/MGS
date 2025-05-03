@@ -59,12 +59,12 @@ C_int_constant_list* C_int_constant_list::duplicate() const
 }
 
 
-void C_int_constant_list::internalExecute(LensContext *c)
+void C_int_constant_list::internalExecute(GslContext *c)
 {
 }
 
 
-void C_int_constant_list::internalExecute(LensContext *c, ArrayDataItem *adi)
+void C_int_constant_list::internalExecute(GslContext *c, ArrayDataItem *adi)
 {
 
    // need to get dimension from vector

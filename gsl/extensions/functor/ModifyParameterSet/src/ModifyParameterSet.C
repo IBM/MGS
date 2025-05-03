@@ -9,16 +9,16 @@
 #include "Mgs.h"
 #include "ModifyParameterSet.h"
 #include "CG_ModifyParameterSetBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ParameterSet.h"
 #include "NDPairListDataItem.h"
 #include <memory>
 
-void ModifyParameterSet::userInitialize(LensContext* CG_c, Functor*& f1, Functor*& f2)
+void ModifyParameterSet::userInitialize(GslContext* CG_c, Functor*& f1, Functor*& f2)
 {
 }
 
-std::unique_ptr<ParameterSet> ModifyParameterSet::userExecute(LensContext* CG_c) 
+std::unique_ptr<ParameterSet> ModifyParameterSet::userExecute(GslContext* CG_c) 
 {
    std::vector<DataItem*> nullArgs;
    std::unique_ptr<DataItem> rval_ap;

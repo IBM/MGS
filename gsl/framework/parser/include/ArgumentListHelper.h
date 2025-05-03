@@ -11,7 +11,7 @@
 #include "Copyright.h"
 
 #include "DataItem.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_argument_list.h"
 #include "C_type_specifier.h"
 #include <memory>
@@ -20,7 +20,7 @@ class ArgumentListHelper
 {
    public:
       void getDataItem(std::unique_ptr<DataItem>& dataItem
-		  , LensContext* c
+		  , GslContext* c
 		  , C_argument_list* argumentList
 		  , C_type_specifier* typeSpec);
 };

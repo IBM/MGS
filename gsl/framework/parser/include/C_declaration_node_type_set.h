@@ -13,7 +13,7 @@
 
 class C_declarator;
 class C_node_type_set_specifier_clause;
-class LensContext;
+class GslContext;
 class Grid;
 class SyntaxError;
 
@@ -25,7 +25,7 @@ class C_declaration_node_type_set : public C_declaration
 	 C_declarator *, C_node_type_set_specifier_clause *, SyntaxError *);
       virtual C_declaration_node_type_set* duplicate() const;
       virtual ~C_declaration_node_type_set();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

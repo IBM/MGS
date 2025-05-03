@@ -33,7 +33,7 @@ C_declarator* C_declarator::duplicate() const
 }
 
 
-void C_declarator::internalExecute(LensContext *c)
+void C_declarator::internalExecute(GslContext *c)
 {
 }
 

@@ -6,8 +6,8 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
-#ifndef LensType_H
-#define LensType_H
+#ifndef GslType_H
+#define GslType_H
 #include "Mdl.h"
 
 #include <string>
@@ -15,12 +15,12 @@
 #include <vector>
 #include "DataType.h"
 
-class LensType : public DataType {
+class GslType : public DataType {
    using DataType::getServiceNameString;  // Make base class method visible
    using DataType::getServiceDescriptionString;  // Make base class method visible
    public:
       virtual void duplicate(std::unique_ptr<DataType>&& rv) const;
-      virtual ~LensType();        
+      virtual ~GslType();        
       virtual void setPointer(bool pointer);
 
       virtual std::string getDescriptor() const;
@@ -48,4 +48,4 @@ class LensType : public DataType {
 	 const std::string& tab) const;
 };
 
-#endif // LensType_H
+#endif // GslType_H

@@ -14,7 +14,7 @@
 #include "C_production.h"
 
 class C_connection_script_declaration;
-class LensContext;
+class GslContext;
 class DataItem;
 class SyntaxError;
 
@@ -31,7 +31,7 @@ class C_connection_script_definition_body : public C_production
       std::list<C_connection_script_declaration*>* releaseList();
       virtual ~C_connection_script_definition_body ();
       virtual C_connection_script_definition_body* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       const DataItem * getRVal() {

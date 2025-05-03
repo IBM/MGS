@@ -8,11 +8,11 @@
 // =============================================================================
 #include "C_query_list.h"
 #include "C_query.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "SyntaxError.h"
 #include "C_production.h"
 
-void C_query_list::internalExecute(LensContext *c)
+void C_query_list::internalExecute(GslContext *c)
 {
    std::list<C_query>::iterator iter, end = _list->end();
    for(iter = _list->begin(); iter != end; ++iter) {

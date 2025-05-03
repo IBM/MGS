@@ -8,18 +8,18 @@
 // =============================================================================
 #include "GetNodeCoordFunctor.h"
 #include "CG_GetNodeCoordFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "Service.h"
 #include <memory>
 
 #include "GenericService.h"
 #include "CoordsStruct.h"
 
-void GetNodeCoordFunctor::userInitialize(LensContext* CG_c) 
+void GetNodeCoordFunctor::userInitialize(GslContext* CG_c) 
 {
 }
 
-Service* GetNodeCoordFunctor::userExecute(LensContext* CG_c, Node*& node) 
+Service* GetNodeCoordFunctor::userExecute(GslContext* CG_c, Node*& node) 
 {
    delete _service;
 // General way if the node needs to return  ShallowArray<unsigned>

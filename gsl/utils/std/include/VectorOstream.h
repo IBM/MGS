@@ -11,7 +11,7 @@
 #include "Copyright.h"
 
 // This overloading of the std::ostream operator for vectors is useful for
-// writing LENS data to files.
+// writing MGS data to files.
 
 #include <iostream>
 #include <vector>

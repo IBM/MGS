@@ -12,14 +12,14 @@
 
 #include "Mgs.h"
 #include "CG_GetPreNodeIndexBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 
 class GetPreNodeIndex : public CG_GetPreNodeIndexBase
 {
    public:
-      void userInitialize(LensContext* CG_c);
-      int userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c);
+      int userExecute(GslContext* CG_c);
       GetPreNodeIndex();
       virtual ~GetPreNodeIndex();
       virtual void duplicate(std::unique_ptr<GetPreNodeIndex>&& dup) const;

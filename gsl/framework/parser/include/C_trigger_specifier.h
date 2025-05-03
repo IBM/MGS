@@ -14,7 +14,7 @@
 #include "C_production.h"
 
 class C_declarator;
-class LensContext;
+class GslContext;
 class C_trigger;
 class SyntaxError;
 class C_ndpair_clause_list;
@@ -28,7 +28,7 @@ class C_trigger_specifier : public C_production
       C_trigger_specifier(std::string, C_trigger *, SyntaxError *);
       virtual ~C_trigger_specifier();
       virtual C_trigger_specifier* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

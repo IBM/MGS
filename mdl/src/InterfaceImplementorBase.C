@@ -709,13 +709,13 @@ void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pa
    }
 
    std::unique_ptr<Method> initializeProxyDemarshaller(
-      new Method(PREFIX + "recv_FLUSH_LENS_demarshaller", "void"));
+      new Method(PREFIX + "recv_FLUSH_MGS_demarshaller", "void"));
    initializeProxyDemarshaller->setAccessType(AccessType::PUBLIC);
    initializeProxyDemarshaller->setMacroConditional(mpiConditional); 
    initializeProxyDemarshaller->addParameter("std::unique_ptr<" + getInstanceProxyDemarshallerName() + "> &ap");
    initializeProxyDemarshaller->setStatic();
    std::ostringstream funBody;
-   funBody << TAB << "PhaseDemarshaller_FLUSH_LENS *di = new PhaseDemarshaller_FLUSH_LENS();\n"
+   funBody << TAB << "PhaseDemarshaller_FLUSH_MGS *di = new PhaseDemarshaller_FLUSH_MGS();\n"
 	   << TAB << "ap.reset(di);\n"; 
 
    initializeProxyDemarshaller->setFunctionBody(funBody.str());
@@ -765,14 +765,14 @@ void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pa
    demarshallerInstanceBase->addBasicInlineDestructor();
 
    //**** member  initialize demarshaller classes
-   std::unique_ptr<Class> demarshallerInstance(new Class("PhaseDemarshaller_FLUSH_LENS")); 
+   std::unique_ptr<Class> demarshallerInstance(new Class("PhaseDemarshaller_FLUSH_MGS")); 
    std::string baseName = getInstanceProxyDemarshallerName();
    std::unique_ptr<BaseClass> demarshallerBase(new BaseClass(baseName));
    demarshallerInstance->addBaseClass(std::move(demarshallerBase));
 
    // Constructors
-   std::unique_ptr<ConstructorMethod> constructor1(new ConstructorMethod("PhaseDemarshaller_FLUSH_LENS"));
-   std::unique_ptr<ConstructorMethod> constructor2(new ConstructorMethod("PhaseDemarshaller_FLUSH_LENS"));
+   std::unique_ptr<ConstructorMethod> constructor1(new ConstructorMethod("PhaseDemarshaller_FLUSH_MGS"));
+   std::unique_ptr<ConstructorMethod> constructor2(new ConstructorMethod("PhaseDemarshaller_FLUSH_MGS"));
 
    std::list<const DataType*> allVars;
    std::vector<Phase*>::iterator phaseIter, phaseEnd;
@@ -1647,7 +1647,7 @@ void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
    }
 
    std::unique_ptr<Method> initializeProxySender(
-      new Method(PREFIX + "send_FLUSH_LENS", "void"));
+      new Method(PREFIX + "send_FLUSH_MGS", "void"));
    initializeProxySender->setAccessType(AccessType::PROTECTED);
    initializeProxySender->setMacroConditional(mpiConditional);
    initializeProxySender->addParameter(OUTPUTSTREAM + "* stream");
@@ -1697,7 +1697,7 @@ void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
    instance.addMethod(std::move(initializeProxySender));
 
    std::unique_ptr<Method> initializeProxyGetSendType(
-      new Method(PREFIX + "getSendType_FLUSH_LENS", "void"));
+      new Method(PREFIX + "getSendType_FLUSH_MGS", "void"));
    initializeProxyGetSendType->setAccessType(AccessType::PROTECTED);
    initializeProxyGetSendType->setMacroConditional(mpiConditional);
    initializeProxyGetSendType->addParameter("std::vector<int>& blengths");

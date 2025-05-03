@@ -11,7 +11,7 @@
 #include "Mgs.h"
 
 #include "CG_ServiceConnectorFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 #include <vector>
 #include <string>
@@ -31,8 +31,8 @@ class Service;
 class ServiceConnectorFunctor : public CG_ServiceConnectorFunctorBase
 {
    public:
-      void userInitialize(LensContext* CG_c);
-      void userExecute(LensContext* CG_c, std::vector<DataItem*>::const_iterator begin, std::vector<DataItem*>::const_iterator end);
+      void userInitialize(GslContext* CG_c);
+      void userExecute(GslContext* CG_c, std::vector<DataItem*>::const_iterator begin, std::vector<DataItem*>::const_iterator end);
       ServiceConnectorFunctor();
       virtual ~ServiceConnectorFunctor();
       virtual void duplicate(std::unique_ptr<ServiceConnectorFunctor>&& dup) const;
@@ -84,7 +84,7 @@ class ServiceConnectorFunctor : public CG_ServiceConnectorFunctorBase
       EdgeSetDataItem* _destinationEdgeSetDI;
       NodeSetDataItem* _sourceNodeSetDI;
       NodeSetDataItem* _destinationNodeSetDI;
-      LensContext* _execContext;
+      GslContext* _execContext;
 
       std::vector<ServiceConnectorElement> _elements;
 

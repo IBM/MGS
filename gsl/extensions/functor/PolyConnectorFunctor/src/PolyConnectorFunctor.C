@@ -11,7 +11,7 @@
 #endif
 #include "PolyConnectorFunctor.h"
 #include "CG_PolyConnectorFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 #include <cassert>
 #include "NodeType.h"
@@ -34,18 +34,18 @@
 #include "Simulation.h"
 #include "Granule.h"
 #include "Connector.h"
-#include "LensConnector.h"
+#include "MgsConnector.h"
 #include "GranuleConnector.h"
 #include "NoConnectConnector.h"
 #include "Simulation.h"
 
 #include <iostream>
 
-void PolyConnectorFunctor::userInitialize(LensContext* CG_c) 
+void PolyConnectorFunctor::userInitialize(GslContext* CG_c) 
 {
 }
 
-void PolyConnectorFunctor::userExecute(LensContext* CG_c, std::vector<DataItem*>::const_iterator begin, std::vector<DataItem*>::const_iterator end) 
+void PolyConnectorFunctor::userExecute(GslContext* CG_c, std::vector<DataItem*>::const_iterator begin, std::vector<DataItem*>::const_iterator end) 
 {
   CG_c->connectionContext->reset();
 #ifdef DEBUG
@@ -166,7 +166,7 @@ void PolyConnectorFunctor::userExecute(LensContext* CG_c, std::vector<DataItem*>
    } else if (CG_c->sim->isCostAggregationPass()) {
      lc=&_granuleConnector;
    } else if (CG_c->sim->isSimulatePass()) {
-     lc=&_lensConnector;
+     lc=&_mgsConnector;
    } else {
      std::cerr<<"Error, PolyConnectorFunctor: no connection context set!"<<std::endl;
      exit(0);

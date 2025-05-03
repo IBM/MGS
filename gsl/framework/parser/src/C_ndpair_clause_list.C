@@ -12,7 +12,7 @@
 #include "SyntaxError.h"
 #include "C_production.h"
 
-void C_ndpair_clause_list::internalExecute(LensContext *c)
+void C_ndpair_clause_list::internalExecute(GslContext *c)
 {
    delete _list;
    _list = new NDPairList;

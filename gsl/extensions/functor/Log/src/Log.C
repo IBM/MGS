@@ -9,15 +9,15 @@
 #include "Mgs.h"
 #include "Log.h"
 #include "CG_LogBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 #include <math.h>
 
-void Log::userInitialize(LensContext* CG_c, Functor*& f) 
+void Log::userInitialize(GslContext* CG_c, Functor*& f) 
 {
 }
 
-double Log::userExecute(LensContext* CG_c) 
+double Log::userExecute(GslContext* CG_c) 
 {
   std::vector<DataItem*> nullArgs;
   std::unique_ptr<DataItem> rval_ap;

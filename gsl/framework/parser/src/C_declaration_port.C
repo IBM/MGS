@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "C_declaration_port.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_declarator.h"
 #include "IntDataItem.h"
 #include "Simulation.h"
@@ -19,7 +19,7 @@
 
 extern "C" { int CreateSocket(int *, int); }
 
-void C_declaration_port::internalExecute(LensContext *c)
+void C_declaration_port::internalExecute(GslContext *c)
 {
    _declarator->execute(c);
    int fd;

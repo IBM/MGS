@@ -13,7 +13,7 @@
 #include "C_definition.h"
 
 class C_type_definition;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_definition_type : public C_definition
@@ -23,7 +23,7 @@ class C_definition_type : public C_definition
       C_definition_type(C_type_definition *, SyntaxError *);
       virtual C_definition_type* duplicate() const;
       virtual ~C_definition_type();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

@@ -32,7 +32,7 @@ C_production_grid::~C_production_grid()
 {
 }
 
-void C_production_grid::execute(LensContext *c, Grid* g)
+void C_production_grid::execute(GslContext *c, Grid* g)
 {
    try {
       internalExecute(c, g);
@@ -47,7 +47,7 @@ void C_production_grid::execute(LensContext *c, Grid* g)
 
 }
 
-void C_production_grid::internalExecute(LensContext *c)
+void C_production_grid::internalExecute(GslContext *c)
 {
    std::cerr << "Internal error, internalExecute of C_production_grid called, exiting..." 
 	     << std::endl;

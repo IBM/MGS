@@ -14,7 +14,7 @@
 #include "SyntaxError.h"
 #include "C_production_adi.h"
 
-void C_matrix_init_declarator::internalExecute(LensContext *c, ArrayDataItem *di)
+void C_matrix_init_declarator::internalExecute(GslContext *c, ArrayDataItem *di)
 {
    _declarator->execute(c);
 

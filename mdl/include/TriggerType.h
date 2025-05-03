@@ -12,9 +12,9 @@
 
 #include <string>
 #include <memory>
-#include "LensType.h"
+#include "GslType.h"
 
-class TriggerType : public LensType {
+class TriggerType : public GslType {
    public:
       virtual void duplicate(std::unique_ptr<DataType>&& rv) const;
       virtual ~TriggerType();        

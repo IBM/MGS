@@ -13,7 +13,7 @@
 #include "SyntaxError.h"
 #include "C_production_grid.h"
 
-void C_layer_set::internalExecute(LensContext *c, Grid* g)
+void C_layer_set::internalExecute(GslContext *c, Grid* g)
 {
    if (g != _lastGrid) {
       _layers.clear();

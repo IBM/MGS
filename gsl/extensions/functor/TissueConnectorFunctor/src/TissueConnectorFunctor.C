@@ -9,15 +9,15 @@
 #include "Mgs.h"
 #include "TissueConnectorFunctor.h"
 #include "CG_TissueConnectorFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "TissueFunctor.h"
 #include <memory>
 
-void TissueConnectorFunctor::userInitialize(LensContext* CG_c) 
+void TissueConnectorFunctor::userInitialize(GslContext* CG_c) 
 {
 }
 
-void TissueConnectorFunctor::userExecute(LensContext* CG_c) 
+void TissueConnectorFunctor::userExecute(GslContext* CG_c) 
 {
   _tissueFunctor->doConnector(CG_c);
 }

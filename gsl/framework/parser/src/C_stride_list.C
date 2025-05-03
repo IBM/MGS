@@ -13,7 +13,7 @@
 #include "SyntaxError.h"
 #include "C_production.h"
 
-void C_stride_list::internalExecute(LensContext *c)
+void C_stride_list::internalExecute(GslContext *c)
 {
    _cSteps->execute(c);
    _cStride->execute(c);

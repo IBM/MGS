@@ -10,7 +10,7 @@
 #include "SyntaxError.h"
 #include "C_production.h"
 
-void C_init_attr_type_edge::internalExecute(LensContext *c)
+void C_init_attr_type_edge::internalExecute(GslContext *c)
 {
 
 }

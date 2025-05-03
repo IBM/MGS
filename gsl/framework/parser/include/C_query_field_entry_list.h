@@ -14,7 +14,7 @@
 #include "C_production.h"
 
 class C_query_field_entry;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_query_field_entry_list : public C_production
@@ -27,7 +27,7 @@ class C_query_field_entry_list : public C_production
 			       SyntaxError *);
       virtual C_query_field_entry_list* duplicate() const;
       std::list<C_query_field_entry>* releaseList();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       virtual ~C_query_field_entry_list ();

@@ -11,7 +11,7 @@
 #include "Mgs.h"
 
 #include "CG_GetPostNodeCoordFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "Service.h"
 #include <memory>
 
@@ -21,8 +21,8 @@ class GetPostNodeCoordFunctor : public CG_GetPostNodeCoordFunctorBase,
 				public Publishable
 {
    public:
-      void userInitialize(LensContext* CG_c);
-      Service* userExecute(LensContext* CG_c, Edge*& edge);
+      void userInitialize(GslContext* CG_c);
+      Service* userExecute(GslContext* CG_c, Edge*& edge);
       GetPostNodeCoordFunctor();
       GetPostNodeCoordFunctor(const GetPostNodeCoordFunctor& rv);
       GetPostNodeCoordFunctor& operator=(const GetPostNodeCoordFunctor& rv);

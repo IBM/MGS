@@ -383,7 +383,7 @@ class CommunicationEngine
     SenderVector sv = _sendervectors[comstep];
 
 #ifdef VERBOSE
-    /* MPI_W begin: measure MPI send communiation + LENS marshalling */
+    /* MPI_W begin: measure MPI send communiation + GSL marshalling */
     double now, then;
     now = MPI_Wtime();
 #endif
@@ -392,7 +392,7 @@ class CommunicationEngine
     }
 #ifdef VERBOSE
     then = MPI_Wtime();
-    /* MPI_W end: measure MPI send communiation + LENS marshalling */
+    /* MPI_W end: measure MPI send communiation + GSL marshalling */
     marshallPlusSendElapsed += (then-now);
 #endif
   }
@@ -421,7 +421,7 @@ class CommunicationEngine
 
       // immediately dispatch using single list of all my receivers - not just the ones for this step
 #ifdef VERBOSE
-      /* MPI_W begin: measure LENS demarshalling */
+      /* MPI_W begin: measure GSL demarshalling */
       double now, then;
       now=MPI_Wtime();
 #endif
@@ -429,7 +429,7 @@ class CommunicationEngine
 #ifdef VERBOSE
       then=MPI_Wtime();
       demarshallElapsed += (then-now);
-      /* MPI_W end: measure LENS demarshalling */
+      /* MPI_W end: measure GSL demarshalling */
 #endif
       // if the receiver is in the list for this step and it is done, one less to wait for
       if (_allreceivers[sourcerank]->done() && rv->find(sourcerank) != rv->end()) npending--;

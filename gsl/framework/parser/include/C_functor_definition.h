@@ -20,7 +20,7 @@ class C_parameter_type;
 class C_parameter_type_list;
 class C_complex_functor_definition;
 class C_connection_script_definition;
-class LensContext;
+class GslContext;
 class FunctorType;
 class ScriptFunctorType;
 class SyntaxError;
@@ -38,7 +38,7 @@ class C_functor_definition : public C_production
       C_functor_definition(C_connection_script_definition *, SyntaxError *);
       virtual ~C_functor_definition();
       virtual C_functor_definition* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 
@@ -87,9 +87,9 @@ class C_functor_definition : public C_production
       std::list<C_parameter_type>* _function_list;
       std::list<C_parameter_type>* _return_list;
 
-      void basicWork(LensContext *c);
-      void constrDefWork(LensContext *c);
-      void complexWork(LensContext *c);
-      void scriptWork(LensContext *c);
+      void basicWork(GslContext *c);
+      void constrDefWork(GslContext *c);
+      void complexWork(GslContext *c);
+      void scriptWork(GslContext *c);
 };
 #endif

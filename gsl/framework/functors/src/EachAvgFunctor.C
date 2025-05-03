@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "EachAvgFunctor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "DataItem.h"
 #include "FunctorType.h"
 #include "Node.h"
@@ -46,7 +46,7 @@ EachAvgFunctor::~EachAvgFunctor()
 {
 }
 
-void EachAvgFunctor::doInitialize(LensContext *c, 
+void EachAvgFunctor::doInitialize(GslContext *c, 
 				  const std::vector<DataItem*>& args)
 {
    // Grab argument 
@@ -65,7 +65,7 @@ void EachAvgFunctor::doInitialize(LensContext *c,
    _remainingProb=_avg-float(_nbrReps);
 }
 
-void EachAvgFunctor::doExecute(LensContext *c, 
+void EachAvgFunctor::doExecute(GslContext *c, 
 			       const std::vector<DataItem*>& args, 
 			       std::unique_ptr<DataItem>& rvalue)
 {

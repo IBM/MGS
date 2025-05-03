@@ -15,7 +15,7 @@
 
 #include "C_production.h"
 
-class LensContext;
+class GslContext;
 class DataItem;
 class C_phase;
 
@@ -28,7 +28,7 @@ class C_phase_list : public C_production
       void releaseList(std::unique_ptr<std::vector<C_phase*> >& phases);
       virtual ~C_phase_list();
       virtual C_phase_list* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

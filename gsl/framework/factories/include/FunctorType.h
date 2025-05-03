@@ -36,10 +36,10 @@ class FunctorType : public InstanceFactory
       std::string getCategory();
       virtual void getInstance(std::unique_ptr<DataItem> & adi, 
 			       std::vector<DataItem*> const * args, 
-			       LensContext* c);
+			       GslContext* c);
       virtual void getInstance(std::unique_ptr<DataItem> & adi, 
 			       const NDPairList& ndplist,
-			       LensContext* c);
+			       GslContext* c);
 
    protected:
       DuplicatePointerArray<Functor, 50> _functorList;

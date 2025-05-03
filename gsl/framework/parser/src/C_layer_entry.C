@@ -11,14 +11,14 @@
 #include "C_layer_name.h"
 #include "Grid.h"
 #include "GridLayerDescriptor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "Repertoire.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 #include "C_production_grid.h"
 
 
-void C_layer_entry::internalExecute(LensContext *c, Grid* g)
+void C_layer_entry::internalExecute(GslContext *c, Grid* g)
 {
    _layers.clear();
    if (_nameRange) {

@@ -15,7 +15,7 @@
 #include "C_definition.h"
 
 class C_functor_definition;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_definition_functor : public C_definition
@@ -25,7 +25,7 @@ class C_definition_functor : public C_definition
       C_definition_functor(C_functor_definition *, SyntaxError *);
       virtual C_definition_functor* duplicate() const;
       virtual ~C_definition_functor();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

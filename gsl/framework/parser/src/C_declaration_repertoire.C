@@ -8,14 +8,14 @@
 // =============================================================================
 #include "C_declaration_repertoire.h"
 #include "C_repertoire_declaration.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "RepertoireFactory.h"
 #include "RepertoireFactoryDataItem.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 
 
-void C_declaration_repertoire::internalExecute(LensContext *c)
+void C_declaration_repertoire::internalExecute(GslContext *c)
 {
    _repertoireDeclaration->execute(c);
 

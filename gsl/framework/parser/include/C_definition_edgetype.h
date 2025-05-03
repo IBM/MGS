@@ -13,7 +13,7 @@
 #include "C_definition.h"
 
 class C_declarator;
-class LensContext;
+class GslContext;
 class C_argument;
 class SyntaxError;
 class C_phase_mapping_list;
@@ -26,7 +26,7 @@ class C_definition_edgetype : public C_definition
 			    C_phase_mapping_list *, SyntaxError *);
       virtual C_definition_edgetype* duplicate() const;
       virtual ~C_definition_edgetype ();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       C_declarator *getName() const { 

@@ -19,7 +19,7 @@ class EdgeSet;
 class DataItem;
 class EdgeSetDataItem;
 class C_argument;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_argument_edgeset: public C_argument
@@ -29,7 +29,7 @@ class C_argument_edgeset: public C_argument
       C_argument_edgeset(C_edgeset *, SyntaxError *);
       virtual ~C_argument_edgeset();
       virtual C_argument_edgeset* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

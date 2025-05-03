@@ -16,7 +16,7 @@
 class C_node_type_set_specifier_clause;
 class Grid;
 class GridLayerDescriptor;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_node_type_set_specifier : public C_production_grid
@@ -27,7 +27,7 @@ class C_node_type_set_specifier : public C_production_grid
 				SyntaxError *);
       virtual ~C_node_type_set_specifier ();
       virtual C_node_type_set_specifier* duplicate() const;
-      virtual void internalExecute(LensContext *, Grid* g);
+      virtual void internalExecute(GslContext *, Grid* g);
       virtual void checkChildren();
       virtual void recursivePrint();
       const std::list<GridLayerDescriptor*>& getLayers() const;

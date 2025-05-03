@@ -6,8 +6,8 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
-#ifndef _LENSPARSERCLASSES_
-#define _LENSPARSERCLASSES_
+#ifndef _GSLPARSERCLASSES_
+#define _GSLPARSERCLASSES_
 #include "Copyright.h"
 
 // includes

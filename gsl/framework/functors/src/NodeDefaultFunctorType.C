@@ -9,7 +9,7 @@
 #include "NodeDefaultFunctorType.h"
 #include "NodeDefaultFunctor.h"
 #include "FunctorType.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <iostream>
 #include "DataItem.h"
 #include "FunctorDataItem.h"

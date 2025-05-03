@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "EachDstFunctor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "DataItem.h"
 #include "FunctorType.h"
 #include "Node.h"
@@ -51,7 +51,7 @@ EachDstFunctor::~EachDstFunctor()
 }
 
 
-void EachDstFunctor::doInitialize(LensContext *c, 
+void EachDstFunctor::doInitialize(GslContext *c, 
 				  const std::vector<DataItem*>& args)
 {
    int nbrArgs=args.size();
@@ -96,7 +96,7 @@ void EachDstFunctor::doInitialize(LensContext *c,
 }
 
 
-void EachDstFunctor::doExecute(LensContext *c, 
+void EachDstFunctor::doExecute(GslContext *c, 
 			       const std::vector<DataItem*>& args, 
 			       std::unique_ptr<DataItem>& rvalue)
 {

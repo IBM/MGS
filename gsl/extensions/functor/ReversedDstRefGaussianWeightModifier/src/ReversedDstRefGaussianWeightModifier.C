@@ -8,7 +8,7 @@
 // =============================================================================
 #include "ReversedDstRefGaussianWeightModifier.h"
 #include "CG_ReversedDstRefGaussianWeightModifierBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ParameterSet.h"
 #include "NDPair.h"
 #include "NDPairList.h"
@@ -21,14 +21,14 @@
 #include "Grid.h"
 #include "GridLayerDescriptor.h"
 
-void ReversedDstRefGaussianWeightModifier::userInitialize(LensContext* CG_c, Functor*& f, float& sigma, float& max, int& wrapDistance) 
+void ReversedDstRefGaussianWeightModifier::userInitialize(GslContext* CG_c, Functor*& f, float& sigma, float& max, int& wrapDistance) 
 {
   _sigma=sigma;
   _max=max;
   _wrapDistance=wrapDistance;
 }
 
-std::unique_ptr<ParameterSet> ReversedDstRefGaussianWeightModifier::userExecute(LensContext* CG_c) 
+std::unique_ptr<ParameterSet> ReversedDstRefGaussianWeightModifier::userExecute(GslContext* CG_c) 
 {
    std::vector<DataItem*> nullArgs;
    std::unique_ptr<DataItem> rval_ap;

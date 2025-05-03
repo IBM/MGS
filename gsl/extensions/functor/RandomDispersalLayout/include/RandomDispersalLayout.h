@@ -12,7 +12,7 @@
 
 #include "Mgs.h"
 #include "CG_RandomDispersalLayoutBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ShallowArray.h"
 #include "rndm.h"
 #include <memory>
@@ -20,8 +20,8 @@
 class RandomDispersalLayout : public CG_RandomDispersalLayoutBase
 {
    public:
-  void userInitialize(LensContext* CG_c, int& total);
-      ShallowArray< int > userExecute(LensContext* CG_c);
+  void userInitialize(GslContext* CG_c, int& total);
+      ShallowArray< int > userExecute(GslContext* CG_c);
       RandomDispersalLayout();
       virtual ~RandomDispersalLayout();
       virtual void duplicate(std::unique_ptr<RandomDispersalLayout>&& dup) const;

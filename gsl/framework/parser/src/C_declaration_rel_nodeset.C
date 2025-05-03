@@ -9,12 +9,12 @@
 #include "C_declaration_rel_nodeset.h"
 #include "C_declarator.h"
 #include "C_relative_nodeset.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "RelativeNodeSetDataItem.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 
-void C_declaration_rel_nodeset::internalExecute(LensContext *c)
+void C_declaration_rel_nodeset::internalExecute(GslContext *c)
 {
    _declaration->execute(c);
    _relativeNodeSet->execute(c);

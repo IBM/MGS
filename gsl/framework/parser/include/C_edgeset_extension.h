@@ -18,7 +18,7 @@
 class C_edge_type_set;
 class C_declarator;
 class C_index_set_specifier;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_edgeset_extension : public C_production
@@ -31,7 +31,7 @@ class C_edgeset_extension : public C_production
       C_edgeset_extension(C_index_set_specifier *, SyntaxError *);
       virtual ~C_edgeset_extension();
       virtual C_edgeset_extension* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       std::string& getEdgeType() { 

@@ -14,7 +14,7 @@
 #include "C_production.h"
 
 class C_index_set;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_gridnodeset : public C_production
@@ -24,7 +24,7 @@ class C_gridnodeset : public C_production
       C_gridnodeset(C_index_set *, SyntaxError *);
       virtual ~C_gridnodeset();
       virtual C_gridnodeset* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       const std::vector<int>& getBeginCoords() {

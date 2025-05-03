@@ -6,9 +6,9 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
-#ifndef _LENSPARSER_H
-#define _LENSPARSER_H
+#ifndef _GSLPARSER_H
+#define _GSLPARSER_H
 #include "Copyright.h"
 
-#include "LensParserClasses.h"
+#include "GslParserClasses.h"
 #endif

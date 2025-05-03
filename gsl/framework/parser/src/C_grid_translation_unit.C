@@ -11,7 +11,7 @@
 #include "SyntaxError.h"
 #include "C_production_grid.h"
 
-void C_grid_translation_unit::internalExecute(LensContext *c, Grid* g)
+void C_grid_translation_unit::internalExecute(GslContext *c, Grid* g)
 {
    _gl->execute(c, g);
 }

@@ -11,7 +11,7 @@
 
 #include "Mgs.h"
 #include "CG_IsoSamplerBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 #include <vector>
 
@@ -21,8 +21,8 @@ class NodeDescriptor;
 class IsoSampler : public CG_IsoSamplerBase
 {
    public:
-      void userInitialize(LensContext* CG_c);
-      void userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c);
+      void userExecute(GslContext* CG_c);
       IsoSampler();
       virtual ~IsoSampler();
       virtual void duplicate(std::unique_ptr<IsoSampler>&& dup) const;

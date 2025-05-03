@@ -10,13 +10,13 @@
 #include "DataItem.h"
 #include "SyntaxError.h"
 #include "C_production.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_separation_constraint.h"
 #include "C_separation_constraint_list.h"
 #include "Simulation.h"
 #include "GranuleSet.h"
 
-void C_declaration_separation_constraint::internalExecute(LensContext *c)
+void C_declaration_separation_constraint::internalExecute(GslContext *c)
 {
    if (c->sim->isCostAggregationPass()) {
       _separationConstraintList->execute(c);

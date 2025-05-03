@@ -1,16 +1,16 @@
 #include "Mgs.h"
 #include "LoadMatrix.h"
 #include "CG_LoadMatrixBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ShallowArray.h"
 #include <memory>
 #include <fstream>
 
-void LoadMatrix::userInitialize(LensContext* CG_c, CustomString& filename, int& rows, int& cols) 
+void LoadMatrix::userInitialize(GslContext* CG_c, CustomString& filename, int& rows, int& cols) 
 {
 }
 
-ShallowArray< float > LoadMatrix::userExecute(LensContext* CG_c) 
+ShallowArray< float > LoadMatrix::userExecute(GslContext* CG_c) 
 {
   ShallowArray< float > rval;
 

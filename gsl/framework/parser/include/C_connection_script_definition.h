@@ -18,7 +18,7 @@ class C_declarator;
 class C_parameter_type_list;
 class C_parameter_type;
 class C_connection_script_definition_body;
-class LensContext;
+class GslContext;
 class Functor;
 class SyntaxError;
 
@@ -30,7 +30,7 @@ class C_connection_script_definition : public C_production
 	 C_connection_script_definition_body *, SyntaxError *);
       virtual ~C_connection_script_definition();
       virtual C_connection_script_definition* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       Functor* getFunctor() {

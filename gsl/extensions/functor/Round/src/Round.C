@@ -9,14 +9,14 @@
 #include "Mgs.h"
 #include "Round.h"
 #include "CG_RoundBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 
-void Round::userInitialize(LensContext* CG_c, Functor*& f) 
+void Round::userInitialize(GslContext* CG_c, Functor*& f) 
 {
 }
 
-double Round::userExecute(LensContext* CG_c) 
+double Round::userExecute(GslContext* CG_c) 
 {
   std::vector<DataItem*> nullArgs;
   std::unique_ptr<DataItem> rval_ap;

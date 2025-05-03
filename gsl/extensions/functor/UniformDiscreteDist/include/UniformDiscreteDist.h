@@ -11,14 +11,14 @@
 
 #include "Mgs.h"
 #include "CG_UniformDiscreteDistBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 
 class UniformDiscreteDist : public CG_UniformDiscreteDistBase
 {
    public:
-      void userInitialize(LensContext* CG_c, double& n1, double& n2);
-      int userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c, double& n1, double& n2);
+      int userExecute(GslContext* CG_c);
       UniformDiscreteDist();
       virtual ~UniformDiscreteDist();
       virtual void duplicate(std::unique_ptr<UniformDiscreteDist>&& dup) const;

@@ -10,7 +10,7 @@
 #include "FunctorType.h"
 #include "FunctorDataItem.h"
 #include "NumericDataItem.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "InstanceFactoryQueriable.h"
 //#include <iostream>
 #include "rndm.h"
@@ -23,7 +23,7 @@
 class FunctorType;
 class Simulation;
 
-void GaussianFunctor::doInitialize(LensContext *c, 
+void GaussianFunctor::doInitialize(GslContext *c, 
 				   const std::vector<DataItem*>& args)
 {
    // get mean and stddev
@@ -42,7 +42,7 @@ void GaussianFunctor::doInitialize(LensContext *c,
 
 }
 
-void GaussianFunctor::doExecute(LensContext *c, 
+void GaussianFunctor::doExecute(GslContext *c, 
 				const std::vector<DataItem*>& args, 
 				std::unique_ptr<DataItem>& rvalue)
 {

@@ -1,18 +1,18 @@
 #include "Mgs.h"
 #include "LoadSparseMatrix.h"
 #include "CG_LoadSparseMatrixBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ShallowArray.h"
 #include <memory>
 #include <fstream>
 
 //#define DBG
 
-void LoadSparseMatrix::userInitialize(LensContext* CG_c, CustomString& filepath, CustomString& filename) 
+void LoadSparseMatrix::userInitialize(GslContext* CG_c, CustomString& filepath, CustomString& filename) 
 {
 }
 
-ShallowArray<float> LoadSparseMatrix::userExecute(LensContext* CG_c) 
+ShallowArray<float> LoadSparseMatrix::userExecute(GslContext* CG_c) 
 {
   std::ifstream input;
   std::ostringstream os;

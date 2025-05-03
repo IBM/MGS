@@ -16,7 +16,7 @@
 
 class C_parameter_type_pair;
 class C_ndpair_clause_list;
-class LensContext;
+class GslContext;
 class DataItem;
 class ParameterSetDataItem;
 class SyntaxError;
@@ -29,7 +29,7 @@ class C_argument_pset: public C_argument
 		      SyntaxError *);
       virtual ~C_argument_pset();
       virtual C_argument_pset* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

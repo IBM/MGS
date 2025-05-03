@@ -15,7 +15,7 @@
 
 class C_declarator;
 class C_query_path;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_declaration_publisher : public C_declaration
@@ -25,7 +25,7 @@ class C_declaration_publisher : public C_declaration
       C_declaration_publisher(C_declarator *, C_query_path *, SyntaxError *);
       virtual C_declaration_publisher* duplicate() const;
       virtual ~C_declaration_publisher();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

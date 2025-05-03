@@ -11,7 +11,7 @@
 #include "Mgs.h"
 
 #include "CG_GetDstNodeCoordFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 
 #include "CoordsStruct.h"
@@ -19,8 +19,8 @@
 class GetDstNodeCoordFunctor : public CG_GetDstNodeCoordFunctorBase
 {
    public:
-      void userInitialize(LensContext* CG_c, int& dim);
-      int userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c, int& dim);
+      int userExecute(GslContext* CG_c);
       GetDstNodeCoordFunctor();
       virtual ~GetDstNodeCoordFunctor();
       virtual void duplicate(std::unique_ptr<GetDstNodeCoordFunctor>&& dup) const;

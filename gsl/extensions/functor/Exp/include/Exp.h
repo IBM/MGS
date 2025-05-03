@@ -11,14 +11,14 @@
 
 #include "Mgs.h"
 #include "CG_ExpBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 
 class Exp : public CG_ExpBase
 {
    public:
-      void userInitialize(LensContext* CG_c, Functor*& f);
-      double userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c, Functor*& f);
+      double userExecute(GslContext* CG_c);
       Exp();
       virtual ~Exp();
       virtual void duplicate(std::unique_ptr<Exp>&& dup) const;

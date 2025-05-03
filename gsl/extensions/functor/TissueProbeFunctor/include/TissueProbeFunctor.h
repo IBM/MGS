@@ -11,7 +11,7 @@
 
 #include "Mgs.h"
 #include "CG_TissueProbeFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "NodeSet.h"
 #include "TissueElement.h"
 #include "NodeDescriptor.h"
@@ -23,8 +23,8 @@ class Grid;
 class TissueProbeFunctor : public CG_TissueProbeFunctorBase, public TissueElement
 {
    public:
-      void userInitialize(LensContext* CG_c);
-      std::unique_ptr<NodeSet> userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c);
+      std::unique_ptr<NodeSet> userExecute(GslContext* CG_c);
       TissueProbeFunctor();
       TissueProbeFunctor(TissueProbeFunctor*);
       virtual ~TissueProbeFunctor();

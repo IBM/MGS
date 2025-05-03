@@ -12,7 +12,7 @@
 #include "SyntaxError.h"
 #include "C_production_grid.h"
 
-void C_grid_translation_declaration::internalExecute(LensContext *c, Grid* g)
+void C_grid_translation_declaration::internalExecute(GslContext *c, Grid* g)
 {
    if (_declaration) _declaration->execute(c);
    else _gridFuncSpec->execute(c, g);

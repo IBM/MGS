@@ -12,14 +12,14 @@
 #include "SyntaxError.h"
 #include "C_production.h"
 #include "RuntimePhase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 
 C_declaration* C_declaration_runtime_phases::duplicate() const
 {
    return new C_declaration_runtime_phases(*this);
 }
 
-void C_declaration_runtime_phases::internalExecute(LensContext *c)
+void C_declaration_runtime_phases::internalExecute(GslContext *c)
 {
    std::unique_ptr<Phase> phase(new RuntimePhase());
    c->setCurrentPhase(phase);

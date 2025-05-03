@@ -14,7 +14,7 @@
 #include "C_complex_functor_clause.h"
 class C_parameter_type;
 class C_parameter_type_list;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_constructor_clause : public C_complex_functor_clause
@@ -24,7 +24,7 @@ class C_constructor_clause : public C_complex_functor_clause
       C_constructor_clause(C_parameter_type_list *, SyntaxError *);
       virtual ~C_constructor_clause();
       virtual C_constructor_clause* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       std::list<C_parameter_type>* getParameterTypeList();

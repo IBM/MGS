@@ -12,7 +12,7 @@
 #include "SyntaxError.h"
 #include "C_production.h"
 
-void C_gridnodeset::internalExecute(LensContext *c)
+void C_gridnodeset::internalExecute(GslContext *c)
 {
    _begin.clear();
    _end.clear();

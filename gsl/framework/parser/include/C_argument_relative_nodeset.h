@@ -16,7 +16,7 @@
 
 class C_relative_nodeset;
 class C_argument;
-class LensContext;
+class GslContext;
 class DataItem;
 class RelativeNodeSetDataItem;
 class SyntaxError;
@@ -28,7 +28,7 @@ class C_argument_relative_nodeset: public C_argument
       C_argument_relative_nodeset(C_relative_nodeset *, SyntaxError *);
       virtual ~C_argument_relative_nodeset();
       virtual C_argument_relative_nodeset* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

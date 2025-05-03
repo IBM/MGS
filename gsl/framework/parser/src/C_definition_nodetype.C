@@ -12,7 +12,7 @@
 #include "C_argument_ndpair_clause_list.h"
 #include "C_argument_declarator.h"
 #include "C_ndpair_clause_list.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "NodeType.h"
 #include "NodeTypeDataItem.h"
 #include "Simulation.h"
@@ -28,7 +28,7 @@
 #include <memory>
 #include <list>
 
-void C_definition_nodetype::internalExecute(LensContext *c)
+void C_definition_nodetype::internalExecute(GslContext *c)
 {
    _declarator->execute(c);
    

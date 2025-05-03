@@ -9,14 +9,14 @@
 #include "Mgs.h"
 #include "Scale.h"
 #include "CG_ScaleBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 
-void Scale::userInitialize(LensContext* CG_c, Functor*& f, double& scale) 
+void Scale::userInitialize(GslContext* CG_c, Functor*& f, double& scale) 
 {
 }
 
-double Scale::userExecute(LensContext* CG_c) 
+double Scale::userExecute(GslContext* CG_c) 
 {
   std::vector<DataItem*> nullArgs;
   std::unique_ptr<DataItem> rval_ap;

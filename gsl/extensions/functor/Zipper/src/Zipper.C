@@ -9,9 +9,9 @@
 #include "Mgs.h"
 #include "Zipper.h"
 #include "CG_ZipperBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "Connector.h"
-#include "LensConnector.h"
+#include "MgsConnector.h"
 #include "GranuleConnector.h"
 #include "NoConnectConnector.h"
 #include "ConnectionContext.h"
@@ -37,11 +37,11 @@
 #include <memory>
 #include <cmath>
 
-void Zipper::userInitialize(LensContext* CG_c) 
+void Zipper::userInitialize(GslContext* CG_c) 
 {
 }
 
-void Zipper::userExecute(LensContext* CG_c, std::vector<DataItem*>::const_iterator begin, std::vector<DataItem*>::const_iterator end) 
+void Zipper::userExecute(GslContext* CG_c, std::vector<DataItem*>::const_iterator begin, std::vector<DataItem*>::const_iterator end) 
 {
   CG_c->connectionContext->reset();
   ConnectionContext* cc = CG_c->connectionContext;
@@ -201,7 +201,7 @@ void Zipper::userExecute(LensContext* CG_c, std::vector<DataItem*>::const_iterat
     } else if (CG_c->sim->isCostAggregationPass()) {
       lc=_granuleConnector;
     } else if (CG_c->sim->isSimulatePass()) {
-      lc=_lensConnector;
+      lc=_mgsConnector;
     } else {
       std::cerr<<"Error, ConnectNodeSetsFunctor : no connection context set!"<<std::endl;
       exit(0);
@@ -301,23 +301,23 @@ Zipper::Zipper()
 {
    _noConnector = new NoConnectConnector;
    _granuleConnector = new GranuleConnector;
-   _lensConnector = new LensConnector;
+   _mgsConnector = new MgsConnector;
 }
 
 Zipper::Zipper(Zipper const & z) 
-  : CG_ZipperBase(), _noConnector(z._noConnector), _granuleConnector(z._granuleConnector), _lensConnector(z._lensConnector), _branchPropListMap(z._branchPropListMap)
+  : CG_ZipperBase(), _noConnector(z._noConnector), _granuleConnector(z._granuleConnector), _mgsConnector(z._mgsConnector), _branchPropListMap(z._branchPropListMap)
 {
   //TUAN : why new?
    _noConnector = new NoConnectConnector;
    _granuleConnector = new GranuleConnector;
-   _lensConnector = new LensConnector;
+   _mgsConnector = new MgsConnector;
 }
 
 Zipper::~Zipper() 
 {
   if (_noConnector) delete _noConnector;
   if (_granuleConnector) delete _granuleConnector;
-  if (_lensConnector) delete _lensConnector;
+  if (_mgsConnector) delete _mgsConnector;
 }
 
 void Zipper::duplicate(std::unique_ptr<Zipper>&& dup) const

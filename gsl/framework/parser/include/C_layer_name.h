@@ -13,7 +13,7 @@
 #include <string>
 #include "C_production.h"
 
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_layer_name : public C_production
@@ -23,7 +23,7 @@ class C_layer_name : public C_production
       C_layer_name(std::string *, SyntaxError *);
       virtual ~C_layer_name();
       virtual C_layer_name* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       std::string& getName() {

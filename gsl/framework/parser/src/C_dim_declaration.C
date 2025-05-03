@@ -10,7 +10,7 @@
 #include "C_int_constant_list.h"
 #include "C_production.h"
 
-void C_dim_declaration::internalExecute(LensContext *c)
+void C_dim_declaration::internalExecute(GslContext *c)
 {
    _intConstantList->execute(c);
 }

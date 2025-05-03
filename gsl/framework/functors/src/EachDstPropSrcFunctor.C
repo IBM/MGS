@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "EachDstPropSrcFunctor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "DataItem.h"
 #include "FunctorType.h"
 #include "NodeDescriptor.h"
@@ -53,7 +53,7 @@ EachDstPropSrcFunctor::~EachDstPropSrcFunctor()
 }
 
 
-void EachDstPropSrcFunctor::doInitialize(LensContext *c, 
+void EachDstPropSrcFunctor::doInitialize(GslContext *c, 
 					 const std::vector<DataItem*>& args)
 {
   int nbrArgs=args.size();
@@ -86,7 +86,7 @@ void EachDstPropSrcFunctor::doInitialize(LensContext *c,
 }
 
 
-NodeDescriptor* EachDstPropSrcFunctor::getProportionalNode(LensContext *c)
+NodeDescriptor* EachDstPropSrcFunctor::getProportionalNode(GslContext *c)
 {
 
 //    This method returns a node from the Source nodeset in the 
@@ -129,7 +129,7 @@ NodeDescriptor* EachDstPropSrcFunctor::getProportionalNode(LensContext *c)
 }
 
 
-void EachDstPropSrcFunctor::doExecute(LensContext* c, 
+void EachDstPropSrcFunctor::doExecute(GslContext* c, 
 				      const std::vector<DataItem*>& args, 
 				      std::unique_ptr<DataItem>& rvalue)
 {

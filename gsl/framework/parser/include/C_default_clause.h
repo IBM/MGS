@@ -13,7 +13,7 @@
 #include "C_production_adi.h"
 
 class C_constant;
-class LensContext;
+class GslContext;
 class ArrayDataItem;
 class SyntaxError;
 
@@ -24,7 +24,7 @@ class C_default_clause : public C_production_adi
       C_default_clause(C_constant *, SyntaxError *);
       virtual ~C_default_clause();
       virtual C_default_clause* duplicate() const;
-      virtual void internalExecute(LensContext *, ArrayDataItem *);
+      virtual void internalExecute(GslContext *, ArrayDataItem *);
       virtual void checkChildren();
       virtual void recursivePrint();
       C_constant * getConstant() const {

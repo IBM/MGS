@@ -10,7 +10,7 @@
 #include "C_edgeset_extension.h"
 #include "C_nodeset.h"
 #include "C_declarator.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "Node.h"
 #include "NodeSet.h"
 #include "NodeSetDataItem.h"
@@ -21,14 +21,14 @@
 #include "EdgeSet.h"
 #include "EdgeSetDataItem.h"
 #include "Simulation.h"
-#include "LensConnector.h"
+#include "MgsConnector.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 #include "C_production.h"
 
 #include <vector>
 
-void C_edgeset::internalExecute(LensContext *c)
+void C_edgeset::internalExecute(GslContext *c)
 {
    if (!c->sim->isEdgeRelationalDataEnabled()) {
      std::cerr << "Edge Relational Data is disabled on simulation! Enable for use of EdgeSet in specification file." << std::endl;
@@ -93,7 +93,7 @@ void C_edgeset::internalExecute(LensContext *c)
       _edgeset = new EdgeSet();
       Grid* preGrid = preNS->getGrid();
       Grid* postGrid = postNS->getGrid();
-      LensConnector lc;
+      MgsConnector lc;
       Repertoire* parent = lc.findLeastCommonRepertoire(preGrid, postGrid);
       const std::vector<GridLayerDescriptor*>& preLayers = preNS->getLayers(),
 	 postLayers = postNS->getLayers();

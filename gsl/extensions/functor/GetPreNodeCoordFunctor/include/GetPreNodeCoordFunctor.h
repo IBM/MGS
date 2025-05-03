@@ -11,7 +11,7 @@
 //#include "Mgs.h"
 
 #include "CG_GetPreNodeCoordFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "Service.h"
 #include <memory>
 
@@ -24,8 +24,8 @@ class GetPreNodeCoordFunctor : public CG_GetPreNodeCoordFunctorBase,
 			       public Publishable
 {
    public:
-      void userInitialize(LensContext* CG_c);
-      Service* userExecute(LensContext* CG_c, Edge*& edge);
+      void userInitialize(GslContext* CG_c);
+      Service* userExecute(GslContext* CG_c, Edge*& edge);
       GetPreNodeCoordFunctor();
       virtual ~GetPreNodeCoordFunctor();
       GetPreNodeCoordFunctor(const GetPreNodeCoordFunctor& rv);

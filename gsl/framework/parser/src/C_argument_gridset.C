@@ -14,7 +14,7 @@
 #include "SyntaxError.h"
 #include <memory>
 
-void C_argument_gridset::internalExecute(LensContext *c)
+void C_argument_gridset::internalExecute(GslContext *c)
 {
    _gridset->execute(c);
 

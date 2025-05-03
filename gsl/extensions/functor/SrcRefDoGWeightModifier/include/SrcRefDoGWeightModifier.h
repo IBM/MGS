@@ -11,15 +11,15 @@
 #include "Mgs.h"
 
 #include "CG_SrcRefDoGWeightModifierBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ParameterSet.h"
 #include <memory>
 
 class SrcRefDoGWeightModifier : public CG_SrcRefDoGWeightModifierBase
 {
    public:
-      void userInitialize(LensContext* CG_c, Functor*& f, float& sigma1, float& max1, float& sigma2, float& max2, int& wrapDistance);
-      std::unique_ptr<ParameterSet> userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c, Functor*& f, float& sigma1, float& max1, float& sigma2, float& max2, int& wrapDistance);
+      std::unique_ptr<ParameterSet> userExecute(GslContext* CG_c);
       SrcRefDoGWeightModifier();
       virtual ~SrcRefDoGWeightModifier();
       virtual void duplicate(std::unique_ptr<SrcRefDoGWeightModifier>&& dup) const;

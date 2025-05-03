@@ -8,7 +8,7 @@
 // =============================================================================
 #include "C_declaration_nodeset.h"
 #include "NodeSet.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_declarator.h"
 #include "C_nodeset.h"
 #include "NodeSetDataItem.h"
@@ -16,7 +16,7 @@
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 
-void C_declaration_nodeset::internalExecute(LensContext *c)
+void C_declaration_nodeset::internalExecute(GslContext *c)
 {
    _declarator->execute(c);
    _nodeset->execute(c);

@@ -16,7 +16,7 @@
 
 class C_query_path_product;
 class C_declarator;
-class LensContext;
+class GslContext;
 class DataItem;
 class Trigger;
 class SyntaxError;
@@ -32,7 +32,7 @@ class C_trigger : public C_production
       C_trigger(C_trigger *, C_trigger *, Type, SyntaxError *);
       virtual ~C_trigger();
       virtual C_trigger* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       Trigger* getTrigger() { 

@@ -9,7 +9,7 @@
 #include "C_declarator_nodeset_extension.h"
 #include "C_declarator.h"
 #include "C_nodeset_extension.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "NodeSet.h"
 #include "NodeSetDataItem.h"
 #include "SyntaxError.h"
@@ -17,7 +17,7 @@
 #include "C_production.h"
 
 
-void C_declarator_nodeset_extension::internalExecute(LensContext *c)
+void C_declarator_nodeset_extension::internalExecute(GslContext *c)
 {
    _declarator->execute(c);
    _nodesetExtension->execute(c);

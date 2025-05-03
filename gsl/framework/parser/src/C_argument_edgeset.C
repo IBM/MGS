@@ -12,7 +12,7 @@
 #include "EdgeSetDataItem.h"
 #include "SyntaxError.h"
 
-void C_argument_edgeset::internalExecute(LensContext *c)
+void C_argument_edgeset::internalExecute(GslContext *c)
 {
    _edgesetDI = new EdgeSetDataItem();
    _edgeset->execute(c);

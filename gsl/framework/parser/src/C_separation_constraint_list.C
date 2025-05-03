@@ -12,7 +12,7 @@
 #include <cassert>
 #include "SyntaxError.h"
 
-void C_separation_constraint_list::internalExecute(LensContext *c)
+void C_separation_constraint_list::internalExecute(GslContext *c)
 {
    std::vector<C_separation_constraint*>::iterator it, 
       end = _separation_constraints->end();

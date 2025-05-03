@@ -6,8 +6,8 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
-#ifndef LENSTISSUESLICER_H
-#define LENSTISSUESLICER_H
+#ifndef MGSTISSUESLICER_H
+#define MGSTISSUESLICER_H
 
 #include <mpi.h>
 #include <cassert>
@@ -23,15 +23,15 @@
 class TissueContext;
 class Params;
 
-class LENSTissueSlicer : public TissueSlicer
+class MGSTissueSlicer : public TissueSlicer
 {
    public:
-     LENSTissueSlicer(const int rank, 
+     MGSTissueSlicer(const int rank, 
 		      const int nSlicers,
 		      const int nTouchDetectors, 
 		      TissueContext* tissueContext, 
 		      Params* params=0);
-     virtual ~LENSTissueSlicer();
+     virtual ~MGSTissueSlicer();
 
    private:
      virtual void sliceAllNeurons();

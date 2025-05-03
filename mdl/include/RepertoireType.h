@@ -12,9 +12,9 @@
 
 #include <string>
 #include <memory>
-#include "LensType.h"
+#include "GslType.h"
 
-class RepertoireType : public LensType {
+class RepertoireType : public GslType {
    public:
       virtual void duplicate(std::unique_ptr<DataType>&& rv) const;
       virtual ~RepertoireType();        

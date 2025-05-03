@@ -11,7 +11,7 @@
 %x COMMENT
 
 %option c++
-%option yyclass="LensLexer"
+%option yyclass="GslLexer"
 %option noyywrap
 
 /* Digits, letters and alphanums */
@@ -27,7 +27,7 @@ U       [a-zA-Z0-9_]
 //#include <sstream>
 #include <fstream>
 #include <string>
-#include "LensLexer.h"
+#include "GslLexer.h"
 using namespace std;
 
 %}

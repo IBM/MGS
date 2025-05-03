@@ -15,7 +15,7 @@
 #include "TriggerableDataItem.h"
 #include "Pauser.h"
 #include "Stopper.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 #include "C_production.h"
@@ -25,7 +25,7 @@
 #include "Simulation.h"
 #include <vector>
 
-void C_trigger_specifier::internalExecute(LensContext *c)
+void C_trigger_specifier::internalExecute(GslContext *c)
 {
 
    if (_trigger) {

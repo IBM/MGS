@@ -13,7 +13,7 @@
 #include <string>
 
 
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class SyntaxError

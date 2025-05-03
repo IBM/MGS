@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "NdplNodeInitFunctor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "DataItem.h"
 #include "FunctorType.h"
 #include "NDPair.h"
@@ -51,7 +51,7 @@ NdplNodeInitFunctor::~NdplNodeInitFunctor()
 }
 
 
-void NdplNodeInitFunctor::doInitialize(LensContext *c, 
+void NdplNodeInitFunctor::doInitialize(GslContext *c, 
 				       const std::vector<DataItem*>& args)
 {
    if (args.size() != 1) {
@@ -72,7 +72,7 @@ void NdplNodeInitFunctor::doInitialize(LensContext *c,
 }
 
 
-void NdplNodeInitFunctor::doExecute(LensContext *c, 
+void NdplNodeInitFunctor::doExecute(GslContext *c, 
 				    const std::vector<DataItem*>& args, 
 				    std::unique_ptr<DataItem>& rvalue)
 {

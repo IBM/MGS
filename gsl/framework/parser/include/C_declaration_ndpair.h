@@ -16,7 +16,7 @@
 
 class C_declarator;
 class C_ndpair_clause;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_declaration_ndpair : public C_declaration
@@ -26,7 +26,7 @@ class C_declaration_ndpair : public C_declaration
       C_declaration_ndpair(C_declarator *,  C_ndpair_clause *, SyntaxError *);
       virtual C_declaration_ndpair* duplicate() const;
       virtual ~C_declaration_ndpair();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

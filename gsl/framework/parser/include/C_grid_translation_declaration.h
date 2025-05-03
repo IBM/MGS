@@ -14,7 +14,7 @@
 
 class C_declaration;
 class C_grid_function_specifier;
-class LensContext;
+class GslContext;
 class Grid;
 class SyntaxError;
 
@@ -27,7 +27,7 @@ class C_grid_translation_declaration : public C_production_grid
 				     SyntaxError *);
       virtual ~C_grid_translation_declaration();
       virtual C_grid_translation_declaration* duplicate() const;
-      virtual void internalExecute(LensContext *, Grid* g);
+      virtual void internalExecute(GslContext *, Grid* g);
       virtual void checkChildren();
       virtual void recursivePrint();
 

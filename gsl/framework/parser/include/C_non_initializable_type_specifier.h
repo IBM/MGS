@@ -13,7 +13,7 @@
 #include "C_type_specifier.h"
 #include "C_production.h"
 
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_non_initializable_type_specifier : public C_production
@@ -25,7 +25,7 @@ class C_non_initializable_type_specifier : public C_production
 	 C_type_specifier::Type, SyntaxError *);
       virtual ~C_non_initializable_type_specifier ();
       virtual C_non_initializable_type_specifier* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       C_type_specifier::Type getType() const { 

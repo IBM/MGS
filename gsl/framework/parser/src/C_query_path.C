@@ -23,14 +23,14 @@
 #include "PublisherQueriable.h"
 #include "Repertoire.h"
 #include "Simulation.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 #include "C_production.h"
 
 #include <sstream>
 
-void C_query_path::internalExecute(LensContext *c)
+void C_query_path::internalExecute(GslContext *c)
 {
    if (_queryList) _queryList->execute(c);
    if (_repName) _repName->execute(c);

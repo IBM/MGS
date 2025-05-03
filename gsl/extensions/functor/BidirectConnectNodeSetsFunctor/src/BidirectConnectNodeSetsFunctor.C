@@ -8,9 +8,9 @@
 // =============================================================================
 #include "BidirectConnectNodeSetsFunctor.h"
 #include "CG_BidirectConnectNodeSetsFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "Connector.h"
-#include "LensConnector.h"
+#include "MgsConnector.h"
 #include "GranuleConnector.h"
 #include "NoConnectConnector.h"
 #include "ConnectionContext.h"
@@ -27,11 +27,11 @@
 #include <memory>
 #include <map>
 
-void BidirectConnectNodeSetsFunctor::userInitialize(LensContext* CG_c) 
+void BidirectConnectNodeSetsFunctor::userInitialize(GslContext* CG_c) 
 {
 }
 
-void BidirectConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, NodeSet*& destination, Functor*& sampling, Functor*& sourceOutAttr, Functor*& destinationInAttr, Functor*& destinationOutAttr, Functor*& sourceInAttr) 
+void BidirectConnectNodeSetsFunctor::userExecute(GslContext* CG_c, NodeSet*& source, NodeSet*& destination, Functor*& sampling, Functor*& sourceOutAttr, Functor*& destinationInAttr, Functor*& destinationOutAttr, Functor*& sourceInAttr) 
 {
    CG_c->connectionContext->reset();
    ConnectionContext* cc = CG_c->connectionContext;
@@ -59,7 +59,7 @@ void BidirectConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& so
    } else if (CG_c->sim->isCostAggregationPass()) {
      lc=_granuleConnector;
    } else if (CG_c->sim->isSimulatePass()) {
-     lc=_lensConnector;
+     lc=_mgsConnector;
    } else {
      std::cerr<<"Error, BidirectConnectNodeSetsFunctor : no connection context set!"<<std::endl;
      exit(0);
@@ -143,7 +143,7 @@ BidirectConnectNodeSetsFunctor::BidirectConnectNodeSetsFunctor()
 {
    _noConnector = new NoConnectConnector;
    _granuleConnector = new GranuleConnector;
-   _lensConnector = new LensConnector;
+   _mgsConnector = new MgsConnector;
 }
 
 BidirectConnectNodeSetsFunctor::~BidirectConnectNodeSetsFunctor() 

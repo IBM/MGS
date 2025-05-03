@@ -13,7 +13,7 @@
 #include "SyntaxError.h"
 #include "C_production.h"
 
-void C_parameter_type_pair::internalExecute(LensContext *c)
+void C_parameter_type_pair::internalExecute(GslContext *c)
 {
 
    _declarator->execute(c);

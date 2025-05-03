@@ -1,8 +1,3 @@
-#ifndef HTREE_MDL
-#define HTREE_MDL
-/*
-@ University of Canterbury 2017-2018. All rights reserved.
- */
 // =============================================================================
 // (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
@@ -11,6 +6,12 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
+// (C) University of Canterbury 2017-2018. All rights reserved.
+//
+// =============================================================================
+#ifndef HTREE_MDL
+#define HTREE_MDL
+
 #include "../../nti/include/MaxComputeOrder.h"
 #include "../std/std.mdl"
 #include "UCInterfaces.mdl"

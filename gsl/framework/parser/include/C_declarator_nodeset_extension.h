@@ -14,7 +14,7 @@
 
 class C_declarator;
 class C_nodeset_extension;
-class LensContext;
+class GslContext;
 class NodeSet;
 class SyntaxError;
 
@@ -26,7 +26,7 @@ class C_declarator_nodeset_extension : public C_production
 				     SyntaxError *);
       virtual ~C_declarator_nodeset_extension();
       virtual C_declarator_nodeset_extension* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       NodeSet* getNodeSet() {

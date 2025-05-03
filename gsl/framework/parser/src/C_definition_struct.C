@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "C_definition_struct.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_declarator.h"
 #include "Simulation.h"
 #include "StructType.h"
@@ -18,7 +18,7 @@
 
 #include <memory>
 
-void C_definition_struct::internalExecute(LensContext *c)
+void C_definition_struct::internalExecute(GslContext *c)
 {
    _declarator->execute(c);
 

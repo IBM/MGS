@@ -38,10 +38,10 @@ class TriggerType : public InstanceFactory
       std::string getModelName() {return _modelName;}
       virtual void getInstance(std::unique_ptr<DataItem> &, 
 			       std::vector<DataItem*> const *, 
-			       LensContext* c = 0);
+			       GslContext* c = 0);
       virtual void getInstance(std::unique_ptr<DataItem> & adi, 
 			       const NDPairList& ndplist,
-			       LensContext* c);
+			       GslContext* c);
       virtual std::string getName() {return _name;}
       virtual std::string getDescription() {return _description;}
       virtual ~TriggerType();

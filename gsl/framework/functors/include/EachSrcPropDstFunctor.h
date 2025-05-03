@@ -15,7 +15,7 @@
 #include <list>
 #include <vector>
 class DataItem;
-class LensContext;
+class GslContext;
 class Functor;
 class NodeDescriptor;
 class NodeSet;
@@ -28,13 +28,13 @@ class EachSrcPropDstFunctor: public SampFctr2Functor
       virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
       virtual ~EachSrcPropDstFunctor();
    protected:
-      virtual void doInitialize(LensContext *c, 
+      virtual void doInitialize(GslContext *c, 
 				const std::vector<DataItem*>& args);
-      virtual void doExecute(LensContext *c, 
+      virtual void doExecute(GslContext *c, 
 			     const std::vector<DataItem*>& args, 
 			     std::unique_ptr<DataItem>& rvalue);
    private:
-      NodeDescriptor* getProportionalNode(LensContext *c);
+      NodeDescriptor* getProportionalNode(GslContext *c);
       std::unique_ptr<Functor> _functor_ap;
       bool _isUntouched;
       NodeSet * _destinationSet;

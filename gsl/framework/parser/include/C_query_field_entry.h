@@ -13,7 +13,7 @@
 #include <string>
 #include "C_production.h"
 
-class LensContext;
+class GslContext;
 class C_ndpair_clause;
 class C_constant;
 class C_declarator;
@@ -29,7 +29,7 @@ class C_query_field_entry : public C_production
       C_query_field_entry(C_declarator *, SyntaxError *);
       virtual ~C_query_field_entry();
       virtual C_query_field_entry* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       std::string getFieldName() {

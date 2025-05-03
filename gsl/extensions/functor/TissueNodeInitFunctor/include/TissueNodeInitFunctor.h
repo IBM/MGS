@@ -11,15 +11,15 @@
 
 #include "Mgs.h"
 #include "CG_TissueNodeInitFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "TissueElement.h"
 #include <memory>
 
 class TissueNodeInitFunctor : public CG_TissueNodeInitFunctorBase, public TissueElement
 {
    public:
-      void userInitialize(LensContext* CG_c);
-      void userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c);
+      void userExecute(GslContext* CG_c);
       TissueNodeInitFunctor();
       TissueNodeInitFunctor(TissueNodeInitFunctor const &);
       virtual ~TissueNodeInitFunctor();

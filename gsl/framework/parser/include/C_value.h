@@ -13,7 +13,7 @@
 #include <string>
 #include "C_production.h"
 
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_value : public C_production
@@ -23,7 +23,7 @@ class C_value : public C_production
       C_value(std::string *, SyntaxError *);
       virtual ~C_value();
       virtual C_value* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       std::string getValue() {

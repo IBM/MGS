@@ -14,7 +14,7 @@
 #include "C_production.h"
 
 class C_parameter_type;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_parameter_type_list : public C_production
@@ -28,7 +28,7 @@ class C_parameter_type_list : public C_production
       std::list<C_parameter_type>* releaseList();
       virtual ~C_parameter_type_list ();
       virtual C_parameter_type_list* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       std::list<C_parameter_type>* getList() {

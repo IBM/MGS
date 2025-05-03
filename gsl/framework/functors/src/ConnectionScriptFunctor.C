@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "ConnectionScriptFunctor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include"C_connection_script_definition_body.h"
 #include "DataItem.h"
 #include "InstanceFactoryQueriable.h"
@@ -42,13 +42,13 @@ ConnectionScriptFunctor::~ConnectionScriptFunctor()
 }
 
 
-void ConnectionScriptFunctor::doInitialize(LensContext *c, 
+void ConnectionScriptFunctor::doInitialize(GslContext *c, 
 					   const std::vector<DataItem*>& args)
 {
 }
 
 
-void ConnectionScriptFunctor::doExecute(LensContext *c, 
+void ConnectionScriptFunctor::doExecute(GslContext *c, 
 					const std::vector<DataItem*>& args, 
 					std::unique_ptr<DataItem>& rvalue)
 {

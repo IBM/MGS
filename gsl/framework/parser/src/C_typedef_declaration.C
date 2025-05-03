@@ -12,7 +12,7 @@
 #include "SyntaxError.h"
 #include "C_production.h"
 
-void C_typedef_declaration::internalExecute(LensContext *c)
+void C_typedef_declaration::internalExecute(GslContext *c)
 {
    _ts->execute(c);
    _id->execute(c);

@@ -14,7 +14,7 @@
 #include "InstanceFactoryQueriable.h"
 #include "NDPairList.h"
 #include "VariableGranuleMapper.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "Simulation.h"
 #include "ConnectionIncrement.h"
 
@@ -25,7 +25,7 @@ VariableType::VariableType() : InstanceFactory()
 
 void VariableType::getInstance(std::unique_ptr<DataItem>& adi,
                                std::vector<DataItem*> const* args,
-                               LensContext* c)
+                               GslContext* c)
 {
   VariableDataItem* vdi = new VariableDataItem;
   VariableInstanceAccessor* via = new VariableInstanceAccessor;
@@ -93,7 +93,7 @@ void VariableType::getInstance(std::unique_ptr<DataItem>& adi,
 }
 
 void VariableType::getInstance(std::unique_ptr<DataItem>& adi,
-                               const NDPairList& ndplist, LensContext* c)
+                               const NDPairList& ndplist, GslContext* c)
 {
   VariableDataItem* vdi = new VariableDataItem;
   VariableInstanceAccessor* via = new VariableInstanceAccessor;

@@ -15,7 +15,7 @@
 #include "C_production.h"
 #include <vector>
 
-class LensContext;
+class GslContext;
 class GranuleMapper;
 class ConnectionIncrement;
 class C_declarator;
@@ -27,7 +27,7 @@ class C_grid_granule : public C_production
       C_grid_granule(const C_grid_granule&);
       virtual ~C_grid_granule();
       virtual C_grid_granule* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       virtual GranuleMapper* getGranuleMapper() {return _granuleMapper;}

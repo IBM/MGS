@@ -18,7 +18,7 @@
 class C_declarator;
 class C_parameter_type;
 class C_parameter_type_list;
-class LensContext;
+class GslContext;
 class InstanceFactory;
 class SyntaxError;
 
@@ -29,7 +29,7 @@ class C_definition_constanttype : public C_definition
       C_definition_constanttype(C_declarator *, SyntaxError *);
       virtual ~C_definition_constanttype();
       virtual C_definition_constanttype* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

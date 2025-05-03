@@ -14,7 +14,7 @@
 
 class C_declarator;
 class C_gridset;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_declaration_gridcoord : public C_declaration
@@ -24,7 +24,7 @@ class C_declaration_gridcoord : public C_declaration
       C_declaration_gridcoord(C_declarator *, C_gridset *, SyntaxError *);
       virtual C_declaration_gridcoord* duplicate() const;
       virtual ~C_declaration_gridcoord();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

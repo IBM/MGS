@@ -6,8 +6,8 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
-#ifndef LensConnector_H_
-#define LensConnector_H_
+#ifndef MgsConnector_H_
+#define MgsConnector_H_
 #include "Copyright.h"
 
 #include "Connector.h"
@@ -27,17 +27,17 @@ class NodeSet;
 class EdgeSet;
 
 
-class LensConnector : public Connector
+class MgsConnector : public Connector
 {
    public:
-      LensConnector();
+      MgsConnector();
       virtual void nodeToNode(NodeDescriptor *from, ParameterSet *outAttrPSet,
 			      NodeDescriptor *to, ParameterSet *inAttrPSet, Simulation* sim);
       virtual void nodeToNodeWithEdge(
 	 EdgeType *, ParameterSet *edgeInit, NodeDescriptor *from, 
 	 ParameterSet *outAttrPSet, NodeDescriptor *to, 
 	 ParameterSet *inAttrPSet, Simulation* sim);
-      virtual ~LensConnector();
+      virtual ~MgsConnector();
       virtual void variableToNodeSet(VariableDescriptor* source, NodeSet* destination, 
 				     NDPairList* sourceOutAttr, 
 				     NDPairList* destinationInAttr, Simulation* sim);

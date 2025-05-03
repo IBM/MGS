@@ -15,7 +15,7 @@
 #include "SyntaxError.h"
 #include "C_production_grid.h"
 
-void C_primary_expression::internalExecute(LensContext *c, Grid* g)
+void C_primary_expression::internalExecute(GslContext *c, Grid* g)
 {
    if (_layerSet) {
       _layerSet->execute(c, g);

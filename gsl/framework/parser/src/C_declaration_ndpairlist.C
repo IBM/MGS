@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "C_declaration_ndpairlist.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_declarator.h"
 #include "NDPairDataItem.h"
 #include "NDPairListDataItem.h"
@@ -16,7 +16,7 @@
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 
-void C_declaration_ndpairlist::internalExecute(LensContext *c)
+void C_declaration_ndpairlist::internalExecute(GslContext *c)
 {
    _declarator->execute(c);
    _ndp_clause_list->execute(c);

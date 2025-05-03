@@ -16,7 +16,7 @@
 #include "NDPair.h"
 #include "NDPairList.h"
 
-void C_equality_expression::internalExecute(LensContext *c, Grid* g)
+void C_equality_expression::internalExecute(GslContext *c, Grid* g)
 {
    _layers.clear();
    if(_primaryExpression) {

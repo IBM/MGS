@@ -11,19 +11,19 @@
 
 #include "Mgs.h"
 #include "CG_ZipperBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 #include <map>
 
 class NoConnectConnector;
 class GranuleConnector;
-class LensConnector;
+class MgsConnector;
 
 class Zipper : public CG_ZipperBase
 {
    public:
-      void userInitialize(LensContext* CG_c);
-      void userExecute(LensContext* CG_c, std::vector<DataItem*>::const_iterator begin, std::vector<DataItem*>::const_iterator end);
+      void userInitialize(GslContext* CG_c);
+      void userExecute(GslContext* CG_c, std::vector<DataItem*>::const_iterator begin, std::vector<DataItem*>::const_iterator end);
       Zipper();
       Zipper(Zipper const &);
       virtual ~Zipper();
@@ -33,7 +33,7 @@ class Zipper : public CG_ZipperBase
    private:
       NoConnectConnector* _noConnector;
       GranuleConnector* _granuleConnector;
-      LensConnector* _lensConnector;
+      MgsConnector* _mgsConnector;
       //map < name-passed-at-last-argument, vector<giving proportional value along branches being used
       std::map<std::string, std::vector<double> > _branchPropListMap; //keep the list 
 };

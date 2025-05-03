@@ -9,7 +9,7 @@
 #include "RangePassThruFunctor.h"
 #include "FunctorType.h"
 #include "NumericDataItem.h"
-#include "LensContext.h"
+#include "GslContext.h"
 //#include <iostream>
 #include "DataItem.h"
 #include "FloatDataItem.h"
@@ -25,7 +25,7 @@ class FunctorType;
 class Simulation;
 class FloatDataItem;
 
-void RangePassThruFunctor::doInitialize(LensContext *c, 
+void RangePassThruFunctor::doInitialize(GslContext *c, 
 					const std::vector<DataItem*>& args)
 {
 
@@ -69,7 +69,7 @@ void RangePassThruFunctor::doInitialize(LensContext *c,
 }
 
 
-void RangePassThruFunctor::doExecute(LensContext *c, 
+void RangePassThruFunctor::doExecute(GslContext *c, 
 				     const std::vector<DataItem*>& args, 
 				     std::unique_ptr<DataItem>& rvalue)
 {

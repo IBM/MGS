@@ -8,14 +8,14 @@
 // =============================================================================
 #include "C_declaration_publisher.h"
 #include "Publisher.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_declarator.h"
 #include "C_query_path.h"
 #include "PublisherDataItem.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 
-void C_declaration_publisher::internalExecute(LensContext *c)
+void C_declaration_publisher::internalExecute(GslContext *c)
 {
    _declarator->execute(c);
    _query_path->execute(c);

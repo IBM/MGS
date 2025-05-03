@@ -8,7 +8,7 @@
 // =============================================================================
 #include "Variable.h"
 
-void Variable::initialize(LensContext *c, const std::vector<DataItem*>& args)
+void Variable::initialize(GslContext *c, const std::vector<DataItem*>& args)
 {
    doInitialize(c, args);
 }

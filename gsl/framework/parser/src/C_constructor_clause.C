@@ -16,7 +16,7 @@ std::list<C_parameter_type>* C_constructor_clause::getParameterTypeList()
 }
 
 
-void C_constructor_clause::internalExecute(LensContext *c)
+void C_constructor_clause::internalExecute(GslContext *c)
 {
    _ptl->execute(c);
 }

@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "C_composite_definition_body.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_composite_statement_list.h"
 #include "Repertoire.h"
 
@@ -16,7 +16,7 @@
 #include "SyntaxErrorException.h"
 #include "C_production.h"
 
-void C_composite_definition_body::internalExecute(LensContext *c)
+void C_composite_definition_body::internalExecute(GslContext *c)
 {
    //_statementList->execute(c);
 }
@@ -57,7 +57,7 @@ C_composite_definition_body::~C_composite_definition_body()
 
 
 Repertoire* C_composite_definition_body::createRepertoire(
-   const std::string& repName, LensContext* c)
+   const std::string& repName, GslContext* c)
 {
    Repertoire *composite = new Repertoire(repName);
 

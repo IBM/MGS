@@ -9,16 +9,16 @@
 #include "Mgs.h"
 #include "NameReturnValue.h"
 #include "CG_NameReturnValueBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "NDPairList.h"
 #include "NumericDataItem.h"
 #include <memory>
 
-void NameReturnValue::userInitialize(LensContext* CG_c, CustomString& s, Functor*& f) 
+void NameReturnValue::userInitialize(GslContext* CG_c, CustomString& s, Functor*& f) 
 {
 }
 
-std::unique_ptr<NDPairList> NameReturnValue::userExecute(LensContext* CG_c) 
+std::unique_ptr<NDPairList> NameReturnValue::userExecute(GslContext* CG_c) 
 {
   std::vector<DataItem*> nullArgs;
   std::unique_ptr<DataItem> rval_ap;

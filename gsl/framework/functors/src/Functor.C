@@ -15,11 +15,11 @@ Functor::Functor() {}
 
 const std::string& Functor::getCategory() const { return _category; }
 
-void Functor::initialize(LensContext* c, const std::vector<DataItem*>& args) {
+void Functor::initialize(GslContext* c, const std::vector<DataItem*>& args) {
   doInitialize(c, args);
 }
 
-void Functor::execute(LensContext* c, const std::vector<DataItem*>& args,
+void Functor::execute(GslContext* c, const std::vector<DataItem*>& args,
                       std::unique_ptr<DataItem>& rvalue) {
   doExecute(c, args, rvalue);
 }

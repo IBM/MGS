@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "OutAttrDefaultFunctor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "DataItem.h"
 #include "FunctorType.h"
 #include "NodeSet.h"
@@ -45,14 +45,14 @@ OutAttrDefaultFunctor::~OutAttrDefaultFunctor()
 }
 
 
-void OutAttrDefaultFunctor::doInitialize(LensContext *c, 
+void OutAttrDefaultFunctor::doInitialize(GslContext *c, 
 					 const std::vector<DataItem*>& args)
 {
 }
 
 
 void OutAttrDefaultFunctor::doExecute(
-   LensContext *c, const std::vector<DataItem*>& args, 
+   GslContext *c, const std::vector<DataItem*>& args, 
    std::unique_ptr<DataItem>& rvalue)
 {
    ConnectionContext *cc = c->connectionContext;

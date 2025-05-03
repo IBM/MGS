@@ -14,7 +14,7 @@
 #include "C_production_adi.h"
 
 void C_matrix_initializer_expression::internalExecute(
-   LensContext *c, ArrayDataItem *adi)
+   GslContext *c, ArrayDataItem *adi)
 {
     _intConstantList->execute(c, adi);
     _offset = _intConstantList->getOffset();

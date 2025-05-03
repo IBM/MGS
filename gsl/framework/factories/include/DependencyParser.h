@@ -21,7 +21,7 @@ class DependencyParser
       bool load(const std::string& objName);
    private:
       std::string _fileName;
-      std::string _lensRoot;      
+      std::string _gslRoot;      
       std::vector<std::string> _loaded;
       bool _load(const std::string& objName);
 };

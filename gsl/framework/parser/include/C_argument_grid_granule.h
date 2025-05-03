@@ -18,7 +18,7 @@ class C_grid_granule;
 class DataItem;
 class GranuleMapperDataItem;
 class C_argument;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_argument_grid_granule: public C_argument
@@ -28,7 +28,7 @@ class C_argument_grid_granule: public C_argument
       C_argument_grid_granule(C_grid_granule *, SyntaxError *);
       virtual ~C_argument_grid_granule();
       virtual C_argument_grid_granule* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

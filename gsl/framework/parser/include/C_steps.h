@@ -14,7 +14,7 @@
 #include "C_production.h"
 
 class C_int_constant_list;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_steps : public C_production
@@ -24,7 +24,7 @@ class C_steps : public C_production
       C_steps(C_int_constant_list *, SyntaxError *);
       virtual ~C_steps();
       virtual C_steps* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       const std::list<int>* getListInt() const;

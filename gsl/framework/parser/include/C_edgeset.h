@@ -12,7 +12,7 @@
 
 #include "C_production.h"
 
-class LensContext;
+class GslContext;
 class C_nodeset;
 class C_edgeset_extension;
 class C_edgeset_list;
@@ -35,7 +35,7 @@ class C_edgeset : public C_production
       C_edgeset(C_edgeset*, C_edgeset*, C_edgeset_extension*, SyntaxError *);
       virtual ~C_edgeset();
       virtual C_edgeset* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       EdgeSet* getEdgeSet() {

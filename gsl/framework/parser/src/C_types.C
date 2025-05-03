@@ -20,7 +20,7 @@ C_types::C_types(const C_types& rv)
 {
 }
 
-void C_types::internalExecute(LensContext *c)
+void C_types::internalExecute(GslContext *c)
 {
 }
 

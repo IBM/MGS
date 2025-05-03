@@ -16,7 +16,7 @@
 
 class C_primary_expression;
 class C_name;
-class LensContext;
+class GslContext;
 class GridLayerDescriptor;
 class Grid;
 class SyntaxError;
@@ -30,7 +30,7 @@ class C_equality_expression : public C_production_grid
 			    SyntaxError * error);
       virtual ~C_equality_expression();
       virtual C_equality_expression* duplicate() const;
-      virtual void internalExecute(LensContext *, Grid* g);
+      virtual void internalExecute(GslContext *, Grid* g);
       virtual void checkChildren();
       virtual void recursivePrint();
       const std::list<GridLayerDescriptor*>& getLayers() const;

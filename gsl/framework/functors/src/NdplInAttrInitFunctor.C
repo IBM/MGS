@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "NdplInAttrInitFunctor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "DataItem.h"
 #include "FunctorType.h"
 #include "NDPairList.h"
@@ -48,7 +48,7 @@ NdplInAttrInitFunctor::~NdplInAttrInitFunctor()
 }
 
 
-void NdplInAttrInitFunctor::doInitialize(LensContext *c, const std::vector<DataItem*>& args)
+void NdplInAttrInitFunctor::doInitialize(GslContext *c, const std::vector<DataItem*>& args)
 {
    if (args.size() != 1) {
       throw SyntaxErrorException(
@@ -68,7 +68,7 @@ void NdplInAttrInitFunctor::doInitialize(LensContext *c, const std::vector<DataI
 }
 
 
-void NdplInAttrInitFunctor::doExecute(LensContext *c, 
+void NdplInAttrInitFunctor::doExecute(GslContext *c, 
 				      const std::vector<DataItem*>& args, 
 				      std::unique_ptr<DataItem>& rvalue)
 {

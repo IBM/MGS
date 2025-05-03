@@ -8,14 +8,14 @@
 // =============================================================================
 #include "C_declaration_edgeset.h"
 #include "EdgeSet.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_declarator.h"
 #include "C_edgeset.h"
 #include "EdgeSetDataItem.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 
-void C_declaration_edgeset::internalExecute(LensContext *c)
+void C_declaration_edgeset::internalExecute(GslContext *c)
 {
    _declarator->execute(c);
    _edgeset->execute(c);

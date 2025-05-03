@@ -18,7 +18,7 @@
 #include <vector>
 
 class DataItem;
-class LensContext;
+class GslContext;
 class NodeSet;
 
 class ManhattanRing2Functor: public SampFctr1Functor
@@ -33,9 +33,9 @@ class ManhattanRing2Functor: public SampFctr1Functor
       virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
       virtual ~ManhattanRing2Functor();
    protected:
-      virtual void doInitialize(LensContext *c, 
+      virtual void doInitialize(GslContext *c, 
 				const std::vector<DataItem*>& args);
-      virtual void doExecute(LensContext *c, 
+      virtual void doExecute(GslContext *c, 
 			     const std::vector<DataItem*>& args, 
 			     std::unique_ptr<DataItem>& rvalue);
    private:

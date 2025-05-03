@@ -14,7 +14,7 @@
 #include "C_production_adi.h"
 
 class C_matrix_initializer_clause;
-class LensContext;
+class GslContext;
 class ArrayDataItem;
 class SyntaxError;
 
@@ -31,7 +31,7 @@ class C_matrix_initializer_clause_list : public C_production_adi
       std::list<C_matrix_initializer_clause>* releaseList();
       virtual ~C_matrix_initializer_clause_list();
       virtual C_matrix_initializer_clause_list* duplicate() const;
-      virtual void internalExecute(LensContext *, ArrayDataItem *);
+      virtual void internalExecute(GslContext *, ArrayDataItem *);
       virtual void checkChildren();
       virtual void recursivePrint();
       std::list<C_matrix_initializer_clause>* getListMatrixInitClause() const;

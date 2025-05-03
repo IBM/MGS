@@ -9,13 +9,13 @@
 #include "C_repname.h"
 #include "C_preamble.h"
 #include "Repertoire.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "RepertoireDataItem.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 #include "C_production.h"
 
-void C_repname::internalExecute(LensContext *c)
+void C_repname::internalExecute(GslContext *c)
 {
    _path.clear();
    if(_preamble) {
@@ -34,7 +34,7 @@ void C_repname::internalExecute(LensContext *c)
 //      std::string mes = 
 //	 "dynamic cast of DataItem to RepertoireDataItem failed";
       std::string mes = 
-	 "dynamic cast of DataItem to RepertoireDataItem failed: the current LensContext object does not have the repertoire with name " + (currentRep);
+	 "dynamic cast of DataItem to RepertoireDataItem failed: the current GslContext object does not have the repertoire with name " + (currentRep);
       throwError(mes);
    }
    Repertoire *current = crdi->getRepertoire();

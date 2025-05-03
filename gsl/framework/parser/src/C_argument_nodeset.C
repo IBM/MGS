@@ -13,7 +13,7 @@
 #include "NodeSetDataItem.h"
 #include "SyntaxError.h"
 
-void C_argument_nodeset::internalExecute(LensContext *c)
+void C_argument_nodeset::internalExecute(GslContext *c)
 {
    _nodeset_DI = new NodeSetDataItem();
 

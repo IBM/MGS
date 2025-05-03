@@ -11,7 +11,7 @@
 #include "C_production.h"
 #include "PhaseDataItem.h"
 #include "Phase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "SyntaxErrorException.h"
 #include "CompCategoryBase.h"
 #include "PhaseDataItem.h"
@@ -19,7 +19,7 @@
 
 #include <iostream>
 
-void C_phase_mapping::internalExecute(LensContext *c)
+void C_phase_mapping::internalExecute(GslContext *c)
 {
    CompCategoryBase* ccBase = c->getCurrentCompCategoryBase();
    std::string type = ccBase->getPhaseType(_modelPhase);

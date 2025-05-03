@@ -14,7 +14,7 @@
 
 #include "C_declaration.h"
 
-class LensContext;
+class GslContext;
 class DataItem;
 class C_separation_constraint;
 class C_separation_constraint_list;
@@ -27,7 +27,7 @@ class C_declaration_separation_constraint : public C_declaration
       C_declaration_separation_constraint(C_separation_constraint_list *, 
 					  SyntaxError *);
       virtual ~C_declaration_separation_constraint();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       virtual C_declaration* duplicate() const;

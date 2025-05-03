@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "RadialSamplerFunctor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ConnectionContext.h"
 #include "DataItem.h"
 #include "IntArrayDataItem.h"
@@ -64,7 +64,7 @@ RadialSamplerFunctor::~RadialSamplerFunctor()
 }
 
 
-void RadialSamplerFunctor::doInitialize(LensContext *c, 
+void RadialSamplerFunctor::doInitialize(GslContext *c, 
 					const std::vector<DataItem*>& args)
 {
   int nbrArgs=args.size();
@@ -118,7 +118,7 @@ void RadialSamplerFunctor::doInitialize(LensContext *c,
   }
 }
 
-void RadialSamplerFunctor::doExecute(LensContext *c, 
+void RadialSamplerFunctor::doExecute(GslContext *c, 
 				     const std::vector<DataItem*>& args, 
 				     std::unique_ptr<DataItem>& rvalue)
 {

@@ -14,7 +14,7 @@
 #include "C_argument.h"
 
 class C_argument;
-class LensContext;
+class GslContext;
 class DataItem;
 class CustomStringDataItem;
 class SyntaxError;
@@ -26,7 +26,7 @@ class C_argument_string: public C_argument
       C_argument_string(std::string *, SyntaxError *);
       virtual ~C_argument_string();
       virtual C_argument_string* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

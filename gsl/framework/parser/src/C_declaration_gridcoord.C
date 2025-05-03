@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "C_declaration_gridcoord.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_declarator.h"
 #include "C_gridset.h"
 #include "GridSet.h"
@@ -16,7 +16,7 @@
 #include "SyntaxErrorException.h"
 
 
-void C_declaration_gridcoord::internalExecute(LensContext *c)
+void C_declaration_gridcoord::internalExecute(GslContext *c)
 {
    _declarator->execute(c);
    _gridset->execute(c);

@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "NodeDefaultFunctor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "DataItem.h"
 #include "FunctorType.h"
 #include "NodeSet.h"
@@ -36,13 +36,13 @@ NodeDefaultFunctor::~NodeDefaultFunctor()
 }
 
 
-void NodeDefaultFunctor::doInitialize(LensContext *c, 
+void NodeDefaultFunctor::doInitialize(GslContext *c, 
 				      const std::vector<DataItem*>& args)
 {
 }
 
 
-void NodeDefaultFunctor::doExecute(LensContext *c, 
+void NodeDefaultFunctor::doExecute(GslContext *c, 
 				   const std::vector<DataItem*>& args, 
 				   std::unique_ptr<DataItem>& rvalue)
 {

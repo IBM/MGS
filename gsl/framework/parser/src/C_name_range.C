@@ -10,12 +10,12 @@
 #include "C_layer_name.h"
 #include "Grid.h"
 #include "GridLayerDescriptor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_production_grid.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 
-void C_name_range::internalExecute(LensContext *c, Grid* g)
+void C_name_range::internalExecute(GslContext *c, Grid* g)
 {
 
    _fromLayerName->execute(c);

@@ -12,7 +12,7 @@
 
 #include <string>
 
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_production
@@ -26,11 +26,11 @@ class C_production
       void setError();
       void printErrorMessage();
       virtual void throwError(const std::string&);
-      virtual void execute(LensContext *);
+      virtual void execute(GslContext *);
       virtual void checkChildren() {};
       virtual void recursivePrint() {};
    protected:
-      virtual void internalExecute(LensContext *) = 0;
+      virtual void internalExecute(GslContext *) = 0;
       SyntaxError *_error;
 };
 #endif

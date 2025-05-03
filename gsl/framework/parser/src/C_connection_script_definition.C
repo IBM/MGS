@@ -13,7 +13,7 @@
 #include "ConnectionScriptFunctor.h"
 #include <memory>
 
-void C_connection_script_definition::internalExecute(LensContext *c)
+void C_connection_script_definition::internalExecute(GslContext *c)
 {
    _declarator->execute(c);
    _param_type_list->execute(c);

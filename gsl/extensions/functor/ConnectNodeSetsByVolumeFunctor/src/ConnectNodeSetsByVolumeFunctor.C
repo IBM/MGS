@@ -1,9 +1,9 @@
 #include "Mgs.h"
 #include "ConnectNodeSetsByVolumeFunctor.h"
 #include "CG_ConnectNodeSetsByVolumeFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "Connector.h"
-#include "LensConnector.h"
+#include "MgsConnector.h"
 #include "GranuleConnector.h"
 #include "NoConnectConnector.h"
 #include "ConnectionContext.h"
@@ -24,11 +24,11 @@
 
 //#define DEBUG
 
-void ConnectNodeSetsByVolumeFunctor::userInitialize(LensContext* CG_c) 
+void ConnectNodeSetsByVolumeFunctor::userInitialize(GslContext* CG_c) 
 {
 }
 
-void ConnectNodeSetsByVolumeFunctor::userExecute(LensContext* CG_c, NodeSet*& source, NodeSet*& destination, CustomString& center, float& radius, float& scale, Functor*& sourceOutAttr, Functor*& destinationInAttr) 
+void ConnectNodeSetsByVolumeFunctor::userExecute(GslContext* CG_c, NodeSet*& source, NodeSet*& destination, CustomString& center, float& radius, float& scale, Functor*& sourceOutAttr, Functor*& destinationInAttr) 
 {
   /*
    * NOTE: The problem is one nodeset uses Tissue-Coordinate
@@ -69,7 +69,7 @@ void ConnectNodeSetsByVolumeFunctor::userExecute(LensContext* CG_c, NodeSet*& so
   } else if (sim->isCostAggregationPass()) {
     lc=_granuleConnector;
   } else if (sim->isSimulatePass()) {
-    lc=_lensConnector;
+    lc=_mgsConnector;
   } else {
     throw SyntaxErrorException(
        "Error, ConnectNodeSetsByVolume : no connection context set!");
@@ -210,7 +210,7 @@ ConnectNodeSetsByVolumeFunctor::ConnectNodeSetsByVolumeFunctor()
 {
    _noConnector = new NoConnectConnector;
    _granuleConnector = new GranuleConnector;
-   _lensConnector = new LensConnector;
+   _mgsConnector = new MgsConnector;
 }
 
 ConnectNodeSetsByVolumeFunctor::~ConnectNodeSetsByVolumeFunctor() 

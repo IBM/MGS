@@ -11,14 +11,14 @@
 
 #include "Mgs.h"
 #include "CG_RoundBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 
 class Round : public CG_RoundBase
 {
    public:
-      void userInitialize(LensContext* CG_c, Functor*& f);
-      double userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c, Functor*& f);
+      double userExecute(GslContext* CG_c);
       Round();
       virtual ~Round();
       virtual void duplicate(std::unique_ptr<Round>&& dup) const;

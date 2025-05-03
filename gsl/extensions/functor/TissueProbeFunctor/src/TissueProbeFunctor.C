@@ -9,7 +9,7 @@
 #include "Mgs.h"
 #include "TissueProbeFunctor.h"
 #include "CG_TissueProbeFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "NodeSet.h"
 #include "TissueFunctor.h"
 #include "NodeDescriptor.h"
@@ -20,11 +20,11 @@
 #include <memory>
 #include <algorithm>
 
-void TissueProbeFunctor::userInitialize(LensContext* CG_c) 
+void TissueProbeFunctor::userInitialize(GslContext* CG_c) 
 {
 }
 
-std::unique_ptr<NodeSet> TissueProbeFunctor::userExecute(LensContext* CG_c) 
+std::unique_ptr<NodeSet> TissueProbeFunctor::userExecute(GslContext* CG_c) 
 {
   std::unique_ptr<NodeSet> rval;
   NDPairList::iterator ndpiter = _tissueFunctor->_params->end(),

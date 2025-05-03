@@ -13,7 +13,7 @@
 #include "C_declaration.h"
 class C_matrix_type_specifier;
 class C_matrix_init_declarator;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 #include <memory>
@@ -29,7 +29,7 @@ class C_declaration_matrix_type : public C_declaration
 				SyntaxError *);
       virtual C_declaration_matrix_type* duplicate() const;
       virtual ~C_declaration_matrix_type();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

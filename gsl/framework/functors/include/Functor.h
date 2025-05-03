@@ -14,14 +14,14 @@
 #include <vector>
 #include <string>
 class DataItem;
-class LensContext;
+class GslContext;
 
 class Functor {
   public:
   Functor();
   virtual const std::string& getCategory() const;
-  void initialize(LensContext* c, const std::vector<DataItem*>& args);
-  void execute(LensContext* c, const std::vector<DataItem*>& args,
+  void initialize(GslContext* c, const std::vector<DataItem*>& args);
+  void execute(GslContext* c, const std::vector<DataItem*>& args,
                std::unique_ptr<DataItem>& rvalue);
   Functor(const Functor& rv) {};
   Functor& operator=(const Functor& rv) {
@@ -31,9 +31,9 @@ class Functor {
   virtual ~Functor();
 
   protected:
-  virtual void doInitialize(LensContext* c,
+  virtual void doInitialize(GslContext* c,
                             const std::vector<DataItem*>& args) = 0;
-  virtual void doExecute(LensContext* c, const std::vector<DataItem*>& args,
+  virtual void doExecute(GslContext* c, const std::vector<DataItem*>& args,
                          std::unique_ptr<DataItem>& rvalue) = 0;
 
   public:

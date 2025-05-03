@@ -6,8 +6,8 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
-#ifndef LENSCONTEXT_H
-#define LENSCONTEXT_H
+#ifndef GSLCONTEXT_H
+#define GSLCONTEXT_H
 #include "Copyright.h"
 
 #include "SymbolTable.h"
@@ -18,23 +18,22 @@
 #include <memory>
 
 class Repertoire;
-class LensLexer;
+class GslLexer;
 class Simulation;
-class LensDeletable;
 class LayerDefinitionContext;
 class C_production;
 class Phase;
 class CompCategoryBase;
 
-class LensContext
+class GslContext
 {
    public:
       // constructors
-      LensContext(Simulation* s);
-      LensContext(const LensContext& lc);
+      GslContext(Simulation* s);
+      GslContext(const GslContext& lc);
 
       // members
-      LensLexer *lexer;
+      GslLexer *lexer;
       Simulation* sim;
       SymbolTable symTable;
       ConnectionContext* connectionContext;
@@ -55,12 +54,12 @@ class LensContext
 	 _currentCompCategoryBase = cc;
       }
       
-      virtual void duplicate(std::unique_ptr<LensContext>& dup) const;
+      virtual void duplicate(std::unique_ptr<GslContext>& dup) const;
 
       void addCurrentRepertoire(Repertoire* rep);
 
       // destructor
-      virtual ~LensContext();
+      virtual ~GslContext();
    private:
       bool _error;
       std::vector<C_production*> _statements;

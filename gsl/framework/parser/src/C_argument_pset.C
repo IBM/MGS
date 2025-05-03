@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "C_argument_pset.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_parameter_type_pair.h"
 #include "C_ndpair_clause_list.h"
 #include "ParameterSet.h"
@@ -21,7 +21,7 @@
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 
-void C_argument_pset::internalExecute(LensContext *c)
+void C_argument_pset::internalExecute(GslContext *c)
 {
    _parm_type_pair->execute(c);
    _ndp_clause_list->execute(c);

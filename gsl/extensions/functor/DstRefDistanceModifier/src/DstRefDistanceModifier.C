@@ -8,7 +8,7 @@
 // =============================================================================
 #include "DstRefDistanceModifier.h"
 #include "CG_DstRefDistanceModifierBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ParameterSet.h"
 #include "NDPair.h"
 #include "NDPairList.h"
@@ -18,11 +18,11 @@
 #include <memory>
 #include <cmath>
 
-void DstRefDistanceModifier::userInitialize(LensContext* CG_c, Functor*& f) 
+void DstRefDistanceModifier::userInitialize(GslContext* CG_c, Functor*& f) 
 {
 }
 
-std::unique_ptr<ParameterSet> DstRefDistanceModifier::userExecute(LensContext* CG_c) 
+std::unique_ptr<ParameterSet> DstRefDistanceModifier::userExecute(GslContext* CG_c) 
 {
    std::vector<DataItem*> nullArgs;
    std::unique_ptr<DataItem> rval_ap;

@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "NdplEdgeInitFunctor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "DataItem.h"
 #include "FunctorType.h"
 #include "NDPairList.h"
@@ -45,7 +45,7 @@ NdplEdgeInitFunctor::~NdplEdgeInitFunctor()
 }
 
 
-void NdplEdgeInitFunctor::doInitialize(LensContext *c, 
+void NdplEdgeInitFunctor::doInitialize(GslContext *c, 
 				       const std::vector<DataItem*>& args)
 {
    if (args.size() != 1) {
@@ -66,7 +66,7 @@ void NdplEdgeInitFunctor::doInitialize(LensContext *c,
 }
 
 
-void NdplEdgeInitFunctor::doExecute(LensContext *c, 
+void NdplEdgeInitFunctor::doExecute(GslContext *c, 
 				    const std::vector<DataItem*>& args, 
 				    std::unique_ptr<DataItem>& rvalue)
 {

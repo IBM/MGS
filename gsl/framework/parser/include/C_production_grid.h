@@ -12,7 +12,7 @@
 
 #include "C_production.h"
 
-class LensContext;
+class GslContext;
 class SyntaxError;
 class Grid;
 
@@ -24,11 +24,11 @@ class C_production_grid : public C_production
       C_production_grid(const C_production_grid&);
       virtual ~C_production_grid();
       virtual C_production_grid* duplicate() const = 0;
-      virtual void execute(LensContext *, Grid *);
+      virtual void execute(GslContext *, Grid *);
       virtual void checkChildren() {};
       virtual void recursivePrint() {};
    protected:
-      virtual void internalExecute(LensContext *);
-      virtual void internalExecute(LensContext *, Grid *) = 0;
+      virtual void internalExecute(GslContext *);
+      virtual void internalExecute(GslContext *, Grid *) = 0;
 };
 #endif

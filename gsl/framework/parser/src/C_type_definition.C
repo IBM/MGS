@@ -10,14 +10,14 @@
 #include "C_declarator.h"
 #include "C_grid_definition_body.h"
 #include "C_composite_definition_body.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "RepertoireFactoryDataItem.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 #include "C_production.h"
 
 
-void C_type_definition::internalExecute(LensContext *c)
+void C_type_definition::internalExecute(GslContext *c)
 {
    _typeName->execute(c);
    RepertoireFactoryDataItem * rdi = new RepertoireFactoryDataItem;

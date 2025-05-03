@@ -6,7 +6,7 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
-#include "LensConnector.h"
+#include "MgsConnector.h"
 #include "Grid.h"
 #include "EdgeType.h"
 #include "Node.h"
@@ -31,15 +31,15 @@
 
 #include <list>
 
-LensConnector::LensConnector()
+MgsConnector::MgsConnector()
 {
 }
 
-LensConnector::~LensConnector()
+MgsConnector::~MgsConnector()
 {
 }
 
-void LensConnector::nodeToNode(NodeDescriptor *from, ParameterSet *outAttrPSet,
+void MgsConnector::nodeToNode(NodeDescriptor *from, ParameterSet *outAttrPSet,
 			       NodeDescriptor *to, ParameterSet *inAttrPSet, Simulation* sim)
 { 
 #ifdef HAVE_MPI
@@ -85,7 +85,7 @@ void LensConnector::nodeToNode(NodeDescriptor *from, ParameterSet *outAttrPSet,
 
 }
 
-void LensConnector::nodeToNodeWithEdge(
+void MgsConnector::nodeToNodeWithEdge(
    EdgeType *et, ParameterSet *edgeInit, NodeDescriptor *from, 
    ParameterSet *outAttrPSet, NodeDescriptor *to, ParameterSet *inAttrPSet, Simulation* sim)
 {
@@ -155,7 +155,7 @@ void LensConnector::nodeToNodeWithEdge(
       
 }
 
-void LensConnector::variableToNodeSet(
+void MgsConnector::variableToNodeSet(
    VariableDescriptor* source, NodeSet* destination, NDPairList* sourceOutAttr, 
    NDPairList* destinationInAttr, Simulation* sim)
 {
@@ -215,7 +215,7 @@ void LensConnector::variableToNodeSet(
    } // ifdef HAVE_MPI: end of else; ifndef HAVE_MPI: end of for(; it != end; ++it)
 }
 
-void LensConnector::variableToEdgeSet(
+void MgsConnector::variableToEdgeSet(
    VariableDescriptor* source, EdgeSet* destination, NDPairList* sourceOutAttr, 
    NDPairList* destinationInAttr, Simulation* sim)
 {
@@ -266,7 +266,7 @@ void LensConnector::variableToEdgeSet(
 }
 
 
-void LensConnector::variableToVariable(
+void MgsConnector::variableToVariable(
    VariableDescriptor* source, VariableDescriptor* destination, NDPairList* sourceOutAttr, 
    NDPairList* destinationInAttr, Simulation* sim)
 {
@@ -312,7 +312,7 @@ void LensConnector::variableToVariable(
 #endif
 }
 
-void LensConnector::nodeSetToVariable(
+void MgsConnector::nodeSetToVariable(
    NodeSet* source, VariableDescriptor* destination, NDPairList* sourceOutAttr, 
    NDPairList* destinationInAttr, Simulation* sim)
 {
@@ -374,7 +374,7 @@ void LensConnector::nodeSetToVariable(
    }
 }
 
-void LensConnector::edgeSetToVariable(
+void MgsConnector::edgeSetToVariable(
    EdgeSet* source, VariableDescriptor* destination, NDPairList* sourceOutAttr, 
    NDPairList* destinationInAttr, Simulation* sim)
 {

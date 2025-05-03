@@ -34,10 +34,10 @@ class GranuleMapperType : public InstanceFactory
       virtual void duplicate(std::unique_ptr<GranuleMapperType>& dup) const = 0;
       virtual void getInstance(std::unique_ptr<DataItem> &, 
 			       std::vector<DataItem*> const *, 
-			       LensContext* c = 0);
+			       GslContext* c = 0);
       virtual void getInstance(std::unique_ptr<DataItem> & adi, 
 			       const NDPairList& ndplist,
-			       LensContext* c);
+			       GslContext* c);
       virtual std::string getName() {return _name;}
       virtual std::string getDescription() {return _description;}
       virtual ~GranuleMapperType();

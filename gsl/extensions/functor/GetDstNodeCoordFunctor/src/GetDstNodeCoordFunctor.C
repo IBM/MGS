@@ -8,7 +8,7 @@
 // =============================================================================
 #include "GetDstNodeCoordFunctor.h"
 #include "CG_GetDstNodeCoordFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "Service.h"
 #include <memory>
 
@@ -17,12 +17,12 @@
 #include "ConnectionContext.h"
 #include "NodeDescriptor.h"
 
-void GetDstNodeCoordFunctor::userInitialize(LensContext* CG_c, int& dim) 
+void GetDstNodeCoordFunctor::userInitialize(GslContext* CG_c, int& dim) 
 {
   _dim=dim;
 }
 
-int GetDstNodeCoordFunctor::userExecute(LensContext* CG_c)
+int GetDstNodeCoordFunctor::userExecute(GslContext* CG_c)
 {
    CG_c->connectionContext->destinationNode->getNodeCoords(_coords.coords);
    return _coords.coords[_dim];

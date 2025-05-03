@@ -13,7 +13,7 @@
 #include "C_production.h"
 
 #include <vector>
-class LensContext;
+class GslContext;
 class C_declaration;
 class C_directive;
 class DataItem;
@@ -28,7 +28,7 @@ class C_connection_script_declaration : public C_production
       C_connection_script_declaration(bool, C_directive *, SyntaxError *);
       virtual ~C_connection_script_declaration();
       virtual C_connection_script_declaration* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       bool isReturn() { 

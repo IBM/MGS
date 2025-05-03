@@ -9,7 +9,7 @@
 #include "ConnectSets2FunctorType.h"
 #include "ConnectSets2Functor.h"
 #include "FunctorType.h"
-#include "LensContext.h"
+#include "GslContext.h"
 //#include <iostream>
 #include "DataItem.h"
 #include "FunctorDataItem.h"

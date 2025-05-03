@@ -9,15 +9,15 @@
 #include "Mgs.h"
 #include "TissueNodeInitFunctor.h"
 #include "CG_TissueNodeInitFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "TissueFunctor.h"
 #include <memory>
 
-void TissueNodeInitFunctor::userInitialize(LensContext* CG_c) 
+void TissueNodeInitFunctor::userInitialize(GslContext* CG_c) 
 {
 }
 
-void TissueNodeInitFunctor::userExecute(LensContext* CG_c) 
+void TissueNodeInitFunctor::userExecute(GslContext* CG_c) 
 {
   _tissueFunctor->doNodeInit(CG_c);
 }

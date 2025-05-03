@@ -16,7 +16,7 @@
 
 class C_declarator;
 class C_argument;
-class LensContext;
+class GslContext;
 class DataItem;
 class SyntaxError;
 
@@ -27,7 +27,7 @@ class C_argument_declarator: public C_argument
       C_argument_declarator(C_declarator *, SyntaxError *);
       virtual ~C_argument_declarator();
       virtual C_argument_declarator* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

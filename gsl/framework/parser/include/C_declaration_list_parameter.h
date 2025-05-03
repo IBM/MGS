@@ -18,7 +18,7 @@ class C_list_parameter_type;
 class C_declarator;
 class C_type_specifier;
 class C_argument_list;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_declaration_list_parameter : public C_declaration
@@ -31,7 +31,7 @@ class C_declaration_list_parameter : public C_declaration
 				   SyntaxError *);
       virtual C_declaration_list_parameter* duplicate() const;
       virtual ~C_declaration_list_parameter();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

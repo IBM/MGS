@@ -1,8 +1,3 @@
-#ifndef Htree_H
-#define Htree_H
-/*
-@ University of Canterbury 2017-2018. All rights reserved.
- */
 // =============================================================================
 // (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
@@ -11,6 +6,11 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
+// (C) University of Canterbury 2017-2018. All rights reserved.
+//
+// =============================================================================
+#ifndef Htree_H
+#define Htree_H
 
 #include "CG_Htree.h"
 #include "Mgs.h"

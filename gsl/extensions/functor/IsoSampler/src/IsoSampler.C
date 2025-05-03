@@ -9,9 +9,9 @@
 #include "Mgs.h"
 #include "IsoSampler.h"
 #include "CG_IsoSamplerBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ConnectionContext.h"
 #include "ParameterSet.h"
 #include "NodeSet.h"
@@ -25,11 +25,11 @@
 #include <cmath>
 #include "VectorOstream.h"
 
-void IsoSampler::userInitialize(LensContext* CG_c) 
+void IsoSampler::userInitialize(GslContext* CG_c) 
 {
 }
 
-void IsoSampler::userExecute(LensContext* CG_c) 
+void IsoSampler::userExecute(GslContext* CG_c) 
 {
   ConnectionContext *cc = CG_c->connectionContext;
   

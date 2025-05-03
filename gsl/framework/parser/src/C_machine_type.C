@@ -10,11 +10,11 @@
 #include "SyntaxError.h"
 #include "C_production.h"
 #include "PhaseElement.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "SyntaxErrorException.h"
 
 
-void C_machine_type::internalExecute(LensContext *c)
+void C_machine_type::internalExecute(GslContext *c)
 {
   if (_machineName=="CPU") {
     _machineType = machineType::CPU;

@@ -15,7 +15,7 @@
 
 class C_argument;
 class C_ndpair_clause_list;
-class LensContext;
+class GslContext;
 class DataItem;
 class NDPairListDataItem;
 class SyntaxError;
@@ -27,7 +27,7 @@ class C_argument_ndpair_clause_list: public C_argument
       C_argument_ndpair_clause_list(C_ndpair_clause_list *, SyntaxError *);
       virtual ~C_argument_ndpair_clause_list();
       virtual C_argument_ndpair_clause_list* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

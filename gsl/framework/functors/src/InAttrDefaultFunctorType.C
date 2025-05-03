@@ -9,7 +9,7 @@
 #include "InAttrDefaultFunctorType.h"
 #include "InAttrDefaultFunctor.h"
 #include "FunctorType.h"
-#include "LensContext.h"
+#include "GslContext.h"
 //#include <iostream>
 #include "DataItem.h"
 #include "FunctorDataItem.h"

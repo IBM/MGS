@@ -17,7 +17,7 @@
 
 
 class DataItem;
-class LensContext;
+class GslContext;
 class InstanceFactoryQueriable;
 class NDPairList;
 
@@ -33,10 +33,10 @@ class InstanceFactory
       }
       virtual void getInstance(std::unique_ptr<DataItem> &, 
 			       std::vector<DataItem*> const *, 
-			       LensContext *) = 0;
+			       GslContext *) = 0;
       virtual void getInstance(std::unique_ptr<DataItem> &, 
  			       const NDPairList& ndplist,
-			       LensContext *) = 0;
+			       GslContext *) = 0;
       virtual std::string getName() =0;
       virtual std::string getDescription() =0;
       virtual std::vector<DataItem*> const & getInstances() {

@@ -14,7 +14,7 @@
 
 #include "C_production.h"
 
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_declarator;
@@ -30,7 +30,7 @@ class C_separation_constraint : public C_production
       C_separation_constraint(const C_separation_constraint&);
       virtual ~C_separation_constraint();
       virtual C_separation_constraint* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

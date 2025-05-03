@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "C_functor_definition.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_functor_category.h"
 #include "C_parameter_type.h"
 #include "C_parameter_type_list.h"
@@ -26,7 +26,7 @@
 #include <memory>
 #include <iostream>
 
-void C_functor_definition::internalExecute(LensContext *c)
+void C_functor_definition::internalExecute(GslContext *c)
 {
    // call executes
    if(_functor_category) _functor_category->execute(c);
@@ -114,7 +114,7 @@ C_functor_definition* C_functor_definition::duplicate() const
 }
 
 
-void C_functor_definition::basicWork(LensContext *c)
+void C_functor_definition::basicWork(GslContext *c)
 {
    _declaratorName = _declarator->getName();
    _functorType = c->sim->getFunctorType(_declaratorName);
@@ -140,7 +140,7 @@ void C_functor_definition::basicWork(LensContext *c)
 }
 
 
-void C_functor_definition::constrDefWork(LensContext *c)
+void C_functor_definition::constrDefWork(GslContext *c)
 {
    _declaratorName = _declarator->getName();
    _functorType = c->sim->getFunctorType(_declaratorName);
@@ -166,7 +166,7 @@ void C_functor_definition::constrDefWork(LensContext *c)
 }
 
 
-void C_functor_definition::complexWork(LensContext *c)
+void C_functor_definition::complexWork(GslContext *c)
 {
    _declaratorName = _complex_functor_def->getName();
    _functorType = c->sim->getFunctorType(_declaratorName);
@@ -192,7 +192,7 @@ void C_functor_definition::complexWork(LensContext *c)
 }
 
 
-void C_functor_definition::scriptWork(LensContext *c)
+void C_functor_definition::scriptWork(GslContext *c)
 {
    _declaratorName = _c_script_def->getScriptName();
    _sft = new ScriptFunctorType(_c_script_def,_declaratorName);

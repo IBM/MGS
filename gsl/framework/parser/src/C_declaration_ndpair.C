@@ -8,7 +8,7 @@
 // =============================================================================
 #include "C_declaration_ndpair.h"
 #include "NDPair.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_declarator.h"
 #include "C_ndpair_clause.h"
 #include "NDPairDataItem.h"
@@ -17,7 +17,7 @@
 
 #include <memory>
 
-void C_declaration_ndpair::internalExecute(LensContext *c)
+void C_declaration_ndpair::internalExecute(GslContext *c)
 {
    _declarator->execute(c);
    _ndp_clause->execute(c);

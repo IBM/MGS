@@ -14,7 +14,7 @@
 #include "C_production_grid.h"
 
 class C_layer_entry;
-class LensContext;
+class GslContext;
 class Grid;
 class GridLayerDescriptor;
 class SyntaxError;
@@ -28,7 +28,7 @@ class C_layer_set : public C_production_grid
       std::list<C_layer_entry*>* releaseSet();
       virtual ~C_layer_set();
       virtual C_layer_set* duplicate() const;
-      virtual void internalExecute(LensContext *, Grid* g);
+      virtual void internalExecute(GslContext *, Grid* g);
       virtual void checkChildren();
       virtual void recursivePrint();
       const std::list<GridLayerDescriptor*>& getLayers() const;

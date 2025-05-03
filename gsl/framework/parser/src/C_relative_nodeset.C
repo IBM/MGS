@@ -10,7 +10,7 @@
 #include "C_gridnodeset.h"
 #include "C_nodeset_extension.h"
 #include "NodeSet.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 #include "C_production.h"
@@ -21,14 +21,14 @@ class Grid;
 #include <list>
 #include <cassert>
 
-void C_relative_nodeset::internalExecute(LensContext *c)
+void C_relative_nodeset::internalExecute(GslContext *c)
 {
    _gridNodeSet->execute(c);
    delete _storedContext;
 
    // Note: executing this copy constructor can lead to recursion in 
    // ConnectionScriptFunctor, for now we'll set to NULL
-   //_storedContext = new LensContext(c);
+   //_storedContext = new GslContext(c);
    _storedContext = 0;
 
 }
@@ -86,7 +86,7 @@ C_relative_nodeset::C_relative_nodeset(const C_relative_nodeset& rv)
       _gridNodeSet = rv._gridNodeSet->duplicate();
    }
    if (rv._storedContext) {
-      std::unique_ptr<LensContext> dup;
+      std::unique_ptr<GslContext> dup;
       rv._storedContext->duplicate(dup);
       _storedContext = dup.release();
    }

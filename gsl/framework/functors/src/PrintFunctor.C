@@ -9,7 +9,7 @@
 #include "PrintFunctor.h"
 #include "FunctorType.h"
 #include "FunctorDataItem.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "InstanceFactoryQueriable.h"
 //#include <iostream>
 #include "DataItem.h"
@@ -18,13 +18,13 @@
 #include "Functor.h"
 #include "Simulation.h"
 
-void PrintFunctor::doInitialize(LensContext *c, 
+void PrintFunctor::doInitialize(GslContext *c, 
 				const std::vector<DataItem*>& args)
 {
 }
 
 
-void PrintFunctor::doExecute(LensContext *c, 
+void PrintFunctor::doExecute(GslContext *c, 
 			     const std::vector<DataItem*>& args, 
 			     std::unique_ptr<DataItem>& rvalue)
 {

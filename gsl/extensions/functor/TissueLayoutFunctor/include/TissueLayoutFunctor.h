@@ -11,7 +11,7 @@
 
 #include "Mgs.h"
 #include "CG_TissueLayoutFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ShallowArray.h"
 #include "TissueElement.h"
 #include <memory>
@@ -21,8 +21,8 @@ class TissueFunctor;
 class TissueLayoutFunctor : public CG_TissueLayoutFunctorBase, public TissueElement
 {
    public:
-      void userInitialize(LensContext* CG_c);
-      ShallowArray< int > userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c);
+      ShallowArray< int > userExecute(GslContext* CG_c);
       TissueLayoutFunctor();
       TissueLayoutFunctor(TissueLayoutFunctor const &);
       virtual ~TissueLayoutFunctor();

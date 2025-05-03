@@ -9,12 +9,12 @@
 #include "C_declaration_stride.h"
 #include "C_declarator.h"
 #include "C_stride_list.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "StridesListDataItem.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 
-void C_declaration_stride::internalExecute(LensContext *c)
+void C_declaration_stride::internalExecute(GslContext *c)
 {
    _cDeclarator->execute(c);
    _cStrideList->execute(c);

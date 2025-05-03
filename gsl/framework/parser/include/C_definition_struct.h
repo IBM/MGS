@@ -18,7 +18,7 @@
 class C_declarator;
 class C_parameter_type;
 class C_parameter_type_list;
-class LensContext;
+class GslContext;
 class InstanceFactory;
 class SyntaxError;
 
@@ -29,7 +29,7 @@ class C_definition_struct : public C_definition
       C_definition_struct(C_declarator *, SyntaxError *);
       virtual ~C_definition_struct();
       virtual C_definition_struct* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

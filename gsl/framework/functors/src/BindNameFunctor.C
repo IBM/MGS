@@ -9,7 +9,7 @@
 #include "BindNameFunctor.h"
 #include "FunctorType.h"
 #include "CustomStringDataItem.h"
-#include "LensContext.h"
+#include "GslContext.h"
 //#include <iostream>
 //#include <sstream>
 #include "DataItem.h"
@@ -26,7 +26,7 @@
 #include "SyntaxErrorException.h"
 #include <memory>
 
-void BindNameFunctor::doInitialize(LensContext *c, 
+void BindNameFunctor::doInitialize(GslContext *c, 
 				   const std::vector<DataItem*>& args)
 {
    std::vector<DataItem*>::const_iterator iter, 
@@ -54,7 +54,7 @@ void BindNameFunctor::doInitialize(LensContext *c,
 }
 
 
-void BindNameFunctor::doExecute(LensContext *c, 
+void BindNameFunctor::doExecute(GslContext *c, 
 				const std::vector<DataItem*>& args, 
 				std::unique_ptr<DataItem>& rvalue)
 {

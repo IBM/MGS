@@ -13,7 +13,7 @@
 #include "SyntaxError.h"
 #include "C_production_grid.h"
 
-void C_node_type_set_specifier::internalExecute(LensContext *c, Grid* g)
+void C_node_type_set_specifier::internalExecute(GslContext *c, Grid* g)
 {
    _nodeTypeSetSpecifierClause->execute(c);
    _layers = _nodeTypeSetSpecifierClause->getLayers(g);

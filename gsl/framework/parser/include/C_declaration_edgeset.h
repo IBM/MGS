@@ -16,7 +16,7 @@
 
 class C_declarator;
 class C_edgeset;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_declaration_edgeset : public C_declaration
@@ -26,7 +26,7 @@ class C_declaration_edgeset : public C_declaration
       C_declaration_edgeset(C_declarator *, C_edgeset *, SyntaxError * error);
       virtual C_declaration_edgeset* duplicate() const;
       virtual ~C_declaration_edgeset();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

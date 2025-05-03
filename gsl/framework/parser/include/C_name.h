@@ -14,7 +14,7 @@
 #include "C_production.h"
 
 class C_name;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_name : public C_production
@@ -24,7 +24,7 @@ class C_name : public C_production
       C_name(std::string *, SyntaxError *);
       virtual ~C_name();
       virtual C_name* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       std::string getName() {

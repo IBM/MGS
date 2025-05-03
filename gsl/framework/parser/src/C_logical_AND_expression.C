@@ -14,7 +14,7 @@
 #include "C_production_grid.h"
 #include <algorithm>
 
-void C_logical_AND_expression::internalExecute(LensContext *c, Grid* g)
+void C_logical_AND_expression::internalExecute(GslContext *c, Grid* g)
 {
    std::list<C_equality_expression*>::iterator 
       i = _listEqualityExpression->begin(), 

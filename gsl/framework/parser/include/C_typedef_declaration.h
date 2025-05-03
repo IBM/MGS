@@ -14,7 +14,7 @@
 
 class C_type_specifier;
 class C_declarator;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_typedef_declaration : public C_production
@@ -25,7 +25,7 @@ class C_typedef_declaration : public C_production
 			    SyntaxError *);
       virtual ~C_typedef_declaration();
       virtual C_typedef_declaration* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

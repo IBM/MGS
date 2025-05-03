@@ -13,7 +13,7 @@
 #include "C_production_adi.h"
 
 class C_matrix_initializer_list;
-class LensContext;
+class GslContext;
 class ArrayDataItem;
 class SyntaxError;
 
@@ -24,7 +24,7 @@ class C_matrix_initializer : public C_production_adi
       C_matrix_initializer(C_matrix_initializer_list *, SyntaxError *);
       virtual ~C_matrix_initializer();
       virtual C_matrix_initializer* duplicate() const;
-      virtual void internalExecute(LensContext *, ArrayDataItem *);
+      virtual void internalExecute(GslContext *, ArrayDataItem *);
       virtual void checkChildren();
       virtual void recursivePrint();
       C_matrix_initializer_list* getMatrixInitList() const {

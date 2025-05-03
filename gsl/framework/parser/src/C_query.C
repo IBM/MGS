@@ -12,7 +12,7 @@
 #include "SyntaxError.h"
 #include "C_production.h"
 
-void C_query::internalExecute(LensContext *c)
+void C_query::internalExecute(GslContext *c)
 {
    if (_entry) _entry->execute(c);
    if (_set) _set->execute(c);

@@ -12,7 +12,7 @@
 #include <cassert>
 #include "SyntaxError.h"
 
-void C_phase_mapping_list::internalExecute(LensContext *c)
+void C_phase_mapping_list::internalExecute(GslContext *c)
 {
    std::vector<C_phase_mapping*>::iterator it, end = _phase_mappings->end();
    for (it = _phase_mappings->begin(); it != end; ++it) {

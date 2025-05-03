@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "TraverseFunctor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "DataItem.h"
 #include "FunctorType.h"
 #include "InstanceFactoryQueriable.h"
@@ -29,13 +29,13 @@ TraverseFunctor::~TraverseFunctor()
 }
 
 
-void TraverseFunctor::doInitialize(LensContext *c, 
+void TraverseFunctor::doInitialize(GslContext *c, 
 				   const std::vector<DataItem*>& args)
 {
 }
 
 
-void TraverseFunctor::doExecute(LensContext *c, 
+void TraverseFunctor::doExecute(GslContext *c, 
 				const std::vector<DataItem*>& args, 
 				std::unique_ptr<DataItem>& rvalue)
 {

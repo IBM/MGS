@@ -30,7 +30,7 @@ C_system_call* C_system_call::duplicate() const
    return new C_system_call(*this);
 }
 
-void C_system_call::internalExecute(LensContext *c)
+void C_system_call::internalExecute(GslContext *c)
 {
    int s=system(_command->c_str());
 }

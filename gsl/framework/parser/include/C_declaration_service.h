@@ -16,7 +16,7 @@
 
 class C_declarator;
 class C_service;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_declaration_service : public C_declaration
@@ -26,7 +26,7 @@ class C_declaration_service : public C_declaration
       C_declaration_service(C_declarator *, C_service *, SyntaxError *);
       virtual C_declaration_service* duplicate() const;
       virtual ~C_declaration_service();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

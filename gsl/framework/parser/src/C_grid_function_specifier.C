@@ -12,7 +12,7 @@
 #include "SyntaxError.h"
 #include "C_production_grid.h"
 
-void C_grid_function_specifier::internalExecute(LensContext *c, Grid* g)
+void C_grid_function_specifier::internalExecute(GslContext *c, Grid* g)
 {
    if (_directive) _directive->execute(c);
    else {

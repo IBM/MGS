@@ -13,14 +13,14 @@
 #include "ServiceDescriptor.h"
 #include "TriggerType.h"
 #include "Publisher.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 #include "C_production.h"
 
 #include <assert.h>
 
-void C_query_path_product::internalExecute(LensContext *c)
+void C_query_path_product::internalExecute(GslContext *c)
 {
    _queryPath->execute(c);
    _declarator->execute(c);

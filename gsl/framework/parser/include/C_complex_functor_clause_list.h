@@ -14,7 +14,7 @@
 #include "C_production.h"
 
 class C_complex_functor_clause;
-class LensContext;
+class GslContext;
 class C_complex_functor_clause;
 class SyntaxError;
 
@@ -28,7 +28,7 @@ class C_complex_functor_clause_list : public C_production
       std::list<C_complex_functor_clause*>* releaseList();
       virtual ~C_complex_functor_clause_list();
       virtual C_complex_functor_clause_list* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       std::list<C_complex_functor_clause*>* getList() {

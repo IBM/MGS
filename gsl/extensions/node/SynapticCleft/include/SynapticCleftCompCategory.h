@@ -1,5 +1,3 @@
-#ifndef SynapticCleftCompCategory_H
-#define SynapticCleftCompCategory_H
 // =============================================================================
 // (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
@@ -8,6 +6,9 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
+#ifndef SynapticCleftCompCategory_H
+#define SynapticCleftCompCategory_H
+
 #include "Mgs.h"
 #include "CG_SynapticCleftCompCategory.h"
 #include "CountableModel.h"

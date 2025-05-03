@@ -8,7 +8,7 @@
 // =============================================================================
 #include "ArgumentListHelper.h"
 #include "DataItem.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "DataItemArrayDataItem.h"
 #include "SyntaxError.h"
 #include "C_argument_list.h"
@@ -16,7 +16,7 @@
 #include "C_initializable_type_specifier.h"
 
 void ArgumentListHelper::getDataItem(std::unique_ptr<DataItem>& dataItem
-				, LensContext* c
+				, GslContext* c
 				, C_argument_list* argumentList
 				, C_type_specifier* typeSpec)
 {

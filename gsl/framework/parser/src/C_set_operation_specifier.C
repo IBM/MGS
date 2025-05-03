@@ -13,7 +13,7 @@
 #include "SyntaxError.h"
 #include "C_production.h"
 
-void C_set_operation_specifier::internalExecute(LensContext *c)
+void C_set_operation_specifier::internalExecute(GslContext *c)
 {
    _dcl->execute(c);
    _sop->execute(c);

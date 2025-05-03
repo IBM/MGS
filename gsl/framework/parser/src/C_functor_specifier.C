@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "C_functor_specifier.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_argument.h"
 #include "C_declarator.h"
 #include "C_argument_list.h"
@@ -19,7 +19,7 @@
 #include "C_production.h"
 
 
-void C_functor_specifier::internalExecute(LensContext *c)
+void C_functor_specifier::internalExecute(GslContext *c)
 {
    _functorDeclarator->execute(c);
    _argumentList->execute(c);

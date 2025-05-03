@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "EdgeDefaultFunctor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "DataItem.h"
 #include "FunctorType.h"
 #include "ConnectionContext.h"
@@ -33,13 +33,13 @@ EdgeDefaultFunctor::~EdgeDefaultFunctor()
 }
 
 
-void EdgeDefaultFunctor::doInitialize(LensContext *c, 
+void EdgeDefaultFunctor::doInitialize(GslContext *c, 
 				      const std::vector<DataItem*>& args)
 {
 }
 
 
-void EdgeDefaultFunctor::doExecute(LensContext *c, 
+void EdgeDefaultFunctor::doExecute(GslContext *c, 
 				   const std::vector<DataItem*>& args, 
 				   std::unique_ptr<DataItem>& rvalue)
 {

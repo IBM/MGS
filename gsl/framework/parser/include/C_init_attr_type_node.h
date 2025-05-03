@@ -13,7 +13,7 @@
 #include <string>
 #include "C_production.h"
 
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_init_attr_type_node : public C_production
@@ -24,7 +24,7 @@ class C_init_attr_type_node : public C_production
       C_init_attr_type_node(int t, SyntaxError *);
       virtual ~C_init_attr_type_node();
       virtual C_init_attr_type_node* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       Type getType() {

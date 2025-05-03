@@ -11,14 +11,14 @@
 #include "C_initializable_type_specifier.h"
 #include "C_declarator.h"
 #include "C_argument_list.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "DataItem.h"
 #include "DataItemArrayDataItem.h"
 #include "SyntaxError.h"
 #include "ArgumentListHelper.h"
 #include "SyntaxErrorException.h"
 
-void C_declaration_list_parameter::internalExecute(LensContext *c)
+void C_declaration_list_parameter::internalExecute(GslContext *c)
 {
    if (_typeSpec)
       _typeSpec->execute(c);

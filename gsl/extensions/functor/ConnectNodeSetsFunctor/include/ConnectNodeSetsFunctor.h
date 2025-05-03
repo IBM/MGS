@@ -11,18 +11,18 @@
 #include "Mgs.h"
 
 #include "CG_ConnectNodeSetsFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 
 class NoConnectConnector;
 class GranuleConnector;
-class LensConnector;
+class MgsConnector;
 
 class ConnectNodeSetsFunctor : public CG_ConnectNodeSetsFunctorBase
 {
    public:
-      void userInitialize(LensContext* CG_c);
-      void userExecute(LensContext* CG_c, NodeSet*& source, NodeSet*& destination, Functor*& sampling, Functor*& sourceOutAttr, Functor*& destinationInAttr);
+      void userInitialize(GslContext* CG_c);
+      void userExecute(GslContext* CG_c, NodeSet*& source, NodeSet*& destination, Functor*& sampling, Functor*& sourceOutAttr, Functor*& destinationInAttr);
       ConnectNodeSetsFunctor();
       virtual ~ConnectNodeSetsFunctor();
       virtual void duplicate(std::unique_ptr<ConnectNodeSetsFunctor>&& dup) const;
@@ -31,7 +31,7 @@ class ConnectNodeSetsFunctor : public CG_ConnectNodeSetsFunctorBase
    private:
       NoConnectConnector* _noConnector;
       GranuleConnector* _granuleConnector;
-      LensConnector* _lensConnector;
+      MgsConnector* _mgsConnector;
 };
 
 #endif

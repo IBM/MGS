@@ -14,7 +14,7 @@
 #include <list>
 #include "C_production.h"
 
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_preamble : public C_production
@@ -27,7 +27,7 @@ class C_preamble : public C_production
       std::list<std::string>* releaseList();
       virtual ~C_preamble();
       virtual C_preamble* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       std::list<std::string>* getListStrings() const;

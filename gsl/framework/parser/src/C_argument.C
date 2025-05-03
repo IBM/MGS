@@ -9,7 +9,7 @@
 #include "C_argument.h"
 #include "C_production.h"
 
-void C_argument::internalExecute(LensContext *c)
+void C_argument::internalExecute(GslContext *c)
 {
 
 }

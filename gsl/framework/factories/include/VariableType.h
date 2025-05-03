@@ -40,10 +40,10 @@ class VariableType : public InstanceFactory
       virtual ~VariableType();
       virtual void getInstance(std::unique_ptr<DataItem> & adi, 
 			       std::vector<DataItem*> const * args, 
-			       LensContext* c);
+			       GslContext* c);
       virtual void getInstance(std::unique_ptr<DataItem> & adi, 
  			       const NDPairList& ndplist,
-			       LensContext* c);
+			       GslContext* c);
 //      virtual ConnectionIncrement* getComputeCost() = 0;
      void setCreatingInstanceAtEachMPIProcess() { _instanceAtEachMPIProcess=true; };
    protected:

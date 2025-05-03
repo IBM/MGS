@@ -13,7 +13,7 @@
 #include "SyntaxError.h"
 #include "C_production_grid.h"
 
-void C_logical_OR_expression::internalExecute(LensContext *c, Grid* g)
+void C_logical_OR_expression::internalExecute(GslContext *c, Grid* g)
 {
    _layers.sort();
 

@@ -1018,10 +1018,10 @@ std::string CompCategoryBase::getAddVariableNamesForPhaseFB() const
 std::string CompCategoryBase::getSetDistributionTemplatesFB() const
 {
    std::ostringstream os;
-   os << TAB << SENDTEMPLATES <<"[\"FLUSH_LENS\"] = &" + getInstanceBaseName()
-      << "::CG_send_FLUSH_LENS;\n"
-      << TAB << GETSENDTYPETEMPLATES <<"[\"FLUSH_LENS\"] = &" + getInstanceBaseName()
-      << "::CG_getSendType_FLUSH_LENS;\n"
+   os << TAB << SENDTEMPLATES <<"[\"FLUSH_MGS\"] = &" + getInstanceBaseName()
+      << "::CG_send_FLUSH_MGS;\n"
+      << TAB << GETSENDTYPETEMPLATES <<"[\"FLUSH_MGS\"] = &" + getInstanceBaseName()
+      << "::CG_getSendType_FLUSH_MGS;\n"
       << TAB << "std::map<std::string, Phase*>::iterator it, end = _phaseMappings.end();\n"
       << TAB << "for (it = _phaseMappings.begin(); it != end; ++it) {\n"
       << getTemplateFillerCode()
@@ -1250,8 +1250,8 @@ std::string CompCategoryBase::getFindDemarshallerFB() const
       << TAB << TAB << "ccd = new CCDemarshaller(&getSimulation());\n"
       << TAB << TAB << "_demarshallerMap[fromPartitionId] = ccd;\n\n"
       << TAB << TAB << "std::unique_ptr<" + getInstanceProxyDemarshallerName() + "> ap;\n"
-      << TAB << TAB << getInstanceProxyName() + "::CG_recv_FLUSH_LENS_demarshaller(ap);\n"
-      << TAB << TAB << "ccd->CG_recvTemplates[\"FLUSH_LENS\"] = ap.release();\n\n"
+      << TAB << TAB << getInstanceProxyName() + "::CG_recv_FLUSH_MGS_demarshaller(ap);\n"
+      << TAB << TAB << "ccd->CG_recvTemplates[\"FLUSH_MGS\"] = ap.release();\n\n"
       << TAB << TAB << "std::map<std::string, Phase*>::iterator it, end = _phaseMappings.end();\n"
       << TAB << TAB << "for (it = _phaseMappings.begin(); it != end; ++it) {\n"
       << getFindDemarshallerFillerCode()

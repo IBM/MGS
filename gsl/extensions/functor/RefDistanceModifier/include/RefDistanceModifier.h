@@ -11,15 +11,15 @@
 #include "Mgs.h"
 
 #include "CG_RefDistanceModifierBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ParameterSet.h"
 #include <memory>
 
 class RefDistanceModifier : public CG_RefDistanceModifierBase
 {
    public:
-      void userInitialize(LensContext* CG_c, int& directionFlag, int& WrapFlag, Functor*& f);
-      std::unique_ptr<ParameterSet> userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c, int& directionFlag, int& WrapFlag, Functor*& f);
+      std::unique_ptr<ParameterSet> userExecute(GslContext* CG_c);
       RefDistanceModifier();
       virtual ~RefDistanceModifier();
       virtual void duplicate(std::unique_ptr<RefDistanceModifier>&& dup) const;

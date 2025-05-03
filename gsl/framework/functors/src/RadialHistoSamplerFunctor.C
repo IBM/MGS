@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "RadialHistoSamplerFunctor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ConnectionContext.h"
 #include "DataItem.h"
 #include "IntArrayDataItem.h"
@@ -53,7 +53,7 @@ RadialHistoSamplerFunctor::~RadialHistoSamplerFunctor()
 
 
 void RadialHistoSamplerFunctor::doInitialize(
-   LensContext *c, const std::vector<DataItem*>& args)
+   GslContext *c, const std::vector<DataItem*>& args)
 {
    /*
    Grab the int list
@@ -165,7 +165,7 @@ float RadialHistoSamplerFunctor::getCummulativeProbability(
 
 
 void RadialHistoSamplerFunctor::doExecute(
-   LensContext *c, const std::vector<DataItem*>& args, 
+   GslContext *c, const std::vector<DataItem*>& args, 
    std::unique_ptr<DataItem>& rvalue)
 {
    ConnectionContext *cc = c->connectionContext;

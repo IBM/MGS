@@ -12,7 +12,7 @@
 
 #include "C_production.h"
 
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_types : public C_production
@@ -42,7 +42,7 @@ class C_types : public C_production
       };
       C_types(SyntaxError *);
       C_types(const C_types& rv);
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       virtual C_types* duplicate() const;

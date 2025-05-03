@@ -17,7 +17,7 @@
 class C_declarator;
 class C_init_attr_type_node;
 class C_init_attr_type_edge;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_parameter_type_pair : public C_production
@@ -34,7 +34,7 @@ class C_parameter_type_pair : public C_production
       C_parameter_type_pair(SyntaxError * error);
       virtual ~C_parameter_type_pair();
       virtual C_parameter_type_pair* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       ModelType getModelType() {

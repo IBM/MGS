@@ -17,7 +17,7 @@ class C_constructor_clause;
 class C_function_clause;
 class C_parameter_type;
 class C_return_clause;
-class LensContext;
+class GslContext;
 class C_complex_functor_clause_list;
 class SyntaxError;
 
@@ -33,7 +33,7 @@ class C_complex_functor_declaration_body : public C_production
 	 SyntaxError *);
       virtual ~C_complex_functor_declaration_body();
       virtual C_complex_functor_declaration_body* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       std::list<C_parameter_type>* getConstructorParameters() { 

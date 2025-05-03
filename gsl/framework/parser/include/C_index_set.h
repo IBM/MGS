@@ -14,7 +14,7 @@
 #include "C_production.h"
 
 class C_index_entry;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_index_set : public C_production
@@ -27,7 +27,7 @@ class C_index_set : public C_production
       virtual C_index_set* duplicate() const;
       std::list<C_index_entry*>* releaseList();
       virtual ~C_index_set();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       const std::list<C_index_entry *>& getIndexEntryList() const;

@@ -40,7 +40,7 @@
 #include <stdio.h>
 #include <string>
 
-void C_type_specifier::internalExecute(LensContext *c) {
+void C_type_specifier::internalExecute(GslContext *c) {
   if (_initTypeSpec) {
     _initTypeSpec->execute(c);
     _nextTypeSpec = _initTypeSpec->getNextTypeSpecifier();

@@ -17,7 +17,7 @@
 #include "SyntaxErrorException.h"
 #include "C_production_adi.h"
 
-void C_matrix_initializer_clause::internalExecute(LensContext *c, ArrayDataItem *adi)
+void C_matrix_initializer_clause::internalExecute(GslContext *c, ArrayDataItem *adi)
 {
 
    _constantList->execute(c);

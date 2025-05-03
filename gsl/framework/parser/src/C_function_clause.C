@@ -16,7 +16,7 @@ std::list<C_parameter_type>* C_function_clause::getParameterTypeList()
 }
 
 
-void C_function_clause::internalExecute(LensContext *c)
+void C_function_clause::internalExecute(GslContext *c)
 {
    _ptl->execute(c);
 }

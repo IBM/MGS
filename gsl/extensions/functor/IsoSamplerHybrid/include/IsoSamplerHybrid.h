@@ -12,7 +12,7 @@
 
 #include "Mgs.h"
 #include "CG_IsoSamplerHybridBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 #include <vector>
 
@@ -22,8 +22,8 @@ class NodeDescriptor;
 class IsoSamplerHybrid : public CG_IsoSamplerHybridBase
 {
    public:
-      void userInitialize(LensContext* CG_c);
-      void userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c);
+      void userExecute(GslContext* CG_c);
       IsoSamplerHybrid();
       virtual ~IsoSamplerHybrid();
       virtual void duplicate(std::unique_ptr<IsoSamplerHybrid>&& dup) const;

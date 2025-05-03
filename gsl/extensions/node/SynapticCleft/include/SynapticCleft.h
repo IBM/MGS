@@ -1,5 +1,3 @@
-#ifndef SynapticCleft_H
-#define SynapticCleft_H
 // =============================================================================
 // (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
@@ -7,7 +5,9 @@
 // Version 2.0, January 2004.
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 // 
-// =============================================================================:wq
+// =============================================================================
+#ifndef SynapticCleft_H
+#define SynapticCleft_H
 
 #include "CG_SynapticCleft.h"
 #include "Mgs.h"

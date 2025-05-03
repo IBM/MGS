@@ -21,7 +21,7 @@ class Constant;
 class Edge;
 class NodeDescriptor;
 class DataItem;
-class LensContext;
+class GslContext;
 class ParameterSet;
 class NDPairList;
 class ConnectionIncrement;
@@ -49,7 +49,7 @@ class Variable : public VariableDescriptor, public ServiceAcceptor,
 	 std::unique_ptr<ParameterSet>&& outAttrPSet) const = 0;
       virtual ~Variable();
       virtual void duplicate(std::unique_ptr<Variable>&& dup) const = 0;
-      void initialize(LensContext *c, const std::vector<DataItem*>& args);
+      void initialize(GslContext *c, const std::vector<DataItem*>& args);
       void initialize(const NDPairList& ndplist);
 //      virtual ConnectionIncrement* getComputeCost() const = 0;
 //      virtual ConnectionIncrement* getComputeCost();
@@ -57,7 +57,7 @@ class Variable : public VariableDescriptor, public ServiceAcceptor,
 
    protected:
       VariableCompCategoryBase* _compCategory;
-      virtual void doInitialize(LensContext *c, 
+      virtual void doInitialize(GslContext *c, 
 				const std::vector<DataItem*>& args) = 0;
       virtual void doInitialize(const NDPairList& ndplist) = 0;
 };

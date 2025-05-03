@@ -18,7 +18,7 @@ class C_functor_category;
 class C_declarator;
 class C_complex_functor_declaration_body;
 class C_parameter_type;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_complex_functor_definition : public C_production
@@ -30,7 +30,7 @@ class C_complex_functor_definition : public C_production
 				   SyntaxError *);
       virtual ~C_complex_functor_definition();
       virtual C_complex_functor_definition* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       const std::string& getCategory() const;

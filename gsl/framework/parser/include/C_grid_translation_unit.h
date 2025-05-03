@@ -13,7 +13,7 @@
 #include "C_production_grid.h"
 
 class C_grid_translation_declaration_list;
-class LensContext;
+class GslContext;
 class Grid;
 class SyntaxError;
 
@@ -25,7 +25,7 @@ class C_grid_translation_unit : public C_production_grid
 			      SyntaxError *);
       virtual ~C_grid_translation_unit();
       virtual C_grid_translation_unit* duplicate() const;
-      virtual void internalExecute(LensContext *, Grid* g);
+      virtual void internalExecute(GslContext *, Grid* g);
       virtual void checkChildren();
       virtual void recursivePrint();
       void setTdError(SyntaxError *tdError) { 

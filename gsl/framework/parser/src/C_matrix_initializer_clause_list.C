@@ -12,7 +12,7 @@
 #include "SyntaxError.h"
 #include "C_production_adi.h"
 
-void C_matrix_initializer_clause_list::internalExecute(LensContext *c, ArrayDataItem *adi)
+void C_matrix_initializer_clause_list::internalExecute(GslContext *c, ArrayDataItem *adi)
 {
    std::list<C_matrix_initializer_clause>::iterator iter, 
       end = _listMatrixInitClause->end();

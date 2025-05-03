@@ -12,15 +12,15 @@
 
 #include "Mgs.h"
 #include "CG_NormalizedGradientLayoutBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ShallowArray.h"
 #include <memory>
 
 class NormalizedGradientLayout : public CG_NormalizedGradientLayoutBase
 {
    public:
-      void userInitialize(LensContext* CG_c, int& total, double& slope, ShallowArray< int >& origin, ShallowArray< bool >& gradientDimensions);
-      ShallowArray< int > userExecute(LensContext* CG_c);
+      void userInitialize(GslContext* CG_c, int& total, double& slope, ShallowArray< int >& origin, ShallowArray< bool >& gradientDimensions);
+      ShallowArray< int > userExecute(GslContext* CG_c);
       NormalizedGradientLayout();
       virtual ~NormalizedGradientLayout();
       virtual void duplicate(std::unique_ptr<NormalizedGradientLayout>&& dup) const;

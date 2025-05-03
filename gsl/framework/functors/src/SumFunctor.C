@@ -9,7 +9,7 @@
 #include "SumFunctor.h"
 #include "FunctorType.h"
 #include "NumericDataItem.h"
-#include "LensContext.h"
+#include "GslContext.h"
 //#include <iostream>
 #include "DataItem.h"
 #include "IntDataItem.h"
@@ -27,10 +27,10 @@
 class FunctorType;
 class Simulation;
 
-void SumFunctor::doInitialize(LensContext *c,
+void SumFunctor::doInitialize(GslContext *c,
                               const std::vector<DataItem *> &args) {}
 
-void SumFunctor::doExecute(LensContext *c, const std::vector<DataItem *> &args,
+void SumFunctor::doExecute(GslContext *c, const std::vector<DataItem *> &args,
                            std::unique_ptr<DataItem> &rvalue) {
 
   std::cout << "DataItem type: " << args[0]->getType() << std::endl;

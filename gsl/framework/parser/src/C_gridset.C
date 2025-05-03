@@ -17,7 +17,7 @@
 #include "C_production.h"
 
 
-void C_gridset::internalExecute(LensContext *c)
+void C_gridset::internalExecute(GslContext *c)
 {
    _repname->execute(c);
    _gridnodeset->execute(c);

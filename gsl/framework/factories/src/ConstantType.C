@@ -20,7 +20,7 @@ ConstantType::ConstantType()
 
 void ConstantType::getInstance(std::unique_ptr<DataItem> & adi, 
 			       std::vector<DataItem*> const * args, 
-			       LensContext* c)
+			       GslContext* c)
 {
    ConstantDataItem* cdi = new ConstantDataItem;
 
@@ -33,7 +33,7 @@ void ConstantType::getInstance(std::unique_ptr<DataItem> & adi,
 
 void ConstantType::getInstance(std::unique_ptr<DataItem> & adi, 
 			       const NDPairList& ndplist,
-			       LensContext* c)
+			       GslContext* c)
 {
    ConstantDataItem* cdi = new ConstantDataItem;
 

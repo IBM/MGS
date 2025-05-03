@@ -15,7 +15,7 @@
 
 class C_primary_expression;
 class Grid;
-class LensContext;
+class GslContext;
 class GridLayerDescriptor;
 class SyntaxError;
 
@@ -24,7 +24,7 @@ class C_logical_NOT_expression : public C_production_grid
    public:
       C_logical_NOT_expression(const C_logical_NOT_expression&);
       C_logical_NOT_expression(C_primary_expression *, SyntaxError *);
-      virtual void internalExecute(LensContext *, Grid *);
+      virtual void internalExecute(GslContext *, Grid *);
       virtual void checkChildren();
       virtual void recursivePrint();
       virtual C_logical_NOT_expression* duplicate() const;

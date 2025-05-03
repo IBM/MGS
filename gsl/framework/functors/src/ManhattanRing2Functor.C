@@ -7,7 +7,7 @@
 //
 // =============================================================================
 #include "ManhattanRing2Functor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ConnectionContext.h"
 #include "DataItem.h"
 #include "IntArrayDataItem.h"
@@ -44,7 +44,7 @@ ManhattanRing2Functor::~ManhattanRing2Functor()
 }
 
 
-void ManhattanRing2Functor::doInitialize(LensContext *c, 
+void ManhattanRing2Functor::doInitialize(GslContext *c, 
 					 const std::vector<DataItem*>& args)
 {
    /*
@@ -64,7 +64,7 @@ void ManhattanRing2Functor::doInitialize(LensContext *c,
 }
 
 
-void ManhattanRing2Functor::doExecute(LensContext *c, 
+void ManhattanRing2Functor::doExecute(GslContext *c, 
 				      const std::vector<DataItem*>& args, 
 				      std::unique_ptr<DataItem>& rvalue)
 {

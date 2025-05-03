@@ -15,7 +15,7 @@
 #include <vector>
 #include <string>
 class DataItem;
-class LensContext;
+class GslContext;
 class ParameterSet;
 #include "Functor.h"
 
@@ -27,9 +27,9 @@ class InAttrDefaultFunctor: public Functor
       virtual void duplicate(std::unique_ptr<Functor>&& fap) const;
       virtual ~InAttrDefaultFunctor();
    protected:
-      virtual void doInitialize(LensContext *c, 
+      virtual void doInitialize(GslContext *c, 
 				const std::vector<DataItem*>& args);
-      virtual void doExecute(LensContext *c, 
+      virtual void doExecute(GslContext *c, 
 			     const std::vector<DataItem*>& args, 
 			     std::unique_ptr<DataItem>& rvalue);
    private:

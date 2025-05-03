@@ -14,7 +14,7 @@
 
 #include "C_declaration.h"
 
-class LensContext;
+class GslContext;
 class DataItem;
 class C_phase;
 class C_phase_list;
@@ -25,7 +25,7 @@ class C_declaration_runtime_phases : public C_declaration
       C_declaration_runtime_phases(const C_declaration_runtime_phases&);
       C_declaration_runtime_phases(C_phase_list *, SyntaxError *);
       virtual ~C_declaration_runtime_phases();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       virtual C_declaration* duplicate() const;

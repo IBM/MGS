@@ -16,7 +16,7 @@
 #include <iostream>
 
 
-void C_parameter_type_list::internalExecute(LensContext *c)
+void C_parameter_type_list::internalExecute(GslContext *c)
 {
 
    std::list<C_parameter_type>::iterator i,end=_list->end();

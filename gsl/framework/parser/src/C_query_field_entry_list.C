@@ -11,7 +11,7 @@
 #include "SyntaxError.h"
 #include "C_production.h"
 
-void C_query_field_entry_list::internalExecute(LensContext *c)
+void C_query_field_entry_list::internalExecute(GslContext *c)
 {
    std::list<C_query_field_entry>::iterator iter, end = _list->end();
    for(iter = _list->begin(); iter != end; ++iter) {
