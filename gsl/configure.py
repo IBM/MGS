@@ -2133,13 +2133,24 @@ $(BIN_DIR)/createDF: $(DEPENDFILE_OBJS)
 
 # Parser targets
 speclang.tab.h:
-\tcd framework/parser/bison; $(BISON) -v -d speclang.y; \\
-\tmv speclang.tab.c ../generated/speclang.tab.C 2>/dev/null; mv speclang.tab.h ../generated/speclang.tab.h 2>/dev/null
+\tcd framework/parser/bison; $(BISON) -v -d speclang.y;
+\t@if [ -f framework/parser/bison/speclang.tab.c ]; then \\
+\t\tmv speclang.tab.c ../generated/speclang.tab.C 2>/dev/null; \\
+\tfi
+\t@if [ -f framework/parser/bison/speclang.tab.h ]; then \\
+\t\tmv speclang.tab.h ../generated/; 2>/dev/null \\
+\tfi
 
 framework/parser/generated/speclang.tab.C: framework/parser/bison/speclang.y
-\tcd framework/parser/bison; $(BISON) -v -d speclang.y; \\
-\tmv speclang.tab.c ../generated/speclang.tab.C 2>/dev/null; mv speclang.tab.h ../generated/speclang.tab.h 2>/dev/null
+\tcd framework/parser/bison; $(BISON) -v -d speclang.y;
+\t@if [ -f framework/parser/bison/speclang.tab.c ]; then \\
+\t\tmv speclang.tab.c ../generated/speclang.tab.C 2>/dev/null; \\
+\tfi
+\t@if [ -f framework/parser/bison/speclang.tab.h ]; then \\
+\t\tmv speclang.tab.h ../generated/; 2>/dev/null \\
+\tfi
 
+f
 """
         if self.options.withGpu is True:
             retStr += \
