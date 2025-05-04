@@ -2150,7 +2150,6 @@ framework/parser/generated/speclang.tab.C: framework/parser/bison/speclang.y
 \t\tmv speclang.tab.h ../generated/; 2>/dev/null \\
 \tfi
 
-f
 """
         if self.options.withGpu is True:
             retStr += \
