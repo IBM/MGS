@@ -690,6 +690,11 @@ if [ ! $FIRST_BUILD -eq 1 ] && [ "$TYPE" != "$PREV_TYPE" ]; then
     Yes_No_RebuildClean
   fi
 fi
+#}}}
+
+################################################
+### MDL code ###
+#{{{
 if [ $FIRST_BUILD] -eq 1 ]; then
   if [ ! -f "$MDLROOT/parser/mdl.tab.h" ]; then
     touch "$MDLROOT/parser/mdl.tab.h"
@@ -697,21 +702,7 @@ if [ $FIRST_BUILD] -eq 1 ]; then
   if [ ! -f "$MDLROOT/parser/mdl.tab.c" ]; then
     touch "$MDLROOT/parser/mdl.tab.c"
   fi
-  if [ ! -f "$GSLROOT/framework/parser/generated/speclang.tab.h" ]; then
-    touch "$GSLROOT/framework/parser/generated/speclang.tab.h"
-  fi
-  if [ ! -f "$GSLROOT/framework/parser/generated/speclang.tab.C" ]; then
-    touch "$GSLROOT/framework/parser/generated/speclang.tab.C"
-  fi
-  if [ ! -f "$GSLROOT/bin/gslparser" ]; then
-    touch "$GSLROOT/bin/gslparser"
-  fi
 fi
-#}}}
-
-################################################
-### MDL code ###
-#{{{
 if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
   echoerr "Start build MDL parser"
   cd $MDLROOT
@@ -857,6 +848,42 @@ fi
 ##########################################
 ### GSL code ###
 #{{{
+# Add at the beginning of the GSL build section
+if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
+  # Create the directories needed for GSL build
+  mkdir -p ${GSLROOT}/lib ${GSLROOT}/obj
+  
+  # If this is a clean build, check and fix the Makefile dependency issue
+  if [ ! -f "${GSLROOT}/framework/parser/generated/speclang.tab.C" ]; then
+    # Create a simple shell script to handle the bison command with better error checking
+    echo '#!/bin/bash
+cd "'${GSLROOT}'/framework/parser/bison"
+bison -v -d speclang.y
+if [ $? -eq 0 ]; then
+  mkdir -p "'${GSLROOT}'/framework/parser/generated"
+  if [ -f speclang.tab.c ]; then
+    cp speclang.tab.c "'${GSLROOT}'/framework/parser/generated/speclang.tab.C"
+  fi
+  if [ -f speclang.tab.h ]; then
+    cp speclang.tab.h "'${GSLROOT}'/framework/parser/generated"
+  fi
+  exit 0
+else
+  echo "Bison command failed"
+  exit 1
+fi
+' > ${GSLROOT}/run_bison.sh
+    chmod +x ${GSLROOT}/run_bison.sh
+    
+    # Run the script to generate the files before the main build
+    ${GSLROOT}/run_bison.sh
+    
+    # Touch the files if they still don't exist
+    touch ${GSLROOT}/framework/parser/generated/speclang.tab.C
+    touch ${GSLROOT}/framework/parser/generated/speclang.tab.h
+  fi
+  
+  ...
 EXTRA_ARGS="${COLAB} ${REGENMAKEFILE} ${BUILD_TARGET}"
 if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
   #{{{
