@@ -150,7 +150,7 @@ Yes_No_RebuildClean()
 {
   #{{{
   # print question
-  read -p "Do you want to continue with --rebuild --clean (yes(y)/no(n)) [enter = y]: " YnAnswer
+  read -p "Do you want to continue with options --rebuild --clean (yes(y)/no(n)) [enter = y]: " YnAnswer
 
   # read answer
   YnAnswer=${YnAnswer:-y}
@@ -469,18 +469,6 @@ if [ $EMPTY_FILE -eq 1  ]; then
   echo "#endif" >> ${Model2Use} 
 fi 
 
-if [ ! -f "$MDLROOT/parser/mdl.tab.h" ]; then
-  touch "$MDLROOT/parser/mdl.tab.h"
-fi
-if [ ! -f "$MDLROOT/parser/mdl.tab.c" ]; then
-  touch "$MDLROOT/parser/mdl.tab.c"
-fi
-if [ ! -f "$GSLROOT/framework/parser/generated/speclang.tab.h" ]; then
-  touch "$GSLROOT/framework/parser/generated/speclang.tab.h"
-fi
-if [ ! -f "$GSLROOT/framework/parser/generated/speclang.tab.C" ]; then
-  touch "$GSLROOT/framework/parser/generated/speclang.tab.C"
-fi
 #}}}
 ########################################
 ### Check required tools ###
@@ -694,12 +682,29 @@ fi
 if [ "$CLEAN" == "-clean" ] ; then
   rm_ifexist $BASE_FOLDER/.built
 fi
-if [ "$TYPE" != "$PREV_TYPE" ]; then
+if [ ! $FIRST_BUILD -eq 1 ] && [ "$TYPE" != "$PREV_TYPE" ]; then
   #gawk -v type="$TYPE"  -v prev_type="$PREV_TYPE" 'NR==2 { sub(prev_type, type)}1' .built > .built_tmp && mv .built_tmp .built
   rm -f gsl/Makefile
   if [[ "$REBUILD" != "-rebuild" && "$CLEAN" != "-clean" ]]; then
     echoerr "You have switched the build from ${PREV_TYPE} to ${TYPE}. Build with --rebuild --clean"
     Yes_No_RebuildClean
+  fi
+fi
+if [ $FIRST_BUILD] -eq 1 ]; then
+  if [ ! -f "$MDLROOT/parser/mdl.tab.h" ]; then
+    touch "$MDLROOT/parser/mdl.tab.h"
+  fi
+  if [ ! -f "$MDLROOT/parser/mdl.tab.c" ]; then
+    touch "$MDLROOT/parser/mdl.tab.c"
+  fi
+  if [ ! -f "$GSLROOT/framework/parser/generated/speclang.tab.h" ]; then
+    touch "$GSLROOT/framework/parser/generated/speclang.tab.h"
+  fi
+  if [ ! -f "$GSLROOT/framework/parser/generated/speclang.tab.C" ]; then
+    touch "$GSLROOT/framework/parser/generated/speclang.tab.C"
+  fi
+  if [ ! -f "$GSLROOT/bin/gslparser" ]; then
+    touch "$GSLROOT/bin/gslparser"
   fi
 fi
 #}}}
