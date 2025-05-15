@@ -2136,6 +2136,7 @@ speclang.tab.h:
 \tcd framework/parser/bison; $(BISON) -v -d speclang.y;
 \t@if [ -f framework/parser/bison/speclang.tab.c ]; then \\
 \t\tmv speclang.tab.c ../generated/speclang.tab.C 2>/dev/null; \\
+\t\tmv speclang.tab.h ../generated/; 2>/dev/null \\
 \tfi
 \t@if [ -f framework/parser/bison/speclang.tab.h ]; then \\
 \t\tmv speclang.tab.h ../generated/; 2>/dev/null \\

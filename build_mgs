@@ -453,7 +453,7 @@ if [  -f "${Model2Use}"  ]; then
 fi
 if [ $EMPTY_FILE -eq 1  ]; then
   touch ${Model2Use}
-  echo "//Please the following define options, with MODEL_TO_USE always required." > ${Model2Use} 
+  echo "//Please consider the following define options, with MODEL_TO_USE always required." > ${Model2Use} 
   echo "//IMPORTANT: any change is expected to be followed by a  full rebuild." >> ${Model2Use}
   echo "//--------------------" >> ${Model2Use}
   echo "#define MODEL_TO_USE _MSN_2000_MAHON //with <value> is a macro defined in NTSMacros.h" >> ${Model2Use}
@@ -673,7 +673,7 @@ fi
 if [  -f ".built"  ]; then
   line=$(head -n 1 ".built")
   if  [ "$BASE_FOLDER" != "$line" ]; then
-    echoerr "Please run the following before reattempting mgs_build: source set_env"
+    echoerr "Please enter the following command before reattempting mgs_build: source set_env"
     rm .built
     exit 1
   fi
@@ -850,6 +850,9 @@ fi
 #{{{
 # Add at the beginning of the GSL build section
 if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
+  # Add a test echo to confirm this section is being executed
+  echo -e "\n\n${cc_red}===== EXECUTING GSL BUILD SECTION =====\n===== WHAT_TO_BUILD='$WHAT_TO_BUILD' =====\n===== TESTING DIRECTORY CREATION =====${cc_normal}\n\n"
+
   # Create the directories needed for GSL build
   mkdir -p ${GSLROOT}/lib ${GSLROOT}/obj
   
@@ -860,7 +863,6 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
 cd "'${GSLROOT}'/framework/parser/bison"
 bison -v -d speclang.y
 if [ $? -eq 0 ]; then
-  mkdir -p "'${GSLROOT}'/framework/parser/generated"
   if [ -f speclang.tab.c ]; then
     cp speclang.tab.c "'${GSLROOT}'/framework/parser/generated/speclang.tab.C"
   fi
@@ -875,6 +877,11 @@ fi
 ' > ${GSLROOT}/run_bison.sh
     chmod +x ${GSLROOT}/run_bison.sh
     
+    # Display the content of the script for verification
+    echo -e "\n\n${cc_blue}===== CONTENT OF BISON HELPER SCRIPT =====${cc_normal}\n\n"
+    cat "${GSLROOT}/run_bison.sh"
+    
+    echo -e "\n\n${cc_blue}===== RUNNING BISON HELPER SCRIPT =====${cc_normal}\n\n"
     # Run the script to generate the files before the main build
     ${GSLROOT}/run_bison.sh
     
@@ -882,8 +889,7 @@ fi
     touch ${GSLROOT}/framework/parser/generated/speclang.tab.C
     touch ${GSLROOT}/framework/parser/generated/speclang.tab.h
   fi
-  
-  ...
+fi
 EXTRA_ARGS="${COLAB} ${REGENMAKEFILE} ${BUILD_TARGET}"
 if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
   #{{{
