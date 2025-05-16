@@ -695,7 +695,7 @@ fi
 ################################################
 ### MDL code ###
 #{{{
-if [ $FIRST_BUILD] -eq 1 ]; then
+if [ $FIRST_BUILD -eq 1 ]; then
   if [ ! -f "$MDLROOT/parser/mdl.tab.h" ]; then
     touch "$MDLROOT/parser/mdl.tab.h"
   fi
