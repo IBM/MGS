@@ -68,7 +68,7 @@
 #include "Params.h"
 #include "TissueGrowthSimulator.hpp"
 
-#include "MGSTissueSlicer.h"
+#include "MgsTissueSlicer.h"
 #include "TouchDetector.h"
 #include "ORTouchSpace.h"
 #include "ComputeBranch.h"

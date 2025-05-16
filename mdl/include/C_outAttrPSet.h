@@ -17,7 +17,8 @@ class C_dataTypeList;
 class C_generalList;
 
 class C_outAttrPSet : public C_struct {
-
+   protected:
+      using C_struct::duplicate;
    public:
       virtual void addToList(C_generalList* gl);
       C_outAttrPSet(C_dataTypeList* dtl);

@@ -18,7 +18,8 @@ class MdlContext;
 class C_generalList;
 
 class C_userFunctionCall : public C_general {
-
+   protected:
+      using C_general::duplicate;
    public:
       virtual void execute(MdlContext* context);
       virtual void addToList(C_generalList* gl);
