@@ -2132,23 +2132,22 @@ $(BIN_DIR)/createDF: $(DEPENDFILE_OBJS)
             """\
 
 # Parser targets
-speclang.tab.h:
-\tcd framework/parser/bison; $(BISON) -v -d speclang.y;
-\t@if [ -f framework/parser/bison/speclang.tab.c ]; then \\
-\t\tmv speclang.tab.c ../generated/speclang.tab.C 2>/dev/null; \\
-\t\tmv speclang.tab.h ../generated/; 2>/dev/null \\
+speclang.tab.h: framework/parser/bison/speclang.y
+\t(cd framework/parser/bison && $(BISON) -v -d speclang.y)
+\tif [ -f framework/parser/bison/speclang.tab.c ]; then \\
+\t\tcp framework/parser/bison/speclang.tab.c framework/parser/generated/speclang.tab.C; \\
 \tfi
-\t@if [ -f framework/parser/bison/speclang.tab.h ]; then \\
-\t\tmv speclang.tab.h ../generated/; 2>/dev/null \\
+\tif [ -f framework/parser/bison/speclang.tab.h ]; then \\
+\t\tcp framework/parser/bison/speclang.tab.h framework/parser/generated/; \\
 \tfi
 
 framework/parser/generated/speclang.tab.C: framework/parser/bison/speclang.y
-\tcd framework/parser/bison; $(BISON) -v -d speclang.y;
-\t@if [ -f framework/parser/bison/speclang.tab.c ]; then \\
-\t\tmv speclang.tab.c ../generated/speclang.tab.C 2>/dev/null; \\
+\t(cd framework/parser/bison && $(BISON) -v -d speclang.y)
+\tif [ -f framework/parser/bison/speclang.tab.c ]; then \\
+\t\tcp framework/parser/bison/speclang.tab.c framework/parser/generated/speclang.tab.C; \\
 \tfi
-\t@if [ -f framework/parser/bison/speclang.tab.h ]; then \\
-\t\tmv speclang.tab.h ../generated/; 2>/dev/null \\
+\tif [ -f framework/parser/bison/speclang.tab.h ]; then \\
+\t\tcp framework/parser/bison/speclang.tab.h framework/parser/generated/; \\
 \tfi
 
 """
