@@ -99,12 +99,12 @@ include sources.mk
 # Parser targets
 mdl.tab.h:  parser/mdl.y
 	cd parser && bison -v -d -b mdl mdl.y
-	cp parser/mdl.tab.h include/
-	if [ -f parser/mdl.tab.c ]; then cp parser/mdl.tab.c parser/mdl.tab.cpp 2>/dev/null; fi
+	mv parser/mdl.tab.h include/
+	if [ -f parser/mdl.tab.c ]; then mv parser/mdl.tab.c parser/mdl.tab.cpp 2>/dev/null; fi
 
 parser/mdl.tab.cpp: parser/mdl.y
 	cd parser && bison -v -d -b mdl mdl.y
-	if [ -f parser/mdl.tab.c ]; then cp parser/mdl.tab.c parser/mdl.tab.cpp 2>/dev/null; fi
+	if [ -f parser/mdl.tab.c ]; then mv parser/mdl.tab.c parser/mdl.tab.cpp 2>/dev/null; fi
 
 # Scanner targets
 ifeq ($(FLEXFIXER), True)
