@@ -19,7 +19,7 @@ class C_generalList;
 
 class C_general : public C_production {
    protected:
-   using C_production::duplicate;  // Make base class method visible
+      using C_production::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       virtual void addToList(C_generalList* gl);

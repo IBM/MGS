@@ -19,7 +19,8 @@ class C_generalList;
 class C_identifierList;
 
 class C_predicateFunction : public C_general {
-
+   protected:
+      using C_general::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       virtual void addToList(C_generalList* gl);

@@ -22,7 +22,9 @@ class Predicate;
 class ConnectionCCBase;
 
 class C_regularConnection : public C_connection {
-   using C_connection::execute;  // Make base class method visible
+   protected:
+      using C_connection::execute;  // Make base class method visible
+      using C_connection::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context,
 			   ConnectionCCBase* connectionBase);

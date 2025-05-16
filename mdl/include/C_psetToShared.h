@@ -18,7 +18,8 @@ class MdlContext;
 class C_generalList;
 
 class C_psetToShared : public C_psetMapping {
-
+   protected:
+      using C_psetMapping::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       virtual void addToList(C_generalList* gl);

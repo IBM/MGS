@@ -20,7 +20,8 @@ class C_dataTypeList;
 class C_generalList;
 
 class C_struct : public C_general {
-
+   protected:
+      using C_general::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       virtual void addToList(C_generalList* gl);

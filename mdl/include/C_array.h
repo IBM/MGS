@@ -19,7 +19,8 @@ class DataType;
 class ArrayType;
 
 class C_array : public C_production {
-   using C_production::duplicate;  // Make base class method visible
+   protected:
+      using C_production::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       C_array();
