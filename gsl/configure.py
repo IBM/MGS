@@ -2121,56 +2121,53 @@ $(BIN_DIR)/createDF: $(DEPENDFILE_OBJS)
 
 """
         return retStr
-    
-def getParserTargets(self):
-    """docstring"""
-    # Original code had issues with file generation and movement
-    # Replacing with more robust approach that handles directory creation
-    # and uses copy instead of move to avoid race conditions
-    
-    retStr = \
-        """\
+
+    def getParserTargets(self):
+        """docstring"""
+        # bisonOutputPrefix = ""
+        # if self.bisonVersion == "1.35":
+        #     bisonOutputPrefix = "framework/parser/bison/"
+
+        retStr = \
+            """\
 
 # Parser targets
 speclang.tab.h:
-\t@echo "Ensuring parser directories exist..."
-\t@mkdir -p framework/parser/generated
 \tcd framework/parser/bison; $(BISON) -v -d speclang.y;
 \t@if [ -f framework/parser/bison/speclang.tab.c ]; then \\
-\t\tcp framework/parser/bison/speclang.tab.c framework/parser/generated/speclang.tab.C; \\
+\t\tmv speclang.tab.c ../generated/speclang.tab.C 2>/dev/null; \\
+\t\tmv speclang.tab.h ../generated/; 2>/dev/null \\
 \tfi
 \t@if [ -f framework/parser/bison/speclang.tab.h ]; then \\
-\t\tcp framework/parser/bison/speclang.tab.h framework/parser/generated/; \\
+\t\tmv speclang.tab.h ../generated/; 2>/dev/null \\
 \tfi
 
 framework/parser/generated/speclang.tab.C: framework/parser/bison/speclang.y
-\t@echo "Running Bison for speclang.tab.C..."
-\t@mkdir -p framework/parser/generated
 \tcd framework/parser/bison; $(BISON) -v -d speclang.y;
 \t@if [ -f framework/parser/bison/speclang.tab.c ]; then \\
-\t\tcp framework/parser/bison/speclang.tab.c framework/parser/generated/speclang.tab.C; \\
+\t\tmv speclang.tab.c ../generated/speclang.tab.C 2>/dev/null; \\
 \tfi
 \t@if [ -f framework/parser/bison/speclang.tab.h ]; then \\
-\t\tcp framework/parser/bison/speclang.tab.h framework/parser/generated/; \\
+\t\tmv speclang.tab.h ../generated/; 2>/dev/null \\
 \tfi
 
 """
-    if self.options.withGpu is True:
-        retStr += \
-            """
+        if self.options.withGpu is True:
+            retStr += \
+                """
 $(OBJS_DIR)/speclang.tab.o: framework/parser/generated/speclang.tab.C framework/parser/bison/speclang.y
 \t$(CC) -c $< -DYYDEBUG $(CFLAGS) -o $@
 
 """
-    else:
-        retStr += \
-            """
+        else:
+            retStr += \
+                """
 $(OBJS_DIR)/speclang.tab.o: framework/parser/generated/speclang.tab.C framework/parser/bison/speclang.y
 \t$(CC) -c $< -DYYDEBUG $(CFLAGS) $(OBJECTONLYFLAGS) -o $@
 
 """
 
-    return retStr
+        return retStr
 
     def getScannerTargets(self):
         """docstring"""
