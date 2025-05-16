@@ -456,16 +456,21 @@ if [ $EMPTY_FILE -eq 1  ]; then
   echo "//Please consider the following define options, with MODEL_TO_USE always required." > ${Model2Use} 
   echo "//IMPORTANT: any change is expected to be followed by a  full rebuild." >> ${Model2Use}
   echo "//--------------------" >> ${Model2Use}
-  echo "#define MODEL_TO_USE _MSN_2000_MAHON //with <value> is a macro defined in NTSMacros.h" >> ${Model2Use}
+  echo "#define MODEL_TO_USE _MSN_2000_MAHON" >> ${Model2Use}
   echo "//#define MAX_COMPUTE_ORDER <value> (range: 0-7)" >> ${Model2Use}
-  echo "//#define USE_DOUBLES   [to enable double-precision]" >> ${Model2Use} 
-  echo "#define NVU_NTS_EXTENSION  //we need this to enable NTS to work with NVU" >> ${Model2Use}
+  echo "// ^^^ <value> being a macro defined in NTSMacros.h" >> ${Model2Use}
+  echo "//#define USE_DOUBLES" >> ${Model2Use} 
+  echo "// ^^^ to enable double-precision" >> ${Model2Use} 
+  echo "#define NVU_NTS_EXTENSION" >> ${Model2Use}
+  echo "// ^^^ to enable NTS to work with NVU" >> ${Model2Use}
   echo "#define SINGLE_JUNCTIONAL_CAPSULE_CAN_FORM_MULTIPLE_SYNAPSE ">> ${Model2Use} 
   echo "//#define WAIT_FOR_REST" >> ${Model2Use}
   echo "#ifdef WAIT_FOR_REST" >> ${Model2Use} 
-  echo "#define NOGATING_TIME 20.0 //ms" >> ${Model2Use} 
-  echo "#else " >> ${Model2Use} 
-  echo "#define NOGATING_TIME 0.0 //ms" >> ${Model2Use} 
+  echo "#define NOGATING_TIME 20.0" >> ${Model2Use} 
+  echo "// ^^^ units : msec" >> ${Model2Use} 
+  echo "#else" >> ${Model2Use} 
+  echo "#define NOGATING_TIME 0.0" >> ${Model2Use} 
+  echo "// ^^^ units : msec" >> ${Model2Use} 
   echo "#endif" >> ${Model2Use} 
 fi 
 
