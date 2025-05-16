@@ -703,45 +703,6 @@ if [ $FIRST_BUILD -eq 1 ]; then
     touch "$MDLROOT/parser/mdl.tab.c"
   fi
 fi
-
-# Create helper function to check if Bison generates MDL parser files correctly
-check_fix_mdl_parser() {
-  cd $MDLROOT
-  # Check if Bison outputs exist and copy to the right locations
-  if [ -f "parser/mdl.tab.c" ]; then
-    cp parser/mdl.tab.c parser/mdl.tab.cpp
-    echo "Found and copied mdl.tab.c to mdl.tab.cpp"
-  else
-    echo "Warning: parser/mdl.tab.c not found!"
-  fi
-  
-  if [ -f "parser/mdl.tab.h" ]; then
-    cp parser/mdl.tab.h include/
-    echo "Found and copied mdl.tab.h to include/"
-  else
-    echo "Warning: parser/mdl.tab.h not found!"
-  fi
-  
-  # Check if they ended up in wrong locations and move them
-  for possible_location in . parser scanner include; do
-    if [ -f "$possible_location/mdl.tab.h" ] && [ "$possible_location" != "include" ]; then
-      echo "Found mdl.tab.h in $possible_location, copying to include/"
-      cp "$possible_location/mdl.tab.h" include/
-    fi
-    if [ -f "$possible_location/mdl.tab.c" ] && [ "$possible_location" != "parser" ]; then
-      echo "Found mdl.tab.c in $possible_location, copying to parser/mdl.tab.cpp"
-      cp "$possible_location/mdl.tab.c" parser/mdl.tab.cpp
-    fi
-  done
-  
-  cd $BASE_FOLDER
-}
-
-# Run the check/fix function if needed
-if [ "$REBUILD" == "-rebuild" ] || [ "$CLEAN" == "-clean" ]; then
-  echo "Will run check_fix_mdl_parser after MDL build or clean"
-fi
-
 if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
   echoerr "Start build MDL parser"
   cd $MDLROOT
@@ -773,11 +734,6 @@ if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
       echoerr  -e "${cc_blue}Build MDL successfully.${cc_normal}\n"
     fi
     rm -f mdl.make.mark
-    # After MDL build completes, run check/fix if we're rebuilding
-    if [ "$REBUILD" == "-rebuild" ]; then
-      echo "Running MDL parser file check/fix..."
-      check_fix_mdl_parser
-    fi  
     cd $BASE_FOLDER
   fi
 fi
