@@ -853,39 +853,10 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
   # Create the directories needed for GSL build
   mkdir -p ${GSLROOT}/lib ${GSLROOT}/obj
 fi
-# If this is a clean build, check and fix the Makefile dependency issue
-if [ ! -f "${GSLROOT}/framework/parser/generated/speclang.tab.C" ]; then
-  # Create and run a simple shell script to handle the bison command with better error checking
-  echo '#!/bin/bash
-cd "'${GSLROOT}'/framework/parser/bison"
-bison -v -d speclang.y
-if [ $? -eq 0 ]; then
-if [ -f speclang.tab.c ]; then
-  mv speclang.tab.c "'${GSLROOT}'/framework/parser/generated/speclang.tab.C"
-fi
-if [ -f speclang.tab.h ]; then
-  mv speclang.tab.h "'${GSLROOT}'/framework/parser/generated"
-fi
-exit 0
-else
-echo "Bison command failed"
-exit 1
-fi
-' > ${GSLROOT}/run_bison.sh
-  chmod +x ${GSLROOT}/run_bison.sh
-  
-  # Display the content of the script for verification
-  # echo -e "\n\n${cc_blue}===== CONTENT OF BISON HELPER SCRIPT =====${cc_normal}\n\n"
-  # cat "${GSLROOT}/run_bison.sh"
-  
-  # echo -e "\n\n${cc_blue}===== RUNNING BISON HELPER SCRIPT =====${cc_normal}\n\n"
-  # Run the script to generate the files before the main build
-  ${GSLROOT}/run_bison.sh
-  
-  # Touch the files if they still don't exist
-  touch ${GSLROOT}/framework/parser/generated/speclang.tab.C
-  touch ${GSLROOT}/framework/parser/generated/speclang.tab.h
-fi
+
+# Ensure the generated directory exists
+mkdir -p ${GSLROOT}/framework/parser/generated
+
 EXTRA_ARGS="${COLAB} ${REGENMAKEFILE} ${BUILD_TARGET}"
 if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
   #{{{
