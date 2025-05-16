@@ -2122,47 +2122,52 @@ $(BIN_DIR)/createDF: $(DEPENDFILE_OBJS)
 """
         return retStr
 
-def getParserTargets(self):
-    """docstring"""
-    retStr = \
-        """\
+    def getParserTargets(self):
+        """docstring"""
+        # bisonOutputPrefix = ""
+        # if self.bisonVersion == "1.35":
+        #     bisonOutputPrefix = "framework/parser/bison/"
+
+        retStr = \
+            """\
 
 # Parser targets
-speclang.tab.h: framework/parser/bison/speclang.y
-\t(cd framework/parser/bison && $(BISON) -v -d speclang.y)
-\tif [ -f framework/parser/bison/speclang.tab.c ]; then \\
-\t\tcp framework/parser/bison/speclang.tab.c framework/parser/generated/speclang.tab.C; \\
+speclang.tab.h:
+\tcd framework/parser/bison; $(BISON) -v -d speclang.y;
+\t@if [ -f framework/parser/bison/speclang.tab.c ]; then \\
+\t\tmv speclang.tab.c ../generated/speclang.tab.C 2>/dev/null; \\
+\t\tmv speclang.tab.h ../generated/; 2>/dev/null \\
 \tfi
-\tif [ -f framework/parser/bison/speclang.tab.h ]; then \\
-\t\tcp framework/parser/bison/speclang.tab.h framework/parser/generated/; \\
+\t@if [ -f framework/parser/bison/speclang.tab.h ]; then \\
+\t\tmv speclang.tab.h ../generated/; 2>/dev/null \\
 \tfi
 
 framework/parser/generated/speclang.tab.C: framework/parser/bison/speclang.y
-\t(cd framework/parser/bison && $(BISON) -v -d speclang.y)
-\tif [ -f framework/parser/bison/speclang.tab.c ]; then \\
-\t\tcp framework/parser/bison/speclang.tab.c framework/parser/generated/speclang.tab.C; \\
+\tcd framework/parser/bison; $(BISON) -v -d speclang.y;
+\t@if [ -f framework/parser/bison/speclang.tab.c ]; then \\
+\t\tmv speclang.tab.c ../generated/speclang.tab.C 2>/dev/null; \\
 \tfi
-\tif [ -f framework/parser/bison/speclang.tab.h ]; then \\
-\t\tcp framework/parser/bison/speclang.tab.h framework/parser/generated/; \\
+\t@if [ -f framework/parser/bison/speclang.tab.h ]; then \\
+\t\tmv speclang.tab.h ../generated/; 2>/dev/null \\
 \tfi
 
 """
-    if self.options.withGpu is True:
-        retStr += \
-            """
+        if self.options.withGpu is True:
+            retStr += \
+                """
 $(OBJS_DIR)/speclang.tab.o: framework/parser/generated/speclang.tab.C framework/parser/bison/speclang.y
 \t$(CC) -c $< -DYYDEBUG $(CFLAGS) -o $@
 
 """
-    else:
-        retStr += \
-            """
+        else:
+            retStr += \
+                """
 $(OBJS_DIR)/speclang.tab.o: framework/parser/generated/speclang.tab.C framework/parser/bison/speclang.y
 \t$(CC) -c $< -DYYDEBUG $(CFLAGS) $(OBJECTONLYFLAGS) -o $@
 
 """
 
-    return retStr
+        return retStr
 
     def getScannerTargets(self):
         """docstring"""
