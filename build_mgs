@@ -696,13 +696,41 @@ fi
 ### MDL code ###
 #{{{
 if [ $FIRST_BUILD -eq 1 ]; then
-  if [ ! -f "$MDLROOT/parser/mdl.tab.h" ]; then
-    touch "$MDLROOT/parser/mdl.tab.h"
-  fi
-  if [ ! -f "$MDLROOT/parser/mdl.tab.c" ]; then
-    touch "$MDLROOT/parser/mdl.tab.c"
+  # For first build, pre-generate MDL parser files to avoid circular dependencies
+  echoerr "First build detected, pre-generating MDL parser files"
+  
+  mkdir -p "$MDLROOT/parser"
+  mkdir -p "$MDLROOT/include"
+  
+  # Try to run bison directly to generate the files
+  if [ -f "$MDLROOT/parser/mdl.y" ]; then
+    cd "$MDLROOT/parser"
+    bison -v -d -b mdl mdl.y
+    # Check results
+    if [ -f "mdl.tab.c" ]; then
+      cp mdl.tab.c mdl.tab.cpp
+      echoerr "Successfully created mdl.tab.cpp"
+    else
+      # Create empty file as placeholder
+      touch mdl.tab.cpp
+      echoerr "Warning: Created empty mdl.tab.cpp placeholder"
+    fi
+    if [ -f "mdl.tab.h" ]; then
+      cp mdl.tab.h ../include/
+      echoerr "Successfully created include/mdl.tab.h"
+    else
+      # Create empty file as placeholder
+      touch ../include/mdl.tab.h
+      echoerr "Warning: Created empty include/mdl.tab.h placeholder"
+    fi
+    cd "$BASE_FOLDER"
+  else
+    echoerr "Warning: $MDLROOT/parser/mdl.y not found, creating empty placeholder files"
+    touch "$MDLROOT/parser/mdl.tab.cpp"
+    touch "$MDLROOT/include/mdl.tab.h"
   fi
 fi
+
 if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
   echoerr "Start build MDL parser"
   cd $MDLROOT
