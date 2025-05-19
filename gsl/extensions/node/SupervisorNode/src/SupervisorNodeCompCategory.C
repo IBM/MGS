@@ -34,6 +34,8 @@ void SupervisorNodeCompCategory::initializeShared(RNG& rng)
   for (int i=0; i<IMG_SIZE; ++i) SHD.x[i]=PRELIM_STATE;
   SHD.imageIndex=-1;
   SHD.trainingEpoch=1;
+  if (SHD.outputsPerEpoch==0) SHD.outputInterval=dataset.training_images.size()+1;
+  else SHD.outputInterval=dataset.training_images.size()/SHD.outputsPerEpoch;
   if (getSimulation().getRank()==0) {
     std::cerr<<"MNIST reader loaded "<<dataset.training_images.size()<<" training images."<<std::endl<<std::endl;
     std::cerr<<"MNIST reader loaded "<<dataset.test_images.size()<<" test images."
@@ -45,24 +47,23 @@ void SupervisorNodeCompCategory::initializeShared(RNG& rng)
 void SupervisorNodeCompCategory::updateShared(RNG& rng) 
 {
   SHD.refreshErrors = false;
-  bool output=false;
   ++SHD.numberOfInputs;
-
+  bool output=false;
   unsigned label, oldLabel;
 
   if (!SHD.shready) SHD.shready = isReady();
   else oldLabel=SHD.labels[SHD.labelIndex];
+  if (SHD.shready) output=(SHD.imageIndex % SHD.outputInterval == 0);
   
   if (!SHD.test) {
     do {
       if (++SHD.imageIndex==dataset.training_images.size()) {
-	SHD.imageIndex=0;
-	shuffleDeck(dataset.training_images.size(),rng);
-	if (SHD.shready) output=true;
-	if (++SHD.trainingEpoch>SHD.trainingEpochs) {
-	  SHD.test = true;
-	  shuffleDeck(dataset.test_images.size(),rng);
-	}
+        SHD.imageIndex=0;
+        shuffleDeck(dataset.training_images.size(),rng);
+        if (++SHD.trainingEpoch>SHD.trainingEpochs) {
+          SHD.test = true;
+          shuffleDeck(dataset.test_images.size(),rng);
+        }
       }
       label = dataset.training_labels[_shuffledDeck[SHD.imageIndex]];
       if (SHD.shready) SHD.labels[SHD.labelIndex]=label;
@@ -74,9 +75,8 @@ void SupervisorNodeCompCategory::updateShared(RNG& rng)
   else {
     do {
       if (++SHD.imageIndex==dataset.test_images.size()) {
-	SHD.imageIndex=0;
-	shuffleDeck(dataset.test_images.size(),rng);
-	if (SHD.shready) output=true;
+        SHD.imageIndex=0;
+        shuffleDeck(dataset.test_images.size(),rng);
       }
       label = dataset.test_labels[_shuffledDeck[SHD.imageIndex]];
       if (SHD.shready) SHD.labels[SHD.labelIndex]=label;
