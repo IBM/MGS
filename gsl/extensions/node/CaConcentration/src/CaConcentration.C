@@ -1,19 +1,12 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
-#include "Lens.h"
+// =============================================================================
+#include "Mgs.h"
 #include "CaConcentration.h"
 #include "CG_CaConcentration.h"
 #include "rndm.h"
@@ -446,7 +439,7 @@ void CaConcentration::forwardSolve7_corrector(RNG& rng)
 #endif
 
 bool CaConcentration::confirmUniqueDeltaT(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset,
     CG_CaConcentrationOutAttrPSet* CG_outAttrPset)
@@ -459,8 +452,8 @@ bool CaConcentration::confirmUniqueDeltaT(
 //   if we don't retain the dimension's (x,y,z) coordinate
 //  Even if we retain (x,y,z) this value change with the #capsule per compartment
 //   and geometric sampling --> so not a good choice
-bool CaConcentration::checkSite(const String& CG_direction,
-                                const String& CG_component,
+bool CaConcentration::checkSite(const CustomString& CG_direction,
+                                const CustomString& CG_component,
                                 NodeDescriptor* CG_node, Edge* CG_edge,
                                 VariableDescriptor* CG_variable,
                                 Constant* CG_constant,
@@ -475,7 +468,7 @@ bool CaConcentration::checkSite(const String& CG_direction,
 }
 
 void CaConcentration::setProximalJunction(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset,
     CG_CaConcentrationOutAttrPSet* CG_outAttrPset)
@@ -1295,7 +1288,7 @@ dyn_var_t CaConcentration::getAij(DimensionStruct* a, DimensionStruct* b,
 
 
 void CaConcentration::setReceptorCaCurrent(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset,
     CG_CaConcentrationOutAttrPSet* CG_outAttrPset)
@@ -1309,7 +1302,7 @@ void CaConcentration::setReceptorCaCurrent(
 // to be called at connection-setup time
 //    check MDL for what kind of connection then it is called
 void CaConcentration::setInjectedCaCurrent(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset,
     CG_CaConcentrationOutAttrPSet* CG_outAttrPset)
@@ -1471,7 +1464,7 @@ dyn_var_t CaConcentration::getHalfDistance (int index)
 
 
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
-void CaConcentration::setTargetAttachCaConcentration(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset, CG_CaConcentrationOutAttrPSet* CG_outAttrPset)
+void CaConcentration::setTargetAttachCaConcentration(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset, CG_CaConcentrationOutAttrPSet* CG_outAttrPset)
 {
 #ifdef DEBUG_ASSERT
   assert(targetAttachCaConcentration.size() > 0);
@@ -1482,7 +1475,7 @@ void CaConcentration::setTargetAttachCaConcentration(const String& CG_direction,
 
 
 #ifdef MICRODOMAIN_CALCIUM
-void CaConcentration::createMicroDomainData(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset, CG_CaConcentrationOutAttrPSet* CG_outAttrPset) 
+void CaConcentration::createMicroDomainData(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset, CG_CaConcentrationOutAttrPSet* CG_outAttrPset) 
 {
   std::string listmicroDomains (CG_inAttrPset->domainName.c_str());
   if (listmicroDomains.empty())
@@ -1491,7 +1484,7 @@ void CaConcentration::createMicroDomainData(const String& CG_direction, const St
   else{
     std::vector<std::string> tokens;  // extract all names of microdomains as token
     assert(microdomainNames.size() == 0);
-    StringUtils::Tokenize(listmicroDomains, tokens, " ,");
+    CustomStringUtils::Tokenize(listmicroDomains, tokens, " ,");
     int numMicrodomains = tokens.size();
 
     microdomainNames.increaseSizeTo(numMicrodomains);
@@ -1529,7 +1522,7 @@ void CaConcentration::createMicroDomainData(const String& CG_direction, const St
     
     for (unsigned ii = 0; ii < numMicrodomains; ++ii)
     {
-      String domainName(tokens[ii].c_str());
+      CustomString domainName(tokens[ii].c_str());
       microdomainNames[ii] = domainName;
       int offset = ii * numCpts;
 #if MICRODOMAIN_DATA_FROM == _MICRODOMAIN_DATA_FROM_CHANPARAM
@@ -1603,11 +1596,11 @@ void CaConcentration::createMicroDomainData(const String& CG_direction, const St
   }
 }
 
-void CaConcentration::setupCurrent2Microdomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset, CG_CaConcentrationOutAttrPSet* CG_outAttrPset) 
+void CaConcentration::setupCurrent2Microdomain(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset, CG_CaConcentrationOutAttrPSet* CG_outAttrPset) 
 {//this current is supposed to project into the Ca-domain with name defined in 'CG_inAttrPset->domainName'
   //put channel producing Ca2+ influx to the right location
   //from that we can update the [Ca2+] in the associated microdomain
-  String microdomainName = CG_inAttrPset->domainName;
+  CustomString microdomainName = CG_inAttrPset->domainName;
   int ii = 0;
   while (microdomainNames[ii] != microdomainName)
   {
@@ -1615,11 +1608,11 @@ void CaConcentration::setupCurrent2Microdomain(const String& CG_direction, const
   }
   _mapCurrentToMicrodomainIndex[channelCaCurrents_microdomain.size()-1] = ii;
 }
-void CaConcentration::setupFlux2Microdomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset, CG_CaConcentrationOutAttrPSet* CG_outAttrPset) 
+void CaConcentration::setupFlux2Microdomain(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset, CG_CaConcentrationOutAttrPSet* CG_outAttrPset) 
 {//this current is supposed to project into the Ca-domain with name defined in 'CG_inAttrPset->domainName'
   //put channel producing Ca2+ influx to the right location
   //from that we can update the [Ca2+] in the associated microdomain
-  String microdomainName = CG_inAttrPset->domainName;
+  CustomString microdomainName = CG_inAttrPset->domainName;
   int ii = 0;
   while (microdomainNames[ii] != microdomainName)
   {

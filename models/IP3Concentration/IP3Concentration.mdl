@@ -1,8 +1,16 @@
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
 #ifndef IP3Concentration_MDL
 #define IP3Concentration_MDL
 
 #include "../../nti/include/MaxComputeOrder.h"
-
 #include "../std/std.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
@@ -24,14 +32,14 @@ Node IP3Concentration Implements SolutionArrayProducer,
 	//data members: reference
        // pointer to array of branch
        // help to identify the branch a IP3(cyto)-compartment belong to 
-  BranchDataStruct* branchData; // pointer to branch's data
+  BranchDataStruct* branchData; // pointer to branchs data
   DimensionStruct* [] dimensions; // each branch has many compartments (whose center point represented by DimensionStruct)
 	//data members: internal, but for solver
     //{{{
 	//NOTE: array data become ShallowArray<dyn_var_t> Aii in C++ code
   dyn_var_t [] Aii; // TODO unit
   dyn_var_t [] Aip; // TODO unit
-  dyn_var_t [] Aim; // branch's distalmost compartment to junction coupling coefficient
+  dyn_var_t [] Aim; // branchs distalmost compartment to junction coupling coefficient
 
   dyn_var_t [] RHS; // TODO unit
   dyn_var_t [] Aij; // TODO unit
@@ -125,27 +133,33 @@ Node IP3Concentration Implements SolutionArrayProducer,
     /*{{{*/
   InitPhase initializeCompartmentData;
 
-  #if MAX_COMPUTE_ORDER>0
+#if MAX_COMPUTE_ORDER>0
   RuntimePhase forwardSolve1, backwardSolve1; 
-  #endif
-  #if MAX_COMPUTE_ORDER>1
+#endif
+
+#if MAX_COMPUTE_ORDER>1
   RuntimePhase forwardSolve2, backwardSolve2; 
-  #endif
-  #if MAX_COMPUTE_ORDER>2
+#endif
+
+#if MAX_COMPUTE_ORDER>2
   RuntimePhase forwardSolve3, backwardSolve3; 
-  #endif
-  #if MAX_COMPUTE_ORDER>3
+#endif
+
+#if MAX_COMPUTE_ORDER>3
   RuntimePhase forwardSolve4, backwardSolve4; 
-  #endif
-  #if MAX_COMPUTE_ORDER>4
+#endif
+
+#if MAX_COMPUTE_ORDER>4
   RuntimePhase forwardSolve5, backwardSolve5; 
-  #endif
-  #if MAX_COMPUTE_ORDER>5
+#endif
+
+#if MAX_COMPUTE_ORDER>5
   RuntimePhase forwardSolve6, backwardSolve6; 
-  #endif
-  #if MAX_COMPUTE_ORDER>6
+#endif
+
+#if MAX_COMPUTE_ORDER>6
   RuntimePhase forwardSolve7, backwardSolve7; 
-  #endif
+#endif
 
   RuntimePhase solve, finish;
     /*}}}*/
@@ -263,7 +277,7 @@ OPTION 3:
 }
 
 // represent an end-point (i.e. last compartment in the series of compartments along a branch)
-// thus don't hold real data, just a reference to that last segment
+// thus dont hold real data, just a reference to that last segment
 Node IP3ConcentrationEndPoint Implements IP3ConcentrationProducer, DimensionProducer
 {
 // For each regular compute-branch (i.e. not a junction), represented by IP3Concentration 
@@ -274,7 +288,7 @@ Node IP3ConcentrationEndPoint Implements IP3ConcentrationProducer, DimensionProd
   DimensionStruct* dimension; //reference to the struct representing the compartment
 
   Shared {
-    // so the two instances share the Branch's data
+    // so the two instances share the Branchs data
 		// an array but indeed is a scalar
     dyn_var_t []* IP3ConcentrationConnect;
     DimensionStruct* []* dimensionsConnect;
@@ -288,7 +302,7 @@ Node IP3ConcentrationEndPoint Implements IP3ConcentrationProducer, DimensionProd
   }
 
   UserFunction setPointers;// which is called to create the proper memory reference for 'IP3(cyto)' of the end-point component which
-            // can be 'distalEnd' or 'proximalEnd' depending upon the incoming node's InAttrPset's identifier's value
+            // can be 'distalEnd' or 'proximalEnd' depending upon the incoming nodes InAttrPsets identifiers value
 
   // Connection setup (i.e. input)
   Connection Pre Node () Expects IP3ConcentrationArrayProducer, DimensionArrayProducer {
@@ -309,7 +323,7 @@ Node IP3ConcentrationJunction Implements DimensionArrayProducer, BranchDataProdu
 {
 /*{{{*/
   //{{{ DATA
-  BranchDataStruct* branchData; // the proximal-side regular-branch's data
+  BranchDataStruct* branchData; // the proximal-side regular-branchs data
   DimensionStruct* [] dimensions;
     //{{{data members: internal, but for solver
   dyn_var_t* [] IP3ConcentrationInputs;
@@ -376,7 +390,7 @@ Node IP3ConcentrationJunction Implements DimensionArrayProducer, BranchDataProdu
   }	
 
   //{{{input
-  // the junction-branch connects to regular-branch through the regular-branch's endpoints
+  // the junction-branch connects to regular-branch through the regular-branchs endpoints
   Connection Pre Node (PSet.identifier=="endpoint") Expects IP3ConcentrationProducer, 
     DimensionProducer, BranchDataProducer  {
     IP3ConcentrationProducer.IP3 >> IP3ConcentrationInputs;

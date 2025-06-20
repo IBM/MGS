@@ -1,10 +1,7 @@
-
-#// =================================================================
-#//
-#// (C) Copyright 2018 New Jersey Institute of Technology.
-#//
-#// =================================================================
-
+// =============================================================================
+// (C) Copyright 2018 New Jersey Institute of Technology. All rights reserved.
+//
+// =============================================================================
 
 #ifndef ChannelMK_GPe_mouse_MDL
 #define ChannelMK_GPe_mouse_MDL
@@ -16,7 +13,7 @@
 // Muscarinic-sensitive K+ outward current
 // slowly increasing outward current ; that control adaptation
 // higher current --> slower frequency (or high adaptation)
-//NOTE: Don't use CurrentArrayProducer as it causes conflict with GHK-formula
+//NOTE: Dont use CurrentArrayProducer as it causes conflict with GHK-formula
 //    Use IOCurrentArrayProducer instead
 Node ChannelMK_GPe_mouse Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer, IOCurrentArrayProducer, DimensionArrayProducer {
 /*{{{*/

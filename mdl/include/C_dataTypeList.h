@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef C_dataTypeList_H
 #define C_dataTypeList_H
 #include "Mdl.h"
@@ -26,15 +19,15 @@ class C_dataType;
 class DataType;
 
 class C_dataTypeList : public C_production {
-
+   using C_production::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       C_dataTypeList();
       C_dataTypeList(C_dataType* dt);
       C_dataTypeList(C_dataTypeList* dtl, C_dataType* dt);
       C_dataTypeList(const C_dataTypeList& rv);
-      virtual void duplicate(std::auto_ptr<C_dataTypeList>& rv) const;
-      void releaseDataTypeVec(std::auto_ptr<std::vector<DataType*> >& dtv);
+      virtual void duplicate(std::unique_ptr<C_dataTypeList>&& rv) const;
+      void releaseDataTypeVec(std::unique_ptr<std::vector<DataType*> >& dtv);
       virtual ~C_dataTypeList();
 
    private:

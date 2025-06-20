@@ -1,23 +1,16 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BMC-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. and EPFL 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// ================================================================
-
+// =============================================================================
 #include "Communicator.h"
 #include "Receiver.h"
 #include "Sender.h"
 #include "BG_AvailableMemory.h"
-
+#include <mpi.h>
 #include <cassert>
 #include <vector>
 
@@ -80,7 +73,7 @@ void Communicator::bcast(Sender* s, Receiver* r, int cycle, int phase)
 void Communicator::tableMerge(Sender* s, Receiver* r, int cycle, int phase) 
 {
   int rank=s->getRank();
-  int size;
+  int size=0;
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
   int recvRank[2] = {rank*2+1, rank*2+2};
@@ -109,10 +102,10 @@ void Communicator::tableMerge(Sender* s, Receiver* r, int cycle, int phase)
     while (more[0] || more[1]) {
       MPI_Status status;
       for (int flag=0; flag==0; flip=!flip) {
-	i = flip ? 1 : 0;
-	if (more[i]==0) i = flip ? 0 : 1;
-	MPI_Test(&request[i], &flag, &status);
-	if (flag) more[i] = status.MPI_TAG;	  
+        i = flip ? 1 : 0;
+        flag=request[i].Test(status);
+        if (more[i]==0) i = flip ? 0 : 1;
+        if (flag) more[i] = status.Get_tag();	  
       }
       MPI_Get_count(&status, recvtype, &recvcount);
       s->mergeWithSendBuf(i, recvcount, cycle, phase);
@@ -138,31 +131,31 @@ void Communicator::tableMerge(Sender* s, Receiver* r, int cycle, int phase)
     while (tag) {
       bool reused=false;
       for (int i=0; i<requestVector.size(); ++i) {
-	MPI_Status status;
-	int flag;
-	MPI_Test(&requestVector[i], &flag, &status);
-	if (flag) {
-	  reused=true;
-	  s->getSendbuf(cycle, i);
-	  sendcount-=sendbufsize;
-	  if (sendcount<=sendbufsize) {
-	    sendbufsize = sendcount;
-	    tag=0;
-	  }
-	  MPI_Isend(sendbufs[i], sendbufsize, sendtype, sendRank, tag, MPI_COMM_WORLD, &requestVector[i]);
-	}
+        int flag=0;
+	      MPI_Status status;
+        MPI_Test(&requestVector[i], &flag, &status);
+        if (flag) {
+	        reused=true;
+	        s->getSendbuf(cycle, i);
+	        sendcount-=sendbufsize;
+	        if (sendcount<=sendbufsize) {
+	          sendbufsize = sendcount;
+	          tag=0;
+	        }
+	        MPI_Isend(sendbufs[i], sendbufsize, sendtype, sendRank, tag, MPI_COMM_WORLD, &requestVector[i]);
+	      }
       }
       if (!reused && requestVector.size()<MAX_N_SEND_BUFFS) {
-	int idx = requestVector.size();
-	sendbufs.push_back(s->getSendbuf(cycle, idx));
-	sendcount-=sendbufsize;
-	if (sendcount<=sendbufsize) {
-	  sendbufsize = sendcount;
-	  tag=0;
-	}
-	MPI_Request request;
-	MPI_Isend(sendbufs[idx], sendbufsize, sendtype, sendRank, tag, MPI_COMM_WORLD, &request);
-	requestVector.push_back(request);
+        int idx = requestVector.size();
+        sendbufs.push_back(s->getSendbuf(cycle, idx));
+        sendcount-=sendbufsize;
+        if (sendcount<=sendbufsize) {
+          sendbufsize = sendcount;
+          tag=0;
+        }
+        MPI_Request request;
+        MPI_Isend(sendbufs[idx], sendbufsize, sendtype, sendRank, tag, MPI_COMM_WORLD, &request);
+        requestVector.push_back(request);
       }
     }
   }

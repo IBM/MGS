@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_int_constant_list.h"
 #include "ArrayDataItem.h"
 #include "SyntaxError.h"
@@ -66,12 +59,12 @@ C_int_constant_list* C_int_constant_list::duplicate() const
 }
 
 
-void C_int_constant_list::internalExecute(LensContext *c)
+void C_int_constant_list::internalExecute(GslContext *c)
 {
 }
 
 
-void C_int_constant_list::internalExecute(LensContext *c, ArrayDataItem *adi)
+void C_int_constant_list::internalExecute(GslContext *c, ArrayDataItem *adi)
 {
 
    // need to get dimension from vector

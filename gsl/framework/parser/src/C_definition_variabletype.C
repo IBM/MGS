@@ -1,20 +1,13 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_definition_variabletype.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_declarator.h"
 #include "Simulation.h"
 #include "VariableType.h"
@@ -29,7 +22,7 @@
 
 #include <memory>
 
-void C_definition_variabletype::internalExecute(LensContext *c)
+void C_definition_variabletype::internalExecute(GslContext *c)
 {
    _declarator->execute(c);
 
@@ -97,8 +90,8 @@ C_definition_variabletype::C_definition_variabletype(
 
 C_definition_variabletype::C_definition_variabletype(
    C_declarator *d, C_name* info, C_phase_mapping_list* p, SyntaxError * error)
-   : C_definition(error), _declarator(d), _info(info), _instanceFactory(0), 
-     _phase_mapping_list(p)
+   : C_definition(error), _declarator(d), _instanceFactory(0), 
+     _phase_mapping_list(p), _info(info)
 {
 }
 

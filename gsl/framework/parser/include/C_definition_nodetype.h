@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef C_definition_nodetype_H
 #define C_definition_nodetype_H
 #include "Copyright.h"
@@ -20,7 +13,7 @@
 #include "C_definition.h"
 
 class C_declarator;
-class LensContext;
+class GslContext;
 class C_argument;
 class SyntaxError;
 class C_phase_mapping_list;
@@ -33,7 +26,7 @@ class C_definition_nodetype : public C_definition
 			    C_phase_mapping_list *, SyntaxError *);
       virtual C_definition_nodetype* duplicate() const;
       virtual ~C_definition_nodetype ();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       C_declarator* getName() const { 

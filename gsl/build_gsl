@@ -74,7 +74,7 @@ elif [[ "$cpu" == "ppc64le" ]]; then
   fi
 fi
 }
-SUPPORTED_PLATFORMS="LINUX BGL BGP BGQ SMP"
+SUPPORTED_PLATFORMS="LINUX BGL BGP BGQ SMP MACOS"
 
 #########################################
 #   PRINT HELP
@@ -131,7 +131,13 @@ BUILD_TARGET=""
 COLAB=""
 REGENMAKEFILE=""
 DEBUGOPTS="1"
-NPROCS=$((`cat /proc/cpuinfo | grep processor | wc -l`))
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS
+    NPROCS=$(sysctl -n hw.ncpu)
+else
+    # Linux
+    NPROCS=$((`cat /proc/cpuinfo | grep processor | wc -l`))
+fi
 PROFILE=""
 
 optspec=":d:p:sr-:j:"
@@ -266,6 +272,9 @@ case $PLATFORM in
   BGQ )
     PLATFORM_OPTS+="--with-mpi --blueGeneQ "
     ;;
+  MACOS )
+    PLATFORM_OPTS+="--with-mpi --nowarning_dynamiccast"
+    ;;
 esac
 
 if [ "$GPU" == "-gpu" ]; then
@@ -351,12 +360,12 @@ else
   make -j $NPROCS ${EXTRA_LIBS};
 fi
 
-if [ "$CLEAN" != "-clean" ] && { [ $? -gt 0 ] || [ ! `ls $LENSROOT/bin/gslparser` ];}; then 
+if [ "$CLEAN" != "-clean" ] && { [ $? -gt 0 ] || [ ! `ls $GSLROOT/bin/gslparser` ];}; then 
   echoerr -e "${cc_red}Build GSL failed ! ${cc_normal}\n";
   exit 1;
 elif [ "$CLEAN" == "-clean" ]; then 
   echoerr -e "\n\n\n${cc_blue}You have removed GSL successful.${cc_normal}\n";
-  if [ "$REBUILD" == "-rebuild" ] && { [ `ls $LENSROOT/bin/gslparser` ];}; then 
+  if [ "$REBUILD" == "-rebuild" ] && { [ `ls $GSLROOT/bin/gslparser` ];}; then 
     echoerr -e "\n\n\n${cc_blue}Build GSL successful.${cc_normal}\n";
   fi
 else

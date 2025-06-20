@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef C_typeCore_H
 #define C_typeCore_H
 #include "Mdl.h"
@@ -25,15 +18,15 @@
 class MdlContext;
 
 class C_typeCore : public C_production {
-
+   using C_production::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       C_typeCore();
       C_typeCore(DataType* dt);
       C_typeCore(const std::string& s);
       C_typeCore(const C_typeCore& rv);
-      virtual void duplicate(std::auto_ptr<C_typeCore>& rv) const;
-      void releaseDataType(std::auto_ptr<DataType>& dt);
+      virtual void duplicate(std::unique_ptr<C_typeCore>&& rv) const;
+      void releaseDataType(std::unique_ptr<DataType>&& dt);
       virtual ~C_typeCore();
       
    private:

@@ -1,25 +1,17 @@
-/* =================================================================
-Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+// 
+// =============================================================================
+// 
+// (C) Copyright 2018 New Jersey Institute of Technology. All rights reserved.
+// 
+// =============================================================================
 
-"Restricted Materials of IBM"
-
-BMC-YKT-07-18-2017
-
-(C) Copyright IBM Corp. 2005-2017  All rights reserved
-
-US Government Users Restricted Rights -
-Use, duplication or disclosure restricted by
-GSA ADP Schedule Contract with IBM Corp.
-
-=================================================================
-
-(C) Copyright 2018 New Jersey Institute of Technology.
-
-=================================================================
-*/
-
-
-#include "Lens.h"
+#include "Mgs.h"
 #include "GABAAReceptor.h"
 #include "CG_GABAAReceptor.h"
 #include "rndm.h"
@@ -85,8 +77,8 @@ void GABAAReceptor::updateGABAA(RNG& rng)
   I = g * ((*Vpost)[indexPost] - getSharedMembers().E);
 }
 
-void GABAAReceptor::setPostIndex(const String& CG_direction,
-                                 const String& CG_component,
+void GABAAReceptor::setPostIndex(const CustomString& CG_direction,
+                                 const CustomString& CG_component,
                                  NodeDescriptor* CG_node, Edge* CG_edge,
                                  VariableDescriptor* CG_variable,
                                  Constant* CG_constant,
@@ -117,8 +109,8 @@ void GABAAReceptor::setPostIndex(const String& CG_direction,
   }
 }
 
-void GABAAReceptor::setPrePostIndex(const String& CG_direction,
-    const String& CG_component,
+void GABAAReceptor::setPrePostIndex(const CustomString& CG_direction,
+    const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge,
     VariableDescriptor* CG_variable,
     Constant* CG_constant,

@@ -1,26 +1,18 @@
 %{
-// =================================================================
-// Licensed Materials - Property of IBM                             
-//                                                                 
-// "Restricted Materials of IBM"                                  
-//                                                               
-// BCM-YKT-07-18-2017                                         
-//                                                                  
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved          
-//                                                                  
-// US Government Users Restricted Rights -                         
-// Use, duplication or disclosure restricted by                    
-// GSA ADP Schedule Contract with IBM Corp.                        
-//                                                                
-// =================================================================
-%}
-
-%{
-#include "MdlLexer.h"
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+#include "bison_compat.h"  // adds compatibility macros
+#include "mdl_types.h"
 #include "ParserClasses.h"
+#include "MdlLexer.h"
 #include "MdlContext.h"
 #include "Initializer.h"
-
 #include "StringType.h"
 #include "BoolType.h"
 #include "CharType.h"
@@ -44,7 +36,6 @@
 #include "TriggerType.h"
 #include "ParameterSetType.h"
 #include "NDPairListType.h"
-
 #include "Operation.h"
 #include "ParanthesisOp.h"
 #include "TerminalOp.h"
@@ -60,16 +51,12 @@
 #include "BValidOp.h"
 #include "AndOp.h"
 #include "OrOp.h"
-
 #include "Connection.h"
-
 #include "PhaseType.h"
 #include "PhaseTypeInstance.h"
 #include "PhaseTypeShared.h"
 #include "PhaseTypeGridLayers.h"
-
 #include "TriggeredFunction.h"
-
 #include "SyntaxErrorException.h"
 #include "InternalException.h"
 #include <iostream>
@@ -78,74 +65,75 @@
 #include <cstring>
 #include <stdio.h>
 #include <chrono>
+#include <errno.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 using namespace std;
 
+#ifndef USABLE
 #define USABLE
-#define YYPARSE_PARAM parm
-#define YYLEX_PARAM parm
-#ifndef YYDEBUG
-#define YYDEBUG 1
 #endif
+
+// Define context access
 #define CONTEXT ((MdlContext *) parm)
-#define yyparse mdlparse
-#define yyerror mdlerror
-#define yylex   mdllex
-#define CURRENTFILE (((MdlContext *) parm)->_lexer)->currentFileName
-#define CURRENTLINE (((MdlContext *) parm)->_lexer)->lineCount
+#define CURRENTFILE (CONTEXT->_lexer)->currentFileName
+#define CURRENTLINE (CONTEXT->_lexer)->lineCount
 
+// Function declarations
+void mdlerror(const char *s);
+void mdlerror(YYLTYPE* locp, void* parm, const char* s);
+int mdllex(YYSTYPE* lvalp, YYLTYPE* locp, void* parm);
 
-   void mdlerror(const char *s);
-   void mdlerror(YYLTYPE*, void*, const char *s);
-   int mdllex(YYSTYPE *lvalp, YYLTYPE *locp, void *context);
+// Helper function for executing productions
+inline void HIGH_LEVEL_EXECUTE(void* parm, C_production* l) {
+    try {
+        l->execute(CONTEXT);
+        delete l;
+        CONTEXT->setErrorDisplayed(false);
+    } catch (SyntaxErrorException& e) {
+        cerr << "ERROR: [";
+        if (e.isCaught()) {
+            cerr << e.getFileName() << ":" << e.getLineNumber();
+        } else {
+            // Use the context's stored error information
+            CONTEXT->synchronize(); // Ensure context is synced before reporting
+            cerr << CONTEXT->getLastErrorFileName() << ":" << CONTEXT->getLastErrorLine();
+        }
+        cerr << "] " << e.getError() << endl;
+        CONTEXT->setError();
+        delete l;
+    } catch (InternalException& e) {
+        cerr << "ERROR: [";
+        CONTEXT->synchronize(); // Ensure context is synched before reporting
+        cerr << CONTEXT->getLastErrorFileName() << ":" << CONTEXT->getLastErrorLine() << "] ";
+        cerr << e.getError() << endl;
+        CONTEXT->setError();
+        delete l;
+    }
+}
 
-   inline void HIGH_LEVEL_EXECUTE(void* parm, C_production* l) {
-      try{
-	 l->execute(CONTEXT);
-	 delete l;
-	 CONTEXT->setErrorDisplayed(false);
-      } catch (SyntaxErrorException& e) {
-	 cerr << "Error at file:";
-	 if (e.isCaught()) {
-	    cerr << e.getFileName() << ", line:" << e.getLineNumber() << ", ";
-	 } else {
-	    MdlLexer *li = CONTEXT->_lexer;
-	    cerr << li->currentFileName << ", line:" << li->lineCount << ", ";
-	 }
-	 cerr << e.getError() << endl; 
-	 CONTEXT->setError();
-	 delete l;
-      } catch (InternalException& e) {
-	 cerr << "Error at file:";	 
-	 MdlLexer *li = CONTEXT->_lexer;
-	 cerr << li->currentFileName << ", line:" << li->lineCount << ", ";
-	 cerr << e.getError() << endl; 
-	 CONTEXT->setError();
-	 delete l;
-      } catch (...) {
-	 cerr << "Error at file:";	 
-	 MdlLexer *li = CONTEXT->_lexer;
-	 cerr << li->currentFileName << ", line:" << li->lineCount << ", ";
-	 CONTEXT->setError();
-	 delete l;
-      }
-
-   }
 %}
 
-%pure-parser
+// Modern Bison directives
+%define api.pure full
+%define api.prefix {mdl}
+%define parse.error verbose
+
+// Add this line to prevent symbol kind enum conflicts
+%define api.symbol.prefix {symbol_}
+
 %locations
-%parse-param       {void * YYPARSE_PARAM}
-%lex-param       {void * YYLEX_PARAM}
-/*%param { void * context} */
+%param { void* parm }
 
 %{
 #ifndef YYSTYPE_DEFINITION
 #define YYSTYPE_DEFINITION
 %}
 
-
+// Semantic value union definition
 %union {
       double V_double;
       int V_int;
@@ -192,7 +180,9 @@ using namespace std;
 #endif
 %}
 
-%token <V_double>  DOUBLE_CONSTANT
+// Token Declarations
+
+%token <V_double> DOUBLE_CONSTANT
 %token <V_int> INT_CONSTANT
 %token <P_string> STRING_LITERAL
 %token <P_string> IDENTIFIER
@@ -268,11 +258,10 @@ using namespace std;
 %token OPTIONAL
 %token FRAMEWORK
 
-/* types for non-terminals */
+// Type Declarations for non-terminals
+
 %type <P_general> argumentDataType
 %type <P_generalList> argumentDataTypeList
-// %type <P_general> argumentMapping
-// %type <P_generalList> argumentMappingList
 %type <P_array> array
 %type <V_connectionComponentType> connectionComponentType
 %type <P_connection> connection
@@ -345,6 +334,8 @@ using namespace std;
 
 %%
 
+// Grammar Rules
+
 mdlFile:  parserLineList {
 
 }
@@ -379,28 +370,21 @@ parserLine: struct {
 | functor {
    HIGH_LEVEL_EXECUTE(parm, $1);
 }
-/*
-| error ';' {
-   MdlLexer *l = ((MdlContext *) parm)->_lexer;
-   cerr<< "Error position: "<<l->currentFileName<<": "
-       <<l->lineCount<<endl<<endl;
-   CONTEXT->setError();
-} 
-*/
+
 | error {
    MdlContext *c = (MdlContext *) parm;
    MdlLexer *l = c->_lexer;
-   if ((c->isSameErrorLine(l->currentFileName, l->lineCount) == false) 
-       && !c->isErrorDisplayed()){
-      cerr<< "Error at file:"<<l->currentFileName<<", line:" <<l->lineCount<< ", ";
-      cerr<< "unexpected token: " << l->getToken() << endl << endl;
+   
+   // Update the error location first
+   c->setLastError(l->currentFileName, l->lineCount);
+   
+   if (!c->isErrorDisplayed()){
+      cerr<< "ERROR: ["<<c->getLastErrorFileName()<<":" <<c->getLastErrorLine()<<"] ";
+      cerr<< "Unexpected token: " << l->getToken() << endl << endl;
       c->setErrorDisplayed(true);
    }
-   c->setLastError(l->currentFileName, l->lineCount);
-   CONTEXT->setError();
-}
-;
-
+   c->setError();
+};
 
 /* Directives */
 
@@ -948,94 +932,94 @@ phaseIdentifierList: phaseIdentifier {
 ;
 
 edgeInstancePhase: INITPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeInstance());
-   $$ = new C_initPhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
+   $$ = new C_initPhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 | RUNTIMEPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeInstance());
-   $$ = new C_runtimePhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
+   $$ = new C_runtimePhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 | FINALPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeInstance());
-   $$ = new C_finalPhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
+   $$ = new C_finalPhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 | LOADPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeInstance());
-   $$ = new C_loadPhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
+   $$ = new C_loadPhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 ;
 
 variableInstancePhase: INITPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeInstance());
-   $$ = new C_initPhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
+   $$ = new C_initPhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 | RUNTIMEPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeInstance());
-   $$ = new C_runtimePhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
+   $$ = new C_runtimePhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 | FINALPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeInstance());
-   $$ = new C_finalPhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
+   $$ = new C_finalPhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 | LOADPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeInstance());
-   $$ = new C_loadPhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
+   $$ = new C_loadPhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 ;
 
 nodeInstancePhase: INITPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeInstance());
-   $$ = new C_initPhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
+   $$ = new C_initPhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 | RUNTIMEPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeInstance());
-   $$ = new C_runtimePhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
+   $$ = new C_runtimePhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 | RUNTIMEPHASE GRIDLAYERS phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeGridLayers());
-   $$ = new C_runtimePhase($3, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeGridLayers());
+   $$ = new C_runtimePhase($3, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 | FINALPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeInstance());
-   $$ = new C_finalPhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
+   $$ = new C_finalPhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 | LOADPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeInstance());
-   $$ = new C_loadPhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeInstance());
+   $$ = new C_loadPhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 ;
 
 sharedPhase: INITPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeShared());
-   $$ = new C_initPhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeShared());
+   $$ = new C_initPhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 | RUNTIMEPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeShared());
-   $$ = new C_runtimePhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeShared());
+   $$ = new C_runtimePhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 | FINALPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeShared());
-   $$ = new C_finalPhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeShared());
+   $$ = new C_finalPhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 | LOADPHASE phaseIdentifierList ';' {
-   std::auto_ptr<PhaseType> pType(new PhaseTypeShared());
-   $$ = new C_loadPhase($2, pType);
+   std::unique_ptr<PhaseType> pType(new PhaseTypeShared());
+   $$ = new C_loadPhase($2, std::move(pType));
    $$->setTokenLocation(CURRENTFILE, @1.first_line);
 }
 ;
@@ -1520,11 +1504,40 @@ array : typeClassifier '[' ']' {
 ;
 
 %%
- 
-inline int mdllex(YYSTYPE *lvalp, YYLTYPE *locp, void *context)
+
+// Lexer implementation
+int mdllex(YYSTYPE* lvalp, YYLTYPE* locp, void* parm)
 {
-   return ((MdlContext *) context)->_lexer->lex(lvalp, locp, (MdlContext *) context);
+    return CONTEXT->_lexer->lex(lvalp, locp, CONTEXT);
 }
+
+// Error handling function
+void mdlerror(YYLTYPE* locp, void* parm, const char* s)
+{
+    MdlContext *c = (MdlContext *) parm;
+    if (c && c->_lexer && locp) {
+        // Store the error location in the context
+        c->setLastError(c->_lexer->currentFileName, locp->first_line);
+        
+        // Optional: add more detailed diagnostics for debugging
+        if (!c->isErrorDisplayed()) {
+            fprintf(stderr, "ERROR: [%s:%d] %s\n", 
+                    c->_lexer->currentFileName.c_str(),
+                    locp->first_line, 
+                    s);
+            
+            // When encountering a "missing semicolon" error, suggest checking the previous line
+            if (strstr(s, "expecting ';'") != NULL) {
+                fprintf(stderr, "HINT: The error might be a missing semicolon at the end of line %d.\n", 
+                  locp->first_line - 1);
+            }
+        }
+    } else {
+        fprintf(stderr, "Parser error: %s (location info unavailable)\n", s);
+    }
+}
+
+// Main and Helper Functions 
 
 int main(int argc, char *argv[])
 {
@@ -1538,27 +1551,25 @@ int main(int argc, char *argv[])
   char year_format[] = "%Y";
   char year[] = "mm-dd-yyyya";
   strftime(year, strlen(year), year_format, timetm);
-
-std::cout << ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n"
-          << ".                                                           .\n"
-          << ".  Licensed Materials - Property of IBM                     .\n"
-          << ".                                                           .\n"
-          << ".  \"Restricted Materials of IBM\"                            .\n"
-          << ".                                                           .\n"
-          //<< ".  BCM-YKT-07-18-2017                                     .\n"
-	  << ".  BCM-YKT-"
-	  << time_str << "                                     .\n"
-          << ".                                                           .\n"
-          //<< ".  (C) Copyright IBM Corp. 2005-2017  All rights reserved   .\n"
-	  << ".  (C) Copyright IBM Corp. 2005-"
-	  << year << "  All rights reserved   .\n"
-          << ".                                                           .\n"
-          << ".                                                           .\n"
-          << ".                                                           .\n"
-          << ".  This product includes software developed by the          .\n"
-          << ".  University of California, Berkeley and its contributors  .\n"
-          << ".                                                           .\n"
-          << ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n\n\n";
+  std::cout << ". . . . . . . . . . . . . . . . . . . . . ." << std::endl
+            << ".                                         ." << std::endl
+            << ".        /\\/\\/\\    ______     _           ." << std::endl
+            << ".       /      \\  |  __  \\   | |          ." << std::endl
+            << ".      /  /\\/\\  \\ | |  | |   | |          ." << std::endl
+            << ".     /  /    \\  \\| |  | |   | |          ." << std::endl
+            << ".    /  /      \\  \\ |__| |   | | ___      ." << std::endl
+            << ".    \\/\\/      /\\/ \\____/    |_|____\\     ." << std::endl
+            << ".     \\  \\    /     \\   /        /        ." << std::endl
+            << ".      \\  \\  /       \\ /        /         ." << std::endl
+            << ".       \\  \\/         \\        /          ." << std::endl
+            << ".        \\  \\\\        /\\      /           ." << std::endl
+            << ".         \\  \\\\      /  \\    /            ." << std::endl
+            << ".          \\  \\\\    /    \\  /             ." << std::endl
+            << ".           \\  \\\\  /      \\/              ." << std::endl
+            << ".            \\  \\\\/        *              ." << std::endl
+            << ".             \\  \\\\       * *             ." << std::endl
+            << ".              \\__/      * * *            ." << std::endl
+            << ". . . . . . . . . . . . . . . . . . . . . .\n\n\n";
 
    Initializer init(argc, argv);
    if (init.execute()) {
@@ -1566,14 +1577,4 @@ std::cout << ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n"
    } else {
       return 1;
    }
-}
-
-void mdlerror(const char *s)
-{
-   fprintf(stderr,"%s\n",s);
-}
-
-void mdlerror(YYLTYPE*, void*, const char *s)
-{
-   fprintf(stderr, "%s\n", s);
 }

@@ -1,7 +1,7 @@
-#include "Lens.h"
+#include "Mgs.h"
 #include "SetSourceArrayIndexFunctor.h"
 #include "CG_SetSourceArrayIndexFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ConnectionContext.h"
 #include "ParameterSetDataItem.h"
 #include "NodeDescriptor.h"
@@ -13,12 +13,12 @@
 
 #include <memory>
 
-void SetSourceArrayIndexFunctor::userInitialize(LensContext* CG_c, Functor*& destinationInAttr) 
+void SetSourceArrayIndexFunctor::userInitialize(GslContext* CG_c, Functor*& destinationInAttr) 
 {
-  destinationInAttr->duplicate(_destinationInAttr);
+  destinationInAttr->duplicate(std::move(_destinationInAttr));
 }
 
-std::unique_ptr<ParameterSet> SetSourceArrayIndexFunctor::userExecute(LensContext* CG_c) 
+std::unique_ptr<ParameterSet> SetSourceArrayIndexFunctor::userExecute(GslContext* CG_c) 
 {
   ConnectionContext* cc = CG_c->connectionContext;
   if (cc->restart) _indexMap.clear();
@@ -47,7 +47,7 @@ std::unique_ptr<ParameterSet> SetSourceArrayIndexFunctor::userExecute(LensContex
   paramsLocal.push_back(ndp);
 
   pset->set(paramsLocal);
-  pset->duplicate(rval);
+  pset->duplicate(std::move(rval));
   return rval;
 }
 
@@ -59,24 +59,24 @@ SetSourceArrayIndexFunctor::SetSourceArrayIndexFunctor()
 SetSourceArrayIndexFunctor::SetSourceArrayIndexFunctor(SetSourceArrayIndexFunctor const& f)
     : CG_SetSourceArrayIndexFunctorBase(f), _indexMap(f._indexMap)
 {
-  f._destinationInAttr->duplicate(_destinationInAttr);
+  f._destinationInAttr->duplicate(std::move(_destinationInAttr));
 }
 
 SetSourceArrayIndexFunctor::~SetSourceArrayIndexFunctor() 
 {
 }
 
-void SetSourceArrayIndexFunctor::duplicate(std::unique_ptr<SetSourceArrayIndexFunctor>& dup) const
+void SetSourceArrayIndexFunctor::duplicate(std::unique_ptr<SetSourceArrayIndexFunctor>&& dup) const
 {
    dup.reset(new SetSourceArrayIndexFunctor(*this));
 }
 
-void SetSourceArrayIndexFunctor::duplicate(std::unique_ptr<Functor>& dup) const
+void SetSourceArrayIndexFunctor::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new SetSourceArrayIndexFunctor(*this));
 }
 
-void SetSourceArrayIndexFunctor::duplicate(std::unique_ptr<CG_SetSourceArrayIndexFunctorBase>& dup) const
+void SetSourceArrayIndexFunctor::duplicate(std::unique_ptr<CG_SetSourceArrayIndexFunctorBase>&& dup) const
 {
    dup.reset(new SetSourceArrayIndexFunctor(*this));
 }

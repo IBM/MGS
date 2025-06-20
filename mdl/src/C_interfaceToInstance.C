@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_interfaceToInstance.h"
 #include "C_interfaceMapping.h"
 #include "C_generalList.h"
@@ -28,9 +21,9 @@ void C_interfaceToInstance::execute(MdlContext* context)
 
 void C_interfaceToInstance::addToList(C_generalList* gl) 
 {  
-   std::auto_ptr<C_interfaceToInstance> im;
+   std::unique_ptr<C_interfaceToInstance> im;
    im.reset(new C_interfaceToInstance(*this));
-   gl->addInterfaceToInstance(im);
+   gl->addInterfaceToInstance(std::move(im));
 }
 
 C_interfaceToInstance::C_interfaceToInstance() 
@@ -46,18 +39,18 @@ C_interfaceToInstance::C_interfaceToInstance(
 } 
 
 void C_interfaceToInstance::duplicate(
-   std::auto_ptr<C_interfaceToInstance>& rv) const
+   std::unique_ptr<C_interfaceToInstance>&& rv) const
 {
    rv.reset(new C_interfaceToInstance(*this));
 }
 
 void C_interfaceToInstance::duplicate(
-   std::auto_ptr<C_interfaceMapping>& rv) const
+   std::unique_ptr<C_interfaceMapping>&& rv) const
 {
    rv.reset(new C_interfaceToInstance(*this));
 }
 
-void C_interfaceToInstance::duplicate(std::auto_ptr<C_general>& rv) const
+void C_interfaceToInstance::duplicate(std::unique_ptr<C_general>&& rv) const
 {
    rv.reset(new C_interfaceToInstance(*this));
 }

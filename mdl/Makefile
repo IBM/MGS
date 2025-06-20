@@ -23,7 +23,7 @@ OBJECTONLYFLAGS :=
 
 # Look for include files in each of the modules
 #  This will append CFLAGS with a string like '-Idir1/include -Idir2/include'
-CFLAGS := -Iinclude -Iparser  -std=c++11 -Wno-deprecated-declarations
+CFLAGS := -Iinclude -Iparser  -std=c++17 -Wno-deprecated-declarations
 
 # Create a variable 'ADDCFLAGS' that you can use to add to the CFLAGS from the
 # command line option of gmake if necessary
@@ -43,7 +43,7 @@ SRCS :=
 FINAL_TARGET_FLAG := 
 
 ifeq ($(CC), g++)
-  CFLAGS += -std=c++11 -Wall -Wno-unused -Wpointer-arith -Wcast-qual -Wcast-align -Wno-deprecated-declarations
+  CFLAGS += -std=c++17 -Wall -Wno-unused -Wpointer-arith -Wcast-qual -Wcast-align -Wno-deprecated-declarations
 endif
 
 ifeq ($(OPERATING_SYSTEM), Linux)
@@ -98,12 +98,13 @@ include sources.mk
 
 # Parser targets
 mdl.tab.h:  parser/mdl.y
-	cd parser; bison -v -d -b mdl mdl.y; cd ..
-	cd parser; mv mdl.tab.h ../include; cd -
-	
+	cd parser && bison -v -d -b mdl mdl.y
+	cp parser/mdl.tab.h include/
+	if [ -f parser/mdl.tab.c ]; then cp parser/mdl.tab.c parser/mdl.tab.cpp 2>/dev/null; fi
 
-parser/mdl.tab.c: parser/mdl.y
-	cd parser; bison -v -d -b mdl mdl.y; cd ..
+parser/mdl.tab.cpp: parser/mdl.y
+	cd parser && bison -v -d -b mdl mdl.y
+	if [ -f parser/mdl.tab.c ]; then cp parser/mdl.tab.c parser/mdl.tab.cpp 2>/dev/null; fi
 
 # Scanner targets
 ifeq ($(FLEXFIXER), True)
@@ -146,10 +147,10 @@ lib/libmdl.a: $(OBJS) | $(LIB_DIR)
 LIBS += lib/libmdl.a
 
 
-final: mdl.tab.h $(OBJS) parser/mdl.tab.c lib/libmdl.a scanner/lex.yy.cc
+final: mdl.tab.h $(OBJS) parser/mdl.tab.cpp lib/libmdl.a scanner/lex.yy.cc
 	@mkdir -p $(BIN_DIR)
 	-rm -f $(BIN_DIR)/$(EXE_FILE)
-	$(CC) $(CFLAGS) parser/mdl.tab.c scanner/lex.yy.cc $(LIBS) \
+	$(CC) $(CFLAGS) -Wno-sign-compare parser/mdl.tab.cpp scanner/lex.yy.cc $(LIBS) \
            $(XLINKER) -o $(BIN_DIR)/$(EXE_FILE) $(FINAL_TARGET_FLAG)
 
 .PHONY: clean
@@ -157,7 +158,7 @@ clean:
 	-rm -f $(OBJS_DIR)/*
 	-rm -f $(BIN_DIR)/$(EXE_FILE)
 	-rm -f parser/mdl.output
-	-rm -f parser/mdl.tab.c
+	-rm -f parser/mdl.tab.cpp
 	-rm -f parser/mdl.tab.h
 	-rm -f scanner/lex.yy.cc
 

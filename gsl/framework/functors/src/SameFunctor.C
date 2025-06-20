@@ -1,20 +1,13 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "SameFunctor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "DataItem.h"
 #include "FunctorType.h"
 #include "ParameterSetDataItem.h"
@@ -34,11 +27,11 @@ SameFunctor::SameFunctor()
 
 SameFunctor::SameFunctor(const SameFunctor& csf)
 {
-   if (csf._pset.get()) csf._pset.get()->duplicate(_pset);
+   if (csf._pset.get()) csf._pset.get()->duplicate(std::move(_pset));
 }
 
 
-void SameFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void SameFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new SameFunctor(*this));
 }
@@ -50,7 +43,7 @@ SameFunctor::~SameFunctor()
 }
 
 
-void SameFunctor::doInitialize(LensContext *c, 
+void SameFunctor::doInitialize(GslContext *c, 
 			       const std::vector<DataItem*>& args)
 {
    if (args.size() != 1) {
@@ -62,14 +55,14 @@ void SameFunctor::doInitialize(LensContext *c,
       throw SyntaxErrorException(
 	 "Dynamic cast of DataItem to ParameterSetDataItem failed on SameFunctor");
    }
-   if (psdi->getParameterSet()) psdi->getParameterSet()->duplicate(_pset);
+   if (psdi->getParameterSet()) psdi->getParameterSet()->duplicate(std::move(_pset));
    else {
       throw SyntaxErrorException(
 	 "Bad ParameterSetDataItem passed to initialize SameFunctor");
    }
 }
 
-void SameFunctor::doExecute(LensContext *c, 
+void SameFunctor::doExecute(GslContext *c, 
 			    const std::vector<DataItem*>& args, 
 			    std::unique_ptr<DataItem>& rvalue)
 {

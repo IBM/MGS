@@ -1,30 +1,23 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
-#include "Lens.h"
+// =============================================================================
+#include "Mgs.h"
 #include "Log.h"
 #include "CG_LogBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 #include <math.h>
 
-void Log::userInitialize(LensContext* CG_c, Functor*& f) 
+void Log::userInitialize(GslContext* CG_c, Functor*& f) 
 {
 }
 
-double Log::userExecute(LensContext* CG_c) 
+double Log::userExecute(GslContext* CG_c) 
 {
   std::vector<DataItem*> nullArgs;
   std::unique_ptr<DataItem> rval_ap;
@@ -46,17 +39,17 @@ Log::~Log()
 {
 }
 
-void Log::duplicate(std::unique_ptr<Log>& dup) const
+void Log::duplicate(std::unique_ptr<Log>&& dup) const
 {
    dup.reset(new Log(*this));
 }
 
-void Log::duplicate(std::unique_ptr<Functor>& dup) const
+void Log::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new Log(*this));
 }
 
-void Log::duplicate(std::unique_ptr<CG_LogBase>& dup) const
+void Log::duplicate(std::unique_ptr<CG_LogBase>&& dup) const
 {
    dup.reset(new Log(*this));
 }

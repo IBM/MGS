@@ -1,4 +1,13 @@
-#include "Lens.h"
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
+#include "Mgs.h"
 #include "IzhikUnitDataCollector.h"
 #include "CG_IzhikUnitDataCollector.h"
 #include "NodeDescriptor.h"
@@ -155,7 +164,7 @@ void IzhikUnitDataCollector::dataCollectionSpike(Trigger* trigger, NDPairList* n
 
 
 
-void IzhikUnitDataCollector::getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_IzhikUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_IzhikUnitDataCollectorOutAttrPSet* CG_outAttrPset) 
+void IzhikUnitDataCollector::getNodeIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_IzhikUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_IzhikUnitDataCollectorOutAttrPSet* CG_outAttrPset) 
 {
   ShallowArray<unsigned,3,2> coords;
   CG_node->getNode()->getNodeCoords(coords);
@@ -175,17 +184,17 @@ IzhikUnitDataCollector::~IzhikUnitDataCollector()
   if (trans_file) delete trans_file;
 }
 
-void IzhikUnitDataCollector::duplicate(std::unique_ptr<IzhikUnitDataCollector>& dup) const
+void IzhikUnitDataCollector::duplicate(std::unique_ptr<IzhikUnitDataCollector>&& dup) const
 {
    dup.reset(new IzhikUnitDataCollector(*this));
 }
 
-void IzhikUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
+void IzhikUnitDataCollector::duplicate(std::unique_ptr<Variable>&& dup) const
 {
    dup.reset(new IzhikUnitDataCollector(*this));
 }
 
-void IzhikUnitDataCollector::duplicate(std::unique_ptr<CG_IzhikUnitDataCollector>& dup) const
+void IzhikUnitDataCollector::duplicate(std::unique_ptr<CG_IzhikUnitDataCollector>&& dup) const
 {
    dup.reset(new IzhikUnitDataCollector(*this));
 }

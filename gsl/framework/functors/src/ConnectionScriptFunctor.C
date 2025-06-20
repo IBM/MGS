@@ -1,20 +1,13 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "ConnectionScriptFunctor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include"C_connection_script_definition_body.h"
 #include "DataItem.h"
 #include "InstanceFactoryQueriable.h"
@@ -36,7 +29,7 @@ ConnectionScriptFunctor::ConnectionScriptFunctor(
 }
 
 
-void ConnectionScriptFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void ConnectionScriptFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new ConnectionScriptFunctor(*this));
 }
@@ -49,13 +42,13 @@ ConnectionScriptFunctor::~ConnectionScriptFunctor()
 }
 
 
-void ConnectionScriptFunctor::doInitialize(LensContext *c, 
+void ConnectionScriptFunctor::doInitialize(GslContext *c, 
 					   const std::vector<DataItem*>& args)
 {
 }
 
 
-void ConnectionScriptFunctor::doExecute(LensContext *c, 
+void ConnectionScriptFunctor::doExecute(GslContext *c, 
 					const std::vector<DataItem*>& args, 
 					std::unique_ptr<DataItem>& rvalue)
 {

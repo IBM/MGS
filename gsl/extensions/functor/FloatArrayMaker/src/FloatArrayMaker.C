@@ -1,15 +1,15 @@
-#include "Lens.h"
+#include "Mgs.h"
 #include "FloatArrayMaker.h"
 #include "CG_FloatArrayMakerBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ShallowArray.h"
 #include <memory>
 
-void FloatArrayMaker::userInitialize(LensContext* CG_c, Functor*& f, int& size) 
+void FloatArrayMaker::userInitialize(GslContext* CG_c, Functor*& f, int& size) 
 {
 }
 
-ShallowArray< float > FloatArrayMaker::userExecute(LensContext* CG_c) 
+ShallowArray< float > FloatArrayMaker::userExecute(GslContext* CG_c) 
 {
   ShallowArray<float> this_rval;
   this_rval.increaseSizeTo(init.size);
@@ -39,17 +39,17 @@ FloatArrayMaker::~FloatArrayMaker()
 {
 }
 
-void FloatArrayMaker::duplicate(std::unique_ptr<FloatArrayMaker>& dup) const
+void FloatArrayMaker::duplicate(std::unique_ptr<FloatArrayMaker>&& dup) const
 {
    dup.reset(new FloatArrayMaker(*this));
 }
 
-void FloatArrayMaker::duplicate(std::unique_ptr<Functor>& dup) const
+void FloatArrayMaker::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new FloatArrayMaker(*this));
 }
 
-void FloatArrayMaker::duplicate(std::unique_ptr<CG_FloatArrayMakerBase>& dup) const
+void FloatArrayMaker::duplicate(std::unique_ptr<CG_FloatArrayMakerBase>&& dup) const
 {
    dup.reset(new FloatArrayMaker(*this));
 }

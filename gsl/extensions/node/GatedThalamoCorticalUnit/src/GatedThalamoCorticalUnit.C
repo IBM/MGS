@@ -1,4 +1,13 @@
-#include "Lens.h"
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
+#include "Mgs.h"
 #include "GatedThalamoCorticalUnit.h"
 #include "CG_GatedThalamoCorticalUnit.h"
 #include "GridLayerData.h"
@@ -84,7 +93,7 @@ void GatedThalamoCorticalUnit::whiten(RNG& rng){
   }
 }
 
-void GatedThalamoCorticalUnit::setIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_GatedThalamoCorticalUnitInAttrPSet* CG_inAttrPset, CG_GatedThalamoCorticalUnitOutAttrPSet* CG_outAttrPset) 
+void GatedThalamoCorticalUnit::setIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_GatedThalamoCorticalUnitInAttrPSet* CG_inAttrPset, CG_GatedThalamoCorticalUnitOutAttrPSet* CG_outAttrPset) 
 {
   int row = getGlobalIndex()+1; // +1 is for Matlab
   int col = CG_node->getGlobalIndex()+1;

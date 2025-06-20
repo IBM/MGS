@@ -1,8 +1,17 @@
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
 #ifndef ChannelCaT_GHK_H
 #define ChannelCaT_GHK_H
 
 #include "CG_ChannelCaT_GHK.h"
-#include "Lens.h"
+#include "Mgs.h"
 #include "rndm.h"
 
 #include "MaxComputeOrder.h"
@@ -27,7 +36,7 @@ class ChannelCaT_GHK : public CG_ChannelCaT_GHK
   virtual ~ChannelCaT_GHK();
   static void initialize_others();
   #ifdef MICRODOMAIN_CALCIUM
-  virtual void setCalciumMicrodomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ChannelCaT_GHKInAttrPSet* CG_inAttrPset, CG_ChannelCaT_GHKOutAttrPSet* CG_outAttrPset);
+  virtual void setCalciumMicrodomain(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ChannelCaT_GHKInAttrPSet* CG_inAttrPset, CG_ChannelCaT_GHKOutAttrPSet* CG_outAttrPset);
   int _offset; //the offset due to the presence of different Ca2+-microdomain
   #endif
 

@@ -1,20 +1,13 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "NDPair.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "IntDataItem.h"
 #include "DoubleDataItem.h"
 
@@ -27,7 +20,7 @@ NDPair::NDPair(const std::string& name, std::unique_ptr<DataItem>& di)
 NDPair::NDPair(const std::string& name, const std::string& value)
 : _name(name)
 {
-  _dataItem.reset(new StringDataItem(value));
+  _dataItem.reset(new CustomStringDataItem(value));
 }
 
 NDPair::NDPair(const std::string& name, int value)
@@ -97,7 +90,7 @@ std::string NDPair::getValue() const
 
 void NDPair::setValue(const std::string& value)
 {
-  _dataItem.reset(new StringDataItem(value));
+  _dataItem.reset(new CustomStringDataItem(value));
 }
 
 void NDPair::setValue(int value)

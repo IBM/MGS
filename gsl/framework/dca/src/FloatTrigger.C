@@ -1,25 +1,18 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "FloatTrigger.h"
 #include "DataItem.h"
 #include "FloatArrayDataItem.h"
 #include "NumericDataItem.h"
 #include "Simulation.h"
 #include "Service.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "BoolDataItem.h"
 #include "TriggerDataItem.h"
 #include "ServiceDataItem.h"
@@ -38,11 +31,11 @@ FloatTrigger::FloatTrigger(Simulation& sim, std::vector<DataItem*> const& args)
     exit(-1);
   }
   std::vector<DataItem*>::const_iterator iter = args.begin();
-  StringDataItem* descriptionDI = dynamic_cast<StringDataItem*>(*iter);
+  CustomStringDataItem* descriptionDI = dynamic_cast<CustomStringDataItem*>(*iter);
   if (descriptionDI == 0)
   {
     std::cerr
-        << "Dynamic cast of DataItem to StringDataItem failed on FloatTrigger!"
+        << "Dynamic cast of DataItem to CustomStringDataItem failed on FloatTrigger!"
         << std::endl;
     exit(-1);
   }
@@ -57,11 +50,11 @@ FloatTrigger::FloatTrigger(Simulation& sim, std::vector<DataItem*> const& args)
     exit(-1);
   }
   ++iter;
-  StringDataItem* opDI = dynamic_cast<StringDataItem*>(*iter);
+  CustomStringDataItem* opDI = dynamic_cast<CustomStringDataItem*>(*iter);
   if (opDI == 0)
   {
     std::cerr
-        << "Dynamic cast of DataItem to StringDataItem failed on FloatTrigger!"
+        << "Dynamic cast of DataItem to CustomStringDataItem failed on FloatTrigger!"
         << std::endl;
     exit(-1);
   }
@@ -168,7 +161,7 @@ bool FloatTrigger::isGreaterThanOrEqual() { return (*_service) >= _criterion; }
 
 bool FloatTrigger::isLessThanOrEqual() { return (*_service) <= _criterion; }
 
-void FloatTrigger::duplicate(std::unique_ptr<Trigger>& dup) const
+void FloatTrigger::duplicate(std::unique_ptr<Trigger>&& dup) const
 {
   dup.reset(new FloatTrigger(*this));
 }

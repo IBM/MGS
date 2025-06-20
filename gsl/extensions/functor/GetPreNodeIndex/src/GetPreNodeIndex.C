@@ -1,15 +1,15 @@
-#include "Lens.h"
+#include "Mgs.h"
 #include "GetPreNodeIndex.h"
 #include "CG_GetPreNodeIndexBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "NodeDescriptor.h"
 #include <memory>
 
-void GetPreNodeIndex::userInitialize(LensContext* CG_c) 
+void GetPreNodeIndex::userInitialize(GslContext* CG_c) 
 {
 }
 
-int GetPreNodeIndex::userExecute(LensContext* CG_c) 
+int GetPreNodeIndex::userExecute(GslContext* CG_c) 
 {
   return CG_c->connectionContext->sourceNode->getNodeIndex();
 }
@@ -23,17 +23,17 @@ GetPreNodeIndex::~GetPreNodeIndex()
 {
 }
 
-void GetPreNodeIndex::duplicate(std::unique_ptr<GetPreNodeIndex>& dup) const
+void GetPreNodeIndex::duplicate(std::unique_ptr<GetPreNodeIndex>&& dup) const
 {
    dup.reset(new GetPreNodeIndex(*this));
 }
 
-void GetPreNodeIndex::duplicate(std::unique_ptr<Functor>& dup) const
+void GetPreNodeIndex::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new GetPreNodeIndex(*this));
 }
 
-void GetPreNodeIndex::duplicate(std::unique_ptr<CG_GetPreNodeIndexBase>& dup) const
+void GetPreNodeIndex::duplicate(std::unique_ptr<CG_GetPreNodeIndexBase>&& dup) const
 {
    dup.reset(new GetPreNodeIndex(*this));
 }

@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-11-14-2018
-//
-// (C) Copyright IBM Corp. 2005-2018  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "CompCategoryBase.h"
 #include "InterfaceImplementorBase.h"
 #include "MemberContainer.h"
@@ -66,13 +59,13 @@ CompCategoryBase& CompCategoryBase::operator=(const CompCategoryBase& rv)
    return *this;
 }
 
-void CompCategoryBase::releaseInAttrPSet(std::auto_ptr<StructType>& iap)
+void CompCategoryBase::releaseInAttrPSet(std::unique_ptr<StructType>&& iap)
 {
    iap.reset(_inAttrPSet);
    _inAttrPSet = 0;
 }
 
-void CompCategoryBase::setInAttrPSet(std::auto_ptr<StructType>& iap)
+void CompCategoryBase::setInAttrPSet(std::unique_ptr<StructType>&& iap)
 {
    delete _inAttrPSet;
    _inAttrPSet = iap.release();
@@ -136,17 +129,17 @@ void CompCategoryBase::copyOwnedHeap(const CompCategoryBase& rv)
       _instancePhases = new std::vector<Phase*>();
       std::vector<Phase*>::const_iterator it, 
 	 end = rv._instancePhases->end();
-      std::auto_ptr<Phase> dup;   
+      std::unique_ptr<Phase> dup;   
       for (it = rv._instancePhases->begin(); it != end; ++it) {
-	 (*it)->duplicate(dup);
+	 (*it)->duplicate(std::move(dup));
 	 _instancePhases->push_back(dup.release());
       }
    } else {
       _instancePhases = 0;
    }
    if (rv._inAttrPSet) {
-      std::auto_ptr<StructType> dup;
-      rv._inAttrPSet->duplicate(dup);
+      std::unique_ptr<StructType> dup;
+      rv._inAttrPSet->duplicate(std::move(dup));
       _inAttrPSet = dup.release();
    } else {
       _inAttrPSet = 0;
@@ -155,17 +148,17 @@ void CompCategoryBase::copyOwnedHeap(const CompCategoryBase& rv)
       _triggeredFunctions = new std::vector<TriggeredFunction*>();
       std::vector<TriggeredFunction*>::const_iterator it
 	 , end = rv._triggeredFunctions->end();
-      std::auto_ptr<TriggeredFunction> dup;   
+      std::unique_ptr<TriggeredFunction> dup;   
       for (it = rv._triggeredFunctions->begin(); it != end; ++it) {
-	 (*it)->duplicate(dup);
+	 (*it)->duplicate(std::move(dup));
 	 _triggeredFunctions->push_back(dup.release());
       }
    } else {
       _triggeredFunctions = 0;
    }
    if (rv._connectionIncrement) {
-      std::auto_ptr<ConnectionIncrement> dup;
-      rv._connectionIncrement->duplicate(dup);
+      std::unique_ptr<ConnectionIncrement> dup;
+      rv._connectionIncrement->duplicate(std::move(dup));
       _connectionIncrement = dup.release();
    } else {
       _connectionIncrement = 0;
@@ -196,7 +189,7 @@ void CompCategoryBase::destructOwnedHeap()
 }
 
 void CompCategoryBase::setTriggeredFunctions(
-   std::auto_ptr<std::vector<TriggeredFunction*> >& triggeredFunction) 
+   std::unique_ptr<std::vector<TriggeredFunction*> >& triggeredFunction) 
 {
    delete _triggeredFunctions;
    _triggeredFunctions = triggeredFunction.release();
@@ -204,8 +197,8 @@ void CompCategoryBase::setTriggeredFunctions(
 
 void CompCategoryBase::generateInAttrPSet()
 {
-   std::auto_ptr<Class> instance;
-   createPSetClass(instance, _inAttrPSet->_members, "InAttr");
+   std::unique_ptr<Class> instance;
+   createPSetClass(std::move(instance), _inAttrPSet->_members, "InAttr");
    _classes.push_back(instance.release());
 }
 
@@ -217,13 +210,13 @@ void CompCategoryBase::generatePSet()
 }
 void CompCategoryBase::generatePSet(bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType )
 {
-   std::auto_ptr<Class> instance;
+   std::unique_ptr<Class> instance;
    if (use_classType)
    {
-      createPSetClass(instance, getInstances(), use_classType, classType);
+      createPSetClass(std::move(instance), getInstances(), use_classType, classType);
    }
    else
-      createPSetClass(instance, getInstances());
+      createPSetClass(std::move(instance), getInstances());
    _classes.push_back(instance.release());
 }
 
@@ -240,7 +233,7 @@ void CompCategoryBase::addExtraInstanceBaseMethods(Class& instance) const
    instance.addFriendDeclaration(ccBaseFriend);
 
    // initialize method
-   std::auto_ptr<Method> initializeMethod(new Method("initialize", "void"));
+   std::unique_ptr<Method> initializeMethod(new Method("initialize", "void"));
    initializeMethod->setVirtual();
    initializeMethod->addParameter("ParameterSet* " + PREFIX + "initPSet");
    std::ostringstream initializeFB;
@@ -319,7 +312,7 @@ getCompCategory()->um_interneuronInputs[index].copyContents(CG_pset->interneuron
       }
    }
    initializeMethod->setFunctionBody(initializeFB.str());
-   instance.addMethod(initializeMethod);
+   instance.addMethod(std::move(initializeMethod));
 
    // Add the phase methods
    if(_instancePhases) {
@@ -341,37 +334,37 @@ getCompCategory()->um_interneuronInputs[index].copyContents(CG_pset->interneuron
       "\"" + getTriggerableCallerInstanceName() + ".h\"");
 
    // Add initialization PSet method
-   std::auto_ptr<Method> getInitializationParameterSetMethod(
+   std::unique_ptr<Method> getInitializationParameterSetMethod(
       new Method("getInitializationParameterSet", "void"));
    getInitializationParameterSetMethod->setConst();
    getInitializationParameterSetMethod->setVirtual();
    getInitializationParameterSetMethod->addParameter(
-      "std::unique_ptr<ParameterSet>& initPSet");
+      "std::unique_ptr<ParameterSet>&& initPSet");
    getInitializationParameterSetMethod->setFunctionBody(
       TAB + "initPSet.reset(new " + getPSetName() + "());\n");
-   instance.addMethod(getInitializationParameterSetMethod);
+   instance.addMethod(std::move(getInitializationParameterSetMethod));
 
    // Add in attribute PSet method
-   std::auto_ptr<Method> getInAttrParameterSetMethod(
+   std::unique_ptr<Method> getInAttrParameterSetMethod(
       new Method("getInAttrParameterSet", "void"));
    getInAttrParameterSetMethod->setConst();
    getInAttrParameterSetMethod->setVirtual();
    getInAttrParameterSetMethod->addParameter(
-      "std::unique_ptr<ParameterSet>& " + INATTRPSETNAME);
+      "std::unique_ptr<ParameterSet>&& " + INATTRPSETNAME);
    getInAttrParameterSetMethod->setFunctionBody(
       TAB + INATTRPSETNAME + ".reset(new " + getInAttrPSetName() + "());\n");
-   instance.addMethod(getInAttrParameterSetMethod);
+   instance.addMethod(std::move(getInAttrParameterSetMethod));
 
    // Add out attribute PSet method
-   std::auto_ptr<Method> getOutAttrParameterSetMethod(
+   std::unique_ptr<Method> getOutAttrParameterSetMethod(
       new Method("getOutAttrParameterSet", "void"));
    getOutAttrParameterSetMethod->setConst();
    getOutAttrParameterSetMethod->setVirtual();
    getOutAttrParameterSetMethod->addParameter(
-      "std::unique_ptr<ParameterSet>& " + OUTATTRPSETNAME);
+      "std::unique_ptr<ParameterSet>&& " + OUTATTRPSETNAME);
    getOutAttrParameterSetMethod->setFunctionBody(
       TAB + OUTATTRPSETNAME + ".reset(new " + getOutAttrPSetName() + "());\n");
-   instance.addMethod(getOutAttrParameterSetMethod);
+   instance.addMethod(std::move(getOutAttrParameterSetMethod));
 }
 
 void CompCategoryBase::addExtraInstanceProxyMethods(Class& instance) const
@@ -386,37 +379,37 @@ void CompCategoryBase::addExtraInstanceProxyMethods(Class& instance) const
      instance.addHeader("\"" + getOutAttrPSetName() + ".h\"");
 
    // Add initialization PSet method
-     std::auto_ptr<Method> getInitializationParameterSetMethod(
+     std::unique_ptr<Method> getInitializationParameterSetMethod(
        new Method("getInitializationParameterSet", "void"));
      getInitializationParameterSetMethod->setConst();
      getInitializationParameterSetMethod->setVirtual();
      getInitializationParameterSetMethod->addParameter(
-						       "std::unique_ptr<ParameterSet>& initPSet");
+						       "std::unique_ptr<ParameterSet>&& initPSet");
      getInitializationParameterSetMethod->setFunctionBody(
 							  TAB + "initPSet.reset(new " + getPSetName() + "());\n");
-     instance.addMethod(getInitializationParameterSetMethod);
+     instance.addMethod(std::move(getInitializationParameterSetMethod));
 
    // Add in attribute PSet method
-     std::auto_ptr<Method> getInAttrParameterSetMethod(
+     std::unique_ptr<Method> getInAttrParameterSetMethod(
        new Method("getInAttrParameterSet", "void"));
      getInAttrParameterSetMethod->setConst();
      getInAttrParameterSetMethod->setVirtual();
      getInAttrParameterSetMethod->addParameter(
-					       "std::unique_ptr<ParameterSet>& " + INATTRPSETNAME);
+					       "std::unique_ptr<ParameterSet>&& " + INATTRPSETNAME);
      getInAttrParameterSetMethod->setFunctionBody(
        TAB + INATTRPSETNAME + ".reset(new " + getInAttrPSetName() + "());\n");
-     instance.addMethod(getInAttrParameterSetMethod);
+     instance.addMethod(std::move(getInAttrParameterSetMethod));
 
    // Add out attribute PSet method
-     std::auto_ptr<Method> getOutAttrParameterSetMethod(
+     std::unique_ptr<Method> getOutAttrParameterSetMethod(
        new Method("getOutAttrParameterSet", "void"));
      getOutAttrParameterSetMethod->setConst();
      getOutAttrParameterSetMethod->setVirtual();
      getOutAttrParameterSetMethod->addParameter(
-						"std::unique_ptr<ParameterSet>& " + OUTATTRPSETNAME);
+						"std::unique_ptr<ParameterSet>&& " + OUTATTRPSETNAME);
      getOutAttrParameterSetMethod->setFunctionBody(
        TAB + OUTATTRPSETNAME + ".reset(new " + getOutAttrPSetName() + "());\n");
-     instance.addMethod(getOutAttrParameterSetMethod);
+     instance.addMethod(std::move(getOutAttrParameterSetMethod));
    }
    instance.addClass(getCompCategoryBaseName());
 
@@ -431,7 +424,7 @@ void CompCategoryBase::generateInstance()
 }
 void CompCategoryBase::generateInstance(bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType, Class* compcat_ptr)
 {
-   std::auto_ptr<Class> instance(new Class(getInstanceName()));
+   std::unique_ptr<Class> instance(new Class(getInstanceName()));
    //if (isSupportedMachineType(MachineType::GPU) and use_classType)
    if (use_classType)
       instance->setClassInfo(classType);
@@ -463,12 +456,12 @@ void CompCategoryBase::generateInstance(bool use_classType, std::pair<Class::Pri
 
 void CompCategoryBase::generateCompCategoryBase(Class* ptr)
 {
-   std::auto_ptr<Class> instance(ptr == nullptr? new Class(getCompCategoryBaseName()) : ptr);
+   std::unique_ptr<Class> instance(ptr == nullptr? new Class(getCompCategoryBaseName()) : ptr);
    if (isSupportedMachineType(MachineType::GPU))
       instance->setClassInfo(std::make_pair(Class::PrimeType::Node, Class::SubType::BaseCompCategory));
 
-   std::auto_ptr<BaseClass> base(new BaseClass(getFrameworkCompCategoryName()));   
-   instance->addBaseClass(base);
+   std::unique_ptr<BaseClass> base(new BaseClass(getFrameworkCompCategoryName()));   
+   instance->addBaseClass(std::move(base));
  
    //instance->addHeader("\"Edge.h\"");
    instance->addHeader("\"Simulation.h\"");
@@ -492,34 +485,34 @@ void CompCategoryBase::generateCompCategoryBase(Class* ptr)
    addCompCategoryBaseConstructorMethod(*(instance.get()));
 
    // Add initialization PSet method
-   std::auto_ptr<Method> getInitializationParameterSetMethod(
+   std::unique_ptr<Method> getInitializationParameterSetMethod(
       new Method("getInitializationParameterSet", "void"));
    getInitializationParameterSetMethod->setVirtual();
    getInitializationParameterSetMethod->addParameter(
-      "std::unique_ptr<ParameterSet>& initPSet");
+      "std::unique_ptr<ParameterSet>&& initPSet");
    getInitializationParameterSetMethod->setFunctionBody(
       TAB + "initPSet.reset(new " + getPSetName() + "());\n");
-   instance->addMethod(getInitializationParameterSetMethod);
+   instance->addMethod(std::move(getInitializationParameterSetMethod));
 
    // Add in attribute PSet method
-   std::auto_ptr<Method> getInAttrParameterSetMethod(
+   std::unique_ptr<Method> getInAttrParameterSetMethod(
       new Method("getInAttrParameterSet", "void"));
    getInAttrParameterSetMethod->setVirtual();
    getInAttrParameterSetMethod->addParameter(
-      "std::unique_ptr<ParameterSet>& " + INATTRPSETNAME);
+      "std::unique_ptr<ParameterSet>&& " + INATTRPSETNAME);
    getInAttrParameterSetMethod->setFunctionBody(
       TAB + INATTRPSETNAME + ".reset(new " + getInAttrPSetName() + "());\n");
-   instance->addMethod(getInAttrParameterSetMethod);
+   instance->addMethod(std::move(getInAttrParameterSetMethod));
 
    // Add out attribute PSet method
-   std::auto_ptr<Method> getOutAttrParameterSetMethod(
+   std::unique_ptr<Method> getOutAttrParameterSetMethod(
       new Method("getOutAttrParameterSet", "void"));
    getOutAttrParameterSetMethod->setVirtual();
    getOutAttrParameterSetMethod->addParameter(
-      "std::unique_ptr<ParameterSet>& " + OUTATTRPSETNAME);
+      "std::unique_ptr<ParameterSet>&& " + OUTATTRPSETNAME);
    getOutAttrParameterSetMethod->setFunctionBody(
       TAB + OUTATTRPSETNAME + ".reset(new " + getOutAttrPSetName() + "());\n");
-   instance->addMethod(getOutAttrParameterSetMethod);
+   instance->addMethod(std::move(getOutAttrParameterSetMethod));
 
    // Add getSharedMembers() to the current class 
    instance->addKernelArgs("_nodes.size()", "size", "unsigned");
@@ -538,12 +531,12 @@ void CompCategoryBase::generateCompCategoryBase(Class* ptr)
    // Add getWorkUnits method 
    std::string phaseName = "phaseName";
    std::string workUnits = "workUnits";
-   std::auto_ptr<Method> getWorkUnitsMethod(
+   std::unique_ptr<Method> getWorkUnitsMethod(
       new Method("getWorkUnits", "void"));   
    getWorkUnitsMethod->setVirtual();
    getWorkUnitsMethod->setFunctionBody(
       createGetWorkUnitsMethodBody(phaseName, workUnits));
-   instance->addMethod(getWorkUnitsMethod);
+   instance->addMethod(std::move(getWorkUnitsMethod));
 
    if (!strcmp(getType().c_str(), "Node") || !strcmp(getType().c_str(), "Variable")) {
       MacroConditional mpiConditional(MPICONDITIONAL);
@@ -555,14 +548,14 @@ void CompCategoryBase::generateCompCategoryBase(Class* ptr)
          secondParam = "node";
       else if (!strcmp(getType().c_str(), "Variable"))
          secondParam = "variable";
-      std::auto_ptr<Method> addToSendMap(
+      std::unique_ptr<Method> addToSendMap(
          new Method("addToSendMap", "void"));   
       addToSendMap->addParameter("int " + firstParam);
       addToSendMap->addParameter(getType() + "* " + secondParam);
       addToSendMap->setVirtual();
       addToSendMap->setFunctionBody(createAddNodeMethodBody(firstParam, secondParam));
       addToSendMap->setMacroConditional(mpiConditional);
-      instance->addMethod(addToSendMap);
+      instance->addMethod(std::move(addToSendMap));
    
       // Add allocateProxy method 
       firstParam = "fromPartitionId";
@@ -570,14 +563,14 @@ void CompCategoryBase::generateCompCategoryBase(Class* ptr)
          secondParam = "nd";
       else if (!strcmp(getType().c_str(), "Variable"))
          secondParam = "vd";
-      std::auto_ptr<Method> allocateProxy(
+      std::unique_ptr<Method> allocateProxy(
          new Method("allocateProxy", "void"));   
       allocateProxy->addParameter("int " + firstParam);
       allocateProxy->addParameter(getType() + "Descriptor* " + secondParam);
       allocateProxy->setVirtual();
       allocateProxy->setFunctionBody(createAllocateProxyMethodBody(firstParam, secondParam));
       allocateProxy->setMacroConditional(mpiConditional);
-      instance->addMethod(allocateProxy);
+      instance->addMethod(std::move(allocateProxy));
    }
 
    if (!strcmp(getType().c_str(), "Node") || !strcmp(getType().c_str(), "Variable"))
@@ -590,28 +583,28 @@ void CompCategoryBase::generateCompCategoryBase(Class* ptr)
 void CompCategoryBase::generateCompCategory()
 {
    // placeholder
-   std::auto_ptr<Class> instance(new Class(getCompCategoryName()));
+   std::unique_ptr<Class> instance(new Class(getCompCategoryName()));
 
    instance->setUserCode();
 
    std::string baseName = getCompCategoryBaseName();
-   std::auto_ptr<BaseClass> base(
+   std::unique_ptr<BaseClass> base(
       new BaseClass(baseName));
-   instance->addBaseClass(base);
+   instance->addBaseClass(std::move(base));
 
    instance->addHeader("\"" + baseName + ".h\"");
    instance->addClass("NDPairList");
 
    // Constructor 
-   std::auto_ptr<ConstructorMethod> constructor(
+   std::unique_ptr<ConstructorMethod> constructor(
       new ConstructorMethod(getCompCategoryName()));
    constructor->addParameter("Simulation& sim");
    constructor->addParameter("const std::string& modelName");
    constructor->addParameter("const NDPairList& ndpList");
    constructor->setInitializationStr(
       getCompCategoryBaseName() + "(sim, modelName, ndpList)");
-   std::auto_ptr<Method> consToIns(constructor.release());
-   instance->addMethod(consToIns);
+   std::unique_ptr<Method> consToIns(constructor.release());
+   instance->addMethod(std::move(consToIns));
 
    addExtraCompCategoryMethods(*(instance.get()));
    _classes.push_back(instance.release());  
@@ -633,12 +626,12 @@ void CompCategoryBase::generateWorkUnitCommon(const std::string& workUnitType,
 					      const std::string& compCatName)
 {
    std::string fullName = getWorkUnitCommonName(workUnitType);
-   std::auto_ptr<Class> instance(new Class(fullName));
+   std::unique_ptr<Class> instance(new Class(fullName));
 
    std::string baseName = "WorkUnit";
-   std::auto_ptr<BaseClass> base(
+   std::unique_ptr<BaseClass> base(
       new BaseClass(baseName));
-   instance->addBaseClass(base);
+   instance->addBaseClass(std::move(base));
 
    std::string computeStateAttName = 
       "(" + compCatName + "::*_computeState) (" + argumentType; 
@@ -660,7 +653,7 @@ void CompCategoryBase::generateWorkUnitCommon(const std::string& workUnitType,
    instance->addClass(compCatName);
    instance->addHeader("\"rndm.h\"");
    
-   std::auto_ptr<Attribute> attCup;
+   std::unique_ptr<Attribute> attCup;
 
    if (argumentType != "") {
       instance->addHeader("\"" + argumentType + ".h\"");
@@ -695,7 +688,7 @@ void CompCategoryBase::generateWorkUnitCommon(const std::string& workUnitType,
    instance->addAttribute(attCup);
 
    // Constructor 
-   std::auto_ptr<ConstructorMethod> constructor(
+   std::unique_ptr<ConstructorMethod> constructor(
       new ConstructorMethod(fullName));
    if (argumentType != "") {
       constructor->addParameter(argumentType + "* arg");
@@ -712,11 +705,11 @@ void CompCategoryBase::generateWorkUnitCommon(const std::string& workUnitType,
    std::ostringstream constructorFB;
    constructorFB << TAB << "_rng.reSeed(urandom(_compCategory->getSimulation().getWorkUnitRandomSeedGenerator()), _compCategory->getSimulation().getRank());\n";      
    constructor->setFunctionBody(constructorFB.str());
-   std::auto_ptr<Method> consToIns(constructor.release());
-   instance->addMethod(consToIns);
+   std::unique_ptr<Method> consToIns(constructor.release());
+   instance->addMethod(std::move(consToIns));
 
    // execute 
-   std::auto_ptr<Method> executeMethod(
+   std::unique_ptr<Method> executeMethod(
       new Method("execute", "void"));
    executeMethod->setVirtual();
    std::ostringstream executeFB;   
@@ -731,35 +724,35 @@ void CompCategoryBase::generateWorkUnitCommon(const std::string& workUnitType,
    executeFB
       << ");\n";
    executeMethod->setFunctionBody(executeFB.str());
-   instance->addMethod(executeMethod);
+   instance->addMethod(std::move(executeMethod));
 
    // getRNG
-   std::auto_ptr<Method> getRNGMethod(
+   std::unique_ptr<Method> getRNGMethod(
       new Method("getRNG", "RNG&"));
    std::ostringstream getRNGFB;   
    getRNGFB
       << TAB << "return _rng;\n";
    getRNGMethod->setFunctionBody(getRNGFB.str());
-   instance->addMethod(getRNGMethod);
+   instance->addMethod(std::move(getRNGMethod));
 
    // setGPUMachineID
-   std::auto_ptr<Method> setGPUMachineIDMethod(
+   std::unique_ptr<Method> setGPUMachineIDMethod(
       new Method("setGPUMachineID", "void"));
    setGPUMachineIDMethod->addParameter("int GPUMachineID");
    std::ostringstream setGPUMachineIDFB;   
    setGPUMachineIDFB
       << TAB << "_GPUMachineID = GPUMachineID;\n";
    setGPUMachineIDMethod->setFunctionBody(setGPUMachineIDFB.str());
-   instance->addMethod(setGPUMachineIDMethod);
+   instance->addMethod(std::move(setGPUMachineIDMethod));
 
    // getGPUMachineID
-   std::auto_ptr<Method> getGPUMachineIDMethod(
+   std::unique_ptr<Method> getGPUMachineIDMethod(
       new Method("getGPUMachineID", "int"));
    std::ostringstream getGPUMachineIDFB;   
    getGPUMachineIDFB
       << TAB << "return _GPUMachineID;\n";
    getGPUMachineIDMethod->setFunctionBody(getGPUMachineIDFB.str());
-   instance->addMethod(getGPUMachineIDMethod);
+   instance->addMethod(std::move(getGPUMachineIDMethod));
 
    // Don't add the standard methods
    instance->addBasicDestructor();
@@ -771,11 +764,11 @@ void CompCategoryBase::generateTriggerableCallerCommon(
    const std::string& modelType)
 {
    std::string fullName = getTriggerableCallerCommonName(modelType);
-   std::auto_ptr<Class> instance(new Class(fullName));
+   std::unique_ptr<Class> instance(new Class(fullName));
 
    std::string baseName = "TriggerableCaller";
-   std::auto_ptr<BaseClass> base(new BaseClass(baseName));
-   instance->addBaseClass(base);
+   std::unique_ptr<BaseClass> base(new BaseClass(baseName));
+   instance->addBaseClass(std::move(base));
 
    std::string computeStateAttName = 
       "(" + modelType + "::*_function) (Trigger*, NDPairList*)"; 
@@ -786,7 +779,7 @@ void CompCategoryBase::generateTriggerableCallerCommon(
    instance->addHeader("\"" + baseName + ".h\"");
    instance->addClass(modelType);
    
-   std::auto_ptr<Attribute> attCup;
+   std::unique_ptr<Attribute> attCup;
 
    CustomAttribute* computeStateAtt = new CustomAttribute(
       computeStateAttName, "void", 
@@ -801,7 +794,7 @@ void CompCategoryBase::generateTriggerableCallerCommon(
    instance->addAttribute(attCup);
 
    // Constructor 
-   std::auto_ptr<ConstructorMethod> constructor(
+   std::unique_ptr<ConstructorMethod> constructor(
       new ConstructorMethod(fullName));
    constructor->addParameter("NDPairList* ndPairList");
    constructor->addParameter("void " + computeStatePar);
@@ -811,25 +804,25 @@ void CompCategoryBase::generateTriggerableCallerCommon(
       += "_function(function), _triggerable(triggerable)";
    constructor->setInitializationStr(initializationStr);
    std::ostringstream constructorFB;
-   std::auto_ptr<Method> consToIns(constructor.release());
-   instance->addMethod(consToIns);
+   std::unique_ptr<Method> consToIns(constructor.release());
+   instance->addMethod(std::move(consToIns));
 
    // execute 
-   std::auto_ptr<Method> eventMethod(
+   std::unique_ptr<Method> eventMethod(
       new Method("event", "void"));
    eventMethod->setVirtual();
    eventMethod->addParameter("Trigger* trigger");
    eventMethod->setFunctionBody(
       TAB + "(*_triggerable.*_function)(trigger, _ndPairList);\n");
-   instance->addMethod(eventMethod);
+   instance->addMethod(std::move(eventMethod));
 
    // getTriggerable 
-   std::auto_ptr<Method> getTriggerableMethod(
+   std::unique_ptr<Method> getTriggerableMethod(
       new Method("getTriggerable", "Triggerable*"));
    getTriggerableMethod->setVirtual();
    getTriggerableMethod->setFunctionBody(
       TAB + "return _triggerable;\n");
-   instance->addMethod(getTriggerableMethod);
+   instance->addMethod(std::move(getTriggerableMethod));
 
 //    // Don't add the standard methods
 //    instance->addBasicDestructor();
@@ -982,13 +975,13 @@ void CompCategoryBase::addCreateTriggerableCallerMethod(
    const std::vector<TriggeredFunction*>* functions,
    const std::string& triggerableCallerName) const
 {
-   std::auto_ptr<Method> method(
+   std::unique_ptr<Method> method(
       new Method("createTriggerableCaller", EVENTTYPE));
    method->setAccessType(AccessType::PROTECTED);
    method->setVirtual();
    method->addParameter("const std::string& " + TRIGGERABLEFUNCTIONNAME);
    method->addParameter("NDPairList* " + TRIGGERABLENDPLIST);
-   method->addParameter("std::unique_ptr<TriggerableCaller>& " + 
+   method->addParameter("std::unique_ptr<TriggerableCaller>&& " + 
 			TRIGGERABLECALLER);
    std::ostringstream os;
 
@@ -1006,7 +999,7 @@ void CompCategoryBase::addCreateTriggerableCallerMethod(
       << " as a Triggerable function.\");\n"
       << TAB << "//return " << UNALTEREDRETURN << ";\n";
    method->setFunctionBody(os.str());
-   instance.addMethod(method);   
+   instance.addMethod(std::move(method));   
 }
 
 std::string CompCategoryBase::getAddVariableNamesForPhaseFB() const
@@ -1025,10 +1018,10 @@ std::string CompCategoryBase::getAddVariableNamesForPhaseFB() const
 std::string CompCategoryBase::getSetDistributionTemplatesFB() const
 {
    std::ostringstream os;
-   os << TAB << SENDTEMPLATES <<"[\"FLUSH_LENS\"] = &" + getInstanceBaseName()
-      << "::CG_send_FLUSH_LENS;\n"
-      << TAB << GETSENDTYPETEMPLATES <<"[\"FLUSH_LENS\"] = &" + getInstanceBaseName()
-      << "::CG_getSendType_FLUSH_LENS;\n"
+   os << TAB << SENDTEMPLATES <<"[\"FLUSH_MGS\"] = &" + getInstanceBaseName()
+      << "::CG_send_FLUSH_MGS;\n"
+      << TAB << GETSENDTYPETEMPLATES <<"[\"FLUSH_MGS\"] = &" + getInstanceBaseName()
+      << "::CG_getSendType_FLUSH_MGS;\n"
       << TAB << "std::map<std::string, Phase*>::iterator it, end = _phaseMappings.end();\n"
       << TAB << "for (it = _phaseMappings.begin(); it != end; ++it) {\n"
       << getTemplateFillerCode()
@@ -1257,8 +1250,8 @@ std::string CompCategoryBase::getFindDemarshallerFB() const
       << TAB << TAB << "ccd = new CCDemarshaller(&getSimulation());\n"
       << TAB << TAB << "_demarshallerMap[fromPartitionId] = ccd;\n\n"
       << TAB << TAB << "std::unique_ptr<" + getInstanceProxyDemarshallerName() + "> ap;\n"
-      << TAB << TAB << getInstanceProxyName() + "::CG_recv_FLUSH_LENS_demarshaller(ap);\n"
-      << TAB << TAB << "ccd->CG_recvTemplates[\"FLUSH_LENS\"] = ap.release();\n\n"
+      << TAB << TAB << getInstanceProxyName() + "::CG_recv_FLUSH_MGS_demarshaller(ap);\n"
+      << TAB << TAB << "ccd->CG_recvTemplates[\"FLUSH_MGS\"] = ap.release();\n\n"
       << TAB << TAB << "std::map<std::string, Phase*>::iterator it, end = _phaseMappings.end();\n"
       << TAB << TAB << "for (it = _phaseMappings.begin(); it != end; ++it) {\n"
       << getFindDemarshallerFillerCode()
@@ -1300,7 +1293,7 @@ void CompCategoryBase::addDistributionCodeToCC(Class& instance) const
    instance.addTypeDefinition(getSendTypeDefinition);
 
    // Add addVariableNamesForPhase method
-   std::auto_ptr<Method> addVariableNamesForPhaseMethod(
+   std::unique_ptr<Method> addVariableNamesForPhaseMethod(
       new Method("addVariableNamesForPhase", "void") );
    addVariableNamesForPhaseMethod->setMacroConditional(mpiConditional);
    addVariableNamesForPhaseMethod->addParameter(
@@ -1309,83 +1302,83 @@ void CompCategoryBase::addDistributionCodeToCC(Class& instance) const
       "const std::string& " + PHASE);
    addVariableNamesForPhaseMethod->setFunctionBody(
       getAddVariableNamesForPhaseFB());
-   instance.addMethod(addVariableNamesForPhaseMethod);
+   instance.addMethod(std::move(addVariableNamesForPhaseMethod));
 
    // Add setDistributionTemplates method
-   std::auto_ptr<Method> setDistributionTemplatesMethod(
+   std::unique_ptr<Method> setDistributionTemplatesMethod(
       new Method("setDistributionTemplates", "void") );
    setDistributionTemplatesMethod->setMacroConditional(mpiConditional);
    setDistributionTemplatesMethod->setVirtual();
    setDistributionTemplatesMethod->setFunctionBody(
       getSetDistributionTemplatesFB());
-   instance.addMethod(setDistributionTemplatesMethod);
+   instance.addMethod(std::move(setDistributionTemplatesMethod));
 
    // Add resetSendProcessIdIterators method
-   std::auto_ptr<Method> resetSendProcessIdIteratorsMethod(
+   std::unique_ptr<Method> resetSendProcessIdIteratorsMethod(
       new Method("resetSendProcessIdIterators", "void") );
    resetSendProcessIdIteratorsMethod->setMacroConditional(mpiConditional);
    resetSendProcessIdIteratorsMethod->setVirtual();
    resetSendProcessIdIteratorsMethod->setFunctionBody(
       getResetSendProcessIdIteratorsFB());
-   instance.addMethod(resetSendProcessIdIteratorsMethod);
+   instance.addMethod(std::move(resetSendProcessIdIteratorsMethod));
 
    // Add getSendNextProcessId method
-   std::auto_ptr<Method> getSendNextProcessIdMethod(
+   std::unique_ptr<Method> getSendNextProcessIdMethod(
       new Method("getSendNextProcessId", "int") );
    getSendNextProcessIdMethod->setMacroConditional(mpiConditional);
    getSendNextProcessIdMethod->setVirtual();
    getSendNextProcessIdMethod->setFunctionBody(
       getGetSendNextProcessIdFB());
-   instance.addMethod(getSendNextProcessIdMethod);
+   instance.addMethod(std::move(getSendNextProcessIdMethod));
 
    // Add atSendProcessIdEnd method
-   std::auto_ptr<Method> atSendProcessIdEndMethod(
+   std::unique_ptr<Method> atSendProcessIdEndMethod(
       new Method("atSendProcessIdEnd", "bool") );
    atSendProcessIdEndMethod->setMacroConditional(mpiConditional);
    atSendProcessIdEndMethod->setVirtual();
    atSendProcessIdEndMethod->setFunctionBody(
       getAtSendProcessIdEndFB());
-   instance.addMethod(atSendProcessIdEndMethod);
+   instance.addMethod(std::move(atSendProcessIdEndMethod));
 
    // Add resetReceiveProcessIdIterators method
-   std::auto_ptr<Method> resetReceiveProcessIdIteratorsMethod(
+   std::unique_ptr<Method> resetReceiveProcessIdIteratorsMethod(
       new Method("resetReceiveProcessIdIterators", "void") );
    resetReceiveProcessIdIteratorsMethod->setMacroConditional(mpiConditional);
    resetReceiveProcessIdIteratorsMethod->setVirtual();
    resetReceiveProcessIdIteratorsMethod->setFunctionBody(
       getResetReceiveProcessIdIteratorsFB());
-   instance.addMethod(resetReceiveProcessIdIteratorsMethod);
+   instance.addMethod(std::move(resetReceiveProcessIdIteratorsMethod));
 
    // Add getReceiveNextProcessId method
-   std::auto_ptr<Method> getReceiveNextProcessIdMethod(
+   std::unique_ptr<Method> getReceiveNextProcessIdMethod(
       new Method("getReceiveNextProcessId", "int") );
    getReceiveNextProcessIdMethod->setMacroConditional(mpiConditional);
    getReceiveNextProcessIdMethod->setVirtual();
    getReceiveNextProcessIdMethod->setFunctionBody(
       getGetReceiveNextProcessIdFB());
-   instance.addMethod(getReceiveNextProcessIdMethod);
+   instance.addMethod(std::move(getReceiveNextProcessIdMethod));
 
    // Add atReceiveProcessIdEnd method
-   std::auto_ptr<Method> atReceiveProcessIdEndMethod(
+   std::unique_ptr<Method> atReceiveProcessIdEndMethod(
       new Method("atReceiveProcessIdEnd", "bool") );
    atReceiveProcessIdEndMethod->setMacroConditional(mpiConditional);
    atReceiveProcessIdEndMethod->setVirtual();
    atReceiveProcessIdEndMethod->setFunctionBody(
       getAtReceiveProcessIdEndFB());
-   instance.addMethod(atReceiveProcessIdEndMethod);
+   instance.addMethod(std::move(atReceiveProcessIdEndMethod));
 
    // Add setMemPattern method
-   std::auto_ptr<Method> setMemPatternMethod(new Method("setMemPattern", "int") );
+   std::unique_ptr<Method> setMemPatternMethod(new Method("setMemPattern", "int") );
    setMemPatternMethod->setMacroConditional(mpiConditional);
    setMemPatternMethod->setVirtual();
    setMemPatternMethod->addParameter("std::string phaseName");
    setMemPatternMethod->addParameter("int dest");
    setMemPatternMethod->addParameter("MemPattern* mpptr");
    setMemPatternMethod->setFunctionBody(getSetMemPatternFB());
-   instance.addMethod(setMemPatternMethod);
+   instance.addMethod(std::move(setMemPatternMethod));
 
    // Add getIndexedBlock method
-   std::auto_ptr<Method> getIndexedBlockMethod(new Method("getIndexedBlock", "int") );
+   std::unique_ptr<Method> getIndexedBlockMethod(new Method("getIndexedBlock", "int") );
    getIndexedBlockMethod->setMacroConditional(mpiConditional);
    getIndexedBlockMethod->setVirtual();
    getIndexedBlockMethod->addParameter("std::string phaseName");
@@ -1393,18 +1386,18 @@ void CompCategoryBase::addDistributionCodeToCC(Class& instance) const
    getIndexedBlockMethod->addParameter("MPI_Datatype* blockType");
    getIndexedBlockMethod->addParameter("MPI_Aint& blockLocation");
    getIndexedBlockMethod->setFunctionBody(getGetIndexedBlockFB());
-   instance.addMethod(getIndexedBlockMethod);
+   instance.addMethod(std::move(getIndexedBlockMethod));
 
    // Add getReceiveBlockCreator method
-   std::auto_ptr<Method> getReceiveBlockCreatorMethod(new Method("getReceiveBlockCreator", "IndexedBlockCreator*") );
+   std::unique_ptr<Method> getReceiveBlockCreatorMethod(new Method("getReceiveBlockCreator", "IndexedBlockCreator*") );
    getReceiveBlockCreatorMethod->setMacroConditional(mpiConditional);
    getReceiveBlockCreatorMethod->setVirtual();
    getReceiveBlockCreatorMethod->addParameter("int fromPartitionId");
    getReceiveBlockCreatorMethod->setFunctionBody(getGetReceiveBlockCreatorFB());
-   instance.addMethod(getReceiveBlockCreatorMethod);
+   instance.addMethod(std::move(getReceiveBlockCreatorMethod));
 
    // Add send method
-   std::auto_ptr<Method> sendMethod(
+   std::unique_ptr<Method> sendMethod(
       new Method("send", "void") );
    sendMethod->setMacroConditional(mpiConditional);
    sendMethod->setVirtual();
@@ -1412,29 +1405,29 @@ void CompCategoryBase::addDistributionCodeToCC(Class& instance) const
    sendMethod->addParameter("int pid");
    sendMethod->addParameter("OutputStream* os");
    sendMethod->setFunctionBody(getSendFB());
-   instance.addMethod(sendMethod);
+   instance.addMethod(std::move(sendMethod));
 
    // Add getDemarshaller method
-   std::auto_ptr<Method> getDemarshallerMethod(
+   std::unique_ptr<Method> getDemarshallerMethod(
       new Method("getDemarshaller", PREFIX+getInstanceName()+"CompCategory::CCDemarshaller*") );
    getDemarshallerMethod->setMacroConditional(mpiConditional);
    getDemarshallerMethod->setVirtual();
    getDemarshallerMethod->addParameter("int fromPartitionId");
    getDemarshallerMethod->setFunctionBody(
       getGetDemarshallerFB());
-   instance.addMethod(getDemarshallerMethod);
+   instance.addMethod(std::move(getDemarshallerMethod));
 
    // Add findDemarshaller method
-   std::auto_ptr<Method> findDemarshallerMethod(
+   std::unique_ptr<Method> findDemarshallerMethod(
       new Method("findDemarshaller", PREFIX+getInstanceName()+"CompCategory::CCDemarshaller*") );
    findDemarshallerMethod->setMacroConditional(mpiConditional);
    findDemarshallerMethod->setVirtual();
    findDemarshallerMethod->addParameter("int fromPartitionId");
    findDemarshallerMethod->setFunctionBody(
       getFindDemarshallerFB());
-   instance.addMethod(findDemarshallerMethod);
+   instance.addMethod(std::move(findDemarshallerMethod));
 
-   std::auto_ptr<Attribute> attCup;
+   std::unique_ptr<Attribute> attCup;
    CustomAttribute* sendTemplates = new CustomAttribute(
       SENDTEMPLATES, "std::map<std::string, " + SENDFUNCTIONPTRTYPE + ">", AccessType::PRIVATE);
    sendTemplates->setMacroConditional(mpiConditional);
@@ -1452,12 +1445,12 @@ void CompCategoryBase::addDistributionCodeToCC(Class& instance) const
    // Demarshaller class within CompCategory Class
 
    //**** member compcategory demarshaller classes
-   std::auto_ptr<Class> ccdemarshaller(new Class("CCDemarshaller")); 
+   std::unique_ptr<Class> ccdemarshaller(new Class("CCDemarshaller")); 
    std::string baseName = "Demarshaller";
-   std::auto_ptr<BaseClass> demarshallerBase(new BaseClass(baseName));
-   ccdemarshaller->addBaseClass(demarshallerBase);
-   std::auto_ptr<BaseClass> ibcBase(new BaseClass("IndexedBlockCreator"));
-   ccdemarshaller->addBaseClass(ibcBase);
+   std::unique_ptr<BaseClass> demarshallerBase(new BaseClass(baseName));
+   ccdemarshaller->addBaseClass(std::move(demarshallerBase));
+   std::unique_ptr<BaseClass> ibcBase(new BaseClass("IndexedBlockCreator"));
+   ccdemarshaller->addBaseClass(std::move(ibcBase));
 
    TypeDefinition recvDemarshaller;
    recvDemarshaller.setDefinition(
@@ -1474,14 +1467,14 @@ void CompCategoryBase::addDistributionCodeToCC(Class& instance) const
    CustomAttribute* receiveList = new CustomAttribute("_receiveList", "ShallowArray<"+getInstanceProxyName()+">", AccessType::PROTECTED);
    if (isSupportedMachineType(MachineType::GPU))
       receiveList->setMacroConditional(gpuConditional);
-   std::auto_ptr<Attribute> receiveListAp(receiveList);
+   std::unique_ptr<Attribute> receiveListAp(receiveList);
    ccdemarshaller->addAttribute(receiveListAp);
    if (isSupportedMachineType(MachineType::GPU))
    {
       MacroConditional gpuConditional(GPUCONDITIONAL);
       CustomAttribute* receiveList = new CustomAttribute("_receiveList", "ShallowArray_Flat<"+getInstanceProxyName()+">", AccessType::PROTECTED);
       receiveList->setMacroConditional(gpuConditional);
-      std::auto_ptr<Attribute> receiveListAp(receiveList);
+      std::unique_ptr<Attribute> receiveListAp(receiveList);
       ccdemarshaller->addAttribute(receiveListAp);
    }
 
@@ -1489,14 +1482,14 @@ void CompCategoryBase::addDistributionCodeToCC(Class& instance) const
    CustomAttribute* receiveListIter = new CustomAttribute("_receiveListIter", "ShallowArray<"+getInstanceProxyName()+">::iterator", AccessType::PROTECTED);
    if (isSupportedMachineType(MachineType::GPU))
       receiveListIter->setMacroConditional(gpuConditional);
-   std::auto_ptr<Attribute> receiveListIterAp(receiveListIter);
+   std::unique_ptr<Attribute> receiveListIterAp(receiveListIter);
    ccdemarshaller->addAttribute(receiveListIterAp);
    if (isSupportedMachineType(MachineType::GPU))
    {
       MacroConditional gpuConditional(GPUCONDITIONAL);
       CustomAttribute* receiveListIter = new CustomAttribute("_receiveListIter", "ShallowArray_Flat<"+getInstanceProxyName()+">::iterator", AccessType::PROTECTED);
       receiveListIter->setMacroConditional(gpuConditional);
-      std::auto_ptr<Attribute> receiveListIterAp(receiveListIter);
+      std::unique_ptr<Attribute> receiveListIterAp(receiveListIter);
       ccdemarshaller->addAttribute(receiveListIterAp);
    }
 
@@ -1504,14 +1497,14 @@ void CompCategoryBase::addDistributionCodeToCC(Class& instance) const
    CustomAttribute* receiveState = new CustomAttribute("_receiveState", "ShallowArray<"+getInstanceProxyName()+">::iterator", AccessType::PROTECTED);
    if (isSupportedMachineType(MachineType::GPU))
       receiveState->setMacroConditional(gpuConditional);
-   std::auto_ptr<Attribute> receiveStateAp(receiveState);
+   std::unique_ptr<Attribute> receiveStateAp(receiveState);
    ccdemarshaller->addAttribute(receiveStateAp);
    if (isSupportedMachineType(MachineType::GPU))
    {
       MacroConditional gpuConditional(GPUCONDITIONAL);
       CustomAttribute* receiveState = new CustomAttribute("_receiveState", "ShallowArray_Flat<"+getInstanceProxyName()+">::iterator", AccessType::PROTECTED);
       receiveState->setMacroConditional(gpuConditional);
-      std::auto_ptr<Attribute> receiveStateAp(receiveState);
+      std::unique_ptr<Attribute> receiveStateAp(receiveState);
       ccdemarshaller->addAttribute(receiveStateAp);
    }
    if (isSupportedMachineType(MachineType::GPU))
@@ -1522,17 +1515,17 @@ void CompCategoryBase::addDistributionCodeToCC(Class& instance) const
 
    // recvTemplates attribute
    CustomAttribute* recvTemplates = new CustomAttribute("CG_recvTemplates", "CG_RecvDemarshallers", AccessType::PROTECTED);
-   std::auto_ptr<Attribute> recvTemplatesAp(recvTemplates);
+   std::unique_ptr<Attribute> recvTemplatesAp(recvTemplates);
    ccdemarshaller->addAttribute(recvTemplatesAp);
 
    // simulation pointer attribute
    CustomAttribute* simulationPtr = new CustomAttribute("_sim", "Simulation", AccessType::PRIVATE);
    simulationPtr->setPointer();
-   std::auto_ptr<Attribute> simulationPtrAp(simulationPtr);
+   std::unique_ptr<Attribute> simulationPtrAp(simulationPtr);
    ccdemarshaller->addAttribute(simulationPtrAp);
 
    // Constructors
-   std::auto_ptr<ConstructorMethod> constructor(new ConstructorMethod("CCDemarshaller"));
+   std::unique_ptr<ConstructorMethod> constructor(new ConstructorMethod("CCDemarshaller"));
 
    std::ostringstream constructorFB;
    constructorFB << TAB << TAB << TAB << "_sim = sim;\n";
@@ -1733,59 +1726,59 @@ void CompCategoryBase::addDistributionCodeToCC(Class& instance) const
    constructor->setFunctionBody(constructorFB.str());
    constructor->setInline();
 
-   std::auto_ptr<Method> consToIns1(constructor.release());
-   ccdemarshaller->addMethod(consToIns1);
+   std::unique_ptr<Method> consToIns1(constructor.release());
+   ccdemarshaller->addMethod(std::move(consToIns1));
    
    // add setMemPattern method
-   std::auto_ptr<Method> demarshallerSetMemPatternMethod(new Method("setMemPattern", "int"));
+   std::unique_ptr<Method> demarshallerSetMemPatternMethod(new Method("setMemPattern", "int"));
    demarshallerSetMemPatternMethod->setInline();
    demarshallerSetMemPatternMethod->addParameter("std::string phaseName");
    demarshallerSetMemPatternMethod->addParameter("int source");
    demarshallerSetMemPatternMethod->addParameter("MemPattern* mpptr");
    demarshallerSetMemPatternMethod->setFunctionBody(setMemPatternMethodFB.str());
-   ccdemarshaller->addMethod(demarshallerSetMemPatternMethod);
+   ccdemarshaller->addMethod(std::move(demarshallerSetMemPatternMethod));
 
    // add getIndexedBlock method
-   std::auto_ptr<Method> demarshallerGetIndexedBlockMethod(new Method("getIndexedBlock", "int"));
+   std::unique_ptr<Method> demarshallerGetIndexedBlockMethod(new Method("getIndexedBlock", "int"));
    demarshallerGetIndexedBlockMethod->setInline();
    demarshallerGetIndexedBlockMethod->addParameter("std::string phaseName");
    demarshallerGetIndexedBlockMethod->addParameter("int source");
    demarshallerGetIndexedBlockMethod->addParameter("MPI_Datatype* blockType");
    demarshallerGetIndexedBlockMethod->addParameter("MPI_Aint& blockLocation");
    demarshallerGetIndexedBlockMethod->setFunctionBody(getIndexedBlockMethodFB.str());
-   ccdemarshaller->addMethod(demarshallerGetIndexedBlockMethod);
+   ccdemarshaller->addMethod(std::move(demarshallerGetIndexedBlockMethod));
 
    // add demarshall method
-   std::auto_ptr<Method> demarshallMethod(new Method("demarshall", "int"));
+   std::unique_ptr<Method> demarshallMethod(new Method("demarshall", "int"));
    demarshallMethod->setInline();
    demarshallMethod->addParameter("const char* buffer");
    demarshallMethod->addParameter("int size");
    demarshallMethod->addParameter("bool& rebuildRequested");
    demarshallMethod->setFunctionBody(demarshallMethodFB.str());
-   ccdemarshaller->addMethod(demarshallMethod);
+   ccdemarshaller->addMethod(std::move(demarshallMethod));
 
    // add addDestination method
-   std::auto_ptr<Method> addDestinationMethod(new Method("addDestination", getType() + "ProxyBase*"));
+   std::unique_ptr<Method> addDestinationMethod(new Method("addDestination", getType() + "ProxyBase*"));
    addDestinationMethod->setInline();
    addDestinationMethod->setFunctionBody(addDestinationMethodFB.str());
-   ccdemarshaller->addMethod(addDestinationMethod);
+   ccdemarshaller->addMethod(std::move(addDestinationMethod));
 
    // add reset method
-   std::auto_ptr<Method> resetMethod(new Method("reset", "void"));
+   std::unique_ptr<Method> resetMethod(new Method("reset", "void"));
    resetMethod->setInline();
    resetMethod->setFunctionBody(resetMethodFB.str());
-   ccdemarshaller->addMethod(resetMethod);
+   ccdemarshaller->addMethod(std::move(resetMethod));
 
    // add done method
-   std::auto_ptr<Method> doneMethod(new Method("done", "bool"));
+   std::unique_ptr<Method> doneMethod(new Method("done", "bool"));
    doneMethod->setInline();
    doneMethod->setFunctionBody(doneMethodFB.str());
-   ccdemarshaller->addMethod(doneMethod);
+   ccdemarshaller->addMethod(std::move(doneMethod));
 
    ccdemarshaller->addBasicInlineDestructor();
    ccdemarshaller->setMacroConditional(mpiConditional);
 
-   instance.addMemberClass(ccdemarshaller, AccessType::PRIVATE);
+   instance.addMemberClass(std::move(ccdemarshaller), AccessType::PRIVATE);
 }
 
 std::string CompCategoryBase::getTemplateFillerCode() const

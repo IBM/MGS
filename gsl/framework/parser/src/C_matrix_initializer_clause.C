@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_matrix_initializer_clause.h"
 #include "C_matrix_initializer_expression.h"
 #include "C_constant_list.h"
@@ -24,7 +17,7 @@
 #include "SyntaxErrorException.h"
 #include "C_production_adi.h"
 
-void C_matrix_initializer_clause::internalExecute(LensContext *c, ArrayDataItem *adi)
+void C_matrix_initializer_clause::internalExecute(GslContext *c, ArrayDataItem *adi)
 {
 
    _constantList->execute(c);
@@ -59,7 +52,7 @@ void C_matrix_initializer_clause::internalExecute(LensContext *c, ArrayDataItem 
 	    I_adi->getModifiableIntVector()->begin();
          I_matrixIterator += offSet;
 	 std::list<float>::iterator initIter, initEnd=initList->end();
-	 for (initIter=initList->begin(); initIter!=initEnd; ++initIter, I_matrixIterator) {
+	 for (initIter=initList->begin(); initIter!=initEnd; ++initIter, ++I_matrixIterator) {
 	   (*I_matrixIterator)=int(*initIter);
 	 }
       }
@@ -67,7 +60,7 @@ void C_matrix_initializer_clause::internalExecute(LensContext *c, ArrayDataItem 
       else {
 	std::list<float>::iterator initIter, initEnd=initList->end();
 	std::vector<int>::iterator I_adiIter = I_adi->getModifiableIntVector()->begin();
-	for (initIter=initList->begin(); initIter!=initEnd; ++initIter, I_adiIter) {
+	for (initIter=initList->begin(); initIter!=initEnd; ++initIter, ++I_adiIter) {
 	  (*I_adiIter)=int(*initIter);
 	}
       }

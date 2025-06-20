@@ -1,19 +1,12 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-11-19-2015
-//
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
-#include "Lens.h"
+// =============================================================================
+#include "Mgs.h"
 #include "CaERConcentrationJunction.h"
 #include "CG_CaERConcentrationJunction.h"
 #include "rndm.h"
@@ -367,7 +360,7 @@ void CaERConcentrationJunction::printDebugHH(std::string phase)
 //  Even if we retain (x,y,z) this value change with the #capsule per compartment
 //   and geometric sampling --> so not a good choice
 bool CaERConcentrationJunction::checkSite(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant,
     CG_CaERConcentrationJunctionInAttrPSet* CG_inAttrPset,
@@ -382,7 +375,7 @@ bool CaERConcentrationJunction::checkSite(
 }
 
 bool CaERConcentrationJunction::confirmUniqueDeltaT(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant,
     CG_CaERConcentrationJunctionInAttrPSet* CG_inAttrPset,

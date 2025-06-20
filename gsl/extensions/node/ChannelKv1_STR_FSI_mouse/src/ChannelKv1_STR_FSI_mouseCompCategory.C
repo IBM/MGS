@@ -1,11 +1,9 @@
-// =================================================================
+// =============================================================================
+// (C) Copyright 2018 New Jersey Institute of Technology. All rights reserved.
 //
-// (C) Copyright 2018 New Jersey Institute of Technology.
-//
-// =================================================================
+// =============================================================================
 
-
-#include "Lens.h"
+#include "Mgs.h"
 #include "ChannelKv1_STR_FSI_mouseCompCategory.h"
 #include "NDPairList.h"
 #include "CG_ChannelKv1_STR_FSI_mouseCompCategory.h"

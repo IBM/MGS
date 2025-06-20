@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_array.h"
 #include "MdlContext.h"
 #include "DataType.h"
@@ -29,8 +22,8 @@ void C_array::execute(MdlContext* context)
       throw InternalException ("_typeClassifier is 0 in C_array::execute");
    }
    _typeClassifier->execute(context);
-   std::auto_ptr<DataType> dt;
-   _typeClassifier->releaseDataType(dt);
+   std::unique_ptr<DataType> dt;
+   _typeClassifier->releaseDataType(std::move(dt));
    delete _arrayType;
    _arrayType = new ArrayType(dt.release());
 }
@@ -51,13 +44,13 @@ C_array::C_array(const C_array& rv)
    : C_production(rv), _typeClassifier(0), _arrayType(0)
 {
    if (rv._typeClassifier) {
-      std::auto_ptr<C_typeClassifier> dup;
-      rv._typeClassifier->duplicate(dup);
+      std::unique_ptr<C_typeClassifier> dup;
+      rv._typeClassifier->duplicate(std::move(dup));
       _typeClassifier = dup.release();
    }
    if (rv._arrayType) {
-      std::auto_ptr<DataType> dup;
-      rv._arrayType->duplicate(dup);
+      std::unique_ptr<DataType> dup;
+      rv._arrayType->duplicate(std::move(dup));
       DataType* dt = dup.release();
       _arrayType = dynamic_cast<ArrayType*>(dt);
       if (_arrayType == 0) {
@@ -67,12 +60,12 @@ C_array::C_array(const C_array& rv)
    }
 }
 
-void C_array::duplicate(std::auto_ptr<C_array>& rv) const
+void C_array::duplicate(std::unique_ptr<C_array>&& rv) const
 {
    rv.reset(new C_array(*this));
 }
 
-void C_array::releaseDataType(std::auto_ptr<DataType>& dt) 
+void C_array::releaseDataType(std::unique_ptr<DataType>&& dt) 
 {
    dt.reset(_arrayType);
    _arrayType = 0;

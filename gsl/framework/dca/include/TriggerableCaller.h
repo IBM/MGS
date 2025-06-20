@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef TriggerableCaller_H
 #define TriggerableCaller_H
 #include "Copyright.h"
@@ -36,7 +29,7 @@ class TriggerableCaller
 	 : _ndPairList(ndPairList) {}
       virtual void event(Trigger* trigger) = 0;
       virtual Triggerable* getTriggerable() = 0;
-      virtual void duplicate(std::unique_ptr<TriggerableCaller>& dup) const = 0;
+      virtual void duplicate(std::unique_ptr<TriggerableCaller>&& dup) const = 0;
       virtual ~TriggerableCaller() {};
    protected:
       NDPairList* _ndPairList;

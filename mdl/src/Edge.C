@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "Edge.h"
 #include "SharedCCBase.h"
 #include "Generatable.h"
@@ -55,7 +48,7 @@ Edge Edge::operator=(const Edge& rv)
 }
 
 
-void Edge::duplicate(std::auto_ptr<Generatable>& rv) const
+void Edge::duplicate(std::unique_ptr<Generatable>&& rv) const
 {
    rv.reset(new Edge(*this));
 }
@@ -91,7 +84,7 @@ EdgeConnection* Edge::getPreNode()
    return _preNode;
 }
 
-void Edge::setPreNode(std::auto_ptr<EdgeConnection>& con) 
+void Edge::setPreNode(std::unique_ptr<EdgeConnection>&& con) 
 {
    delete _preNode;
    _preNode = con.release();
@@ -102,7 +95,7 @@ EdgeConnection* Edge::getPostNode()
    return _postNode;
 }
 
-void Edge::setPostNode(std::auto_ptr<EdgeConnection>& con) 
+void Edge::setPostNode(std::unique_ptr<EdgeConnection>&& con) 
 {
    delete _postNode;
    _postNode = con.release();
@@ -116,15 +109,15 @@ Edge::~Edge()
 void Edge::copyOwnedHeap(const Edge& rv)
 {
    if(rv._preNode) {
-      std::auto_ptr<EdgeConnection> dup;
-      rv._preNode->duplicate(dup);
+      std::unique_ptr<EdgeConnection> dup;
+      rv._preNode->duplicate(std::move(dup));
       _preNode = dup.release();
    } else {
       _preNode = 0;
    }
    if(rv._postNode) {
-      std::auto_ptr<EdgeConnection> dup;
-      rv._postNode->duplicate(dup);
+      std::unique_ptr<EdgeConnection> dup;
+      rv._postNode->duplicate(std::move(dup));
       _postNode = dup.release();
    } else {
       _postNode = 0;
@@ -166,20 +159,20 @@ void Edge::addExtraInstanceBaseMethods(Class& instance) const
    SharedCCBase::addExtraInstanceBaseMethods(instance);
 
    std::string baseName = getType() + "Base";
-   std::auto_ptr<BaseClass> base(new BaseClass(baseName));
+   std::unique_ptr<BaseClass> base(new BaseClass(baseName));
   
 //    CustomAttribute* cusAtt = new CustomAttribute("_edgeCompCategoryBase",
 // 						 "EdgeCompCategoryBase");
 //    cusAtt->setPointer();
 //    cusAtt->setConstructorParameterNameExtra("cc");
-//    std::auto_ptr<Attribute> simAtt(cusAtt);
+//    std::unique_ptr<Attribute> simAtt(cusAtt);
 //    base->addAttribute(simAtt);
-   instance.addBaseClass(base);
+   instance.addBaseClass(std::move(base));
 
    instance.addHeader("\"" + baseName + ".h\"");
 
    // add setPreNode method
-   std::auto_ptr<Method> setPreNodeMethod(new Method("setPreNode", "void"));
+   std::unique_ptr<Method> setPreNodeMethod(new Method("setPreNode", "void"));
    setPreNodeMethod->setVirtual();
    setPreNodeMethod->addParameter("NodeDescriptor* " + PREFIX + "node");
    std::ostringstream setPreNodeMethodFB;
@@ -190,10 +183,10 @@ void Edge::addExtraInstanceBaseMethods(Class& instance) const
    setPreNodeMethodFB
       << TAB << "checkAndSetPreNode(" << PREFIX << "node" << ");\n";
    setPreNodeMethod->setFunctionBody(setPreNodeMethodFB.str());
-   instance.addMethod(setPreNodeMethod);
+   instance.addMethod(std::move(setPreNodeMethod));
 
    // add setPostNode method
-   std::auto_ptr<Method> setPostNodeMethod(new Method("setPostNode", "void"));
+   std::unique_ptr<Method> setPostNodeMethod(new Method("setPostNode", "void"));
    setPostNodeMethod->setVirtual();
    setPostNodeMethod->addParameter("NodeDescriptor* " + PREFIX + "node");
    std::ostringstream setPostNodeMethodFB;
@@ -204,7 +197,7 @@ void Edge::addExtraInstanceBaseMethods(Class& instance) const
    setPostNodeMethodFB
       << TAB << "checkAndSetPostNode(" << PREFIX << "node" << ");\n";
    setPostNodeMethod->setFunctionBody(setPostNodeMethodFB.str());
-   instance.addMethod(setPostNodeMethod);
+   instance.addMethod(std::move(setPostNodeMethod));
 
    if (_preNode) {
       _preNode->addInterfaceHeaders(instance);
@@ -219,15 +212,15 @@ void Edge::addExtraInstanceProxyMethods(Class& instance) const
    SharedCCBase::addExtraInstanceProxyMethods(instance);
 
    std::string baseName = getType() + "ProxyBase";
-   std::auto_ptr<BaseClass> base(new BaseClass(baseName));
+   std::unique_ptr<BaseClass> base(new BaseClass(baseName));
   
 //    CustomAttribute* cusAtt = new CustomAttribute("_edgeCompCategoryBase",
 // 						 "EdgeCompCategoryBase");
 //    cusAtt->setPointer();
 //    cusAtt->setConstructorParameterNameExtra("cc");
-//    std::auto_ptr<Attribute> simAtt(cusAtt);
+//    std::unique_ptr<Attribute> simAtt(cusAtt);
 //    base->addAttribute(simAtt);
-   instance.addBaseClass(base);
+   instance.addBaseClass(std::move(base));
 
    instance.addHeader("\"" + baseName + ".h\"");
 }
@@ -237,16 +230,16 @@ void Edge::addExtraInstanceMethods(Class& instance) const
    SharedCCBase::addExtraInstanceMethods(instance);
 
    std::string baseName = getInstanceBaseName();
-   std::auto_ptr<BaseClass> base(
+   std::unique_ptr<BaseClass> base(
       new BaseClass(baseName));
 
 //    CustomAttribute* cusAtt = new CustomAttribute("_edgeCompCategoryBase",
 // 						 "EdgeCompCategoryBase");
 //    cusAtt->setPointer();
 //    cusAtt->setConstructorParameterNameExtra("cc");
-//    std::auto_ptr<Attribute> simAtt(cusAtt);
+//    std::unique_ptr<Attribute> simAtt(cusAtt);
 //    base->addAttribute(simAtt);
-   instance.addBaseClass(base);
+   instance.addBaseClass(std::move(base));
 
    instance.addHeader("\"" + baseName + ".h\"");
    instance.addStandardMethods();
@@ -262,17 +255,17 @@ void Edge::addExtraCompCategoryBaseMethods(Class& instance) const
       new CustomAttribute("_edgeList", 
 			  "ShallowArray<" + getInstanceName() + 
 			  ", 1000, 8>");  
-   std::auto_ptr<Attribute> edgeListAttAP(edgeListAtt);
+   std::unique_ptr<Attribute> edgeListAttAP(edgeListAtt);
    instance.addAttribute(edgeListAttAP);
 
    CustomAttribute* computeCostAtt = 
       new CustomAttribute("_computeCost", 
 			  "ConnectionIncrement");  
-   std::auto_ptr<Attribute> computeCostAttAP(computeCostAtt);
+   std::unique_ptr<Attribute> computeCostAttAP(computeCostAtt);
    instance.addAttribute(computeCostAttAP);
 
    // add getEdge Method
-   std::auto_ptr<Method> getEdgeMethod(
+   std::unique_ptr<Method> getEdgeMethod(
       new Method("getEdge", "Edge*") );
    getEdgeMethod->setVirtual(true);
    std::ostringstream getEdgeMethodFunctionBody;
@@ -286,18 +279,18 @@ void Edge::addExtraCompCategoryBaseMethods(Class& instance) const
 //       << TAB << "return e;\n";
    getEdgeMethod->setFunctionBody(
       getEdgeMethodFunctionBody.str());
-   instance.addMethod(getEdgeMethod);
+   instance.addMethod(std::move(getEdgeMethod));
 
    // add getComputeCost method
-   std::auto_ptr<Method> getComputeCostMethod(
+   std::unique_ptr<Method> getComputeCostMethod(
       new Method("getComputeCost", "ConnectionIncrement*"));
    getComputeCostMethod->setVirtual();
 //   getComputeCostMethod->setConst();
    getComputeCostMethod->setFunctionBody(TAB + "return &_computeCost;\n");
-   instance.addMethod(getComputeCostMethod);
+   instance.addMethod(std::move(getComputeCostMethod));
 
    // add getNumOfEdges Method
-   std::auto_ptr<Method> getNumOfEdgesMethod(
+   std::unique_ptr<Method> getNumOfEdgesMethod(
       new Method("getNumOfEdges", "int") );
    getNumOfEdgesMethod->setVirtual(true);
    std::ostringstream getNumOfEdgesMethodFB;
@@ -305,7 +298,7 @@ void Edge::addExtraCompCategoryBaseMethods(Class& instance) const
       << TAB << "return _edgeList.size();\n";
    getNumOfEdgesMethod->setFunctionBody(
       getNumOfEdgesMethodFB.str());
-   instance.addMethod(getNumOfEdgesMethod);
+   instance.addMethod(std::move(getNumOfEdgesMethod));
 }
 
 void Edge::addExtraCompCategoryMethods(Class& instance) const
@@ -331,7 +324,7 @@ std::string Edge::getEdgeConnectionCommonBody(
 void Edge::addCompCategoryBaseConstructorMethod(Class& instance) const
 {
    // Constructor 
-   std::auto_ptr<ConstructorMethod> constructor(
+   std::unique_ptr<ConstructorMethod> constructor(
       new ConstructorMethod(getCompCategoryBaseName()));
    constructor->addParameter("Simulation& sim");
    constructor->addParameter("const std::string& modelName");
@@ -339,6 +332,6 @@ void Edge::addCompCategoryBaseConstructorMethod(Class& instance) const
    constructor->setInitializationStr(
       getFrameworkCompCategoryName() + "(sim, modelName)");
    constructor->setFunctionBody(getCompCategoryBaseConstructorBody());
-   std::auto_ptr<Method> consToIns(constructor.release());
-   instance.addMethod(consToIns);
+   std::unique_ptr<Method> consToIns(constructor.release());
+   instance.addMethod(std::move(consToIns));
 }

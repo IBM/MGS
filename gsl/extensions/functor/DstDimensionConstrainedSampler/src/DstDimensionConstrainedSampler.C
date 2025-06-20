@@ -1,24 +1,17 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
-#include "Lens.h"
+// =============================================================================
+#include "Mgs.h"
 #include "DstDimensionConstrainedSampler.h"
 #include "CG_DstDimensionConstrainedSamplerBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ConnectionContext.h"
 #include "ParameterSet.h"
 #include "NodeSet.h"
@@ -33,12 +26,12 @@
 #include <cmath>
 #include "VectorOstream.h"
 
-void DstDimensionConstrainedSampler::userInitialize(LensContext* CG_c, int& constrainedDstDim) 
+void DstDimensionConstrainedSampler::userInitialize(GslContext* CG_c, int& constrainedDstDim) 
 {
   _constrainedDstDim=constrainedDstDim;
 }
 
-void DstDimensionConstrainedSampler::userExecute(LensContext* CG_c) 
+void DstDimensionConstrainedSampler::userExecute(GslContext* CG_c) 
 {
   ConnectionContext *cc = CG_c->connectionContext;
   
@@ -148,17 +141,17 @@ DstDimensionConstrainedSampler::~DstDimensionConstrainedSampler()
 {
 }
 
-void DstDimensionConstrainedSampler::duplicate(std::unique_ptr<DstDimensionConstrainedSampler>& dup) const
+void DstDimensionConstrainedSampler::duplicate(std::unique_ptr<DstDimensionConstrainedSampler>&& dup) const
 {
    dup.reset(new DstDimensionConstrainedSampler(*this));
 }
 
-void DstDimensionConstrainedSampler::duplicate(std::unique_ptr<Functor>& dup) const
+void DstDimensionConstrainedSampler::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new DstDimensionConstrainedSampler(*this));
 }
 
-void DstDimensionConstrainedSampler::duplicate(std::unique_ptr<CG_DstDimensionConstrainedSamplerBase>& dup) const
+void DstDimensionConstrainedSampler::duplicate(std::unique_ptr<CG_DstDimensionConstrainedSamplerBase>&& dup) const
 {
    dup.reset(new DstDimensionConstrainedSampler(*this));
 }

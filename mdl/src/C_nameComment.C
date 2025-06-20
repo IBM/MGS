@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_nameComment.h"
 #include "C_production.h"
 #include "MdlContext.h"
@@ -44,12 +37,12 @@ C_nameComment::C_nameComment(const C_nameComment& rv)
 {
 }
 
-void C_nameComment::duplicate(std::auto_ptr<C_nameComment>& rv) const
+void C_nameComment::duplicate(std::unique_ptr<C_nameComment>&& rv) const
 {
    rv.reset(new C_nameComment(*this));
 }
 
-void C_nameComment::duplicate(std::auto_ptr<C_production>& rv) const
+void C_nameComment::duplicate(std::unique_ptr<C_production>&& rv) const
 {
    rv.reset(new C_nameComment(*this));
 }

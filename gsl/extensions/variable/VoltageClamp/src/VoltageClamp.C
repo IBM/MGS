@@ -1,19 +1,12 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
-#include "Lens.h"
+// =============================================================================
+#include "Mgs.h"
 #include "VoltageClamp.h"
 #include "CG_VoltageClamp.h"
 #include <memory>
@@ -238,7 +231,7 @@ void VoltageClamp::updateI(RNG& rng)
   if (inject) {
     if (type == 1 or type == 3)
     {
-      float goal;
+      float goal=0;
       if (type == 1)
       {
         //float goal = (*V)[idx] + (targetV - (*V)[idx])/2;
@@ -513,22 +506,22 @@ VoltageClamp::~VoltageClamp()
   delete outFile;
 }
 
-void VoltageClamp::duplicate(std::unique_ptr<VoltageClamp>& dup) const
+void VoltageClamp::duplicate(std::unique_ptr<VoltageClamp>&& dup) const
 {
    dup.reset(new VoltageClamp(*this));
 }
 
-void VoltageClamp::duplicate(std::unique_ptr<Variable>& dup) const
+void VoltageClamp::duplicate(std::unique_ptr<Variable>&& dup) const
 {
    dup.reset(new VoltageClamp(*this));
 }
 
-void VoltageClamp::duplicate(std::unique_ptr<CG_VoltageClamp>& dup) const
+void VoltageClamp::duplicate(std::unique_ptr<CG_VoltageClamp>&& dup) const
 {
    dup.reset(new VoltageClamp(*this));
 }
 
-void VoltageClamp::setInjectedCurrent(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_VoltageClampInAttrPSet* CG_inAttrPset, CG_VoltageClampOutAttrPSet* CG_outAttrPset)
+void VoltageClamp::setInjectedCurrent(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_VoltageClampInAttrPSet* CG_inAttrPset, CG_VoltageClampOutAttrPSet* CG_outAttrPset)
 {
   idx = CG_inAttrPset->idx;
   if (idx < 0 or

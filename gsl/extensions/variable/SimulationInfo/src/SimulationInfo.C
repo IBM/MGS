@@ -1,4 +1,13 @@
-#include "Lens.h"
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
+#include "Mgs.h"
 #include "SimulationInfo.h"
 #include "CG_SimulationInfo.h"
 #include <memory>
@@ -64,17 +73,17 @@ SimulationInfo::~SimulationInfo()
 {
 }
 
-void SimulationInfo::duplicate(std::unique_ptr<SimulationInfo>& dup) const
+void SimulationInfo::duplicate(std::unique_ptr<SimulationInfo>&& dup) const
 {
    dup.reset(new SimulationInfo(*this));
 }
 
-void SimulationInfo::duplicate(std::unique_ptr<Variable>& dup) const
+void SimulationInfo::duplicate(std::unique_ptr<Variable>&& dup) const
 {
    dup.reset(new SimulationInfo(*this));
 }
 
-void SimulationInfo::duplicate(std::unique_ptr<CG_SimulationInfo>& dup) const
+void SimulationInfo::duplicate(std::unique_ptr<CG_SimulationInfo>&& dup) const
 {
    dup.reset(new SimulationInfo(*this));
 }

@@ -1,18 +1,12 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
+#include <memory>
 #ifndef Class_H
 #define Class_H
 #include "Mdl.h"
@@ -46,7 +40,7 @@ class Class
       Class();
       Class(const std::string& name);
       Class(const Class& rv);
-      void duplicate(std::auto_ptr<Class>& dup) const;
+      void duplicate(std::unique_ptr<Class>&& dup) const;
       Class& operator=(const Class& rv);
       ~Class();
 
@@ -75,7 +69,7 @@ class Class
 	 _classes.insert(IncludeClass(cl, conditional));
       }
 
-      void addMemberClass(std::auto_ptr<Class>& cl, 
+      void addMemberClass(std::unique_ptr<Class>&& cl, 
 		     AccessType accessType, const std::string& conditional = "") {
 	 cl->setMemberClass();
 	 cl->setParentClassName(_name);
@@ -83,17 +77,17 @@ class Class
 	 _memberClasses[accessType].push_back(cl.release());
       }
 
-      void addPartnerClass(std::auto_ptr<Class>& cl, 
+      void addPartnerClass(std::unique_ptr<Class>&& cl, 
 		     const std::string& conditional = "") {
 	 _partnerClasses.push_back(cl.release());
       }
 
-      void addBaseClass(std::auto_ptr<BaseClass>& bc) {
+      void addBaseClass(std::unique_ptr<BaseClass>&& bc) {
 	 _baseClasses.push_back(bc.release());
       }
 
       /* to be removed when we convert from auto_ptr to unique_ptr */
-      void addAttribute(std::auto_ptr<Attribute>& att) {
+      void addAttribute(std::unique_ptr<Attribute>&& att) {
 	 if (att->getStatic() ) _generateSourceFile=true;
 	 _attributes.push_back(att.release());
       }
@@ -117,12 +111,12 @@ class Class
 	    assert(0);
       }
 
-      void addMethod(std::auto_ptr<Method>& mt) {
+      void addMethod(std::unique_ptr<Method>&& mt) {
 	 mt->setClass(this);
 	 if (!(mt->isInline())) _generateSourceFile=true;
 	 _methods.push_back(mt.release());
       }
-      void addMethodToExternalFile(std::string external_filename, std::auto_ptr<Method>& mt) {
+      void addMethodToExternalFile(std::string external_filename, std::unique_ptr<Method>&& mt) {
 	 assert(mt->isInline() == false);
 	//if (!(mt->isInline())) _generateSourceFile=true;
 	 _methodsInDifferentFile[external_filename].push_back(mt.release());
@@ -369,7 +363,6 @@ class Class
       void destructOwnedHeap();
       void copyOwnedHeap(const Class& rv);
       void printBeginning(std::ostringstream& os);
-      void printCopyright(std::ostringstream& os);
       void printHeaders(const std::set<IncludeHeader>& headers, 
 			std::ostringstream& os);
       void printClasses(std::ostringstream& os);

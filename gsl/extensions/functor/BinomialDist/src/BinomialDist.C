@@ -1,31 +1,24 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
-#include "Lens.h"
+// =============================================================================
+#include "Mgs.h"
 #include "BinomialDist.h"
 #include "CG_BinomialDistBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "Simulation.h"
 #include <memory>
 
-void BinomialDist::userInitialize(LensContext* CG_c, double& probOfN1, double& n1, double& n2, unsigned& seed) 
+void BinomialDist::userInitialize(GslContext* CG_c, double& probOfN1, double& n1, double& n2, unsigned& seed) 
 {
   //  _rng.reSeedShared(seed);
 }
 
-double BinomialDist::userExecute(LensContext* CG_c) 
+double BinomialDist::userExecute(GslContext* CG_c) 
 {
   double rval=init.n2;
   if (drandom(0, 1.0, CG_c->sim->getSharedFunctorRandomSeedGenerator())<init.probOfN1) {
@@ -48,17 +41,17 @@ BinomialDist::~BinomialDist()
 {
 }
 
-void BinomialDist::duplicate(std::unique_ptr<BinomialDist>& dup) const
+void BinomialDist::duplicate(std::unique_ptr<BinomialDist>&& dup) const
 {
    dup.reset(new BinomialDist(*this));
 }
 
-void BinomialDist::duplicate(std::unique_ptr<Functor>& dup) const
+void BinomialDist::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new BinomialDist(*this));
 }
 
-void BinomialDist::duplicate(std::unique_ptr<CG_BinomialDistBase>& dup) const
+void BinomialDist::duplicate(std::unique_ptr<CG_BinomialDistBase>&& dup) const
 {
    dup.reset(new BinomialDist(*this));
 }

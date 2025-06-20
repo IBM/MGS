@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BMC-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// ================================================================
-
+// =============================================================================
 #include "TissueContext.h"
 #include "VecPrim.h"
 #ifdef USING_BLUEGENE
@@ -697,7 +690,7 @@ bool TissueContext::isMappedTouch(Touch& t,
 // GOAL: check if this MPI process (based on the given rank 'rank')
 //   should handle the given touch
 #ifdef IDEA1
-bool TissueContext::isLensTouch(Touch& t, int rank)
+bool TissueContext::isMgsTouch(Touch& t, int rank)
 {
   bool rval = false;
   //For each touch, it has 2 capsules
@@ -742,7 +735,7 @@ bool TissueContext::isLensTouch(Touch& t, int rank)
   return rval;
 }
 #else
-bool TissueContext::isLensTouch(Touch& t, int rank)
+bool TissueContext::isMgsTouch(Touch& t, int rank)
 {
   bool rval = false;
   //For each touch, it has 2 capsules
@@ -801,11 +794,11 @@ void TissueContext::correctTouchKeys(int rank)
       key_size_t capkey = _segmentDescriptor.getSegmentKey(mapiter->first, mask);
       if (!key1Fix)
       {
-        if (key1Fix = (capkey == key1)) titer->setKey1(mapiter->first);
+        if ((key1Fix = (capkey == key1))) titer->setKey1(mapiter->first);
       }
       if (!key2Fix)
       {
-        if (key2Fix = (capkey == key2)) titer->setKey2(mapiter->first);
+        if ((key2Fix = (capkey == key2))) titer->setKey2(mapiter->first);
       }
     }
     mapend = _secondPassCapsuleMap.end();
@@ -815,11 +808,11 @@ void TissueContext::correctTouchKeys(int rank)
       key_size_t capkey = _segmentDescriptor.getSegmentKey(mapiter->first, mask);
       if (!key1Fix)
       {
-        if (key1Fix = (capkey == key1)) titer->setKey1(mapiter->first);
+        if ((key1Fix = (capkey == key1))) titer->setKey1(mapiter->first);
       }
       if (!key2Fix)
       {
-        if (key2Fix = (capkey == key2)) titer->setKey2(mapiter->first);
+        if ((key2Fix = (capkey == key2))) titer->setKey2(mapiter->first);
       }
     }
     assert(key1Fix && key2Fix);

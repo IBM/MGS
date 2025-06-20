@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-11-14-2018
-//
-// (C) Copyright IBM Corp. 2005-2018  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef Connection_H
 #define Connection_H
 #include "Mdl.h"
@@ -36,14 +29,14 @@ class Connection {
       Connection(DirectionType directionType = _PRE,
 		 ComponentType componentType = _EDGE, 		 
 		 bool graph = false);
-      virtual void duplicate(std::auto_ptr<Connection>& rv) const = 0;
+      virtual void duplicate(std::unique_ptr<Connection>&& rv) const = 0;
       virtual ~Connection();
       bool getGraph() const;
       void setGraph(bool graph);
 
       std::string getString() const;
 
-      void addInterfaceToMember(std::auto_ptr<InterfaceToMember>& im);
+      void addInterfaceToMember(std::unique_ptr<InterfaceToMember>&& im);
 
       const MemberContainer<InterfaceToMember>& getInterfaces() {
 	 return _interfaces;
@@ -91,7 +84,7 @@ class Connection {
 
       void addMappingToInterface(
 	 const std::string& interface, const std::string& interfaceMember,
-	 const std::string& typeStr, std::auto_ptr<DataType>& dtToInsert);
+	 const std::string& typeStr, std::unique_ptr<DataType>&& dtToInsert);
 
    protected:
       MemberContainer<InterfaceToMember> _interfaces;    

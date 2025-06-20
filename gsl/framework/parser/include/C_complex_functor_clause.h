@@ -1,25 +1,18 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef _C_COMPLEX_FUNCTOR_CLAUSE_H_
 #define _C_COMPLEX_FUNCTOR_CLAUSE_H_
 #include "Copyright.h"
 
 #include "C_production.h"
 
-class LensContext;
+class GslContext;
 
 class C_complex_functor_clause : public C_production
 {
@@ -29,7 +22,7 @@ class C_complex_functor_clause : public C_production
       C_complex_functor_clause(Type t, SyntaxError* error);
       virtual ~C_complex_functor_clause();
       virtual C_complex_functor_clause* duplicate() const = 0;
-      virtual void internalExecute(LensContext *) = 0;
+      virtual void internalExecute(GslContext *) = 0;
       virtual void checkChildren();
       virtual void recursivePrint();
       Type getType() const {

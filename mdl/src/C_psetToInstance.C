@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_psetToInstance.h"
 #include "C_psetMapping.h"
 #include "C_generalList.h"
@@ -28,9 +21,9 @@ void C_psetToInstance::execute(MdlContext* context)
 
 void C_psetToInstance::addToList(C_generalList* gl) 
 {  
-   std::auto_ptr<C_psetToInstance> im;
+   std::unique_ptr<C_psetToInstance> im;
    im.reset(new C_psetToInstance(*this));
-   gl->addPSetToInstance(im);
+   gl->addPSetToInstance(std::move(im));
 }
 
 C_psetToInstance::C_psetToInstance() 
@@ -45,18 +38,18 @@ C_psetToInstance::C_psetToInstance(const std::string& psetMember,
 } 
 
 void C_psetToInstance::duplicate(
-   std::auto_ptr<C_psetToInstance>& rv) const
+   std::unique_ptr<C_psetToInstance>&& rv) const
 {
    rv.reset(new C_psetToInstance(*this));
 }
 
 void C_psetToInstance::duplicate(
-   std::auto_ptr<C_psetMapping>& rv) const
+   std::unique_ptr<C_psetMapping>&& rv) const
 {
    rv.reset(new C_psetToInstance(*this));
 }
 
-void C_psetToInstance::duplicate(std::auto_ptr<C_general>& rv) const
+void C_psetToInstance::duplicate(std::unique_ptr<C_general>&& rv) const
 {
    rv.reset(new C_psetToInstance(*this));
 }

@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef C_declaration_ndpair_H
 #define C_declaration_ndpair_H
 #include "Copyright.h"
@@ -23,7 +16,7 @@
 
 class C_declarator;
 class C_ndpair_clause;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_declaration_ndpair : public C_declaration
@@ -33,7 +26,7 @@ class C_declaration_ndpair : public C_declaration
       C_declaration_ndpair(C_declarator *,  C_ndpair_clause *, SyntaxError *);
       virtual C_declaration_ndpair* duplicate() const;
       virtual ~C_declaration_ndpair();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BMC-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 // Initiated by Heraldo Memelli 11-06-2013
 
 #include "InferiorOliveGlomeruliDetector.h"
@@ -191,7 +184,7 @@ void InferiorOliveGlomeruliDetector::findGlomeruli(TouchVector* touchVector) {
   double recvbuf[4];
   double sendbuf[4];
   MPI_Irecv(recvbuf, 4, MPI_DOUBLE, MPI_ANY_SOURCE,
-	    MPI_ANY_TAG, MPI_COMM_WORLD, &request);
+    MPI_ANY_TAG, MPI_COMM_WORLD, &request);
   int sentReceived[2] = {0, 0};
   Sphere sphere;
   sphere._radius = GlomerulusRadius + MinGlomeruliSpacing;
@@ -259,28 +252,28 @@ void InferiorOliveGlomeruliDetector::findGlomeruli(TouchVector* touchVector) {
                                         rend = ranks.end();
             for (; riter != rend; ++riter) {
               if (*riter == rank) continue;
-              MPI_Isend(sendbuf, 4, MPI_DOUBLE, *riter, 0, MPI_COMM_WORLD, &request);
+              MPI_Isend(sendbuf, 4, MPI_DOUBLE, *riter, 0, 
+                MPI_COMM_WORLD, &request);
               ++sentReceived[0];
             }
           }
         }
         MPI_Status status;
         bool moreToDo = false;
-	int flag;
-	MPI_Test(&request, &flag, &status);
-        while (flag) {
+        int flag=0;
+        while (!flag) {
           ++sentReceived[1];
           moreToDo = (moreToDo || checkGlomeruli(recvbuf));
-          MPI_Irecv(recvbuf, 4, MPI_DOUBLE,
-		    MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &request);
-	  MPI_Test(&request, &flag, &status);
+          MPI_Irecv(recvbuf, 4, MPI_DOUBLE, MPI_ANY_SOURCE, MPI_ANY_TAG,
+            MPI_COMM_WORLD, &request);
+          MPI_Test(&request, &flag, &status);
         }
         localDone = (localDone && !moreToDo);
       }
     }
     int totalSentReceived[2];
     MPI_Allreduce((void*)sentReceived, (void*)totalSentReceived, 2,
-		  MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+                              MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     localDone = globalDone = (totalSentReceived[0] == totalSentReceived[1]);
   }
   MPI_Cancel(&request);
@@ -288,7 +281,7 @@ void InferiorOliveGlomeruliDetector::findGlomeruli(TouchVector* touchVector) {
   ;
   int nGlomeruli = _glomeruli.size();
   MPI_Allreduce((void*)&nGlomeruli, (void*)&totalCount, 1, MPI_INT,
-		MPI_SUM, MPI_COMM_WORLD);
+                            MPI_SUM, MPI_COMM_WORLD);
   if (_tissueContext->getRank() == 0)
     printf("Total Glomeruli = %d\n\n", totalCount);
   TouchVector newTouchVector;
@@ -298,7 +291,7 @@ void InferiorOliveGlomeruliDetector::findGlomeruli(TouchVector* touchVector) {
   int nrGlomeruliTouches = newTouchVector.getCount();
   totalCount = 0;
   MPI_Allreduce((void*)&nrGlomeruliTouches, (void*)&totalCount, 1,
-		MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+                            MPI_INT, MPI_SUM, MPI_COMM_WORLD);
   if (_tissueContext->getRank() == 0)
     printf("Total Glomeruli Touches = %d\n\n", totalCount);
   touches.clear();

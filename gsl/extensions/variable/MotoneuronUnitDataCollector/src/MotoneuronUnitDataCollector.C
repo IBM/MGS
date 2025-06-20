@@ -1,19 +1,12 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
-#include "Lens.h"
+// =============================================================================
+#include "Mgs.h"
 #include "MotoneuronUnitDataCollector.h"
 #include "CG_MotoneuronUnitDataCollector.h"
 #include "NodeDescriptor.h"
@@ -1216,7 +1209,7 @@ void MotoneuronUnitDataCollector::dataCollection(Trigger* trigger, NDPairList* n
 #endif // saveSimple
 }
  
-void MotoneuronUnitDataCollector::getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_MotoneuronUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_MotoneuronUnitDataCollectorOutAttrPSet* CG_outAttrPset) 
+void MotoneuronUnitDataCollector::getNodeIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_MotoneuronUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_MotoneuronUnitDataCollectorOutAttrPSet* CG_outAttrPset) 
 {
   ShallowArray<unsigned,3,2> coords;
   CG_node->getNode()->getNodeCoords(coords);
@@ -1235,17 +1228,17 @@ MotoneuronUnitDataCollector::~MotoneuronUnitDataCollector()
 {
 }
 
-void MotoneuronUnitDataCollector::duplicate(std::unique_ptr<MotoneuronUnitDataCollector>& dup) const
+void MotoneuronUnitDataCollector::duplicate(std::unique_ptr<MotoneuronUnitDataCollector>&& dup) const
 {
   dup.reset(new MotoneuronUnitDataCollector(*this));
 }
 
-void MotoneuronUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
+void MotoneuronUnitDataCollector::duplicate(std::unique_ptr<Variable>&& dup) const
 {
   dup.reset(new MotoneuronUnitDataCollector(*this));
 }
 
-void MotoneuronUnitDataCollector::duplicate(std::unique_ptr<CG_MotoneuronUnitDataCollector>& dup) const
+void MotoneuronUnitDataCollector::duplicate(std::unique_ptr<CG_MotoneuronUnitDataCollector>&& dup) const
 {
   dup.reset(new MotoneuronUnitDataCollector(*this));
 }

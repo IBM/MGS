@@ -1,24 +1,17 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
 #include "ServiceConnectorFunctor.h"
 #include "CG_ServiceConnectorFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 #include <sstream>
 #include <cassert>
@@ -38,7 +31,7 @@
 #include "EdgeSetDataItem.h"
 #include "NodeDataItem.h"
 #include "EdgeDataItem.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "FunctorDataItem.h"
 #include "ServiceDataItem.h"
 #include "Publisher.h"
@@ -47,10 +40,10 @@
 
 //#include "CG_LifeNode.h"
 
-void ServiceConnectorFunctor::userInitialize(LensContext* CG_c) {}
+void ServiceConnectorFunctor::userInitialize(GslContext* CG_c) {}
 
 void ServiceConnectorFunctor::userExecute(
-    LensContext* CG_c, std::vector<DataItem*>::const_iterator begin,
+    GslContext* CG_c, std::vector<DataItem*>::const_iterator begin,
     std::vector<DataItem*>::const_iterator end)
 {
 #ifdef HAVE_MPI
@@ -140,14 +133,14 @@ void ServiceConnectorFunctor::userExecute(
 
   ++it;
 
-  StringDataItem* stringDI;
+  CustomStringDataItem* stringDI;
   FunctorDataItem* functorDI;
   std::string serviceName;
   std::unique_ptr<Functor> functorAp;
   while (it != end)
   {
     serviceName = "";
-    stringDI = dynamic_cast<StringDataItem*>(*it);
+    stringDI = dynamic_cast<CustomStringDataItem*>(*it);
     if (stringDI == 0)
     {
       functorDI = dynamic_cast<FunctorDataItem*>(*it);
@@ -160,7 +153,7 @@ void ServiceConnectorFunctor::userExecute(
       }
       else
       {
-        functorDI->getFunctor()->duplicate(functorAp);
+        functorDI->getFunctor()->duplicate(std::move(functorAp));
       }
     }
     else
@@ -170,7 +163,7 @@ void ServiceConnectorFunctor::userExecute(
 
     ++it;
 
-    stringDI = dynamic_cast<StringDataItem*>(*it);
+    stringDI = dynamic_cast<CustomStringDataItem*>(*it);
     if (stringDI == 0)
     {
       std::ostringstream os;
@@ -215,18 +208,18 @@ ServiceConnectorFunctor::ServiceConnectorFunctor()
 ServiceConnectorFunctor::~ServiceConnectorFunctor() {}
 
 void ServiceConnectorFunctor::duplicate(
-    std::unique_ptr<ServiceConnectorFunctor>& dup) const
+    std::unique_ptr<ServiceConnectorFunctor>&& dup) const
 {
   dup.reset(new ServiceConnectorFunctor(*this));
 }
 
-void ServiceConnectorFunctor::duplicate(std::unique_ptr<Functor>& dup) const
+void ServiceConnectorFunctor::duplicate(std::unique_ptr<Functor>&& dup) const
 {
   dup.reset(new ServiceConnectorFunctor(*this));
 }
 
 void ServiceConnectorFunctor::duplicate(
-    std::unique_ptr<CG_ServiceConnectorFunctorBase>& dup) const
+    std::unique_ptr<CG_ServiceConnectorFunctorBase>&& dup) const
 {
   dup.reset(new ServiceConnectorFunctor(*this));
 }
@@ -245,7 +238,7 @@ void ServiceConnectorFunctor::connectToService(
     // create
     // an proxy. It is always that create an proxy for the pre-node or
     // pre-variable.
-    // similiar to the case in LensConnector: if both ends are not in current
+    // similiar to the case in MgsConnector: if both ends are not in current
     // memory
     // space we do nothing.
     Variable* av = _destinationVariableDI->getVariable()->getVariable();
@@ -524,7 +517,7 @@ void ServiceConnectorFunctor::ServiceConnectorElement::copyOwnedHeap(
   if (rv._functor)
   {
     std::unique_ptr<Functor> dup;
-    rv._functor->duplicate(dup);
+    rv._functor->duplicate(std::move(dup));
     _functor = dup.release();
   }
   else

@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "ToolBase.h"
 #include "Generatable.h"
 #include "MemberContainer.h"
@@ -95,7 +88,7 @@ void ToolBase::generateInitializer(const std::string& type
 				   , bool userInit) 
 {
    std::string fullName = PREFIX + getModuleName() + type;
-   std::auto_ptr<Class> instance(new Class(fullName));
+   std::unique_ptr<Class> instance(new Class(fullName));
 
    instance->addHeader("\"SyntaxErrorException.h\"");
    instance->addHeader("\"DataItem.h\"");
@@ -104,24 +97,24 @@ void ToolBase::generateInitializer(const std::string& type
 
    instance->addAttributes(members);
 
-   std::auto_ptr<Method> doInitMethod(
-      new Method("initialize", "std::vector<DataItem*>::const_iterator") );
+   std::unique_ptr<Method> doInitMethod = std::make_unique<Method>(
+      "initialize", "std::vector<DataItem*>::const_iterator");
    doInitMethod->addParameter("const std::vector<DataItem*>& args");
    std::ostringstream doInitFunctionBody;
    if (userInit) {
       doInitFunctionBody 
-	 << TAB << "if (args.size() < " << members.size() << ") {\n"
-	 << TAB << TAB << "throw SyntaxErrorException(" 
-	 << "\"Number of arguments should be greater than or equal to " 
-	 << members.size() << "\");\n"
-	 << TAB << "}\n";
+      << TAB << "if (args.size() < " << members.size() << ") {\n"
+      << TAB << TAB << "throw SyntaxErrorException(" 
+      << "\"Number of arguments should be greater than or equal to " 
+      << members.size() << "\");\n"
+      << TAB << "}\n";
    } else {
       doInitFunctionBody 
-	 << TAB << "if (args.size() != " << members.size() << ") {\n"
-	 << TAB << TAB << "throw SyntaxErrorException(" 
-	 << "\"Number of arguments should be equal to " 
-	 << members.size() << "\");\n"
-	 << TAB << "}\n";
+      << TAB << "if (args.size() != " << members.size() << ") {\n"
+      << TAB << TAB << "throw SyntaxErrorException(" 
+      << "\"Number of arguments should be equal to " 
+      << members.size() << "\");\n"
+      << TAB << "}\n";
    }
    doInitFunctionBody 
       << TAB << "std::vector<DataItem*>::const_iterator " 
@@ -129,14 +122,14 @@ void ToolBase::generateInitializer(const std::string& type
    if (members.size() > 0) {
       MemberContainer<DataType>::const_iterator it, end = members.end();
       for (it = members.begin(); it != end; it++) {
-	 doInitFunctionBody 
-	    << it->second->getInitializerString(PREFIX + "currentDI");
+	      doInitFunctionBody 
+	      << it->second->getInitializerString(PREFIX + "currentDI");
       }
    }
    doInitFunctionBody 
       << TAB << "return " + PREFIX + "currentDI;\n"; 
    doInitMethod->setFunctionBody(doInitFunctionBody.str());
-   instance->addMethod(doInitMethod);
+   instance->addMethod(std::move(doInitMethod));
 
    instance->addStandardMethods();
    _classes.push_back(instance.release());

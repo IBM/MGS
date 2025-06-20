@@ -9,7 +9,15 @@ from __future__ import print_function
 import os
 import os.path
 import sys
-import distutils.spawn
+import shutil
+
+# Create a replacement for distutils.spawn
+class distutils:
+    class spawn:
+        @staticmethod
+        def find_executable(name):
+            return shutil.which(name)
+        
 if sys.version_info[0] < 3:
     import popen2
 
@@ -29,7 +37,6 @@ else:
     import subprocess
 
     def find_version(name, full_path_name):
-        print(type(full_path_name))
         cmd = [full_path_name, "--version"]
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
         stdout, stderr = p.communicate()
@@ -58,8 +65,8 @@ USE = 1
 DONTUSE = 0
 UNDEF = -1
 
-PROJECT_NAME = "Lens"
-CONFIG_HEADER = "framework/factories/include/LensRootConfig.h"
+PROJECT_NAME = "Mgs"
+CONFIG_HEADER = "framework/factories/include/GslRootConfig.h"
 EXTENSIONS_MK = "./Extensions.mk"
 CLEAN_SCRIPT = "./clean.sh"
 CONFIG_LOG = "./config.log"
@@ -85,6 +92,10 @@ LINUX_SHARED_PFIX = "-shared -Wl,--export-dynamic -Wl,-soname,lib$(notdir $@)"
 LINUX_SHARED_CC = "$(CC) $(SHARED_PFIX) -o $@ $(filter %.o, $^)"
 LINUX_FINAL_TARGET_FLAG = "-Wl,--export-dynamic"
 
+DARWIN_EXTRA_FLAGS = "-DDARWIN"
+DARWIN_SHARED_PFIX = "-shared -Wl,-export_dynamic -Wl,-install_name,@rpath/lib$(notdir $@)"
+DARWIN_SHARED_CC = "$(CC) $(SHARED_PFIX) -o $@ $(filter %.o, $^)"
+DARWIN_FINAL_TARGET_FLAG = "-Wl,-export_dynamic"
 AIX_GNU_MINIMAL_TOC_FLAG = "-mminimal-toc"
 
 AIX_EXTRA_FLAGS = "-DAIX"
@@ -123,7 +134,7 @@ LINUX_DX_LITELIBS = "-L$(DX_BASE)/lib_linux " + COMMON_DX_LITELIBS
 
 EXTRA_PARSER_TARGERS_FOR_DX = "$(DX_DIR)/EdgeSetSubscriberSocket $(DX_DIR)/NodeSetSubscriberSocket $(OBJS_DIR)/socket.o"
 
-LENSPARSER_TARGETS = "$(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(BASE_OBJECTS) "
+GSLPARSER_TARGETS = "$(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(BASE_OBJECTS) "
 
 # # Pre python 2.3 compatibility
 # True = 1
@@ -227,7 +238,7 @@ def createConfigHeader():
 
     if create is True:
         cmd = "#include <string>\n\n"
-        cmd += "const std::string LENSROOT = \"" + rootDir + "\";\n"
+        cmd += "const std::string GSLROOT = \"" + rootDir + "\";\n"
         header = open(CONFIG_HEADER, "w")
         header.write(cmd)
         header.close()
@@ -267,9 +278,10 @@ class DxInfo:
         self.liteLib = self.mainPath
         if (operatingSystem == "AIX"):
             self.liteLib += "/lib_ibm6000/"
-        else:
+        elif self.operatingSystem == "Linux":
             self.liteLib += "/lib_linux/"
-
+        elif self.operatingSystem == "Darwin":
+            self.liteLib += "/lib_darwin/"  # This path may need adjustment
         self.liteLib += "libDXlite.a"
         if os.path.isfile(self.liteLib) is not True:
             print("libDXlite.a could not be found at", self.liteLib)
@@ -595,8 +607,14 @@ class BuildSetup:
         self.hostName = ""
         self.architecture = ""
         self.objectMode = ""
-        self.numCPUs = os.sysconf("SC_NPROCESSORS_ONLN")
-
+        try:
+            if self.operatingSystem == "Darwin":
+                import subprocess
+                self.numCPUs = int(subprocess.check_output(['sysctl', '-n', 'hw.ncpu']).strip())
+            else:
+                self.numCPUs = os.sysconf("SC_NPROCESSORS_ONLN")
+        except (ValueError, AttributeError, subprocess.SubprocessError):
+            self.numCPUs = 2  # Default to 2 if detection fails
         # Binaries
         self.bisonBin = ""
         self.flexBin = ""
@@ -625,6 +643,11 @@ class BuildSetup:
 
         self.operatingSystem = self.unameInfo[0]
         self.hostName = self.unameInfo[1]
+        self.pythonLibName = "python2.7"  # Default value
+        # The path to the Python include directory
+        self.pythonIncludeDir = os.environ.get("PYTHON_INCLUDE_DIR", "/usr/local/include/python2.7")
+        # The path to the Python library directory
+        self.pythonLibDir = os.environ.get("PYTHON_LIB", "/usr/local/lib")
 
         if self.operatingSystem == "AIX":
             self.architecture = "ppc64"
@@ -637,8 +660,11 @@ class BuildSetup:
         elif self.operatingSystem == "Linux":
             self.architecture = self.unameInfo[4]
             self.objectMode = "64"
+        elif self.operatingSystem == "Darwin":  # Add this section
+            self.architecture = "arm64" if "arm" in self.unameInfo[4] else "x86_64"
+            self.objectMode = "64"
         else:
-            raise FatalError(PROJECT_NAME + " only runs in AIX or Linux")
+            raise FatalError(PROJECT_NAME + " only runs in AIX, Linux, or macOS (Darwin)")
 
         self.bisonBin = findFile("bison", True)
         self.flexBin = findFile("flex", True)
@@ -810,6 +836,7 @@ class BuildSetup:
         self.setCompilers()
         self.setDX()
         self.bisonVersionFinder()
+        self.getPythonLibName()  # Add this line
         print(self.getSystemInfo())
 
         # At this point if there has been no FatalError, the environment
@@ -860,7 +887,10 @@ class BuildSetup:
         options to GCC
         """
         def setCompilersMPI(self):
-            if self.operatingSystem == "AIX":
+            if self.operatingSystem == "Darwin":
+                setCompilersMacOS(self)
+                return  # Skip the rest of the method
+            elif self.operatingSystem == "AIX":
                 if self.options.compiler == "gcc":
                     self.options.compiler = "gcc"
                     self.cCompiler = findFile("gcc", True)
@@ -895,6 +925,26 @@ class BuildSetup:
                                 self.cppCompiler = findFile("mpiCC", True)
                                 findFile("mpiCC", True)
                                 # raise FatalError("Currently MPI is only used by AIX")
+
+        def setCompilersMacOS(self):
+            """Set compilers for macOS"""
+            # Default to clang/clang++ on macOS
+            print("Setting compilers for macOS...")
+            self.options.compiler = "gcc"  # We'll still call it gcc for compatibility
+            
+            # First try looking for clang/clang++
+            clang = findFile("clang", False)
+            clangpp = findFile("clang++", False)
+            
+            if clang and clangpp:
+                self.cCompiler = clang
+                self.cppCompiler = clangpp
+                print(f"Using clang compilers: C={self.cCompiler}, C++={self.cppCompiler}")
+            else:
+                # Fall back to gcc/g++ which might be symlinks to clang on macOS
+                self.cCompiler = findFile("gcc", True)
+                self.cppCompiler = findFile("g++", True)
+                print(f"Using gcc compilers (might be symlinks to clang): C={self.cCompiler}, C++={self.cppCompiler}")
 
         def setCompilersMPI_GPU(self):
             if self.operatingSystem == "Linux":
@@ -954,6 +1004,9 @@ BIN_DIR?=./bin
 EXE_FILE=gslparser
 
 """
+        retStr += "PYTHON_INCLUDE_DIR := " + self.pythonIncludeDir + "\n"
+        retStr += "PYTHON_LIB := " + self.pythonLibDir + "\n"
+
         if (self.options.asNts is True) or (self.options.asNtsNVU is True):
             retStr += \
                 """\
@@ -967,12 +1020,12 @@ NTI_INC_DIR=$(NTI_DIR)/include
 BISON=$(shell which bison)
 FLEX=$(shell which flex)
 
-LENSROOT = $(shell pwd)
+GSLROOT = $(shell pwd)
 OPERATING_SYSTEM = $(shell uname)
 
 SCRIPTS_DIR := scripts
 DX_DIR := dx
-SO_DIR := $(LENSROOT)/so
+SO_DIR := $(GSLROOT)/so
 PARSER_PATH := framework/parser
 STD_UTILS_OBJ_PATH := utils/std/obj
 TOTALVIEW_LIBPATH := /opt/toolworks/totalview.8.4.1-7/rs6000/lib
@@ -1516,6 +1569,11 @@ CUDA_OBJS := $(patsubst %, $(OBJS_DIR)/%, $(CUDA_PURE_OBJS))
             else:
                 retStr += " " + XL_RUNTIME_TYPE_INFO_FLAG
         retStr += "\n"
+        
+        # Add this section separately
+        retStr += "OTHER_LIBS := -include utils/std/include/darwin_compat.h -I$(PYTHON_INCLUDE_DIR) -L$(PYTHON_LIB) -lpython3"
+        retStr += "\n"
+        retStr += "OTHER_LIBS_HEADER :=-I$(PYTHON_INCLUDE_DIR)"
         return retStr
 
     def getHeaderPaths(self):
@@ -1556,7 +1614,7 @@ endif
 # Fermi : -gencode arch=compute_20,code=sm_20
 
 #CFLAGS := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generated,$(PARSER_PATH)) $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES))  -DLINUX -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI
-#CFLAGS += -I../common/include -std=c++14 -Wno-deprecated-declarations
+#CFLAGS += -I../common/include -std=c++17 -Wno-deprecated-declarations
 #CFLAGS += --compiler-options -fPIC -MMD
 #CFLAGS += -g -fno-inline -fno-eliminate-unused-debug-types -DDEBUG_ASSERT -DNOWARNING_DYNAMICCAST -Og -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI -DHAVE_GPU
 """
@@ -1566,7 +1624,9 @@ endif
             """
 # SOURCE_AS_CPP := -x c++
 SOURCE_AS_CPP := -x cu
-CUDA_NVCC_FLAGS := --compiler-options -fPIC -std=c++14 -Xcompiler -Wno-deprecated-declarations \
+CUDA_NVCC_FLAGS := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generated,$(PARSER_PATH)) $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES))  -DLINUX -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI -DHAVE_GPU
+CUDA_NVCC_FLAGS += -I../common/include -std=c++17 -Wno-deprecated-declarations
+CUDA_NVCC_FLAGS += --compiler-options -fPIC \
 """
         retStr += " -DLINUX -DDISABLE_DYNAMIC_LOADING -Xcompiler -DHAVE_MPI -Xcompiler -DHAVE_GPU"
         if self.options.debug_assert is True:
@@ -1676,9 +1736,10 @@ CUDA_NVCC_COMBINED_LDFLAGS :=   $(GENCODE_FLAGS) -lib
     def getCFlags(self):  # noqa
         retStr = \
             """\
-OTHER_LIBS :=-lgmp \
 """
-        retStr += "-I$(MGS_PYTHON_INCLUDE_DIR) -L$(MGS_PYTHON_LIB) -l{}".format(self.pythonLibName)
+        # Add compatibility header inclusion
+        retStr += " -include utils/std/include/darwin_compat.h"
+        retStr += " -I$(PYTHON_INCLUDE_DIR) -L$(PYTHON_LIB) -l{}".format(self.pythonLibName)
 
         retStr += "\n"
         retStr += \
@@ -1698,8 +1759,9 @@ endif
             retStr += self.getHeaderPaths()
         retStr += \
             """
-CFLAGS := -fPIC -std=c++14 -Wno-deprecated-declarations
-CFLAGS +=  \
+CFLAGS := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generated,$(PARSER_PATH)) $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES))  -DLINUX -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI
+CFLAGS += -I../common/include -std=c++17 -Wno-deprecated-declarations
+CFLAGS += -fPIC \
 """
         if self.options.colab is True:
             retStr += \
@@ -1719,6 +1781,56 @@ CFLAGS +=  \
             retStr += " " + LINUX_EXTRA_FLAGS
             if self.options.compiler == "gcc":
                 retStr += " -fpic "
+        elif self.operatingSystem == "Darwin":
+            # Base include paths and features
+            retStr += " -include utils/std/include/darwin_compat.h"
+            retStr += " -DDARWIN"
+            retStr += " -DDISABLE_DYNAMIC_LOADING"
+            if self.options.withMpi is True:
+                retStr += " -DHAVE_MPI"
+            if self.options.nowarning_dynamiccast is True:
+                retStr += " -DNOWARNING_DYNAMICCAST"
+            
+            # Compiler options
+            retStr += " -std=c++17"
+            retStr += " -stdlib=libc++" 
+            retStr += " -fpic"
+            
+            # Optimization and debugging
+            if self.options.optimization == "O3":
+                retStr += " -O3"
+            elif self.options.optimization == "Og":
+                retStr += " -Og"
+            else:
+                retStr += " -O3"  # Default to O3 for performance
+            retStr += " -fPIC"
+            retStr += " -MMD"
+            
+            # Library configuration for C++17
+            retStr += " -D_LIBCPP_ENABLE_CXX17_REMOVED_FEATURES"
+            retStr += " -D_LIBCPP_BUILDING_LIBRARY"
+            retStr += " -D_LIBCPP_DISABLE_EXTERN_TEMPLATE"
+            
+            # Warning suppressions
+            retStr += " -Wno-deprecated-declarations"
+            retStr += " -Wno-error=c++17-extensions"
+            retStr += " -Wno-c++11-narrowing"
+            retStr += " -Wno-deprecated-register"
+            retStr += " -Wno-reserved-user-defined-literal" 
+            retStr += " -Wno-incompatible-pointer-types-discards-qualifiers"
+            retStr += " -Wno-implicit-int-conversion"
+            
+            # Include paths
+            retStr += " -I$(GSLROOT)/utils/std/include"
+            retStr += " -I$(GSLROOT)/utils/streams/include"
+            retStr += " -I/opt/homebrew/opt/gmp/include"
+            if self.options.withMpi is True:
+                retStr += " -I/opt/homebrew/opt/open-mpi/include"
+            # System includes
+            retStr += " -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+            # Add the correct C++ include path
+            retStr += " -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1"
+
         elif self.operatingSystem == "AIX":
             if self.options.compiler == "gcc":
                 retStr += " " + AIX_GNU_MINIMAL_TOC_FLAG
@@ -1814,77 +1926,126 @@ CFLAGS +=  \
         retStr += "\n"
         return retStr
 
-    def getLensLibs(self):
-        retStr = "LENS_LIBS := "
+    def getMgsLibs(self):
+        retStr = "MGS_LIBS := "
         if self.options.domainLibrary is True:
-            # retStr += "lib/liblensdomain.a "
-            retStr += "lib/liblens.a\n"
+            # retStr += "lib/libGslParserdomain.a "
+            retStr += "lib/libGslParser.a\n"
         return retStr
 
-    def getLibs(self):  # noqa
+    def getLibs(self):
         retStr = "# add libs"
         if self.options.colab is True:
             if self.options.debug == USE:
-                retStr += \
-                    """
-NTS_LIBS := ${LENSROOT}/lib/libnts_db.so\n
+                retStr += """
+    NTS_LIBS := ${GSLROOT}/lib/libnts_db.so\n
 
-"""
+    """
             else:
-                retStr += \
-                    """
-NTS_LIBS := ${LENSROOT}/lib/libnts.so\n
+                retStr += """
+    NTS_LIBS := ${GSLROOT}/lib/libnts.so\n
 
-"""
-        # retStr += "LENS_LIBS_EXT := $(LENS_LIBS) lib/liblensext.a\n"
+    """
         retStr += """
-LIBS := """
+    LIBS := """
+        
+        # Add basic libraries only once
+        added_libs = set()
+        
         if self.options.dynamicLoading is True:
             retStr += "-ldl "
-        if self.options.pthreads is True:
+            added_libs.add("-ldl")
+        
+        if self.options.pthreads is True and "-lpthread" not in added_libs:
             retStr += "-lpthread "
-        if self.architecture == "ppc32":
+            added_libs.add("-lpthread")
+        
+        if self.architecture == "ppc32" or self.architecture == "ppc64":
             retStr += "-lmass "
-        elif self.architecture == "ppc64":
-            retStr += "-lmass "
-        else:
+            added_libs.add("-lmass")
+        elif "-lm" not in added_libs:
             retStr += "-lm "
-        if self.operatingSystem == "AIX":
-            retStr += "$(LENS_LIBS_EXT) "
-        elif self.operatingSystem == "Linux":
-            # retStr += "-Wl,--whole-archive "
-            retStr += "$(LENS_LIBS_EXT) "
-            # retStr += "-Wl,-no-whole-archive "
+            added_libs.add("-lm")
+        
+        if self.operatingSystem == "AIX" or self.operatingSystem == "Linux" or self.operatingSystem == "Darwin":
+            retStr += "$(MGS_LIBS_EXT) "
         else:
             raise InternalError("Unknown OS " + self.operatingSystem)
-
-        if self.options.mpiTrace is True and self.options.blueGene is not True:
-            printWarning("MPI Trace profiling not available.")
-        elif self.options.mpiTrace is True:
-            retStr += " $(MPI_TRACE_LIBS)"
-
-        if self.options.blueGene is True:
-            retStr += " $(MPI_LIBS)"
-
-        if self.options.compiler == "gcc":
+        
+        if self.operatingSystem == "Darwin":
+            # Try to find GMP using pkg-config or fallback to common locations
+            import subprocess
+            try:
+                # Only add GMP once
+                if "/opt/homebrew/opt/gmp/lib/libgmp.a" not in added_libs:
+                    gmp_path = subprocess.check_output(["brew", "--prefix", "gmp"], universal_newlines=True).strip() + "/lib/libgmp.a"
+                    retStr += f" {gmp_path}"
+                    added_libs.add(gmp_path)
+            except (subprocess.SubprocessError, FileNotFoundError):
+                # Try common locations
+                if os.path.exists("/opt/homebrew/lib/libgmp.a") and "/opt/homebrew/lib/libgmp.a" not in added_libs:
+                    retStr += " /opt/homebrew/lib/libgmp.a"
+                    added_libs.add("/opt/homebrew/lib/libgmp.a")
+                elif os.path.exists("/usr/local/lib/libgmp.a") and "/usr/local/lib/libgmp.a" not in added_libs:
+                    retStr += " /usr/local/lib/libgmp.a"
+                    added_libs.add("/usr/local/lib/libgmp.a")
+                elif "-lgmp" not in added_libs:
+                    retStr += " -lgmp"  # Fallback to letting the linker find it
+                    added_libs.add("-lgmp")
+            
+            # Add MPI libraries only once
             if self.options.withMpi is True:
-                retStr += " -L$(LAMHOME)/lib -lmpi -llammpi++ -llam -ldl -lpthread"
+                mpi_libs = ["-lmpi", "-lmpi_mpifh"]
+                for lib in mpi_libs:
+                    if lib not in added_libs:
+                        retStr += f" -L/opt/homebrew/opt/open-mpi/lib {lib}"
+                        added_libs.add(lib)
+                
+                # Add rpath only once
+                retStr += " -Wl,-rpath,/opt/homebrew/opt/open-mpi/lib"
+                retStr += " -L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib -lz"
+                
+                # Additional MPI libraries for GPU compatibility
+                mpi_gpu_libs = ["-lmpi_cxx", "-lopen-pal"]
+                for lib in mpi_gpu_libs:
+                    if lib not in added_libs:
+                        retStr += f" {lib}"
+                        added_libs.add(lib)
+        else:
+            if "-lgmp" not in added_libs:
+                retStr += " -lgmp"  # Fallback to letting the linker find it
+                added_libs.add("-lgmp")
 
+        # GPU support libraries
         if self.options.withGpu is True:
-            retStr += " -lcuda -lcudart -lcurand"
-            if self.options.withMpi is True:
-                retStr += " -lmpi_cxx -lmpi -lopen-pal"
+            gpu_libs = ["-lcuda", "-lcudart", "-lcurand"]
+            for lib in gpu_libs:
+                if lib not in added_libs:
+                    retStr += f" {lib}"
+                    added_libs.add(lib)
 
+        # Collaboration libraries with debug/release variants
         if self.options.colab is True:
+            retStr += " -I$(NTI_INC_DIR) -L$(shell pwd)/lib/ -Wl,--rpath=$(shell pwd)/lib/"
             if self.options.debug == USE:
-                retStr += " -I$(NTI_INC_DIR) -L$(shell pwd)/lib/ -Wl,--rpath=$(shell pwd)/lib/ -lnti_db -lnts_db -lutils_db"
+                colab_libs = ["-lnti_db", "-lnts_db", "-lutils_db"]
             else:
-                retStr += " -I$(NTI_INC_DIR) -L$(shell pwd)/lib/ -Wl,--rpath=$(shell pwd)/lib/ -lnti -lnts -lutils"
+                colab_libs = ["-lnti", "-lnts", "-lutils"]
+            
+            for lib in colab_libs:
+                if lib not in added_libs:
+                    retStr += f" {lib}"
+                    added_libs.add(lib)
+
         retStr += " $(OTHER_LIBS)"
 
+        # Armadillo support
         if self.options.withArma is True:
-            retStr += " -lopenblas -llapack -lhdf5"
-#retStr += " -llapack -lopenblas -larmadillo"
+            arma_libs = ["-lopenblas", "-llapack", "-lhdf5"]
+            for lib in arma_libs:
+                if lib not in added_libs:
+                    retStr += f" {lib}"
+                    added_libs.add(lib)
 
         retStr += "\n"
         return retStr
@@ -1894,6 +2055,8 @@ LIBS := """
 
         if self.operatingSystem == "Linux":
             retStr += LINUX_SHARED_PFIX
+        elif self.operatingSystem == "Darwin":
+            retStr += DARWIN_SHARED_PFIX
         elif self.operatingSystem == "AIX":
             if self.options.compiler == "gcc":
                 retStr += " " + AIX_GNU_SHARED_PFIX
@@ -1911,6 +2074,8 @@ LIBS := """
 
         if self.operatingSystem == "Linux":
             retStr += LINUX_SHARED_CC
+        elif self.operatingSystem == "Darwin":
+            retStr += DARWIN_SHARED_CC
         elif self.operatingSystem == "AIX":
             retStr += AIX_SHARED_CC
         else:
@@ -1928,9 +2093,11 @@ LIBS := """
                 pass
                 # retStr += " -Xlinker -rdynamic"
             else:
-                retStr += " " + LINUX_FINAL_TARGET_FLAG
+                retStr += LINUX_FINAL_TARGET_FLAG
+        elif self.operatingSystem == "Darwin":
+            retStr += DARWIN_FINAL_TARGET_FLAG 
+            retStr += " -v"
         elif self.operatingSystem == "AIX":
-
             if self.options.dynamicLoading is True:
                 retStr += " -Wl,-bnoautoexp -Wl,-bE:$(SO_DIR)/main.def"
             if self.options.compiler == "gcc":
@@ -1967,6 +2134,9 @@ DX_INCLUDE := framework/dca/include
         retStr += "DX_BASE := " + self.dx.mainPath + "\n"
 
         if self.operatingSystem == "Linux":
+            retStr += "DX_CFLAGS := " + LINUX_DX_CFLAGS + "\n"
+            retStr += "DX_LITELIBS := " + LINUX_DX_LITELIBS + "\n"
+        elif self.operatingSystem == "Darwin":
             retStr += "DX_CFLAGS := " + LINUX_DX_CFLAGS + "\n"
             retStr += "DX_LITELIBS := " + LINUX_DX_LITELIBS + "\n"
         elif self.operatingSystem == "AIX":
@@ -2080,13 +2250,23 @@ $(BIN_DIR)/createDF: $(DEPENDFILE_OBJS)
             """\
 
 # Parser targets
-speclang.tab.h:
-\tcd framework/parser/bison; $(BISON) -v -d speclang.y; \\
-\tmv speclang.tab.c ../generated/speclang.tab.C 2>/dev/null; mv speclang.tab.h ../generated
+speclang.tab.h: framework/parser/bison/speclang.y
+\t(cd framework/parser/bison && $(BISON) -v -d speclang.y)
+\tif [ -f framework/parser/bison/speclang.tab.c ]; then \\
+\t\tcp framework/parser/bison/speclang.tab.c framework/parser/generated/speclang.tab.C; \\
+\tfi
+\tif [ -f framework/parser/bison/speclang.tab.h ]; then \\
+\t\tcp framework/parser/bison/speclang.tab.h framework/parser/generated/; \\
+\tfi
 
 framework/parser/generated/speclang.tab.C: framework/parser/bison/speclang.y
-\tcd framework/parser/bison; $(BISON) -v -d speclang.y; \\
-\tmv speclang.tab.c ../generated/speclang.tab.C 2>/dev/null; mv speclang.tab.h ../generated
+\t(cd framework/parser/bison && $(BISON) -v -d speclang.y)
+\tif [ -f framework/parser/bison/speclang.tab.c ]; then \\
+\t\tcp framework/parser/bison/speclang.tab.c framework/parser/generated/speclang.tab.C; \\
+\tfi
+\tif [ -f framework/parser/bison/speclang.tab.h ]; then \\
+\t\tcp framework/parser/bison/speclang.tab.h framework/parser/generated/; \\
+\tfi
 
 """
         if self.options.withGpu is True:
@@ -2144,45 +2324,47 @@ $(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/
 
     def getAllTarget(self):
         retStr = "cleanfirst:\n"
-        retStr += "\t-rm $(BIN_DIR)/$(EXE_FILE)\n\n"
+        retStr += "\t-rm -f $(BIN_DIR)/$(EXE_FILE)\n\n"
         if self.options.colab is True:
-            retStr += "final: cleanfirst $(OBJS) $(LENS_LIBS_EXT) "
+            retStr += "final: cleanfirst $(OBJS) $(MGS_LIBS_EXT) "
         else:
-            retStr += "final: cleanfirst speclang.tab.h $(OBJS)  $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o  $(LENS_LIBS_EXT) "
+            retStr += "final: cleanfirst speclang.tab.h $(OBJS) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(MGS_LIBS_EXT) "
         if self.options.dynamicLoading is True:
             retStr += " $(DEF_SYMBOLS) $(UNDEF_SYMBOLS) $(BIN_DIR)/createDF $(SHARED_OBJECTS) "
         if self.dx.exists is True:
             retStr += " $(DX_DIR)/EdgeSetSubscriberSocket $(DX_DIR)/NodeSetSubscriberSocket "
         retStr += " | $(BIN_DIR)"
-        retStr += "\n"
-
+        
+        # GPU separate compilation phase (if enabled)
         if self.options.withGpu and self.separate_compile:
             if self.options.colab is True:
                 retStr += "\t$(NVCC) $(CUDA_NVCC_LDFLAGS) $(LIBS) $(FINAL_TARGET_FLAG) $(NEEDED_OBJS) "
             else:
                 retStr += "\t$(NVCC) -Xlinker -DHAVE_GPU $(CUDA_NVCC_LDFLAGS) $(LIBS) $(FINAL_TARGET_FLAG) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) "
-            if self.options.colab is True:
-                pass
-            else:
                 if (self.options.asNts is True) or (self.options.asNtsNVU is True):
                     retStr += "$(NTI_OBJS) "
-            retStr += "$(COMMON_OBJS)  -o $(OBJS_DIR)/gpuCode.o"
+                retStr += "$(COMMON_OBJS) -o $(OBJS_DIR)/gpuCode.o"
             retStr += "\n"
+        
+        # Final linking phase
         if self.options.colab is True:
             retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(NEEDED_OBJS) "
         else:
-            retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) "
-        # retStr = "final: $(BASE_OBJECTS) $(LENS_LIBS_EXT) $(BIN_DIR)/$(EXE_FILE) $(DCA_OBJ)/socket.o $(OBJS) $(MODULE_MKS)"
-        retStr += "$(COMMON_OBJS) "
-        if self.options.withGpu and self.separate_compile:
-            retStr += "$(OBJS_DIR)/gpuCode.o "
-        if self.options.colab is True:
-            pass
-        else:
+            retStr += "\t$(CC) $(FINAL_TARGET_FLAG) "
+            if self.operatingSystem == "Darwin":
+                retStr += "-v "
+            retStr += "$(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) $(COMMON_OBJS) "
+            
+            # Include GPU object file if separate compilation was used
+            if self.options.withGpu and self.separate_compile:
+                retStr += "$(OBJS_DIR)/gpuCode.o "
+            
+            retStr += "$(LDFLAGS) $(LIBS) "
+            
             if (self.options.asNts is True) or (self.options.asNtsNVU is True):
                 retStr += "$(NTI_OBJS) "
-        retStr += "$(LDFLAGS) $(LIBS) -o $(BIN_DIR)/$(EXE_FILE) "
-        return retStr
+                
+        retStr += "-o $(BIN_DIR)/$(EXE_FILE) "        return retStr
 
     def getDependfileTarget(self):
         retStr = "$(SO_DIR)/Dependfile: $(DEF_SYMBOLS) $(UNDEF_SYMBOLS) $(BIN_DIR)/createDF\n"
@@ -2203,14 +2385,14 @@ library: speclang.tab.h  $(COLAB_OBJS)
 """
         return retStr
 
-    def getLibLensTarget(self):
+    def getLibMgsTarget(self):
         retStr = \
             """\
 # I could not find a way to ar it in one time in AIX, the command gets too
 # long, also I cannot do this with the foreach loop using BASE_MODULES because
 # it concatenates into one single line.
 """
-        retStr += "lib/liblens.a: $(BASE_OBJECTS)\n"
+        retStr += "lib/libmgs.a: $(BASE_OBJECTS)\n"
         moduleList = ["parser", "dca", "dataitems", "factories", "networks",
                       "simulation", "functors", "std", "img"]
         if self.options.withMpi is True:
@@ -2223,7 +2405,7 @@ library: speclang.tab.h  $(COLAB_OBJS)
         for i in moduleList:
             retStr += arCmd + " $(OBJ_" + i + ")\n"
         retStr += "\tranlib $@\n\n"
-        retStr += "lib/liblensext.a: $(EXTENSION_OBJECTS) $(LENS_LIBS)"
+        retStr += "lib/libmgsext.a: $(EXTENSION_OBJECTS) $(MGS_LIBS)"
         if self.options.dynamicLoading is False:
             retStr += " $(GENERATED_DL_OBJECTS)"
         retStr += "\n"
@@ -2235,24 +2417,24 @@ library: speclang.tab.h  $(COLAB_OBJS)
 
     def getMainDefTarget(self):
         retStr = \
-            """\
-$(SO_DIR)/main.def: $(LENS_LIBS_EXT)
+            r"""\
+$(SO_DIR)/main.def: $(MGS_LIBS_EXT)
 \techo \#\!. > $@
 \t$(SCRIPTS_DIR)/gen_def.sh $^ >> $@
 """
         return retStr
 
-    def getLensparserTarget(self):
+    def getGslParserTarget(self):
         retStr = "$(BIN_DIR)/$(EXE_FILE): cleanfirst "
 
         if self.operatingSystem == "AIX":
-            retStr += LENSPARSER_TARGETS
+            retStr += GSLPARSER_TARGETS
             if self.options.dynamicLoading is True:
                 retStr += "$(SO_DIR)/main.def "
             else:
-                retStr += "$(LENS_LIBS_EXT) "
-        elif self.operatingSystem == "Linux":
-            retStr += LENSPARSER_TARGETS + "$(LENS_LIBS_EXT) "
+                retStr += "$(MGS_LIBS_EXT) "
+        elif self.operatingSystem == "Linux" or self.operatingSystem == "Darwin":
+            retStr += GSLPARSER_TARGETS + "$(MGS_LIBS_EXT) "
         else:
             raise InternalError("Unknown OS " + self.operatingSystem)
         if self.options.dynamicLoading is True:
@@ -2289,9 +2471,9 @@ $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
         if self.objectMode == "64":
             retStr += " $(MAKE64)"
         if self.dx.exists is True:
-            retStr += " $(DX_CFLAGS) -c $< "
+            retStr += " $(DX_CFLAGS) -x c -c $< "
         else:
-            retStr += " -c $<"
+            retStr += " -x c -c $<"
         retStr += " -o $@\n"
         return retStr
 
@@ -2304,8 +2486,8 @@ clean:
 \t-rm -f dx/NodeSetSubscriberSocket
 \t-rm -f $(BIN_DIR)/$(EXE_FILE)
 \t-rm -f $(BIN_DIR)/createDF
-\t-rm -f lib/liblens.a
-\t-rm -f lib/liblensext.a
+\t-rm -f lib/libmgs.a
+\t-rm -f lib/libmgsext.a
 \t-rm -f $(SO_DIR)/Dependfile
 \t-rm -f framework/parser/bison/speclang.output
 \t-rm -f framework/parser/generated/lex.yy.C
@@ -2317,23 +2499,73 @@ clean:
         return retStr
 
     def getPythonLibName(self):
+        """detect Python library name and paths"""
         import os
-        import fnmatch
-
-        def find(pattern, path):
-            result = []
-            for roots, dirs, files in os.walk(path):
-                for name in files:
-                    if fnmatch.fnmatch(name, pattern):
-                        result.append(name)
-            return result
-        # NOTE: must match the one requested from set_env script
-        libs_found = find("libpython3.6*.so", os.environ["MGS_PYTHON_LIB"])
-        if not libs_found:
-            self.pythonLibName = "python2.7"
-        else:
-            self.pythonLibName = libs_found[0][:-3][3:]
-
+        import subprocess
+        try:
+            # Try to detect the Python version using 'python3-config --ldflags'
+            if self.operatingSystem == "Darwin":
+                try:
+                    # Get Python library info from python3-config
+                    ldflags = subprocess.check_output(["python3-config", "--ldflags"], universal_newlines=True).strip()
+                    lib_parts = [p for p in ldflags.split() if p.startswith("-lpython")]
+                    if lib_parts:
+                        # Extract just the library name without the -l prefix
+                        self.pythonLibName = lib_parts[0][2:]
+                    else:
+                        self.pythonLibName = "python3"
+                        
+                    # Also extract the library path
+                    lib_path_parts = [p for p in ldflags.split() if p.startswith("-L")]
+                    if lib_path_parts:
+                        self.pythonLibDir = lib_path_parts[0][2:]
+                    else:
+                        # Fallback to system locations
+                        self.pythonLibDir = "/usr/lib" if os.path.exists("/usr/lib") else "/usr/local/lib"
+                    
+                    # Get the include directory using python3-config
+                    incflags = subprocess.check_output(["python3-config", "--includes"], universal_newlines=True).strip()
+                    inc_parts = [p for p in incflags.split() if p.startswith("-I")]
+                    if inc_parts:
+                        self.pythonIncludeDir = inc_parts[0][2:]
+                    else:
+                        # Fallback to system locations
+                        self.pythonIncludeDir = "/usr/include/python3.9" if os.path.exists("/usr/include/python3.9") else "/usr/local/include/python3.9"
+                    
+                    print(f"Python detected: lib={self.pythonLibName}, libdir={self.pythonLibDir}, incdir={self.pythonIncludeDir}")
+                    
+                except (subprocess.SubprocessError, FileNotFoundError) as e:
+                    print(f"Warning: Error running python3-config: {e}")
+                    # Default to python3 on macOS if detection fails
+                    self.pythonLibName = "python3"
+                    self.pythonLibDir = "/usr/local/lib"
+                    self.pythonIncludeDir = "/usr/local/include/python3.9"
+            else:
+                # Original Linux detection logic
+                import fnmatch
+                
+                def find(pattern, path):
+                    result = []
+                    for roots, dirs, files in os.walk(path):
+                        for name in files:
+                            if fnmatch.fnmatch(name, pattern):
+                                result.append(name)
+                    return result
+                
+                libs_found = find("libpython*.so", os.environ.get("PYTHON_LIB", "/usr/lib"))
+                if not libs_found:
+                    self.pythonLibName = "python2.7"
+                else:
+                    # Strip lib prefix and .so suffix
+                    self.pythonLibName = libs_found[0][3:-3]
+        except Exception as e:
+            print(f"Warning: Error detecting Python library: {e}")
+            self.pythonLibName = "python3" if self.operatingSystem == "Darwin" else "python2.7"
+            if not hasattr(self, 'pythonLibDir'):
+                self.pythonLibDir = "/usr/local/lib"
+            if not hasattr(self, 'pythonIncludeDir'):
+                self.pythonIncludeDir = "/usr/local/include/python3.9"
+                    
     def generateMakefile(self, fileName):
         fileBody = self.getInitialValues()
         fileBody += "\n"
@@ -2360,7 +2592,7 @@ CFLAGS := ${CUDA_NVCC_FLAGS}
         else:
             fileBody += self.getCFlags()
         fileBody += "\n"
-        # fileBody += self.getLensLibs()
+        # fileBody += self.getMgsLibs()
         fileBody += self.getLibs()
         fileBody += "\n"
 
@@ -2387,13 +2619,13 @@ CFLAGS := ${CUDA_NVCC_FLAGS}
         if self.options.dynamicLoading is True:
             fileBody += self.getDependfileTarget()
             fileBody += "\n"
-        # fileBody += self.getLibLensTarget()
+        # fileBody += self.getLibMgsTarget()
         fileBody += self.getLibsTarget()
         fileBody += "\n"
         if self.options.dynamicLoading is True:
             fileBody += self.getMainDefTarget()
             fileBody += "\n"
-        fileBody += self.getLensparserTarget()
+        fileBody += self.getGslParserTarget()
         fileBody += "\n"
         fileBody += self.getSocketTarget()
         fileBody += "\n"

@@ -1,18 +1,18 @@
-#include "Lens.h"
+#include "Mgs.h"
 #include "LoadSparseMatrix.h"
 #include "CG_LoadSparseMatrixBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ShallowArray.h"
 #include <memory>
 #include <fstream>
 
 //#define DBG
 
-void LoadSparseMatrix::userInitialize(LensContext* CG_c, String& filepath, String& filename) 
+void LoadSparseMatrix::userInitialize(GslContext* CG_c, CustomString& filepath, CustomString& filename) 
 {
 }
 
-ShallowArray<float> LoadSparseMatrix::userExecute(LensContext* CG_c) 
+ShallowArray<float> LoadSparseMatrix::userExecute(GslContext* CG_c) 
 {
   std::ifstream input;
   std::ostringstream os;
@@ -89,17 +89,17 @@ LoadSparseMatrix::~LoadSparseMatrix()
 {
 }
 
-void LoadSparseMatrix::duplicate(std::unique_ptr<LoadSparseMatrix>& dup) const
+void LoadSparseMatrix::duplicate(std::unique_ptr<LoadSparseMatrix>&& dup) const
 {
    dup.reset(new LoadSparseMatrix(*this));
 }
 
-void LoadSparseMatrix::duplicate(std::unique_ptr<Functor>& dup) const
+void LoadSparseMatrix::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new LoadSparseMatrix(*this));
 }
 
-void LoadSparseMatrix::duplicate(std::unique_ptr<CG_LoadSparseMatrixBase>& dup) const
+void LoadSparseMatrix::duplicate(std::unique_ptr<CG_LoadSparseMatrixBase>&& dup) const
 {
    dup.reset(new LoadSparseMatrix(*this));
 }

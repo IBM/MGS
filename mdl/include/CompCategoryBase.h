@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef CompCategoryBase_H
 #define CompCategoryBase_H
 #include "Mdl.h"
@@ -35,14 +28,14 @@ class CompCategoryBase : public InterfaceImplementorBase {
       CompCategoryBase(const std::string& fileName);
       CompCategoryBase(const CompCategoryBase& rv);
       CompCategoryBase& operator=(const CompCategoryBase& rv);
-      virtual void duplicate(std::auto_ptr<Generatable>& rv) const =0;
+      virtual void duplicate(std::unique_ptr<Generatable>&& rv) const =0;
       virtual std::string generateExtra() const;
       virtual std::string getType() const =0;
       virtual ~CompCategoryBase();
-      void releaseInAttrPSet(std::auto_ptr<StructType>& iap);
-      void setInAttrPSet(std::auto_ptr<StructType>& iap);
+      void releaseInAttrPSet(std::unique_ptr<StructType>&& iap);
+      void setInAttrPSet(std::unique_ptr<StructType>&& iap);
       void setTriggeredFunctions(
-	 std::auto_ptr<std::vector<TriggeredFunction*> >& triggeredfunction);
+	 std::unique_ptr<std::vector<TriggeredFunction*> >& triggeredfunction);
 
       StructType* getInAttrPSet() {
 	 return _inAttrPSet;

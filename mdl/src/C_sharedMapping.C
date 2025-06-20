@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_sharedMapping.h"
 #include "C_interfaceMapping.h"
 #include "C_generalList.h"
@@ -28,9 +21,9 @@ void C_sharedMapping::execute(MdlContext* context)
 
 void C_sharedMapping::addToList(C_generalList* gl) 
 {  
-   std::auto_ptr<C_sharedMapping> sm;
+   std::unique_ptr<C_sharedMapping> sm;
    sm.reset(new C_sharedMapping(*this));
-   gl->addSharedMapping(sm);
+   gl->addSharedMapping(std::move(sm));
 }
 
 
@@ -47,17 +40,17 @@ C_sharedMapping::C_sharedMapping(const std::string& interface,
 {
 } 
 
-void C_sharedMapping::duplicate(std::auto_ptr<C_sharedMapping>& rv) const
+void C_sharedMapping::duplicate(std::unique_ptr<C_sharedMapping>&& rv) const
 {
    rv.reset(new C_sharedMapping(*this));
 }
 
-void C_sharedMapping::duplicate(std::auto_ptr<C_interfaceMapping>& rv) const
+void C_sharedMapping::duplicate(std::unique_ptr<C_interfaceMapping>&& rv) const
 {
    rv.reset(new C_sharedMapping(*this));
 }
 
-void C_sharedMapping::duplicate(std::auto_ptr<C_general>& rv) const
+void C_sharedMapping::duplicate(std::unique_ptr<C_general>&& rv) const
 {
    rv.reset(new C_sharedMapping(*this));
 }

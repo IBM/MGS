@@ -1,23 +1,13 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "RefPtGenFunctor.h"
 
-const char * RefPtGenFunctor::_category = "REFPTGEN";
+const std::string RefPtGenFunctor::_category = "REFPTGEN";
 
-const char * RefPtGenFunctor::getCategory()
-{
-   return _category;
-}
+const std::string& RefPtGenFunctor::getCategory() const { return _category; }

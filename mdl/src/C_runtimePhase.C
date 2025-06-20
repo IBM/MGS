@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_runtimePhase.h"
 #include "C_phase.h"
 #include "C_generalList.h"
@@ -30,31 +23,31 @@ void C_runtimePhase::execute(MdlContext* context)
 
 void C_runtimePhase::addToList(C_generalList* gl) 
 {
-   std::auto_ptr<PhaseType> dup;
+   std::unique_ptr<PhaseType> dup;
    const std::vector<C_phaseIdentifier*>& 
       ids = _phaseIdentifierList->getPhaseIdentifiers();
 
    std::vector<C_phaseIdentifier*>::const_iterator it, end = ids.end();
    for (it = ids.begin(); it != end; ++it) {   
-      _phaseType->duplicate(dup);
-      std::auto_ptr<Phase> phase(
-	 new RuntimePhase((*it)->getName(), dup, (*it)->getIdentifiers()));
-      gl->addPhase(phase);
+      _phaseType->duplicate(std::move(dup));
+      std::unique_ptr<Phase>phase = std::make_unique<RuntimePhase>(
+         (*it)->getName(), std::move(dup), (*it)->getIdentifiers());
+      gl->addPhase(std::move(phase));
    }
 }
 
 C_runtimePhase::C_runtimePhase(C_phaseIdentifierList* phaseIdentifierList, 
-			       std::auto_ptr<PhaseType>& phaseType) 
-   : C_phase(phaseIdentifierList, phaseType)
+			       std::unique_ptr<PhaseType>&& phaseType) 
+   : C_phase(phaseIdentifierList, std::move(phaseType))
 {
 } 
 
-void C_runtimePhase::duplicate(std::auto_ptr<C_phase>& rv) const
+void C_runtimePhase::duplicate(std::unique_ptr<C_phase>&& rv) const
 {
    rv.reset(new C_runtimePhase(*this));
 }
 
-void C_runtimePhase::duplicate(std::auto_ptr<C_general>& rv) const
+void C_runtimePhase::duplicate(std::unique_ptr<C_general>&& rv) const
 {
    rv.reset(new C_runtimePhase(*this));
 }

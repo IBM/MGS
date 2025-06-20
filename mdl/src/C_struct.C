@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_struct.h"
 #include "MdlContext.h"
 #include "C_dataTypeList.h"
@@ -44,16 +37,16 @@ void C_struct::execute(MdlContext* context)
       _struct->setTypeName(_name);
    }
    _dataTypeList->execute(context);
-   std::auto_ptr<std::vector<DataType*> > dtv;
+   std::unique_ptr<std::vector<DataType*> > dtv;
    _dataTypeList->releaseDataTypeVec(dtv);
    if (dtv.get()) {
       std::vector<DataType*>::reverse_iterator end = dtv->rend();
       std::vector<DataType*>::reverse_iterator it;
       for (it = dtv->rbegin(); it != end; it++) {
 	 try {
-	    std::auto_ptr<DataType> member;
+	    std::unique_ptr<DataType> member;
 	    member.reset(*it);
-	    _struct->_members.addMemberToFront(member->getName(), member);
+	    _struct->_members.addMemberToFront(member->getName(), std::move(member));
 	 } catch (DuplicateException& e) {
 	    std::cerr << e.getError() << std::endl;
 	    e.setError("");
@@ -63,7 +56,7 @@ void C_struct::execute(MdlContext* context)
       throw InternalException("dtv is 0 in C_struct::execute");
    }
    if (hasName) {
-      std::auto_ptr<Generatable> structMember;
+      std::unique_ptr<Generatable> structMember;
       structMember.reset(_struct);
       _struct = 0;
       context->_generatables->addMember(_name, structMember);
@@ -103,23 +96,23 @@ C_struct::C_struct(const C_struct& rv)
      _frameWorkElement(rv._frameWorkElement) 
 {
    if (rv._struct) {
-      std::auto_ptr<DataType> dup;
-      rv._struct->duplicate(dup);
+      std::unique_ptr<DataType> dup;
+      rv._struct->duplicate(std::move(dup));
       _struct = dynamic_cast<StructType*>(dup.release());
    }
    if (rv._dataTypeList) {
-      std::auto_ptr<C_dataTypeList> dup;
-      rv._dataTypeList->duplicate(dup);
+      std::unique_ptr<C_dataTypeList> dup;
+      rv._dataTypeList->duplicate(std::move(dup));
       _dataTypeList = dup.release();
    }
 }
 
-void C_struct::duplicate(std::auto_ptr<C_struct>& rv) const
+void C_struct::duplicate(std::unique_ptr<C_struct>&& rv) const
 {
    rv.reset(new C_struct(*this));
 }
 
-void C_struct::duplicate(std::auto_ptr<C_general>& rv)const
+void C_struct::duplicate(std::unique_ptr<C_general>&& rv)const
 {
    rv.reset(new C_struct(*this));
 }

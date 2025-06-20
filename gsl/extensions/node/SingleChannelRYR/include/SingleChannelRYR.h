@@ -1,7 +1,16 @@
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
 #ifndef SingleChannelRYR_H
 #define SingleChannelRYR_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_SingleChannelRYR.h"
 #include "rndm.h"
 
@@ -25,7 +34,7 @@ class SingleChannelRYR : public CG_SingleChannelRYR
   void updateChannelTransitionRate(dyn_var_t*& matChannelTransitionRate,
                                    int cptIdx);
   #ifdef MICRODOMAIN_CALCIUM
-  virtual void setCalciumMicrodomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_SingleChannelRYRInAttrPSet* CG_inAttrPset, CG_SingleChannelRYROutAttrPSet* CG_outAttrPset);
+  virtual void setCalciumMicrodomain(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_SingleChannelRYRInAttrPSet* CG_inAttrPset, CG_SingleChannelRYROutAttrPSet* CG_outAttrPset);
   int _offset; //the offset due to the presence of different Ca2+-microdomain
   #endif
 

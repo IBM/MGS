@@ -1,9 +1,9 @@
-#include "Lens.h"
+#include "Mgs.h"
 #include "IsoSamplerHybrid.h"
 #include "CG_IsoSamplerHybridBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ConnectionContext.h"
 #include "ParameterSet.h"
 #include "NodeSet.h"
@@ -17,11 +17,11 @@
 #include <cmath>
 #include "VectorOstream.h"
 
-void IsoSamplerHybrid::userInitialize(LensContext* CG_c) 
+void IsoSamplerHybrid::userInitialize(GslContext* CG_c) 
 {
 }
 
-void IsoSamplerHybrid::userExecute(LensContext* CG_c) 
+void IsoSamplerHybrid::userExecute(GslContext* CG_c) 
 {
   ConnectionContext *cc = CG_c->connectionContext;
   
@@ -65,17 +65,17 @@ IsoSamplerHybrid::~IsoSamplerHybrid()
 {
 }
 
-void IsoSamplerHybrid::duplicate(std::unique_ptr<IsoSamplerHybrid>& dup) const
+void IsoSamplerHybrid::duplicate(std::unique_ptr<IsoSamplerHybrid>&& dup) const
 {
    dup.reset(new IsoSamplerHybrid(*this));
 }
 
-void IsoSamplerHybrid::duplicate(std::unique_ptr<Functor>& dup) const
+void IsoSamplerHybrid::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new IsoSamplerHybrid(*this));
 }
 
-void IsoSamplerHybrid::duplicate(std::unique_ptr<CG_IsoSamplerHybridBase>& dup) const
+void IsoSamplerHybrid::duplicate(std::unique_ptr<CG_IsoSamplerHybridBase>&& dup) const
 {
    dup.reset(new IsoSamplerHybrid(*this));
 }

@@ -1,11 +1,9 @@
-// =================================================================
+// =============================================================================
+// (C) Copyright 2018 New Jersey Institute of Technology. All rights reserved.
 //
-// (C) Copyright 2018 New Jersey Institute of Technology.
-//
-// =================================================================
+// =============================================================================
 
-
-#include "Lens.h"
+#include "Mgs.h"
 #include "ChannelLeak_GPe_mouseCompCategory.h"
 #include "NDPairList.h"
 #include "CG_ChannelLeak_GPe_mouseCompCategory.h"

@@ -1,16 +1,16 @@
-#include "Lens.h"
+#include "Mgs.h"
 #include "LoadMatrix.h"
 #include "CG_LoadMatrixBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ShallowArray.h"
 #include <memory>
 #include <fstream>
 
-void LoadMatrix::userInitialize(LensContext* CG_c, String& filename, int& rows, int& cols) 
+void LoadMatrix::userInitialize(GslContext* CG_c, CustomString& filename, int& rows, int& cols) 
 {
 }
 
-ShallowArray< float > LoadMatrix::userExecute(LensContext* CG_c) 
+ShallowArray< float > LoadMatrix::userExecute(GslContext* CG_c) 
 {
   ShallowArray< float > rval;
 
@@ -60,17 +60,17 @@ LoadMatrix::~LoadMatrix()
 {
 }
 
-void LoadMatrix::duplicate(std::unique_ptr<LoadMatrix>& dup) const
+void LoadMatrix::duplicate(std::unique_ptr<LoadMatrix>&& dup) const
 {
    dup.reset(new LoadMatrix(*this));
 }
 
-void LoadMatrix::duplicate(std::unique_ptr<Functor>& dup) const
+void LoadMatrix::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new LoadMatrix(*this));
 }
 
-void LoadMatrix::duplicate(std::unique_ptr<CG_LoadMatrixBase>& dup) const
+void LoadMatrix::duplicate(std::unique_ptr<CG_LoadMatrixBase>&& dup) const
 {
    dup.reset(new LoadMatrix(*this));
 }

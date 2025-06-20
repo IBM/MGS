@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_initialize.h"
 #include "C_argumentToMemberMapper.h"
 #include "C_general.h"
@@ -28,9 +21,9 @@ void C_initialize::execute(MdlContext* context)
 
 void C_initialize::addToList(C_generalList* gl) 
 {
-   std::auto_ptr<C_initialize> init;
+   std::unique_ptr<C_initialize> init;
    init.reset(new C_initialize(*this));
-   gl->addInitialize(init);
+   gl->addInitialize(std::move(init));
 }
 
 std::string C_initialize::getType() const
@@ -56,12 +49,12 @@ C_initialize::C_initialize(const C_initialize& rv)
 {
 }
 
-void C_initialize::duplicate(std::auto_ptr<C_initialize>& rv) const
+void C_initialize::duplicate(std::unique_ptr<C_initialize>&& rv) const
 {
    rv.reset(new C_initialize(*this));
 }
 
-void C_initialize::duplicate(std::auto_ptr<C_general>& rv) const
+void C_initialize::duplicate(std::unique_ptr<C_general>&& rv) const
 {
    rv.reset(new C_initialize(*this));
 }

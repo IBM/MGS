@@ -1,20 +1,13 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "EachDstFunctor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "DataItem.h"
 #include "FunctorType.h"
 #include "Node.h"
@@ -41,13 +34,13 @@ EachDstFunctor::EachDstFunctor(const EachDstFunctor& csf)
      _nodes(csf._nodes), count(csf.count), _allowConnectToItself(csf._allowConnectToItself)
 
 {
-   if (csf._functor_ap.get()) csf._functor_ap->duplicate(_functor_ap);
+   if (csf._functor_ap.get()) csf._functor_ap->duplicate(std::move(_functor_ap));
    _nodesIter = _nodes.begin();
    _nodesEnd = _nodes.end();
 }
 
 
-void EachDstFunctor::duplicate (std::unique_ptr<Functor> &fap) const
+void EachDstFunctor::duplicate (std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new EachDstFunctor(*this));
 }
@@ -58,7 +51,7 @@ EachDstFunctor::~EachDstFunctor()
 }
 
 
-void EachDstFunctor::doInitialize(LensContext *c, 
+void EachDstFunctor::doInitialize(GslContext *c, 
 				  const std::vector<DataItem*>& args)
 {
    int nbrArgs=args.size();
@@ -79,7 +72,7 @@ void EachDstFunctor::doInitialize(LensContext *c,
 	    << baseMsg.str();
       throw SyntaxErrorException(msg.str());
    }
-   if (fdi->getFunctor()) fdi->getFunctor()->duplicate(_functor_ap);
+   if (fdi->getFunctor()) fdi->getFunctor()->duplicate(std::move(_functor_ap));
    else {
       throw SyntaxErrorException(
 	 "Bad functor argument passed to EachDstFunctor");
@@ -103,7 +96,7 @@ void EachDstFunctor::doInitialize(LensContext *c,
 }
 
 
-void EachDstFunctor::doExecute(LensContext *c, 
+void EachDstFunctor::doExecute(GslContext *c, 
 			       const std::vector<DataItem*>& args, 
 			       std::unique_ptr<DataItem>& rvalue)
 {

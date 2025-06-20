@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "DataType.h"
 #include "Constants.h"
 #include "Utility.h"
@@ -182,8 +175,8 @@ std::string DataType::duplicateIfOwned(const std::string& name,
       os << tab << TAB << "std::unique_ptr< " 
 	 << getDescriptor() << " > " << newName << ";\n"
 	 << tab << TAB << name << "->" << getDataItemFunctionString() 
-	 << "->duplicate("
-	 << newName << ");\n";
+	 << "->duplicate(std::move("
+	 << newName << "));\n";
       return os.str();	 
    } else {
       newName = name;
@@ -654,21 +647,21 @@ std::string DataType::getNotLegitimateDataItemString(
    return os.str();
 }
 
-void DataType::addProxyAttribute(std::auto_ptr<Class>& instance) const
+void DataType::addProxyAttribute(std::unique_ptr<Class>&& instance) const
 {
-   std::auto_ptr<DataType> dup;
-   duplicate(dup);
+   std::unique_ptr<DataType> dup;
+   duplicate(std::move(dup));
    dup->setPointer(false);
    instance->addDataTypeHeader(dup.get());
    instance->addDataTypeDataItemHeader(dup.get());
-   std::auto_ptr<Attribute> att(new DataTypeAttribute(dup));
+   std::unique_ptr<Attribute> att = std::make_unique<DataTypeAttribute>(std::move(dup));
    att->setAccessType(AccessType::PROTECTED);
    instance->addAttribute(att);
 }
 
 void DataType::addSenderMethod(Class& instance) const
 {
-   std::auto_ptr<Method> sender(
+   std::unique_ptr<Method> sender(
       new Method(getSenderMethodName(), "void"));
    sender->setAccessType(AccessType::PROTECTED);
    MacroConditional mpiConditional(MPICONDITIONAL);
@@ -682,7 +675,7 @@ void DataType::addSenderMethod(Class& instance) const
    }
    funBody += _name + ";\n";
    sender->setFunctionBody(funBody);
-   instance.addMethod(sender);
+   instance.addMethod(std::move(sender));
 }
 
 std::string DataType::getSenderMethodName() const

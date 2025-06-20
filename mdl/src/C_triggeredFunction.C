@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_triggeredFunction.h"
 #include "C_general.h"
 #include "C_generalList.h"
@@ -62,8 +55,8 @@ C_triggeredFunction::~C_triggeredFunction()
 void C_triggeredFunction::copyOwnedHeap(const C_triggeredFunction& rv)
 {
    if (rv._identifierList) {
-      std::auto_ptr<C_identifierList> dup;
-      rv._identifierList->duplicate(dup);
+      std::unique_ptr<C_identifierList> dup;
+      rv._identifierList->duplicate(std::move(dup));
       _identifierList = dup.release();
    } else {
       _identifierList = 0;

@@ -1,6 +1,6 @@
 #include "Topology.h"
 #include "../../nti/include/MaxComputeOrder.h"
-#include "../std/std.gsl"
+#include "std.gsl"
 
 //#define V_CM 0.01 //0.01 //1
 #define V_CM 0.024

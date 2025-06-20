@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef C_grid_definition_body_H
 #define C_grid_definition_body_H
 #include "Copyright.h"
@@ -22,7 +15,7 @@
 
 class C_dim_declaration;
 class C_grid_translation_unit;
-class LensContext;
+class GslContext;
 class C_declarator;
 class Repertoire;
 class SyntaxError;
@@ -37,10 +30,10 @@ class C_grid_definition_body : public C_production, public RepertoireFactory
       virtual ~C_grid_definition_body();
       virtual C_grid_definition_body* duplicate() const;
       virtual void duplicate(std::unique_ptr<RepertoireFactory>& rv) const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
-      Repertoire* createRepertoire(std::string const& repName, LensContext* c);
+      Repertoire* createRepertoire(std::string const& repName, GslContext* c);
       void setTdError(SyntaxError *tdError);
 
    private:

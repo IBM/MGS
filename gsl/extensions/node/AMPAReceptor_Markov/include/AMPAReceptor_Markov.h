@@ -1,7 +1,16 @@
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
 #ifndef AMPAReceptor_Markov_H
 #define AMPAReceptor_Markov_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_AMPAReceptor_Markov.h"
 #include "rndm.h"
 
@@ -31,8 +40,8 @@ class AMPAReceptor_Markov : public CG_AMPAReceptor_Markov
    public:
       void updateAMPA(RNG& rng);
       void initializeAMPA(RNG& rng);
-      virtual void setPostIndex(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_AMPAReceptor_MarkovInAttrPSet* CG_inAttrPset, CG_AMPAReceptor_MarkovOutAttrPSet* CG_outAttrPset);
-      virtual void setPrePostIndex(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_AMPAReceptor_MarkovInAttrPSet* CG_inAttrPset, CG_AMPAReceptor_MarkovOutAttrPSet* CG_outAttrPset);
+      virtual void setPostIndex(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_AMPAReceptor_MarkovInAttrPSet* CG_inAttrPset, CG_AMPAReceptor_MarkovOutAttrPSet* CG_outAttrPset);
+      virtual void setPrePostIndex(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_AMPAReceptor_MarkovInAttrPSet* CG_inAttrPset, CG_AMPAReceptor_MarkovOutAttrPSet* CG_outAttrPset);
       virtual ~AMPAReceptor_Markov();
   #ifdef DEBUG_CHAN
       AMPAReceptor_Markov();

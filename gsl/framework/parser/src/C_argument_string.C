@@ -1,25 +1,18 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_argument_string.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "SyntaxError.h"
 
-void C_argument_string::internalExecute(LensContext *c)
+void C_argument_string::internalExecute(GslContext *c)
 {
-   _str_dataitem = new StringDataItem();
+   _str_dataitem = new CustomStringDataItem();
    _str_dataitem->setString(*_string);
 }
 
@@ -30,7 +23,7 @@ C_argument_string::C_argument_string(const C_argument_string& rv)
    if (rv._str_dataitem) {
       std::unique_ptr<DataItem> cc_di;
       rv._str_dataitem->duplicate(cc_di);
-      _str_dataitem = dynamic_cast<StringDataItem*>(cc_di.release());
+      _str_dataitem = dynamic_cast<CustomStringDataItem*>(cc_di.release());
    }
    if (rv._string) {
       _string = new std::string(*(rv._string));

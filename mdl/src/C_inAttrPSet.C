@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_inAttrPSet.h"
 #include "C_struct.h"
 #include "MdlContext.h"
@@ -30,9 +23,9 @@
 void C_inAttrPSet::addToList(C_generalList* gl)
 {
    assert(_struct != 0);
-   std::auto_ptr<StructType> iaps(_struct);
+   std::unique_ptr<StructType> iaps(_struct);
    _struct = 0;
-   gl->addInAttrPSet(iaps);
+   gl->addInAttrPSet(std::move(iaps));
 }
 
 C_inAttrPSet::C_inAttrPSet(C_dataTypeList* dtl) 
@@ -41,17 +34,17 @@ C_inAttrPSet::C_inAttrPSet(C_dataTypeList* dtl)
 
 }
 
-void C_inAttrPSet::duplicate(std::auto_ptr<C_inAttrPSet>& rv) const
+void C_inAttrPSet::duplicate(std::unique_ptr<C_inAttrPSet>&& rv) const
 {
    rv.reset(new C_inAttrPSet(*this));
 }
 
-void C_inAttrPSet::duplicate(std::auto_ptr<C_struct>& rv) const
+void C_inAttrPSet::duplicate(std::unique_ptr<C_struct>&& rv) const
 {
    rv.reset(new C_inAttrPSet(*this));
 }
 
-void C_inAttrPSet::duplicate(std::auto_ptr<C_general>& rv)const
+void C_inAttrPSet::duplicate(std::unique_ptr<C_general>&& rv)const
 {
    rv.reset(new C_inAttrPSet(*this));
 }

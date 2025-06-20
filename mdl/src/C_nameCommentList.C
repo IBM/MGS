@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_nameCommentList.h"
 #include "MdlContext.h"
 #include "C_nameComment.h"
@@ -64,18 +57,18 @@ C_nameCommentList::C_nameCommentList(const C_nameCommentList& rv)
      _nameCommentVec(0) 
 {
    if (rv._nameComment) {
-      std::auto_ptr<C_nameComment> dup;
-      rv._nameComment->duplicate(dup);
+      std::unique_ptr<C_nameComment> dup;
+      rv._nameComment->duplicate(std::move(dup));
       _nameComment = dup.release();
    }
    if (rv._nameCommentList) {
-      std::auto_ptr<C_nameCommentList> dup;
-      rv._nameCommentList->duplicate(dup);
+      std::unique_ptr<C_nameCommentList> dup;
+      rv._nameCommentList->duplicate(std::move(dup));
       _nameCommentList = dup.release();
    }
 }
 
-void C_nameCommentList::duplicate(std::auto_ptr<C_nameCommentList>& rv) const
+void C_nameCommentList::duplicate(std::unique_ptr<C_nameCommentList>&& rv) const
 {
    rv.reset(new C_nameCommentList(*this));
 }

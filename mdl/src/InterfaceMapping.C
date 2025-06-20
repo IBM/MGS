@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "InterfaceMapping.h"
 #include "Interface.h"
 #include "DataType.h"
@@ -33,7 +26,7 @@ InterfaceMapping::InterfaceMapping(Interface* interface)
 }
 
 void InterfaceMapping::addMapping(const std::string& name, 
-				  std::auto_ptr<DataType>& data,
+				  std::unique_ptr<DataType>&& data,
 				  bool amp) 
 {
    iterator it = find(name);
@@ -56,7 +49,7 @@ void InterfaceMapping::addMapping(const std::string& name,
       throw;
    }
    checkAndExtraWork(name, data.get(), type, amp);
-   InterfaceMappingElement elem(name, data, type->getTypeString(), amp);
+   InterfaceMappingElement elem(name, std::move(data), type->getTypeString(), amp);
    _mappings.push_back(elem);
 }
 

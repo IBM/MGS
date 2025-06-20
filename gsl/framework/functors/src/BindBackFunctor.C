@@ -1,21 +1,14 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "BindBackFunctor.h"
 #include "FunctorType.h"
-#include "LensContext.h"
+#include "GslContext.h"
 //#include <iostream>
 #include "DataItem.h"
 #include "FunctorDataItem.h"
@@ -28,7 +21,7 @@ class Functor;
 class FunctorType;
 class Simulation;
 
-void BindBackFunctor::doInitialize(LensContext *c, 
+void BindBackFunctor::doInitialize(GslContext *c, 
 				   const std::vector<DataItem*>& args)
 {
 
@@ -41,7 +34,7 @@ void BindBackFunctor::doInitialize(LensContext *c,
    }
 
    std::unique_ptr<Functor> fap;
-   fdi->getFunctor()->duplicate(fap);
+   fdi->getFunctor()->duplicate(std::move(fap));
    _bind_functor = fap.release();
 
    std::vector<DataItem*>::const_iterator iter, 
@@ -56,7 +49,7 @@ void BindBackFunctor::doInitialize(LensContext *c,
 }
 
 
-void BindBackFunctor::doExecute(LensContext *c, 
+void BindBackFunctor::doExecute(GslContext *c, 
 				const std::vector<DataItem*>& args, 
 				std::unique_ptr<DataItem>& rvalue)
 {
@@ -76,9 +69,9 @@ void BindBackFunctor::doExecute(LensContext *c,
 }
 
 
-void BindBackFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void BindBackFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
-   fap.reset(new BindBackFunctor(*this));
+   fap=std::make_unique<BindBackFunctor>(*this);
 }
 
 
@@ -93,7 +86,7 @@ BindBackFunctor::BindBackFunctor(const BindBackFunctor &f)
 {
    if (f._bind_functor) {
       std::unique_ptr<Functor> fap;
-      f._bind_functor->duplicate(fap);
+      f._bind_functor->duplicate(std::move(fap));
       _bind_functor = fap.release();
    }
 

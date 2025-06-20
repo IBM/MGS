@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_type_specifier.h"
 #include "C_parameter_type_pair.h"
 #include "C_init_attr_type_node.h"
@@ -30,7 +23,7 @@
 #include "FloatArrayDataItem.h"
 #include "IntDataItem.h"
 #include "IntArrayDataItem.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "NDPairDataItem.h"
 #include "GridSetDataItem.h"
 #include "NodeSetDataItem.h"
@@ -47,7 +40,7 @@
 #include <stdio.h>
 #include <string>
 
-void C_type_specifier::internalExecute(LensContext *c) {
+void C_type_specifier::internalExecute(GslContext *c) {
   if (_initTypeSpec) {
     _initTypeSpec->execute(c);
     _nextTypeSpec = _initTypeSpec->getNextTypeSpecifier();
@@ -312,7 +305,7 @@ const char *C_type_specifier::getDataItemType() {
       throwError(mes);
     }
     case (_STRING):
-      retval = StringDataItem::_type;
+      retval = CustomStringDataItem::_type;
       break;
     case (_NDPAIR):
       retval = NDPairDataItem::_type;

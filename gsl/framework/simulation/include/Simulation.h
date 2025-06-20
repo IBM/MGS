@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-11-14-2018
-//
-// (C) Copyright IBM Corp. 2005-2018  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 // Note: acc. to pthread documentation,
 // the pthread.h must be the first included file
 
@@ -20,7 +13,7 @@
 #define SIMULATION_H
 #include "Copyright.h"
 
-#ifndef LINUX
+#if !defined(LINUX) && !defined(DARWIN)
 #include <sys/processor.h>
 #include <sys/thread.h>
 #endif
@@ -531,7 +524,7 @@ class Simulation : public Publishable {
   void benchmark_start(const std::string&);
   double benchmark_timelapsed(const std::string&);
   void benchmark_timelapsed_diff(const std::string&);
-  void benchmark_set_timelapsed_diff();
+  void benchmark_set_timelapsed_diff(const std::string&);
   void benchmark_end(const std::string&);
   //END DEBUG PURPOSE
   private:
@@ -541,9 +534,8 @@ class Simulation : public Publishable {
   double currentTime; 
   TypeManager<NodeType>* _ntm;
   TypeManager<EdgeType>* _etm;
-  SysTimer _simTimer;
-  double _prevTimeElapsed;
-  float _mark;
+  // map to timer and prevTimeElapsed
+  std::map<std::string, std::pair<SysTimer, double> > _simTimers;
   Repertoire* _root;
   
 #ifndef DISABLE_PTHREADS

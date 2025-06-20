@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef GRAPHICALUSERINTERFACE_H
 #define GRAPHICALUSERINTERFACE_H
 #ifndef DISABLE_PTHREADS
@@ -23,14 +16,14 @@
 #include <string>
 #include <list>
 #include "UserInterface.h"
-#include "LENSServer.h"
+#include "MgsServer.h"
 #include "Simulation.h"
 
 class GraphicalUserInterface : public UserInterface
 {
    public:
       GraphicalUserInterface(int guiPort, Simulation& sim);
-      LENSServer* getServer();
+      MgsServer* getServer();
       void getUserInput(Simulation& sim);
       std::string getCommand();
       ~GraphicalUserInterface();
@@ -40,7 +33,7 @@ class GraphicalUserInterface : public UserInterface
       pthread_mutex_t _userInputMutex;
       pthread_mutex_t _commandMutex;
 
-      LENSServer* _server;
+      MgsServer* _server;
       std::string _user_input;
       std::list<std::string> _command;
       int _guiPort;
@@ -55,11 +48,11 @@ inline GraphicalUserInterface::GraphicalUserInterface(int guiPort, Simulation& s
    _user_input = "";
    _guiPort = guiPort;
    std::cout<<"GUI waiting for port setting from Browser..."<<std::endl;
-   _server = new LENSServer(_guiPort,sim);
+   _server = new MgsServer(_guiPort,sim);
    _server->initSocket();
 }
 
-inline LENSServer* GraphicalUserInterface::getServer()
+inline MgsServer* GraphicalUserInterface::getServer()
 {
    return (_server);
 }

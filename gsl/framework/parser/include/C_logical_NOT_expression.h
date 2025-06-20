@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef C_LOGICAL_NOT_EXPRESSION
 #define C_LOGICAL_NOT_EXPRESSION
 #include "Copyright.h"
@@ -22,7 +15,7 @@
 
 class C_primary_expression;
 class Grid;
-class LensContext;
+class GslContext;
 class GridLayerDescriptor;
 class SyntaxError;
 
@@ -31,7 +24,7 @@ class C_logical_NOT_expression : public C_production_grid
    public:
       C_logical_NOT_expression(const C_logical_NOT_expression&);
       C_logical_NOT_expression(C_primary_expression *, SyntaxError *);
-      virtual void internalExecute(LensContext *, Grid *);
+      virtual void internalExecute(GslContext *, Grid *);
       virtual void checkChildren();
       virtual void recursivePrint();
       virtual C_logical_NOT_expression* duplicate() const;

@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BMC-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// ================================================================
-
+// =============================================================================
 #include "SegmentForceDetector.h"
 #include "Segment.h"
 #include "Decomposition.h"
@@ -83,11 +76,17 @@ SegmentForceDetector::SegmentForceDetector(
   _numberOfSenders = _numberOfReceivers = 
     (nSlicers>nSegmentForceDetectors)?nSlicers:nSegmentForceDetectors;
 
-  SegmentForce segmentForce;
-  Datatype segmentForceDatatype(1, &segmentForce, 0, sizeof(SegmentForce));
-
-  segmentForceDatatype.set(0, MPI_DOUBLE, N_SEGFORCE_DATA, segmentForce.getSegmentForceData());
-  _typeSegmentForce = segmentForceDatatype.commit();
+    SegmentForce segmentForce;
+    // Create the base type without bounds
+    Datatype baseSegmentForceType(1, &segmentForce);
+    baseSegmentForceType.set(0, MPI_DOUBLE, N_SEGFORCE_DATA, segmentForce.getSegmentForceData());
+    MPI_Datatype baseSegmentForceTypeMPI = baseSegmentForceType.commit();
+    
+    // Then use MPI_Type_create_resized
+    MPI_Datatype finalSegmentForceType;
+    MPI_Type_create_resized(baseSegmentForceTypeMPI, 0, sizeof(SegmentForce), &finalSegmentForceType);
+    MPI_Type_commit(&finalSegmentForceType);
+    _typeSegmentForce = finalSegmentForceType;
 
 #ifdef A2AW
   _typeSegments = new MPI_Datatype[_numberOfSenders]; 
@@ -114,10 +113,16 @@ SegmentForceDetector::SegmentForceDetector(
 			  sizeof(Capsule), &typeCapsule);
   MPI_Type_commit(&typeCapsule);
 #else
-  _typeSegments = new MPI_Datatype[1];
-  Datatype capsuleDatatype(1, &capsule, 0, sizeof(Capsule));
-  capsuleDatatype.set(0, MPI_DOUBLE, N_CAP_DATA, capsule.getData());
-  _typeSegments[0] = capsuleDatatype.commit();
+  // Create the base type without bounds
+  Datatype baseCapsuleType(1, &capsule);
+  baseCapsuleType.set(0, MPI_DOUBLE, N_CAP_DATA, capsule.getData());
+  MPI_Datatype baseCapsuleTypeMPI = baseCapsuleType.commit();
+
+  // Then use MPI_Type_create_resized
+  MPI_Datatype finalCapsuleType;
+  MPI_Type_create_resized(baseCapsuleTypeMPI, 0, sizeof(Capsule), &finalCapsuleType);
+  MPI_Type_commit(&finalCapsuleType);
+  _typeSegments[0] = finalCapsuleType;
 #endif
 
   for (int i=0; i<_numberOfSenders; ++i) {

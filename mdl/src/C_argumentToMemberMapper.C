@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_argumentToMemberMapper.h"
 #include "C_general.h"
 #include "C_generalList.h"
@@ -39,12 +32,12 @@ void C_argumentToMemberMapper::executeMapper(
    if (_argumentList) {
       _argumentList->execute(context);
       if (_argumentList->getDataTypeVec()) {
-	 std::auto_ptr<std::vector<DataType*> > dataTypeVec;
+	 std::unique_ptr<std::vector<DataType*> > dataTypeVec;
 	 _argumentList->releaseDataTypeVec(dataTypeVec);
 	 std::vector<DataType*>::iterator it; 
 	 std::vector<DataType*>::iterator end = dataTypeVec->end();
 	 for (it = dataTypeVec->begin(); it != end; it++) {
-	    std::auto_ptr<DataType> dataType;
+	    std::unique_ptr<DataType> dataType;
 	    dataType.reset(*it);
 	    if (!dataType->isLegitimateDataItem()) {
 	       SyntaxErrorException e(
@@ -84,8 +77,8 @@ C_argumentToMemberMapper::C_argumentToMemberMapper(
    : C_general(rv), _argumentList(0), _ellipsisIncluded(rv._ellipsisIncluded)
 {
    if (rv._argumentList) {
-      std::auto_ptr<C_generalList> dup;
-      rv._argumentList->duplicate(dup);
+      std::unique_ptr<C_generalList> dup;
+      rv._argumentList->duplicate(std::move(dup));
       _argumentList = dup.release();
    }
 }

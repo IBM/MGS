@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BMC-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. and EPFL 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// ================================================================
-
+// =============================================================================
 #include "Touch.h"
 #include "Utilities.h"
 #include <cassert>
@@ -57,15 +50,29 @@ MPI_Datatype* Touch::getTypeTouch() {
     Touch t;
     _typeTouch = new MPI_Datatype;
 #ifndef LTWT_TOUCH
-    Datatype datatype(3, &t, 0, sizeof(Touch));
-    datatype.set(0, MPI_DOUBLE, N_TOUCH_DATA, t._touchData);
-    datatype.set(1, MPI_SHORT, 4, t._endTouch);
-    datatype.set(2, MPI_CHAR, 1, t._remains);
-    *_typeTouch = datatype.commit();
+    // Create the base type without bounds
+    Datatype baseTouchType(3, &t);
+    baseTouchType.set(0, MPI_DOUBLE, N_TOUCH_DATA, t._touchData);
+    baseTouchType.set(1, MPI_SHORT, 4, t._endTouch);
+    baseTouchType.set(2, MPI_CHAR, 1, t._remains);
+    MPI_Datatype baseTouchTypeMPI = baseTouchType.commit();
+
+    // Then use MPI_Type_create_resized
+    MPI_Datatype finalTouchType;
+    MPI_Type_create_resized(baseTouchTypeMPI, 0, sizeof(Touch), &finalTouchType);
+    MPI_Type_commit(&finalTouchType);
+    *_typeTouch = finalTouchType;
 #else
-    Datatype datatype(1, &t, 0, sizeof(Touch));
-    datatype.set(0, MPI_DOUBLE, N_TOUCH_DATA, t._touchData);
-    *_typeTouch = datatype.commit();
+    // Create the base type without bounds
+    Datatype baseTouchType(1, &t);
+    baseTouchType.set(0, MPI_DOUBLE, N_TOUCH_DATA, t._touchData);
+    MPI_Datatype baseTouchTypeMPI = baseTouchType.commit();
+
+    // Then use MPI_Type_create_resized
+    MPI_Datatype finalTouchType;
+    MPI_Type_create_resized(baseTouchTypeMPI, 0, sizeof(Touch), &finalTouchType);
+    MPI_Type_commit(&finalTouchType);
+    *_typeTouch = finalTouchType;
 #endif
   }
   return _typeTouch;

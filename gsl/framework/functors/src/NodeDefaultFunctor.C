@@ -1,20 +1,13 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "NodeDefaultFunctor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "DataItem.h"
 #include "FunctorType.h"
 #include "NodeSet.h"
@@ -32,7 +25,7 @@ NodeDefaultFunctor::NodeDefaultFunctor()
 {
 }
 
-void NodeDefaultFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void NodeDefaultFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new NodeDefaultFunctor(*this));
 }
@@ -43,13 +36,13 @@ NodeDefaultFunctor::~NodeDefaultFunctor()
 }
 
 
-void NodeDefaultFunctor::doInitialize(LensContext *c, 
+void NodeDefaultFunctor::doInitialize(GslContext *c, 
 				      const std::vector<DataItem*>& args)
 {
 }
 
 
-void NodeDefaultFunctor::doExecute(LensContext *c, 
+void NodeDefaultFunctor::doExecute(GslContext *c, 
 				   const std::vector<DataItem*>& args, 
 				   std::unique_ptr<DataItem>& rvalue)
 {
@@ -62,7 +55,7 @@ void NodeDefaultFunctor::doExecute(LensContext *c,
    std::vector<GridLayerDescriptor*>::const_iterator gld = layers.begin();
    std::vector<GridLayerDescriptor*>::const_iterator end = layers.end();
    for (; gld != end; ++gld) {
-      (*gld)->getNodeType()->getInitializationParameterSet(initPset);
+      (*gld)->getNodeType()->getInitializationParameterSet(std::move(initPset));
 
       nodes.clear();
       nodeset->getNodes(nodes, *gld);

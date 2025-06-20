@@ -1,20 +1,13 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "ManhattanRing2Functor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ConnectionContext.h"
 #include "DataItem.h"
 #include "IntArrayDataItem.h"
@@ -40,7 +33,7 @@ _currentSample(0), _refNode(0), _currentCount(0),_currentList(0)
 {
 }
 
-void ManhattanRing2Functor::duplicate(std::unique_ptr<Functor> &fap) const
+void ManhattanRing2Functor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new ManhattanRing2Functor(*this));
 }
@@ -51,7 +44,7 @@ ManhattanRing2Functor::~ManhattanRing2Functor()
 }
 
 
-void ManhattanRing2Functor::doInitialize(LensContext *c, 
+void ManhattanRing2Functor::doInitialize(GslContext *c, 
 					 const std::vector<DataItem*>& args)
 {
    /*
@@ -71,7 +64,7 @@ void ManhattanRing2Functor::doInitialize(LensContext *c,
 }
 
 
-void ManhattanRing2Functor::doExecute(LensContext *c, 
+void ManhattanRing2Functor::doExecute(GslContext *c, 
 				      const std::vector<DataItem*>& args, 
 				      std::unique_ptr<DataItem>& rvalue)
 {

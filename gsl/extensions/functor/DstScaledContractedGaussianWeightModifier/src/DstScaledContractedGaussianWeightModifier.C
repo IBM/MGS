@@ -1,22 +1,15 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
-#include "Lens.h"
+// =============================================================================
+#include "Mgs.h"
 #include "DstScaledContractedGaussianWeightModifier.h"
 #include "CG_DstScaledContractedGaussianWeightModifierBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ParameterSet.h"
 #include "NDPair.h"
 #include "NDPairList.h"
@@ -29,14 +22,14 @@
 #include "Grid.h"
 #include "GridLayerDescriptor.h"
 
-void DstScaledContractedGaussianWeightModifier::userInitialize(LensContext* CG_c, Functor*& f, float& sigma, float& max, float& contract) 
+void DstScaledContractedGaussianWeightModifier::userInitialize(GslContext* CG_c, Functor*& f, float& sigma, float& max, float& contract) 
 {
   _sigma=sigma;
   _max=max;
   _contract=contract;
 }
 
-std::unique_ptr<ParameterSet> DstScaledContractedGaussianWeightModifier::userExecute(LensContext* CG_c) 
+std::unique_ptr<ParameterSet> DstScaledContractedGaussianWeightModifier::userExecute(GslContext* CG_c) 
 {
    std::vector<DataItem*> nullArgs;
    std::unique_ptr<DataItem> rval_ap;
@@ -93,7 +86,7 @@ std::unique_ptr<ParameterSet> DstScaledContractedGaussianWeightModifier::userExe
    ndpl.push_back(ndp2);
 
    std::unique_ptr<ParameterSet> pset;
-   psdi->getParameterSet()->duplicate(pset);
+   psdi->getParameterSet()->duplicate(std::move(pset));
    pset->set(ndpl);
    return pset;
 }
@@ -107,17 +100,17 @@ DstScaledContractedGaussianWeightModifier::~DstScaledContractedGaussianWeightMod
 {
 }
 
-void DstScaledContractedGaussianWeightModifier::duplicate(std::unique_ptr<DstScaledContractedGaussianWeightModifier>& dup) const
+void DstScaledContractedGaussianWeightModifier::duplicate(std::unique_ptr<DstScaledContractedGaussianWeightModifier>&& dup) const
 {
    dup.reset(new DstScaledContractedGaussianWeightModifier(*this));
 }
 
-void DstScaledContractedGaussianWeightModifier::duplicate(std::unique_ptr<Functor>& dup) const
+void DstScaledContractedGaussianWeightModifier::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new DstScaledContractedGaussianWeightModifier(*this));
 }
 
-void DstScaledContractedGaussianWeightModifier::duplicate(std::unique_ptr<CG_DstScaledContractedGaussianWeightModifierBase>& dup) const
+void DstScaledContractedGaussianWeightModifier::duplicate(std::unique_ptr<CG_DstScaledContractedGaussianWeightModifierBase>&& dup) const
 {
    dup.reset(new DstScaledContractedGaussianWeightModifier(*this));
 }

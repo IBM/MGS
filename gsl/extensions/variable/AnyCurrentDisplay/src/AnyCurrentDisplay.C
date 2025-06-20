@@ -1,4 +1,13 @@
-#include "Lens.h"
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
+#include "Mgs.h"
 #include "AnyCurrentDisplay.h"
 #include "CG_AnyCurrentDisplay.h"
 #include "MaxComputeOrder.h"
@@ -462,7 +471,7 @@ void AnyCurrentDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList)
 
 #ifdef IDEA_CURRENTONCOMPT
 void AnyCurrentDisplay::setUpPointers(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_AnyCurrentDisplayInAttrPSet* CG_inAttrPset,
     CG_AnyCurrentDisplayOutAttrPSet* CG_outAttrPset)
@@ -519,7 +528,7 @@ void AnyCurrentDisplay::setUpPointers(
     return;
     //TUAN TODO: if we want to enable this, make sure use branchData_connect
   }
-  String type(CG_inAttrPset->type);
+  CustomString type(CG_inAttrPset->type);
   if (type == "")
     type = "unknown";
   if (CG_inAttrPset->identifier == "CHANNEL"
@@ -569,12 +578,12 @@ void AnyCurrentDisplay::setUpPointers(
 }
 #else
 void AnyCurrentDisplay::setUpPointers(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_AnyCurrentDisplayInAttrPSet* CG_inAttrPset,
     CG_AnyCurrentDisplayOutAttrPSet* CG_outAttrPset)
 {
-  String type(CG_inAttrPset->type);
+  CustomString type(CG_inAttrPset->type);
   if (type == "")
     type = "unknown";
   if (CG_inAttrPset->identifier == "CHANNEL")
@@ -602,18 +611,18 @@ AnyCurrentDisplay::AnyCurrentDisplay() : CG_AnyCurrentDisplay(), outFile(0) {}
 
 AnyCurrentDisplay::~AnyCurrentDisplay() { delete outFile; }
 
-void AnyCurrentDisplay::duplicate(std::unique_ptr<AnyCurrentDisplay>& dup) const
+void AnyCurrentDisplay::duplicate(std::unique_ptr<AnyCurrentDisplay>&& dup) const
 {
   dup.reset(new AnyCurrentDisplay(*this));
 }
 
-void AnyCurrentDisplay::duplicate(std::unique_ptr<Variable>& dup) const
+void AnyCurrentDisplay::duplicate(std::unique_ptr<Variable>&& dup) const
 {
   dup.reset(new AnyCurrentDisplay(*this));
 }
 
 void AnyCurrentDisplay::duplicate(
-    std::unique_ptr<CG_AnyCurrentDisplay>& dup) const
+    std::unique_ptr<CG_AnyCurrentDisplay>&& dup) const
 {
   dup.reset(new AnyCurrentDisplay(*this));
 }

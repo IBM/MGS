@@ -1,19 +1,12 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
-#include "Lens.h"
+// =============================================================================
+#include "Mgs.h"
 #include "NMDAReceptor.h"
 #include "CG_NMDAReceptor.h"
 #include "rndm.h"
@@ -240,8 +233,8 @@ void NMDAReceptor::updateNMDADepPlasticity(RNG& rng)
   }
 }
 
-void NMDAReceptor::setPostIndex(const String& CG_direction,
-                                const String& CG_component,
+void NMDAReceptor::setPostIndex(const CustomString& CG_direction,
+                                const CustomString& CG_component,
                                 NodeDescriptor* CG_node, Edge* CG_edge,
                                 VariableDescriptor* CG_variable,
                                 Constant* CG_constant,
@@ -273,8 +266,8 @@ void NMDAReceptor::setPostIndex(const String& CG_direction,
 
 
 NMDAReceptor::~NMDAReceptor() {}
-void NMDAReceptor::setPrePostIndex(const String& CG_direction,
-                                const String& CG_component,
+void NMDAReceptor::setPrePostIndex(const CustomString& CG_direction,
+                                const CustomString& CG_component,
                                 NodeDescriptor* CG_node, Edge* CG_edge,
                                 VariableDescriptor* CG_variable,
                                 Constant* CG_constant,
@@ -297,7 +290,7 @@ void NMDAReceptor::setPrePostIndex(const String& CG_direction,
 
 
 #ifdef MICRODOMAIN_CALCIUM
-void NMDAReceptor::setCalciumMicrodomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NMDAReceptorInAttrPSet* CG_inAttrPset, CG_NMDAReceptorOutAttrPSet* CG_outAttrPset) 
+void NMDAReceptor::setCalciumMicrodomain(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NMDAReceptorInAttrPSet* CG_inAttrPset, CG_NMDAReceptorOutAttrPSet* CG_outAttrPset) 
 {
   microdomainName = CG_inAttrPset->domainName;
   int idxFound = 0;

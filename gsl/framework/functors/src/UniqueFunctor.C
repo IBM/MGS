@@ -1,20 +1,13 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "UniqueFunctor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "DataItem.h"
 #include "FunctorType.h"
 #include "Node.h"
@@ -34,13 +27,13 @@ UniqueFunctor::UniqueFunctor()
 UniqueFunctor::UniqueFunctor(const UniqueFunctor& csf)
 {
    if (csf._functor_ap.get())
-      csf._functor_ap->duplicate(_functor_ap);
+      csf._functor_ap->duplicate(std::move(_functor_ap));
 }
 
 
-void UniqueFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void UniqueFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
-   fap.reset(new UniqueFunctor(*this));
+   fap=std::make_unique<UniqueFunctor>(*this);
 }
 
 
@@ -49,7 +42,7 @@ UniqueFunctor::~UniqueFunctor()
 }
 
 
-void UniqueFunctor::doInitialize(LensContext *c, 
+void UniqueFunctor::doInitialize(GslContext *c, 
 				 const std::vector<DataItem*>& args)
 {
    // prototype SamplingFctr2 unique(SamplingFctr2 sf);
@@ -67,12 +60,12 @@ void UniqueFunctor::doInitialize(LensContext *c,
          throw SyntaxErrorException(
 	    "FunctorDataItem in UniqueFunctor doesn't hold a proper functor");
       }
-      functor->duplicate(_functor_ap);
+      functor->duplicate(std::move(_functor_ap));
    }
 }
 
 
-void UniqueFunctor::doExecute(LensContext *c, 
+void UniqueFunctor::doExecute(GslContext *c, 
 			      const std::vector<DataItem*>& args, 
 			      std::unique_ptr<DataItem>& rvalue)
 {

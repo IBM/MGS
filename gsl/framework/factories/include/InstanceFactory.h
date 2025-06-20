@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef INSTANCEFACTORY_H
 #define INSTANCEFACTORY_H
 #include "Copyright.h"
@@ -24,7 +17,7 @@
 
 
 class DataItem;
-class LensContext;
+class GslContext;
 class InstanceFactoryQueriable;
 class NDPairList;
 
@@ -40,10 +33,10 @@ class InstanceFactory
       }
       virtual void getInstance(std::unique_ptr<DataItem> &, 
 			       std::vector<DataItem*> const *, 
-			       LensContext *) = 0;
+			       GslContext *) = 0;
       virtual void getInstance(std::unique_ptr<DataItem> &, 
  			       const NDPairList& ndplist,
-			       LensContext *) = 0;
+			       GslContext *) = 0;
       virtual std::string getName() =0;
       virtual std::string getDescription() =0;
       virtual std::vector<DataItem*> const & getInstances() {

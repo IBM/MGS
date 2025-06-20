@@ -1,19 +1,12 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BMC-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
-#include "Lens.h"
+// =============================================================================
+#include "Mgs.h"
 #include "IP3ConcentrationJunction.h"
 #include "CG_IP3ConcentrationJunction.h"
 #include "rndm.h"
@@ -429,7 +422,7 @@ void IP3ConcentrationJunction::printDebugHH(std::string phase)
 //  Even if we retain (x,y,z) this value change with the #capsule per compartment
 //   and geometric sampling --> so not a good choice
 bool IP3ConcentrationJunction::checkSite(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_IP3ConcentrationJunctionInAttrPSet* CG_inAttrPset,
     CG_IP3ConcentrationJunctionOutAttrPSet* CG_outAttrPset)
@@ -443,7 +436,7 @@ bool IP3ConcentrationJunction::checkSite(
 }
 
 bool IP3ConcentrationJunction::confirmUniqueDeltaT(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_IP3ConcentrationJunctionInAttrPSet* CG_inAttrPset,
     CG_IP3ConcentrationJunctionOutAttrPSet* CG_outAttrPset)

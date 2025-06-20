@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "Predicate.h"
 #include "StructType.h"
 #include "Operation.h"
@@ -44,23 +37,23 @@ Predicate::Predicate(const Predicate& rv)
      _operation(0)
 {
    if (rv._predicate1) {
-      std::auto_ptr<Predicate> dup;
-      rv._predicate1->duplicate(dup);
+      std::unique_ptr<Predicate> dup;
+      rv._predicate1->duplicate(std::move(dup));
       _predicate1 = dup.release();
    }
    if (rv._predicate2) {
-      std::auto_ptr<Predicate> dup;
-      rv._predicate2->duplicate(dup);
+      std::unique_ptr<Predicate> dup;
+      rv._predicate2->duplicate(std::move(dup));
       _predicate2 = dup.release();
    }
    if (rv._operation) {
-      std::auto_ptr<Operation> dup;
-      rv._operation->duplicate(dup);
+      std::unique_ptr<Operation> dup;
+      rv._operation->duplicate(std::move(dup));
       _operation = dup.release();
    }
 }
 
-void Predicate::duplicate(std::auto_ptr<Predicate>& rv) const
+void Predicate::duplicate(std::unique_ptr<Predicate>&& rv) const
 {
    rv.reset(new Predicate(*this));
 }

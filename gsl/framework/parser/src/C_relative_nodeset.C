@@ -1,23 +1,16 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_relative_nodeset.h"
 #include "C_gridnodeset.h"
 #include "C_nodeset_extension.h"
 #include "NodeSet.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 #include "C_production.h"
@@ -28,14 +21,14 @@ class Grid;
 #include <list>
 #include <cassert>
 
-void C_relative_nodeset::internalExecute(LensContext *c)
+void C_relative_nodeset::internalExecute(GslContext *c)
 {
    _gridNodeSet->execute(c);
    delete _storedContext;
 
    // Note: executing this copy constructor can lead to recursion in 
    // ConnectionScriptFunctor, for now we'll set to NULL
-   //_storedContext = new LensContext(c);
+   //_storedContext = new GslContext(c);
    _storedContext = 0;
 
 }
@@ -93,7 +86,7 @@ C_relative_nodeset::C_relative_nodeset(const C_relative_nodeset& rv)
       _gridNodeSet = rv._gridNodeSet->duplicate();
    }
    if (rv._storedContext) {
-      std::unique_ptr<LensContext> dup;
+      std::unique_ptr<GslContext> dup;
       rv._storedContext->duplicate(dup);
       _storedContext = dup.release();
    }

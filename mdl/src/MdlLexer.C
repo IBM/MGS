@@ -1,35 +1,24 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "MdlLexer.h"
 #include <iostream>
 #include <sstream>
 
 MdlLexer::MdlLexer(std::istream * infile, std::ostream * outfile)
-: yyFlexLexer(infile,outfile), yylval(0),lineCount(0)
-{
+: yyFlexLexer(infile,outfile), yylval(0),lineCount(0) {
 }
 
-
-MdlLexer::~MdlLexer()
-{
+MdlLexer::~MdlLexer() {
 }
 
-
-void MdlLexer::skip_proc(void)
-{
+void MdlLexer::skip_proc(void) {
+   assert(0);
    // put input into a std::string
    std::string buffer;
    std::ostringstream ostr;
@@ -39,14 +28,13 @@ void MdlLexer::skip_proc(void)
    }
    buffer = ostr.str();
 
-
    // grab required values and compute lineOffset
    std::istringstream istr(buffer);
    istr >> lineCount;
    istr >> currentFileName;
+   // Optional debug: debugLocation();
 }
 
-const char* MdlLexer::getToken() 
-{
+const char* MdlLexer::getToken() {
    return yytext;
 }

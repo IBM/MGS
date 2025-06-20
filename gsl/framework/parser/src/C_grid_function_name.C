@@ -1,29 +1,22 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_grid_function_name.h"
 #include "C_declarator.h"
 #include "FunctorDataItem.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "NDPairListDataItem.h"
 #include "NDPairList.h"
 #include "IntArrayDataItem.h"
 #include "LayoutFunctor.h"
 #include "NodeInitializerFunctor.h"
 #include "Functor.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "NodeTypeDataItem.h"
 #include "NodeSetDataItem.h"
 #include "GranuleMapperDataItem.h"
@@ -41,7 +34,7 @@
 #include <stdio.h>
 #include <string>
 
-void C_grid_function_name::internalExecute(LensContext* c, Grid* grid) {
+void C_grid_function_name::internalExecute(GslContext* c, Grid* grid) {
   if (_declarator) _declarator->execute(c);
   _argList->execute(c);
   if (_type == _LAYER)
@@ -80,7 +73,7 @@ C_grid_function_name::~C_grid_function_name() {
   delete _argList;
 }
 
-void C_grid_function_name::initNodes(LensContext* c, Grid* grid) {
+void C_grid_function_name::initNodes(GslContext* c, Grid* grid) {
   const std::vector<DataItem*>* args = _argList->getVectorDataItem();
   if (args->size() < 2) {
     std::string mes =
@@ -132,7 +125,7 @@ void C_grid_function_name::initNodes(LensContext* c, Grid* grid) {
 /* being called when a 'Layers'
  * statement is detected in GSL
  */
-void C_grid_function_name::layers(LensContext* c, Grid* grid) {
+void C_grid_function_name::layers(GslContext* c, Grid* grid) {
   std::string name = _declarator->getName();
 
   const std::vector<DataItem*>* args = _argList->getVectorDataItem();
@@ -212,7 +205,7 @@ void C_grid_function_name::layers(LensContext* c, Grid* grid) {
   } else {
     if (c->sim->isGranuleMapperPass() || c->sim->isCostAggregationPass()) {
       std::vector<DataItem*> gmargs;
-      StringDataItem descrDI("Default Volume Granule Mapper.");
+      CustomStringDataItem descrDI("Default Volume Granule Mapper.");
       gmargs.push_back(&descrDI);
 
       const std::vector<int>& sz = grid->getSize();

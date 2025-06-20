@@ -1,4 +1,13 @@
-#include "Lens.h"
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
+#include "Mgs.h"
 #include "AtasoyNFUnit.h"
 #include "CG_AtasoyNFUnit.h"
 #include "rndm.h"
@@ -58,8 +67,9 @@ void AtasoyNFUnit::reaction(RNG& rng)
   }
 }
 
-bool AtasoyNFUnit::checkForConnection(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_AtasoyNFUnitInAttrPSet* CG_inAttrPset, CG_AtasoyNFUnitOutAttrPSet* CG_outAttrPset) 
+bool AtasoyNFUnit::checkForConnection(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_AtasoyNFUnitInAttrPSet* CG_inAttrPset, CG_AtasoyNFUnitOutAttrPSet* CG_outAttrPset) 
 {
+  bool rval=false;
   unsigned preIdx = CG_node->getNode()->getIndex();
   unsigned postIdx = getNode()->getIndex();
   //const char* fname = SHD.laplacian_filename.c_str();
@@ -81,10 +91,11 @@ bool AtasoyNFUnit::checkForConnection(const String& CG_direction, const String& 
       D_in[D_in.size()-1].weight = val;
       D_in[D_in.size()-1].row = getGlobalIndex()+1;  
       D_in[D_in.size()-1].col = CG_node->getGlobalIndex()+1;
-      return 1;
+      rval=true;
+      break;
     }
-  return 0;
   }
+  return rval;
 }   
 
 AtasoyNFUnit::~AtasoyNFUnit() 

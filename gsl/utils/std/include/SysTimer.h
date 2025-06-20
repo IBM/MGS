@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef _SYSTIMER_H
 #define _SYSTIMER_H
 #include "Copyright.h"
@@ -109,22 +102,22 @@ class SysTimer
 
    private:
 
-      bool     amRunning;        // true iff stopwatch is currently running
+      bool _amRunning;        // true iff stopwatch is currently running
 
-      clock_t myStartTime;       // holds the last time the watch was started
+      clock_t _myStartTime;       // holds the last time the watch was started
       // added Ravi Rao
-      struct timeval myStartTimeval;
+      struct timeval _myStartTimeval;
 
-      clock_t myElapsed;         // holds the time between the last start
+      clock_t _myElapsed;         // holds the time between the last start
       // and the last stop
       // added Ravi Rao
-      struct timeval myElapsedTimeval;
+      struct timeval _myElapsedTimeval;
 
-      clock_t myCumulative;      // holds the total amount of time that the
+      clock_t _myCumulative;      // holds the total amount of time that the
       // stopwatch has been on since the last reset
       // (except for the current "lap" time)
       // added Ravi Rao
-      struct timeval myCumulativeTimeval;
+      struct timeval _myCumulativeTimeval;
       /*  struct */
       void timevalSubtract(struct timeval &result, timeval &endtime, struct timeval &starttime);
       void timevalAdd(struct timeval &result, struct timeval &t1, struct timeval &t2);

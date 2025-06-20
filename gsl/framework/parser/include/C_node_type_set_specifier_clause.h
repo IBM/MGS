@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef C_node_type_set_specifier_clause_H
 #define C_node_type_set_specifier_clause_H
 #include "Copyright.h"
@@ -25,7 +18,7 @@ class C_layer_set;
 class C_logical_OR_expression;
 class Grid;
 class GridLayerDescriptor;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_node_type_set_specifier_clause : public NodeTypeSet, public C_production
@@ -38,7 +31,7 @@ class C_node_type_set_specifier_clause : public NodeTypeSet, public C_production
 				       SyntaxError *);
       virtual ~C_node_type_set_specifier_clause ();
       virtual C_node_type_set_specifier_clause* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       const std::list<GridLayerDescriptor*>& getLayers(Grid* g);
@@ -46,7 +39,7 @@ class C_node_type_set_specifier_clause : public NodeTypeSet, public C_production
    private:
       C_layer_set* _layerSet;
       C_logical_OR_expression* _logicalOrExpression;
-      LensContext* _storedContext;
+      GslContext* _storedContext;
       Grid* _lastGrid;
 };
 #endif

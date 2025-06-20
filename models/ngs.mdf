@@ -60,5 +60,6 @@
 
 #include "Analyzers/LFPDataAnalyzers.mdl"
 
+#include "DNN.mdf"
 
 // MDF files

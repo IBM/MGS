@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef CommandLine_H
 #define CommandLine_H
 #include "Mdl.h"
@@ -24,21 +17,23 @@ class CommandLine {
 
    public:
       CommandLine();
+      CommandLine(CommandLine& cl);
       bool parse(int argc, char** argv);
 
       const std::string& getFileName() {
-	 return _fileName;
+	      return _fileName;
       }
-
       bool isStatic() const {
-	 return _static;
-      }	 
+	      return _static;
+      }
+      bool skipIncludes() const {
+	      return _skipIncludes;
+      }
       bool printWarning() const {
-	 return _printWarning;
-      }	 
-
+   	   return _printWarning;
+      }
       const std::vector<std::string>& getIncludePath() {
-	 return _includePath;
+	      return _includePath;
       }
 
    private:
@@ -46,6 +41,7 @@ class CommandLine {
       std::string _fileName;
       bool _static;
       bool _printWarning=true;
+      bool _skipIncludes;
       std::vector<std::string> _includePath;
 };
 

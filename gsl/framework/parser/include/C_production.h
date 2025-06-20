@@ -1,25 +1,18 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef C_production_H
 #define C_production_H
 #include "Copyright.h"
 
 #include <string>
 
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_production
@@ -33,11 +26,11 @@ class C_production
       void setError();
       void printErrorMessage();
       virtual void throwError(const std::string&);
-      virtual void execute(LensContext *);
+      virtual void execute(GslContext *);
       virtual void checkChildren() {};
       virtual void recursivePrint() {};
    protected:
-      virtual void internalExecute(LensContext *) = 0;
+      virtual void internalExecute(GslContext *) = 0;
       SyntaxError *_error;
 };
 #endif

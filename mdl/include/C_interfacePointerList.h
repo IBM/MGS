@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef C_interfacePointerList_H
 #define C_interfacePointerList_H
 #include "Mdl.h"
@@ -26,7 +19,7 @@ class C_interfacePointer;
 class Interface;
 
 class C_interfacePointerList : public C_production {
-
+   using C_production::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       C_interfacePointerList();
@@ -34,8 +27,8 @@ class C_interfacePointerList : public C_production {
       C_interfacePointerList(C_interfacePointerList* ipl, 
 			     C_interfacePointer* ip);
       C_interfacePointerList(const C_interfacePointerList& rv);
-      virtual void duplicate(std::auto_ptr<C_interfacePointerList>& rv) const;
-      void releaseInterfaceVec(std::auto_ptr<std::vector<Interface*> >& ipv);
+      virtual void duplicate(std::unique_ptr<C_interfacePointerList>&& rv) const;
+      void releaseInterfaceVec(std::unique_ptr<std::vector<Interface*> >& ipv);
       virtual ~C_interfacePointerList();
 
    private:

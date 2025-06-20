@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef Functor_H
 #define Functor_H
 #include "Mdl.h"
@@ -30,11 +23,11 @@ class Functor : public ToolBase {
       Functor(const std::string& fileName);
       Functor(const Functor& rv);
       Functor& operator=(const Functor& rv);
-      virtual void duplicate(std::auto_ptr<Generatable>& rv) const;
+      virtual void duplicate(std::unique_ptr<Generatable>&& rv) const;
       virtual std::string getType() const;
       virtual std::string generateExtra() const;
       virtual std::string generateTitleExtra() const;
-      void setReturnType(std::auto_ptr<DataType>& ret);
+      void setReturnType(std::unique_ptr<DataType>&& ret);
       const std::string& getCategory() const;
       void setCategory(const std::string& category);
       virtual ~Functor();        
@@ -54,12 +47,12 @@ class Functor : public ToolBase {
       void generateInstance();
 
    private:
-      void createInitMethod(std::auto_ptr<Method>& method, 
+      void createInitMethod(std::unique_ptr<Method>&& method, 
 			    const MemberContainer<DataType>& args,
 			    const std::string& funcName, 
 			    const std::string& attName,
 			    bool userInit, bool hasRetVal);
-      void createUserMethod(std::auto_ptr<Method>& method, 
+      void createUserMethod(std::unique_ptr<Method>&& method, 
 			    const MemberContainer<DataType>& args,
 			    const std::string& funcName, 
 			    const std::string& retType,

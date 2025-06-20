@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "VariableType.h"
 #include "VariableDataItem.h"
 #include "Variable.h"
@@ -21,7 +14,7 @@
 #include "InstanceFactoryQueriable.h"
 #include "NDPairList.h"
 #include "VariableGranuleMapper.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "Simulation.h"
 #include "ConnectionIncrement.h"
 
@@ -32,7 +25,7 @@ VariableType::VariableType() : InstanceFactory()
 
 void VariableType::getInstance(std::unique_ptr<DataItem>& adi,
                                std::vector<DataItem*> const* args,
-                               LensContext* c)
+                               GslContext* c)
 {
   VariableDataItem* vdi = new VariableDataItem;
   VariableInstanceAccessor* via = new VariableInstanceAccessor;
@@ -100,7 +93,7 @@ void VariableType::getInstance(std::unique_ptr<DataItem>& adi,
 }
 
 void VariableType::getInstance(std::unique_ptr<DataItem>& adi,
-                               const NDPairList& ndplist, LensContext* c)
+                               const NDPairList& ndplist, GslContext* c)
 {
   VariableDataItem* vdi = new VariableDataItem;
   VariableInstanceAccessor* via = new VariableInstanceAccessor;

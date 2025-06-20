@@ -1,4 +1,13 @@
-#include "Lens.h"
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
+#include "Mgs.h"
 #include "GatedThalamicUnitDataCollector.h"
 #include "CG_GatedThalamicUnitDataCollector.h"
 #include "NodeDescriptor.h"
@@ -57,7 +66,7 @@ void GatedThalamicUnitDataCollector::dataCollection(Trigger* trigger, NDPairList
   output<<std::endl;
 }
 
-void GatedThalamicUnitDataCollector::getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_GatedThalamicUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_GatedThalamicUnitDataCollectorOutAttrPSet* CG_outAttrPset) 
+void GatedThalamicUnitDataCollector::getNodeIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_GatedThalamicUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_GatedThalamicUnitDataCollectorOutAttrPSet* CG_outAttrPset) 
 {
   ShallowArray<unsigned,3,2> coords;
   CG_node->getNode()->getNodeCoords(coords);
@@ -76,17 +85,17 @@ GatedThalamicUnitDataCollector::~GatedThalamicUnitDataCollector()
   delete file;
 }
 
-void GatedThalamicUnitDataCollector::duplicate(std::unique_ptr<GatedThalamicUnitDataCollector>& dup) const
+void GatedThalamicUnitDataCollector::duplicate(std::unique_ptr<GatedThalamicUnitDataCollector>&& dup) const
 {
    dup.reset(new GatedThalamicUnitDataCollector(*this));
 }
 
-void GatedThalamicUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
+void GatedThalamicUnitDataCollector::duplicate(std::unique_ptr<Variable>&& dup) const
 {
    dup.reset(new GatedThalamicUnitDataCollector(*this));
 }
 
-void GatedThalamicUnitDataCollector::duplicate(std::unique_ptr<CG_GatedThalamicUnitDataCollector>& dup) const
+void GatedThalamicUnitDataCollector::duplicate(std::unique_ptr<CG_GatedThalamicUnitDataCollector>&& dup) const
 {
    dup.reset(new GatedThalamicUnitDataCollector(*this));
 }

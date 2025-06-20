@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef C_declaration_strid_He
 #define C_declaration_strid_He
 #include "Copyright.h"
@@ -21,7 +14,7 @@
 
 class C_declarator;
 class C_stride_list;
-class LensContext;
+class GslContext;
 class StridesList;
 class SyntaxError;
 
@@ -32,7 +25,7 @@ class C_declaration_stride : public C_declaration
       C_declaration_stride(C_declarator *, C_stride_list *, SyntaxError *);
       virtual C_declaration_stride* duplicate() const;
       virtual ~C_declaration_stride();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

@@ -1,4 +1,4 @@
-# The pathname is relative to the lens directory
+# The pathname is relative to the gsl directory
 # Define some common prefixes/suffixes for use
 THIS_DIR := framework/simulation
 THIS_STEM := simulation
@@ -10,7 +10,7 @@ SOURCES := ISender.C \
 IReceiver.C \
 FinalPhase.C \
 InitPhase.C \
-LENSServer.C \
+MgsServer.C \
 LoadPhase.C \
 Pauser.C \
 Phase.C \
@@ -22,7 +22,7 @@ PhaseElement.C \
 
 #ifeq ($(HAVE_PTHREADS), 1)
 #
-#SOURCES += LENSServer.C \
+#SOURCES += MgsServer.C \
 #ThreadPool.C 
 #
 #endif

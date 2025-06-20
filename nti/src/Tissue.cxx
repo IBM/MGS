@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BMC-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. and EPFL 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// ================================================================
-
+// =============================================================================
 #include "Tissue.h"
 #include "NeuronPartitioner.h"
 #include "Neuron.h"
@@ -31,12 +24,16 @@
 #include <map>
 #include <cstdlib>
 
-#define FIRST_CAPSULE_CONSIDER_AT_SOMA_BORDER
 
+
+#define FIRST_CAPSULE_CONSIDER_AT_SOMA_BORDER
 #define SUGGESTED_BIN_WIDTH 1.0
 #define MIN_COLUMN_DIM 0.000000000001
 //#define COMPOSITE_OUTPUT
 #define TISSUE_COORD_SWC_OUT
+#ifdef __APPLE__
+#define ftello64 ftello
+#endif
 
 Tissue::Tissue(int size, int rank, bool logTranslationHistory,
                bool logRotationHistory)

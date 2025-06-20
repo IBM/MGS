@@ -1,25 +1,18 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
-#include "Lens.h"
+// =============================================================================
+#include "Mgs.h"
 #include "CalciumVisualization.h"
 #include "Simulation.h"
 #include "CG_CalciumVisualization.h"
 #include "NeuronPartitioner.h"
 #include "MaxComputeOrder.h"
-
+#include <mpi.h>
 #include <cfloat>
 #include <cmath>
 #include <memory>
@@ -91,10 +84,10 @@ void CalciumVisualization::initialize(RNG& rng)
   {
     int sendToDest = 0;
     if (i == _rank % N_IO_NODES) sendToDest = _nSends;
-    MPI::COMM_WORLD.Reduce(&sendToDest, &_nVreceives, 1, MPI::INT, MPI::SUM,
-                           _ioNodes[i]);
-    MPI::COMM_WORLD.Reduce(&_nSends, &_nKreceives, 1, MPI::INT, MPI::SUM,
-                           _ioNodes[i]);
+  MPI_Reduce(&sendToDest, &_nVreceives, 1, MPI_INT, MPI_SUM,
+                           _ioNodes[i], MPI_COMM_WORLD);
+  MPI_Reduce(&_nSends, &_nKreceives, 1, MPI_INT, MPI_SUM,
+                           _ioNodes[i], MPI_COMM_WORLD);
   }
   _nBuffs = _isIoNode ? ((N_RECEIVE_BUFFS < _nVreceives) ? N_RECEIVE_BUFFS
                                                          : _nVreceives)
@@ -121,22 +114,22 @@ void CalciumVisualization::initialize(RNG& rng)
     {
       for (int pass = 0; pass < 2; ++pass)
       {
-        std::vector<std::pair<MPI::Request, key_size_t*> > requests(_nBuffs);
+        std::vector<std::pair<MPI_Request, key_size_t*> > requests(_nBuffs);
         std::map<key_size_t*, int> destIndices;
         for (int i = 0; i < _nBuffs; ++i)
         {
           requests[i].second = keyBuffs[i];
           destIndices[keyBuffs[i]] = 0;
         }
-        std::vector<std::pair<MPI::Request, key_size_t*> >::iterator riter, rend;
-        MPI::Status status;
+        std::vector<std::pair<MPI_Request, key_size_t*> >::iterator riter, rend;
+        MPI_Status status;
         calciumMapIter = calciumMap.begin();
         std::map<CompartmentKey, dyn_var_t*, CompartmentKey::compare>::iterator
             calciumMapEnd = calciumMap.end();
         rend = requests.end();
         for (riter = requests.begin(); riter != rend; ++riter)
         {
-          int scount;
+          int scount=0;
           key_size_t* sbuff = riter->second;
           assert(destIndices[sbuff] == 0);
           for (scount = 0;
@@ -148,16 +141,20 @@ void CalciumVisualization::initialize(RNG& rng)
                 calciumMapIter->first._key);
           }
 
-          riter->first = MPI::COMM_WORLD.Isend(sbuff, scount, MPI::DOUBLE,
-                                               _ioNodes[destIndices[sbuff]], 0);
+          MPI_Isend(sbuff, scount, MPI_DOUBLE,
+            _ioNodes[destIndices[sbuff]], 0, MPI_COMM_WORLD, &(riter->first));
           if (++destIndices[sbuff] == N_IO_NODES) destIndices[sbuff] = 0;
         }
         while (calciumMapIter != calciumMapEnd)
         {
           riter = requests.begin();
-          while (0 == riter->first.Test(status))
-            if (++riter == rend) riter = requests.begin();
-          int scount;
+          int flag;
+          MPI_Test(&riter->first, &flag, &status);
+          while (flag==0) {
+            if (++riter == requests.end()) riter = requests.begin();
+            MPI_Test(&riter->first, &flag, &status);
+          }
+          int scount=0;
           key_size_t* sbuff = riter->second;
           if (destIndices[sbuff] == 0)
           {
@@ -168,11 +165,11 @@ void CalciumVisualization::initialize(RNG& rng)
                   SegmentDescriptor::segmentIndex,
                   calciumMapIter->first._cptIdx, calciumMapIter->first._key);
           }
-          riter->first = MPI::COMM_WORLD.Isend(sbuff, scount, MPI::DOUBLE,
-                                               _ioNodes[destIndices[sbuff]], 0);
+          MPI_Isend(sbuff, scount, MPI_DOUBLE,
+            _ioNodes[destIndices[sbuff]], 0, MPI_COMM_WORLD, &riter->first);
           if (++destIndices[sbuff] == N_IO_NODES) destIndices[sbuff] = 0;
         }
-        MPI::COMM_WORLD.Barrier();
+        MPI_Barrier(MPI_COMM_WORLD);
       }
     }
     else
@@ -199,15 +196,15 @@ void CalciumVisualization::initialize(RNG& rng)
       for (int pass = 0; pass < 2; ++pass)
       {
         keysRecvdCount = localDataSize;
-        std::vector<std::pair<MPI::Request, key_size_t*> > requests(_nBuffs);
+        std::vector<std::pair<MPI_Request, key_size_t*> > requests(_nBuffs);
         for (int i = 0; i < _nBuffs; ++i) requests[i].second = keyBuffs[i];
-        std::vector<std::pair<MPI::Request, key_size_t*> >::iterator riter;
-        MPI::Status status;
+        std::vector<std::pair<MPI_Request, key_size_t*> >::iterator riter;
+        MPI_Status status;
 
         for (riter = requests.begin() + 1; riter != requests.end();
              ++riter)  // leave first for self receive
-          riter->first = MPI::COMM_WORLD.Irecv(riter->second, BUFF_SIZE,
-                                               MPI::DOUBLE, MPI_ANY_SOURCE, 0);
+          MPI_Irecv(riter->second, BUFF_SIZE,
+            MPI_DOUBLE, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &riter->first);
 
         if (pass == 1)
         {
@@ -246,10 +243,14 @@ void CalciumVisualization::initialize(RNG& rng)
           else
           {
             riter = requests.begin();
-            while (0 == riter->first.Test(status))
+            int flag;
+            MPI_Test(&riter->first, &flag, &status);
+            while (flag==0) {
               if (++riter == requests.end()) riter = requests.begin();
-            sender = status.Get_source();
-            rcount = status.Get_count(MPI::DOUBLE);
+              MPI_Test(&riter->first, &flag, &status);
+            }
+            sender = status.MPI_SOURCE;
+            MPI_Get_count(&status, MPI_DOUBLE, &rcount);
             rbuff = riter->second;
             keysRecvdCount += rcount;
           }
@@ -297,12 +298,11 @@ void CalciumVisualization::initialize(RNG& rng)
           if (buffsRecvdCount + requests.size() <= (unsigned)_nKreceives)
           {
             if (buffsRecvdCount > _nSends)
-              riter->first = MPI::COMM_WORLD.Irecv(
-                  riter->second, BUFF_SIZE, MPI::DOUBLE, MPI_ANY_SOURCE, 0);
+              MPI_Irecv(riter->second, BUFF_SIZE, 
+                MPI_DOUBLE, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &riter->first);
             else if (buffsRecvdCount == _nSends)
-              requests[0].first =
-                  MPI::COMM_WORLD.Irecv(requests[0].second, BUFF_SIZE,
-                                        MPI::DOUBLE, MPI_ANY_SOURCE, 0);
+                MPI_Irecv(requests[0].second, BUFF_SIZE,
+                  MPI_DOUBLE, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &requests[0].first);
           }
           else
             requests.erase(riter);
@@ -313,7 +313,7 @@ void CalciumVisualization::initialize(RNG& rng)
             _demarshalPatterns[sender].push_back(buffPattern);
           }
         }
-        MPI::COMM_WORLD.Barrier();
+        MPI_Barrier(MPI_COMM_WORLD);
       }
       _outFile = fopen(outFileName.c_str(), "wb");
       if (_outFile == 0)
@@ -325,12 +325,15 @@ void CalciumVisualization::initialize(RNG& rng)
       if (N_IO_NODES > 1)
       {
         dataSize = 0;
-        MPI::Group world_group = MPI::COMM_WORLD.Get_group();
-        MPI::Group new_group =
-            world_group.Incl(_ioNodes.size(), _ioNodes.data());
-        MPI_Comm new_communicator = MPI::COMM_WORLD.Create(new_group);
-        MPI::COMM_WORLD.Reduce(&dataSize, &keysRecvdCount, 1,
-                               MPI::UNSIGNED_LONG, MPI::SUM, _ioNodes[0]);
+        MPI_Group world_group;
+        MPI_Comm_group(MPI_COMM_WORLD, &world_group);
+        MPI_Group new_group;
+        MPI_Group_incl(world_group, _ioNodes.size(), _ioNodes.data(), &new_group);
+        MPI_Comm new_communicator;
+        MPI_Comm_create(MPI_COMM_WORLD, new_group, &new_communicator);
+        MPI_Reduce(&dataSize, &keysRecvdCount, 1,
+                               MPI_UNSIGNED_LONG, MPI_SUM, _ioNodes[0], 
+                               MPI_COMM_WORLD);
       }
       if (_rank == _ioNodes[0])
       {
@@ -378,10 +381,10 @@ void CalciumVisualization::dataCollection(Trigger* trigger,
     int destIO = _ioNodes[_rank % N_IO_NODES];
     if (!_isIoNode)
     {
-      std::vector<std::pair<MPI::Request, float*> > requests(_nBuffs);
+      std::vector<std::pair<MPI_Request, float*> > requests(_nBuffs);
       for (int i = 0; i < _nBuffs; ++i) requests[i].second = _calciumBuffs[i];
-      std::vector<std::pair<MPI::Request, float*> >::iterator riter;
-      MPI::Status status;
+      std::vector<std::pair<MPI_Request, float*> >::iterator riter;
+      MPI_Status status;
       std::vector<std::pair<dyn_var_t*, int> >::iterator
           marshallPatternIter = _marshallPatterns.begin(),
           marshallPatternEnd = _marshallPatterns.end();
@@ -399,14 +402,17 @@ void CalciumVisualization::dataCollection(Trigger* trigger,
                     &sbuff[scount]);
           scount += n;
         }
-        riter->first =
-            MPI::COMM_WORLD.Isend(sbuff, scount, MPI::FLOAT, destIO, 0);
+        MPI_Isend(sbuff, scount, MPI_FLOAT, destIO, 0, MPI_COMM_WORLD, &riter->first);
       }
       while (marshallPatternIter != marshallPatternEnd)
       {
         riter = requests.begin();
-        while (0 == riter->first.Test(status))
+        int flag;
+        MPI_Test(&riter->first, &flag, &status);
+        while (flag==0) {
           if (++riter == requests.end()) riter = requests.begin();
+          MPI_Test(&riter->first, &flag, &status);
+        }
         int scount = 0;
         float* sbuff = riter->second;
         for (; scount < BUFF_SIZE && marshallPatternIter != marshallPatternEnd;
@@ -419,8 +425,7 @@ void CalciumVisualization::dataCollection(Trigger* trigger,
                     &sbuff[scount]);
           scount += n;
         }
-        riter->first =
-            MPI::COMM_WORLD.Isend(sbuff, scount, MPI::FLOAT, destIO, 0);
+        MPI_Isend(sbuff, scount, MPI_FLOAT, destIO, 0, MPI_COMM_WORLD, &riter->first);
       }
     }
     else
@@ -436,15 +441,15 @@ void CalciumVisualization::dataCollection(Trigger* trigger,
       }
 
       std::vector<int> recvCounts(_size, 0);
-      std::vector<std::pair<MPI::Request, float*> > requests(_nBuffs);
+      std::vector<std::pair<MPI_Request, float*> > requests(_nBuffs);
       for (int i = 0; i < _nBuffs; ++i) requests[i].second = _calciumBuffs[i];
-      std::vector<std::pair<MPI::Request, float*> >::iterator riter;
-      MPI::Status status;
+      std::vector<std::pair<MPI_Request, float*> >::iterator riter;
+      MPI_Status status;
 
       for (riter = requests.begin() + 1; riter != requests.end();
            ++riter)  // leave first for self receive
-        riter->first = MPI::COMM_WORLD.Irecv(riter->second, BUFF_SIZE,
-                                             MPI::FLOAT, MPI_ANY_SOURCE, 0);
+        MPI_Irecv(riter->second, BUFF_SIZE,
+          MPI_FLOAT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &riter->first);
 
       int buffsRecvdCount = 0;
       while (buffsRecvdCount < _nVreceives)
@@ -475,9 +480,13 @@ void CalciumVisualization::dataCollection(Trigger* trigger,
         else
         {
           riter = requests.begin();
-          while (0 == riter->first.Test(status))
+          int flag;
+          MPI_Test(&riter->first, &flag, &status);
+          while (flag==0) {
             if (++riter == requests.end()) riter = requests.begin();
-          sender = status.Get_source();
+            MPI_Test(&riter->first, &flag, &status);
+          }
+          sender = status.MPI_SOURCE;
           rbuff = riter->second;
 #ifdef SWAP_BYTE_ORDER
           swapByteOrder(rbuff);
@@ -506,11 +515,11 @@ void CalciumVisualization::dataCollection(Trigger* trigger,
         if (buffsRecvdCount + requests.size() <= (unsigned)_nVreceives)
         {
           if (buffsRecvdCount > _nSends)
-            riter->first = MPI::COMM_WORLD.Irecv(riter->second, BUFF_SIZE,
-                                                 MPI::FLOAT, MPI_ANY_SOURCE, 0);
+            MPI_Irecv(riter->second, BUFF_SIZE,
+              MPI_FLOAT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &riter->first);
           else if (buffsRecvdCount == _nSends)
-            requests[0].first = MPI::COMM_WORLD.Irecv(
-                requests[0].second, BUFF_SIZE, MPI::FLOAT, MPI_ANY_SOURCE, 0);
+            MPI_Irecv(requests[0].second, BUFF_SIZE,
+              MPI_FLOAT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &requests[0].first);
         }
         else
           requests.erase(riter);
@@ -521,7 +530,7 @@ void CalciumVisualization::dataCollection(Trigger* trigger,
 }
 
 void CalciumVisualization::setUpPointers(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_CalciumVisualizationInAttrPSet* CG_inAttrPset,
     CG_CalciumVisualizationOutAttrPSet* CG_outAttrPset)
@@ -539,34 +548,33 @@ CalciumVisualization::~CalciumVisualization()
 }
 
 void CalciumVisualization::duplicate(
-    std::unique_ptr<CalciumVisualization>& dup) const
+    std::unique_ptr<CalciumVisualization>&& dup) const
 {
   dup.reset(new CalciumVisualization(*this));
 }
 
-void CalciumVisualization::duplicate(std::unique_ptr<Variable>& dup) const
+void CalciumVisualization::duplicate(std::unique_ptr<Variable>&& dup) const
 {
   dup.reset(new CalciumVisualization(*this));
 }
 
 void CalciumVisualization::duplicate(
-    std::unique_ptr<CG_CalciumVisualization>& dup) const
+    std::unique_ptr<CG_CalciumVisualization>&& dup) const
 {
   dup.reset(new CalciumVisualization(*this));
 }
 
-float CalciumVisualization::swapByteOrder(float* buff)
+void CalciumVisualization::swapByteOrder(float* buff)
 {
-  unsigned base = sizeof(float);
   for (unsigned long ii = 0; ii < BUFF_SIZE; ++ii)
   {
-    unsigned char sw[base];
+    unsigned char sw[sizeof(float)];
     unsigned char* offset = reinterpret_cast<unsigned char*>(&buff[ii]);
-    // std::memcpy(sw, offset, base);
-    std::copy(offset, offset + base, sw);
-    for (unsigned jj = 0; jj < base; ++jj)
+    // std::memcpy(sw, offset, sizeof(float));
+    std::copy(offset, offset + sizeof(float), sw);
+    for (unsigned jj = 0; jj < sizeof(float); ++jj)
     {
-      offset[jj] = sw[base - jj - 1];
+      offset[jj] = sw[sizeof(float) - jj - 1];
     }
   }
 }

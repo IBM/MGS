@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef ToolBase_H
 #define ToolBase_H
 #include "Mdl.h"
@@ -28,7 +21,7 @@ class DataType;
 class ToolBase : public Generatable {
    public:
       ToolBase(const std::string& fileName);
-      virtual void duplicate(std::auto_ptr<Generatable>& rv) const =0;
+      virtual void duplicate(std::unique_ptr<Generatable>&& rv) const =0;
       virtual std::string getType() const =0;
       virtual void generate() const;
       virtual std::string generateExtra() const;

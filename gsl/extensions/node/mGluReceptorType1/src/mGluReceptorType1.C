@@ -1,4 +1,13 @@
-#include "Lens.h"
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
+#include "Mgs.h"
 #include "mGluReceptorType1.h"
 #include "CG_mGluReceptorType1.h"
 #include "rndm.h"
@@ -17,7 +26,7 @@ void mGluReceptorType1::update(RNG& rng)
 }
 
 void mGluReceptorType1::setPostIndex(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_mGluReceptorType1InAttrPSet* CG_inAttrPset,
     CG_mGluReceptorType1OutAttrPSet* CG_outAttrPset)
@@ -39,7 +48,7 @@ dyn_var_t mGluReceptorType1::sigmoid(dyn_var_t alpha, dyn_var_t beta)
 }
 
 void mGluReceptorType1::setPrePostIndex(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_mGluReceptorType1InAttrPSet* CG_inAttrPset,
     CG_mGluReceptorType1OutAttrPSet* CG_outAttrPset)
@@ -52,7 +61,7 @@ void mGluReceptorType1::setPrePostIndex(
 //do nothing
 #else
 void mGluReceptorType1::setPreIndex(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_mGluReceptorType1InAttrPSet* CG_inAttrPset,
     CG_mGluReceptorType1OutAttrPSet* CG_outAttrPset)

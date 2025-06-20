@@ -1,19 +1,12 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
-#include "Lens.h"
+// =============================================================================
+#include "Mgs.h"
 #include "LFPDataAnalyzer.h"
 #include "CG_LFPDataAnalyzer.h"
 #include "Node.h"
@@ -239,7 +232,7 @@ void LFPDataAnalyzer::setContributions(Trigger* trigger, NDPairList* ndPairList)
 }
 
 
-void LFPDataAnalyzer::getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_LFPDataAnalyzerInAttrPSet* CG_inAttrPset, CG_LFPDataAnalyzerOutAttrPSet* CG_outAttrPset) 
+void LFPDataAnalyzer::getNodeIndices(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_LFPDataAnalyzerInAttrPSet* CG_inAttrPset, CG_LFPDataAnalyzerOutAttrPSet* CG_outAttrPset) 
 {
   ShallowArray<unsigned,3,2> coords;
   CG_node->getNode()->getNodeCoords(coords);
@@ -258,17 +251,17 @@ LFPDataAnalyzer::~LFPDataAnalyzer()
 {
 }
 
-void LFPDataAnalyzer::duplicate(std::unique_ptr<LFPDataAnalyzer>& dup) const
+void LFPDataAnalyzer::duplicate(std::unique_ptr<LFPDataAnalyzer>&& dup) const
 {
   dup.reset(new LFPDataAnalyzer(*this));
 }
 
-void LFPDataAnalyzer::duplicate(std::unique_ptr<Variable>& dup) const
+void LFPDataAnalyzer::duplicate(std::unique_ptr<Variable>&& dup) const
 {
   dup.reset(new LFPDataAnalyzer(*this));
 }
 
-void LFPDataAnalyzer::duplicate(std::unique_ptr<CG_LFPDataAnalyzer>& dup) const
+void LFPDataAnalyzer::duplicate(std::unique_ptr<CG_LFPDataAnalyzer>&& dup) const
 {
   dup.reset(new LFPDataAnalyzer(*this));
 }

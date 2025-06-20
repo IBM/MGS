@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_functor.h"
 #include "C_toolBase.h"
 #include "C_execute.h"
@@ -51,13 +44,13 @@ void C_functor::execute(MdlContext* context)
       }      
       (*executeVec)[0]->executeMapper(context, *func->_executeArguments, 
 				      func->_userExecute);
-      std::auto_ptr<DataType> dt;
-      (*executeVec)[0]->releaseDataType(dt);
-      func->setReturnType(dt);
+      std::unique_ptr<DataType> dt;
+      (*executeVec)[0]->releaseDataType(std::move(dt));
+      func->setReturnType(std::move(dt));
    }
    func->setCategory(_category);
 
-   std::auto_ptr<Generatable> funcMember;
+   std::unique_ptr<Generatable> funcMember;
    funcMember.reset(func);
    context->_generatables->addMember(_name, funcMember);
 }
@@ -81,7 +74,7 @@ C_functor::C_functor(const C_functor& rv)
    _category = rv._category;
 }
 
-void C_functor::duplicate(std::auto_ptr<C_functor>& rv) const
+void C_functor::duplicate(std::unique_ptr<C_functor>&& rv) const
 {
    rv.reset(new C_functor(*this));
 }

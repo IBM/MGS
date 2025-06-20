@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef Variable_H
 #define Variable_H
 #include "Copyright.h"
@@ -28,7 +21,7 @@ class Constant;
 class Edge;
 class NodeDescriptor;
 class DataItem;
-class LensContext;
+class GslContext;
 class ParameterSet;
 class NDPairList;
 class ConnectionIncrement;
@@ -49,14 +42,14 @@ class Variable : public VariableDescriptor, public ServiceAcceptor,
       virtual void addPreNode(NodeDescriptor* n, ParameterSet* InAttrPSet) = 0;
       virtual void addPreVariable(VariableDescriptor* v, ParameterSet* InAttrPSet) = 0;
       virtual void getInitializationParameterSet(
-	 std::unique_ptr<ParameterSet> & r_aptr) const = 0;
+	 std::unique_ptr<ParameterSet>&& r_aptr) const = 0;
       virtual void getInAttrParameterSet(
-	 std::unique_ptr<ParameterSet>& inAttrPSet) const = 0;
+	 std::unique_ptr<ParameterSet>&& inAttrPSet) const = 0;
       virtual void getOutAttrParameterSet(
-	 std::unique_ptr<ParameterSet>& outAttrPSet) const = 0;
+	 std::unique_ptr<ParameterSet>&& outAttrPSet) const = 0;
       virtual ~Variable();
-      virtual void duplicate(std::unique_ptr<Variable>& dup) const = 0;
-      void initialize(LensContext *c, const std::vector<DataItem*>& args);
+      virtual void duplicate(std::unique_ptr<Variable>&& dup) const = 0;
+      void initialize(GslContext *c, const std::vector<DataItem*>& args);
       void initialize(const NDPairList& ndplist);
 //      virtual ConnectionIncrement* getComputeCost() const = 0;
 //      virtual ConnectionIncrement* getComputeCost();
@@ -64,7 +57,7 @@ class Variable : public VariableDescriptor, public ServiceAcceptor,
 
    protected:
       VariableCompCategoryBase* _compCategory;
-      virtual void doInitialize(LensContext *c, 
+      virtual void doInitialize(GslContext *c, 
 				const std::vector<DataItem*>& args) = 0;
       virtual void doInitialize(const NDPairList& ndplist) = 0;
 };

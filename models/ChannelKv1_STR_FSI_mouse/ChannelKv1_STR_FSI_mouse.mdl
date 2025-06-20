@@ -1,10 +1,7 @@
-
-#// =================================================================
-#//
-#// (C) Copyright 2018 New Jersey Institute of Technology.
-#//
-#// =================================================================
-
+// =============================================================================
+// (C) Copyright 2018 New Jersey Institute of Technology. All rights reserved.
+//
+// =============================================================================
 
 #ifndef ChannelKv1_STR_FSI_mouse_MDL
 #define ChannelKv1_STR_FSI_mouse_MDL

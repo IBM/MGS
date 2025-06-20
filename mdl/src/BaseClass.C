@@ -1,18 +1,12 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
+#include <memory>
 #include "BaseClass.h"
 #include "Attribute.h"
 
@@ -48,7 +42,7 @@ BaseClass& BaseClass::operator=(const BaseClass& rv)
    return *this;
 }
 
-void BaseClass::duplicate(std::auto_ptr<BaseClass>& dup) const
+void BaseClass::duplicate(std::unique_ptr<BaseClass>&& dup) const
 {
    dup.reset(new BaseClass(*this));
 }
@@ -78,7 +72,7 @@ const std::vector<Attribute*>& BaseClass::getAttributes() const
    return _attributes;
 }
 
-void BaseClass::addAttribute(std::auto_ptr<Attribute>& att)
+void BaseClass::addAttribute(std::unique_ptr<Attribute>&& att)
 {
    _attributes.push_back(att.release());
 }
@@ -112,8 +106,8 @@ void BaseClass::copyOwnedHeap(const BaseClass& rv)
 {
    for (std::vector<Attribute*>::const_iterator it = rv._attributes.begin();
 	it != rv._attributes.end(); it++) {
-      std::auto_ptr<Attribute> dup;
-      (*it)->duplicate(dup);
+      std::unique_ptr<Attribute> dup;
+      (*it)->duplicate(std::move(dup));
       _attributes.push_back(dup.release());
    }
 }

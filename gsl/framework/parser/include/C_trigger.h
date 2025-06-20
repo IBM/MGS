@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef C_TRIGGER_H
 #define C_TRIGGER_H
 #include "Copyright.h"
@@ -23,7 +16,7 @@
 
 class C_query_path_product;
 class C_declarator;
-class LensContext;
+class GslContext;
 class DataItem;
 class Trigger;
 class SyntaxError;
@@ -39,7 +32,7 @@ class C_trigger : public C_production
       C_trigger(C_trigger *, C_trigger *, Type, SyntaxError *);
       virtual ~C_trigger();
       virtual C_trigger* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       Trigger* getTrigger() { 

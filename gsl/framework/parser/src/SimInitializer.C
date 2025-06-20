@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif 
@@ -41,8 +34,8 @@
 
 #include "Simulation.h"
 #include "Repertoire.h"
-#include "LensLexer.h"
-#include "LensContext.h"
+#include "GslLexer.h"
+#include "GslContext.h"
 #include "PauseActionable.h"
 #include "TriggeredPauseAction.h"
 #include "SyntaxErrorException.h"
@@ -57,7 +50,7 @@
 #include "BG_AvailableMemory.h"
 #endif
 
-extern int lensparse(void*);
+extern int gslparse(void*);
 extern int yydebug;
 
 #ifndef DISABLE_PTHREADS
@@ -115,8 +108,8 @@ bool SimInitializer::internalExecute(int argc, char** argv)
       return false;
    }
    std::unique_ptr<Simulation> sim;
-   std::unique_ptr<LensLexer> scanner;
-   std::unique_ptr<LensContext> context;
+   std::unique_ptr<GslLexer> scanner;
+   std::unique_ptr<GslContext> context;
    
    char const* infilename = commandLine.getGslFile().c_str();
    std::istream *infile;
@@ -128,81 +121,96 @@ bool SimInitializer::internalExecute(int argc, char** argv)
 //#ifndef PROFILING
    bool processed=false;
 #ifdef USING_BLUEGENE
-   char temporaryName[256];
+   char gslName[256];
    std::ostringstream os;
    os<<infilename<<"ps";
-   strcpy(temporaryName,os.str().c_str());
+   strcpy(gslName,os.str().c_str());
    std::string line;
    std::ifstream topf("Topology.h");
    std::string top[3] = {"-1", "-1", "-1"};
    if (topf.is_open()) {
-     while ( topf.good() ) {
-       getline(topf, line);
-       std::stringstream ss(line);
-       std::string tok;
-       ss>>tok;
-       if (tok=="#define") {
-	 ss>>tok;
-	 if (tok=="_X_") ss>>top[0];
-	 else if (tok=="_Y_") ss>>top[1];
-	 else if (tok=="_Z_") ss>>top[2];
-	 else {
-	   std::cerr<<"Error reading Topology.h!"<<std::endl;
-	   exit(-1);
-	 }
-       }
-     }
-     topf.close();
-     if (_rank==0) {
-       std::ifstream inf(infilename);
-       if (inf.is_open()) {
-	 std::ofstream outf(temporaryName);
-	 if (outf.is_open()) {
-	   while ( inf.good() ) {
-	     getline(inf, line);
-	     std::size_t pos=0;
-	     pos=line.find("_X_",0);
-	     while(pos!=std::string::npos) {
-	       line.replace(pos, 3, top[0]);
-	       pos=line.find("_X_",pos+1);
-	     }
-	     pos=line.find("_Y_",0);
-	     while(pos!=std::string::npos) {
-	       line.replace(pos, 3, top[1]);
-	       pos=line.find("_Y_",pos+1);
-	     }
-	     pos=line.find("_Z_",0);
-	     while(pos!=std::string::npos) {
-	       line.replace(pos, 3, top[2]);
-	       pos=line.find("_Z_",pos+1);
-	     }
-	     outf<<line<<std::endl;
-	   }
-	   outf.close();
-	   inf.close();
-	   processed=true;
-	 }
-       }
-     }
-     else processed=true;
+      while ( topf.good() ) {
+         getline(topf, line);
+         std::stringstream ss(line);
+         std::string tok;
+         ss>>tok;
+         if (tok=="#define") {
+            ss>>tok;
+            if (tok=="_X_") ss>>top[0];
+            else if (tok=="_Y_") ss>>top[1];
+            else if (tok=="_Z_") ss>>top[2];
+            else {
+               std::cerr<<"Error reading Topology.h!"<<std::endl;
+               exit(-1);
+            }
+         }
+      }
+      topf.close();
+      if (_rank==0) {
+         std::ifstream inf(infilename);
+         if (inf.is_open()) {
+	         std::ofstream outf(gslName);
+            if (outf.is_open()) {
+               while (inf.good() ) {
+                  getline(inf, line);
+                  std::size_t pos=0;
+                  pos=line.find("_X_",0);
+                  while(pos!=std::string::npos) {
+                     line.replace(pos, 3, top[0]);
+                     pos=line.find("_X_",pos+1);
+                  }
+                  pos=line.find("_Y_",0);
+                  while(pos!=std::string::npos) {
+                     line.replace(pos, 3, top[1]);
+                     pos=line.find("_Y_",pos+1);
+                  }
+                  pos=line.find("_Z_",0);
+                  while(pos!=std::string::npos) {
+                     line.replace(pos, 3, top[2]);
+                     pos=line.find("_Z_",pos+1);
+                  }
+                  outf<<line<<std::endl;
+               }
+               outf.close();
+               inf.close();
+               processed=true;
+            }
+         }
+      }
+      else processed=true;
    }
    MPI_Barrier(MPI_COMM_WORLD);
 #else
-   char temporaryName[256] = "/tmp/bc_mpp.XXXXXX";               // modified by Jizhu Lu on 01/10/2006
+   bool preprocessed = false;
+   char mgsName[256] = "mgs.XXXXXX";               // modified by Jizhu Lu on 01/10/2006
+   if (mkstemp(mgsName)) {                              // added by Jizhu Lu on 01/10/2006
+      std::string preprocessedContent = preprocessMGSROOT(infilename);
+      std::ofstream mgsFile(mgsName);
+      preprocessed = !preprocessedContent.empty();
+      mgsFile << preprocessedContent;
+      mgsFile.close();
+   }
+   char gslName[256] = "/tmp/gsl.XXXXXX";               // modified by Jizhu Lu on 01/10/2006
    char command[256];
-   if (mkstemp(temporaryName)) {                                 // added by Jizhu Lu on 01/10/2006
+   if (preprocessed && mkstemp(gslName)) {                                // added by Jizhu Lu on 01/10/2006
 #ifdef LINUX
-     sprintf(command,"cpp %s %s", infilename, temporaryName);
+     sprintf(command,"cpp -I$MGSROOT/graphs/std %s %s", mgsName, gslName);
 #endif
 #ifdef AIX
-     sprintf(command,"/usr/gnu/bin/gcpp %s %s", infilename, temporaryName);
+     sprintf(command,"/usr/gnu/bin/gcpp -I$MGSROOT/graphs/std %s %s", mgsName, gslName);
+#elif defined(DARWIN)
+     sprintf(command,"cpp -I$MGSROOT/graphs/std %s %s", mgsName, gslName);
 #endif
      int s=system(command);
      processed=true;
    }
 #endif /* USING_BLUEGENE */
-   if (processed) 
-     infile = new std::ifstream(temporaryName);
+   if (processed) {
+     infile = new std::ifstream(gslName);
+     char cleanup[256];
+     sprintf(cleanup,"rm %s %s",mgsName, gslName);
+     int s=system(cleanup);
+   }
    else {
      std::cerr << "Unable to preprocess gsl file, aborting..." << std::endl << std::endl;
      return false;
@@ -227,7 +235,7 @@ bool SimInitializer::internalExecute(int argc, char** argv)
 
    Partitioner* partitioner=0;
    std::ostringstream fname;
-   fname<<"LENS.gph";
+   fname<<"MGS.gph";
    bool outputGraph=false;
    if (sim->getRank()==0 && commandLine.getOutputGraph()) outputGraph=true;
 
@@ -246,11 +254,11 @@ bool SimInitializer::internalExecute(int argc, char** argv)
    sim->setPartitioner(partitioner);
    if (partitioner->requiresCostAggregation()) sim->setCostAggregationPass();
 
-   scanner.reset(new LensLexer(infile,outfile));
-   context.reset(new LensContext(sim.get()));
+   scanner.reset(new GslLexer(infile,outfile));
+   context.reset(new GslContext(sim.get()));
    context->lexer = scanner.get();
 
-   lensparse(context.get());
+   gslparse(context.get());
 
    
    // If there was an error return w/o starting...Trivial error
@@ -285,21 +293,17 @@ bool SimInitializer::internalExecute(int argc, char** argv)
      std::cerr << "_connectionIncrement->_communicationBytes=" << _connectionIncrement->_communicationBytes << std::endl;
 #endif
 
-     std::unique_ptr<LensContext> firstPassContext;
+     std::unique_ptr<GslContext> firstPassContext;
      context->duplicate(firstPassContext);
      firstPassContext->addCurrentRepertoire(sim->getRootRepertoire());
      if (sim->getRank()==0)
      {
        sim->benchmark_timelapsed("Preparation");
      } 
-     if (sim->getRank()==0) printf("\nThe first execution of the parse tree begins.\n\n");
+     if (sim->getRank()==0) printf("The first execution of the parse tree begins.\n\n");
      if (sim->getRank()==0 && sim->isCostAggregationPass()) std::cout << "Aggregating costs in granule graph." << std::endl << std::endl;
 
      firstPassContext->execute();
-     if (sim->getRank()==0)
-     {
-       sim->benchmark_timelapsed("Preparation (firstPassContext->execute())");
-     } 
      if (firstPassContext->isError()) {
        if (sim->getRank()==0) printf("Quitting due to errors...\n\n");
        return false;
@@ -310,31 +314,15 @@ bool SimInitializer::internalExecute(int argc, char** argv)
 #ifdef USING_BLUEGENE
      if (sim->getRank()==0) printf("Available memory after simulation initialization first pass: %lf MB.\n\n",AvailableMemory());
 #endif 
-       if (sim->getRank()==0)
-       {
-	 sim->benchmark_timelapsed_diff(" ...setSeparationGranules + setGraph ())");
-       } 
      
      if (commandLine.getSimulate()) {
        if (sim->getRank()==0) printf("Resetting simulation.\n\n");
        sim->resetInternals();
        sim->setSimulatePass();
-       if (sim->getRank()==0)
-       {
-	 sim->benchmark_timelapsed_diff(" ... resetInternals, setSimulatePass())");
-       } 
        context->addCurrentRepertoire(sim->getRootRepertoire());
-       if (sim->getRank()==0)
-       {
-	 sim->benchmark_timelapsed_diff(" ... addCurrentRepertoire())");
-       } 
        if (sim->getRank()==0) printf("The second execution of the parse tree begins.\n\n");
        context->execute();
      }
-     if (sim->getRank()==0)
-     {
-       sim->benchmark_timelapsed("Preparation (context->execute())");
-     } 
    /*
    }
    catch (SyntaxErrorException& e) {
@@ -368,7 +356,7 @@ bool SimInitializer::internalExecute(int argc, char** argv)
    delete partitioner;
 
 //#ifndef PROFILING
-   unlink(temporaryName);
+   unlink(gslName);
 //#endif
 
 #ifdef VERBOSE
@@ -482,4 +470,27 @@ bool SimInitializer::runSimulationAndUI(
 
 #endif // DISABLE_PTHREADS
    return true;
+}
+
+std::string SimInitializer::preprocessMGSROOT(const std::string& inputFile) {
+   std::ifstream input(inputFile);
+   std::ostringstream processed;
+   std::string line;
+   
+   char* mgsroot = getenv("MGSROOT");
+   if (!mgsroot) {
+       std::cerr << "MGSROOT environment variable not set!" << std::endl;
+       return "";
+   }
+   
+   while (std::getline(input, line)) {
+       size_t pos = 0;
+       while ((pos = line.find("<MGSROOT>", pos)) != std::string::npos) {
+           line.replace(pos, 9, mgsroot);
+           pos += strlen(mgsroot);
+       }
+       processed << line << std::endl;
+   }
+   
+   return processed.str();
 }

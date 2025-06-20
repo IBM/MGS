@@ -1,21 +1,13 @@
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
 #ifndef _NTSMacros_H
 #define _NTSMacros_H
-#// =================================================================
-#// Licensed Materials - Property of IBM
-#//
-#// "Restricted Materials of IBM"
-#//
-#// BCM-YKT-07-18-2017
-#//
-#// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-#//
-#// US Government Users Restricted Rights -
-#// Use, duplication or disclosure restricted by
-#// GSA ADP Schedule Contract with IBM Corp.
-#//
-#// =================================================================
-
-
 /// IMPORTANT: jump to USER-SELECTED section
 
 ///////////////////////////////////////////////////////////////////////
@@ -99,7 +91,7 @@
 // SIMULATION_INVOLVE macro
 //NOTE: Assign to one of this for further computation
 //   --> The value order are important here
-//       Don't change it
+//       Dont change it
 //{{{
 //#define VMONLY 1
 //#define VM_CACYTO 2
@@ -109,8 +101,8 @@
 //}}}
 //IMPORTANT: Enable one or many from this list in your cell model
 //          SIMULATE_VM must always be defined
-//          others can be enabled within the MODEL_TO_USE macro's value
-//          depending on the details of cell's model
+//          others can be enabled within the MODEL_TO_USE macros value
+//          depending on the details of cells model
 //{{{
 #define SIMULATE_VM
 //#define SIMULATE_CACYTO
@@ -328,7 +320,7 @@
 
 #define _CaLVA_DEFAULT CaLVA_HAY_2011
 //}}}
-// CaL CHANNEL_CaL macro  (designed for maximal user's defined parameters)
+// CaL CHANNEL_CaL macro  (designed for maximal users defined parameters)
 //{{{
 #define CaL_GENERAL    100
 //}}}
@@ -539,7 +531,7 @@
 ///////////////////////////////////////////////////////////////////////
 // USER-SELECTED SECTION
 // 1. to choose a model: select the proper value for MODEL_TO_USE
-// Please don't do it here, edit inside this file
+// Please dont do it here, edit inside this file
 #include "Model2Use.h"
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
@@ -579,7 +571,7 @@
 
 //}}}
 //}}}
-#elif   MODEL_TO_USE == _MSN_2005_WOLF
+#elif MODEL_TO_USE == _MSN_2005_WOLF
 //{{{
 #define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
   #define SYNAPSE_MODEL_STRATEGY USE_SYNAPTICCLEFT

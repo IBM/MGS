@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef NodeProxyBase_H
 #define NodeProxyBase_H
 #include "Copyright.h"
@@ -46,17 +39,17 @@ class NodeProxyBase : public Node
       }
 
       virtual void getInitializationParameterSet(
-	 std::unique_ptr<ParameterSet>& initPSet) const {
+	 std::unique_ptr<ParameterSet>&& initPSet) const {
 	 assert(false);
       }
 
       virtual void getInAttrParameterSet(
-	 std::unique_ptr<ParameterSet>& CG_castedPSet) const {
+	 std::unique_ptr<ParameterSet>&& CG_castedPSet) const {
 	 assert(false);
       }
 
       virtual void getOutAttrParameterSet(
-	 std::unique_ptr<ParameterSet>& CG_castedPSet) const {
+	 std::unique_ptr<ParameterSet>&& CG_castedPSet) const {
 	 assert(false);
       }
 
@@ -164,7 +157,7 @@ class NodeProxyBase : public Node
       // [begin]
       virtual TriggerableBase::EventType createTriggerableCaller(
 	 const std::string& name, NDPairList* ndpList, 
-	 std::unique_ptr<TriggerableCaller>& triggerableCaller);
+	 std::unique_ptr<TriggerableCaller>&& triggerableCaller);
       // [end]
 
       NodeDescriptor* _nodeInstanceAccessor;

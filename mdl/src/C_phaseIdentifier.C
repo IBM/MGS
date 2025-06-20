@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_phaseIdentifier.h"
 #include "C_production.h"
 #include "C_identifierList.h"
@@ -57,12 +50,12 @@ C_phaseIdentifier& C_phaseIdentifier::operator=(const C_phaseIdentifier& rv)
    return *this;
 }
 
-void C_phaseIdentifier::duplicate(std::auto_ptr<C_phaseIdentifier>& rv) const
+void C_phaseIdentifier::duplicate(std::unique_ptr<C_phaseIdentifier>&& rv) const
 {
    rv.reset(new C_phaseIdentifier(*this));
 }
 
-void C_phaseIdentifier::duplicate(std::auto_ptr<C_production>& rv) const
+void C_phaseIdentifier::duplicate(std::unique_ptr<C_production>&& rv) const
 {
    rv.reset(new C_phaseIdentifier(*this));
 }
@@ -75,8 +68,8 @@ C_phaseIdentifier::~C_phaseIdentifier()
 void C_phaseIdentifier::copyOwnedHeap(const C_phaseIdentifier& rv)
 {
    if (rv._identifierList) {
-      std::auto_ptr<C_identifierList> dup;
-      rv._identifierList->duplicate(dup);
+      std::unique_ptr<C_identifierList> dup;
+      rv._identifierList->duplicate(std::move(dup));
       _identifierList = dup.release();
    } else {
       _identifierList = 0;

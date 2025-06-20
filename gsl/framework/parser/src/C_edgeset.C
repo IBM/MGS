@@ -1,23 +1,16 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_edgeset.h"
 #include "C_edgeset_extension.h"
 #include "C_nodeset.h"
 #include "C_declarator.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "Node.h"
 #include "NodeSet.h"
 #include "NodeSetDataItem.h"
@@ -28,14 +21,14 @@
 #include "EdgeSet.h"
 #include "EdgeSetDataItem.h"
 #include "Simulation.h"
-#include "LensConnector.h"
+#include "MgsConnector.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 #include "C_production.h"
 
 #include <vector>
 
-void C_edgeset::internalExecute(LensContext *c)
+void C_edgeset::internalExecute(GslContext *c)
 {
    if (!c->sim->isEdgeRelationalDataEnabled()) {
      std::cerr << "Edge Relational Data is disabled on simulation! Enable for use of EdgeSet in specification file." << std::endl;
@@ -100,7 +93,7 @@ void C_edgeset::internalExecute(LensContext *c)
       _edgeset = new EdgeSet();
       Grid* preGrid = preNS->getGrid();
       Grid* postGrid = postNS->getGrid();
-      LensConnector lc;
+      MgsConnector lc;
       Repertoire* parent = lc.findLeastCommonRepertoire(preGrid, postGrid);
       const std::vector<GridLayerDescriptor*>& preLayers = preNS->getLayers(),
 	 postLayers = postNS->getLayers();

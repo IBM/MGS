@@ -1,4 +1,13 @@
-#include "Lens.h"
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
+#include "Mgs.h"
 #include "CaExtrusion.h"
 #include "CG_CaExtrusion.h"
 #include "rndm.h"
@@ -39,8 +48,8 @@ void CaExtrusion::update(RNG& rng) {
 }
 
 
-void CaExtrusion::setPointers(const String& CG_direction,
-                              const String& CG_component,
+void CaExtrusion::setPointers(const CustomString& CG_direction,
+                              const CustomString& CG_component,
                               NodeDescriptor* CG_node, Edge* CG_edge,
                               VariableDescriptor* CG_variable,
                               Constant* CG_constant,

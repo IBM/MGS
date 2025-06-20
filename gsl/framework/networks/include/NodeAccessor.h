@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef NODEACCESSOR_H
 #define NODEACCESSOR_H
 #include "Copyright.h"
@@ -30,7 +23,7 @@ class NodeAccessor
    public:
       virtual NodeDescriptor* getNodeDescriptor(std::vector<int> const & coords, int densityIndex) =0;
       virtual NodeDescriptor* getNodeDescriptor(int nodeIndex, int densityIndex) =0;
-      virtual void duplicate(std::unique_ptr<NodeAccessor> & r_aptr) const =0;
+      virtual void duplicate(std::unique_ptr<NodeAccessor>&& r_aptr) const =0;
       virtual int getNbrUnits() =0;
       virtual GridLayerDescriptor* getGridLayerDescriptor() =0;
       virtual std::string getModelName() =0;

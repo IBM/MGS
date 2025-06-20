@@ -1,25 +1,18 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_separation_constraint_list.h"
 #include "C_separation_constraint.h"
 #include "DataItem.h"
 #include <cassert>
 #include "SyntaxError.h"
 
-void C_separation_constraint_list::internalExecute(LensContext *c)
+void C_separation_constraint_list::internalExecute(GslContext *c)
 {
    std::vector<C_separation_constraint*>::iterator it, 
       end = _separation_constraints->end();

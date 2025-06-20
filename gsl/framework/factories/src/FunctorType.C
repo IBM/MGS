@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "FunctorType.h"
 #include "FunctorDataItem.h"
 #include "Functor.h"
@@ -45,7 +38,7 @@ FunctorType::FunctorType()
 //    return *this;
 // }
 
-void FunctorType::getInstance(std::unique_ptr<DataItem> & adi, std::vector<DataItem*> const * args, LensContext* c)
+void FunctorType::getInstance(std::unique_ptr<DataItem> & adi, std::vector<DataItem*> const * args, GslContext* c)
 {
    FunctorDataItem* fdi = new FunctorDataItem;
 
@@ -65,7 +58,7 @@ void FunctorType::getInstance(std::unique_ptr<DataItem> & adi, std::vector<DataI
 
 void FunctorType::getInstance(std::unique_ptr<DataItem> & adi, 
 			      const NDPairList& ndplist,
-			      LensContext* c)
+			      GslContext* c)
 {
    throw SyntaxErrorException(
       "Functors can not be instantiated with Name-DataItem pair lists.");

@@ -1,6 +1,15 @@
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
 #include "CG_ChannelKAf_KChIP.h"
 #include "ChannelKAf_KChIP.h"
-#include "Lens.h"
+#include "Mgs.h"
 #include "rndm.h"
 
 #include <math.h>
@@ -406,7 +415,7 @@ void ChannelKAf_KChIP::initialize_others()
 ChannelKAf_KChIP::~ChannelKAf_KChIP() {}
 
 #ifdef MICRODOMAIN_CALCIUM
-void ChannelKAf_KChIP::setCalciumMicrodomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ChannelKAf_KChIPInAttrPSet* CG_inAttrPset, CG_ChannelKAf_KChIPOutAttrPSet* CG_outAttrPset) 
+void ChannelKAf_KChIP::setCalciumMicrodomain(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ChannelKAf_KChIPInAttrPSet* CG_inAttrPset, CG_ChannelKAf_KChIPOutAttrPSet* CG_outAttrPset) 
 {
   microdomainName = CG_inAttrPset->domainName;
   int idxFound = 0;

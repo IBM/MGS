@@ -1,7 +1,16 @@
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
 #ifndef ChannelBK_H
 #define ChannelBK_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelBK.h"
 #include "rndm.h"
 
@@ -23,7 +32,7 @@ class ChannelBK : public CG_ChannelBK
       void initialize(RNG& rng);
       virtual ~ChannelBK();
 #ifdef MICRODOMAIN_CALCIUM
-      virtual void setCalciumMicrodomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ChannelBKInAttrPSet* CG_inAttrPset, CG_ChannelBKOutAttrPSet* CG_outAttrPset);
+      virtual void setCalciumMicrodomain(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ChannelBKInAttrPSet* CG_inAttrPset, CG_ChannelBKOutAttrPSet* CG_outAttrPset);
       int _offset; //the offset due to the presence of different Ca2+-microdomain
 #endif
 };

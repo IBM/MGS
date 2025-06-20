@@ -1,16 +1,25 @@
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
 %{
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
-#include "LensLexer.h"
-#include "LensParser.h"
-#include "LensParserClasses.h"
-#include "LensContext.h"
+#include "GslLexer.h"
+#include "GslParser.h"
+#include "GslParserClasses.h"
+#include "GslContext.h"
 #include "SimInitializer.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 
-#ifndef LINUX
+#if !defined(LINUX) && !defined(__APPLE__)
 #include <fptrap.h>
 #endif
 
@@ -26,12 +35,12 @@ using namespace std;
 //#define YYPARSE_PARAM parm
 //#define YYLEX_PARAM parm
 #define YYDEBUG 1
-#define CONTEXT ((LensContext *) parm)
-#define yyparse lensparse
-#define yyerror lenserror
-#define yylex   lenslex
-#define CURRENTFILE (((LensContext *) parm)->lexer)->currentFileName
-#define CURRENTLINE (((LensContext *) parm)->lexer)->lineCount
+#define CONTEXT ((GslContext *) parm)
+#define yyparse gslparse
+#define yyerror gslerror
+#define yylex   gsllex
+#define CURRENTFILE (((GslContext *) parm)->lexer)->currentFileName
+#define CURRENTLINE (((GslContext *) parm)->lexer)->lineCount
 
 // Error macros
 #define PRARGMISMATCH "possible paranthesis mismatch, use ( Argument )"
@@ -41,9 +50,9 @@ using namespace std;
 #define PRCRLMISMATCH "possible curly brackets mismatch use Declarator { GridDefinitionBody } or Declarator { GridDefinitionBody } Declarator"
 #define EXPDECLBEFCURL "expecting a declarator before {"
    
-   //void lenserror(const char *s);
-   void lenserror(YYLTYPE* llocp, void* parm, const char *s);
-   int lenslex(YYSTYPE *lvalp, YYLTYPE *locp, void *context);
+   //void gslerror(const char *s);
+   void gslerror(YYLTYPE* llocp, void* parm, const char *s);
+   int gsllex(YYSTYPE *lvalp, YYLTYPE *locp, void *context);
    inline void HIGH_LEVEL_EXECUTE(void* parm, C_production* l) {
 	 l->checkChildren();
 	 if (l->isError()) {
@@ -71,7 +80,7 @@ using namespace std;
 
 %}
 
-%pure-parser
+%define api.pure full
 %locations
 %lex-param {parm}
 %parse-param {void* parm}
@@ -415,7 +424,7 @@ parser_line: definition {
    HIGH_LEVEL_EXECUTE(parm, $1);
 }
 | error ';' {
-   LensLexer *l = ((LensContext *) parm)->lexer;
+   GslLexer *l = ((GslContext *) parm)->lexer;
 
    cerr << "Error at file:" << l->currentFileName << ", line:" 
 	<< l->lineCount<< ", " << "unexpected token: " 
@@ -424,7 +433,7 @@ parser_line: definition {
    CONTEXT->setError();
 }
 | error {
-   LensLexer *l = ((LensContext *) parm)->lexer;
+   GslLexer *l = ((GslContext *) parm)->lexer;
 
    cerr << "Error at file:" << l->currentFileName << ", line:" 
 	<< l->lineCount<< ", " << "unexpected token: " 
@@ -2941,10 +2950,10 @@ phase_mapping_list: phase_mapping {
 
 %%
 
-inline int lenslex(YYSTYPE *lvalp, YYLTYPE *locp, void *context)
+inline int gsllex(YYSTYPE *lvalp, YYLTYPE *locp, void *context)
 {
-   return ((LensContext *) context)->
-      lexer->lex(lvalp, locp, (LensContext *) context);
+   return ((GslContext *) context)->
+      lexer->lex(lvalp, locp, (GslContext *) context);
 }
 
 int main(int argc, char** argv)
@@ -2961,18 +2970,25 @@ int main(int argc, char** argv)
   MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &provided);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #endif
-  if (rank==0) {
-    std::cout << ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n"
-          << ".                                                           .\n"
-          << ".  Licensed Materials - Property of IBM                     .\n"
-          << ".                                                           .\n"
-          << ".  \"Restricted Materials of IBM\"                            .\n"
-          << ".                                                           .\n"
-          << ".  BCM-YKT-10-20-2018, Version 3.0.0                        .\n"
-          << ".                                                           .\n"
-          << ".  (C) Copyright IBM Corp. 2005-2018  All rights reserved   .\n"
-          << ".                                                           .\n"
-          << ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n";
+  if (rank==0) { 
+    std::cout  <<". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . "<<std::endl
+               <<".         __+__+_          +_____+       +___+            . "<<std::endl
+               <<".       /    ___ \\        /       \\      /  /             ."<<std::endl
+               <<".      / /  +/  __|      /  _______\\     /  /             ."<<std::endl
+               <<".     / /  /            /  /             /  /             ."<<std::endl
+               <<".    / /  /            /  \\\\             /  /             ."<<std::endl
+               <<".   / /  /              \\   \\+____       /  /             ."<<std::endl
+               <<".  / /  /    ______      \\        \\\\     |  |             ."<<std::endl
+               <<". / /  /    [_   + ]      \\_______ \\\\    /  /             ."<<std::endl
+               <<". \\ \\+|        \\  \\               \\  \\   |  |             ."<<std::endl
+               <<".  \\ \\ \\        \\  \\     _____    /  \\\\  |  |             ."<<std::endl
+               <<".   \\ \\ \\      +/  /    /     \\+ /    /  |  |             ."<<std::endl
+               <<".    \\ \\ \\    /   /      \\     +     /   |  |             ."<<std::endl
+               <<".     \\ \\ \\  /   /        \\         /    \\  \\             ."<<std::endl
+               <<".      \\  \\\\    /          \\\\ + +  /     |  \\\\__________+ ."<<std::endl
+               <<".       \\ \\\\___/________ +  \\\\____/  _+  \\\\_\\\\__________/ ."<<std::endl
+               <<".        \\____/   ________________________ \\__________/   ."<<std::endl
+               <<". . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."<<std::endl;
   }
 
    SimInitializer si;
@@ -2988,11 +3004,11 @@ int main(int argc, char** argv)
    }
 }
 
-//void lenserror(const char *s)
+//void gslerror(const char *s)
 //{
 //   fprintf(stderr,"%s\n",s);
 //}
-void lenserror(YYLTYPE* llocp, void* parm, const char *s)
+void gslerror(YYLTYPE* llocp, void* parm, const char *s)
 {
    fprintf(stderr,"%s\n",s);
 }

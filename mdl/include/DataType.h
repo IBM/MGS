@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef DataType_H
 #define DataType_H
 #include "Mdl.h"
@@ -30,7 +23,7 @@ class DataType {
    public:
       // Standard functions
       DataType();
-      virtual void duplicate(std::auto_ptr<DataType>& rv) const =0;
+      virtual void duplicate(std::unique_ptr<DataType>&& rv) const =0;
       virtual ~DataType();        
 
       // Getter & Setter functions    
@@ -263,7 +256,7 @@ class DataType {
 	 const std::string& tab) const;
 
       // This function will add this dataType to a Class as a proxy attribute.
-      virtual void addProxyAttribute(std::auto_ptr<Class>& instance) const;
+      virtual void addProxyAttribute(std::unique_ptr<Class>&& instance) const;
 
       // This function will add a method to the given class to send this
       // dataType in a distributed environment.

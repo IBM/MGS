@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "InterfaceImplementorBase.h"
 #include "Generatable.h"
 #include "MemberContainer.h"
@@ -77,20 +70,20 @@ InterfaceImplementorBase& InterfaceImplementorBase::operator=(
 }
 
 void InterfaceImplementorBase::releaseOutAttrPSet(
-   std::auto_ptr<StructType>& oap)
+   std::unique_ptr<StructType>&& oap)
 {
    oap.reset(_outAttrPSet);
    _outAttrPSet = 0;
 }
 
-void InterfaceImplementorBase::setOutAttrPSet(std::auto_ptr<StructType>& oap)
+void InterfaceImplementorBase::setOutAttrPSet(std::unique_ptr<StructType>&& oap)
 {
    delete _outAttrPSet;
    _outAttrPSet = oap.release();
 }
 
 void InterfaceImplementorBase::setInstancePhases(
-   std::auto_ptr<std::vector<Phase*> >& phases)
+   std::unique_ptr<std::vector<Phase*> >& phases)
 {
    delete _instancePhases;
    _instancePhases = phases.release();
@@ -166,14 +159,17 @@ void InterfaceImplementorBase::copyOwnedHeap(
    const InterfaceImplementorBase& rv)
 {
    if (rv._outAttrPSet) {
-      std::auto_ptr<StructType> dup;
-      rv._outAttrPSet->duplicate(dup);
+      std::unique_ptr<StructType> dup;
+      rv._outAttrPSet->duplicate(std::move(dup));
       _outAttrPSet = dup.release();
-   } else {
+   }
+   else {
       _outAttrPSet = 0;
    }
    if (_instancePhases) _instancePhases = new std::vector<Phase*>(*(rv._instancePhases));
-   else _instancePhases = 0;
+   else {
+      _instancePhases = 0;
+   }
 }
 
 void InterfaceImplementorBase::destructOwnedHeap()
@@ -188,17 +184,17 @@ std::string InterfaceImplementorBase::getModuleName() const
 }
 
 void InterfaceImplementorBase::createPSetClass(
-   std::auto_ptr<Class>& instance,
+   std::unique_ptr<Class>&& instance,
    const MemberContainer<DataType>& members,
    const std::string& name) const 
 {
    auto classType = std::make_pair(Class::PrimeType::UN_SET, Class::SubType::UN_SET);//just anything, as it is ignored
    bool use_classType=false;
-   createPSetClass(instance, members, use_classType, classType, name);
+   createPSetClass(std::move(instance), members, use_classType, classType, name);
 
 }
 void InterfaceImplementorBase::createPSetClass(
-   std::auto_ptr<Class>& instance,
+   std::unique_ptr<Class>&& instance,
    const MemberContainer<DataType>& members,
    bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType,
    const std::string& name) const 
@@ -206,9 +202,9 @@ void InterfaceImplementorBase::createPSetClass(
    std::string fullName = getCommonPSetName(name);
    instance.reset(new Class(fullName));
    
-   std::auto_ptr<BaseClass> psetBase(new BaseClass("ParameterSet"));
+   std::unique_ptr<BaseClass> psetBase(new BaseClass("ParameterSet"));
    
-   instance->addBaseClass(psetBase);
+   instance->addBaseClass(std::move(psetBase));
    instance->addHeader("\"ParameterSet.h\"");
    instance->addHeader("\"NDPair.h\"");
    instance->addHeader("\"NDPairList.h\"");
@@ -218,27 +214,26 @@ void InterfaceImplementorBase::createPSetClass(
    instance->addExtraSourceHeader("<sstream>");
    if (name.empty())
    {
-      if (use_classType)
-      {
-         instance->setClassInfo(classType);
+      if (use_classType) {
+         instance->setClassInfo(std::move(classType));
       }
    }
    instance->addAttributes(members);
 
-   std::auto_ptr<Method> setUpMethod(new Method("set", "void") );
+   std::unique_ptr<Method> setUpMethod(new Method("set", "void") );
    setUpMethod->addParameter("NDPairList& ndplist");
    setUpMethod->setVirtual();
    // setUpMethod->setAccessType(AccessType::PROTECTED);
    setUpMethod->setFunctionBody(getSetupFromNDPairListMethodBody(members));
-   instance->addMethod(setUpMethod);
+   instance->addMethod(std::move(setUpMethod));
 
    instance->addStandardMethods();
 }
 
 void InterfaceImplementorBase::generateOutAttrPSet()
 {
-   std::auto_ptr<Class> instance;
-   createPSetClass(instance, _outAttrPSet->_members, "OutAttr");
+   std::unique_ptr<Class> instance;
+   createPSetClass(std::move(instance), _outAttrPSet->_members, "OutAttr");
    _classes.push_back(instance.release());
 }
 
@@ -250,31 +245,30 @@ void InterfaceImplementorBase::generatePublisher()
 }
 void InterfaceImplementorBase::generatePublisher(bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType)
 {
-   std::auto_ptr<Class> instance(new Class(getPublisherName()));
+   std::unique_ptr<Class> instance(new Class(getPublisherName()));
    if (use_classType)
       instance->setClassInfo(classType);
    
-   std::auto_ptr<Attribute> attCup;
+   std::unique_ptr<Attribute> attCup;
 
-   std::auto_ptr<BaseClass> base(
+   std::unique_ptr<BaseClass> base(
       new BaseClass("GeneratedPublisherBase"));
    
    CustomAttribute* sim = new CustomAttribute("_sim", "Simulation");
    sim->setReference();
    attCup.reset(sim);
-   base->addAttribute(attCup);
+   base->addAttribute(std::move(attCup));
 
-   instance->addBaseClass(base);
+   instance->addBaseClass(std::move(base));
    instance->addHeader("\"GeneratedPublisherBase.h\"");
    instance->addHeader("<memory>");
    instance->addHeader("\"Simulation.h\"");
    instance->addHeader("\"Publishable.h\"");
    instance->addHeader("\"GenericService.h\"");
    instance->addHeader("\"ServiceDescriptor.h\"");
-   addInstanceServiceHeaders(instance);
-   addExtraServiceHeaders(instance);
-   if (isSupportedMachineType(MachineType::GPU))
-   {
+   addInstanceServiceHeaders(std::move(instance));
+   addExtraServiceHeaders(std::move(instance));
+   if (isSupportedMachineType(MachineType::GPU)) {
       instance->addClass(getCompCategoryBaseName());
    }
    instance->addClass(getInstanceBaseName());
@@ -293,25 +287,22 @@ void InterfaceImplementorBase::generatePublisher(bool use_classType, std::pair<C
    instance->addAttribute(attCup);
 
    if (instance->getClassInfoPrimeType() == Class::PrimeType::Constant
-      and instance->getClassInfoSubType() == Class::SubType::Publisher
-         ){ 
-      {
-         // name = "um_constant_" + <ConstantType> + "_" + datamemberName
-         MacroConditional gpuConditional(GPUCONDITIONAL);
-         MemberContainer<DataType>::const_iterator it, end = _instances.end();
-         for (it = _instances.begin(); it != end; ++it) {
-            auto member_attr_name = it->first;
-            auto dt = it->second;
-            std::string attName = PREFIX_MEMBERNAME + "constant_"+ getName()  + "_" + dt->getName();
-            std::unique_ptr<Attribute> att_cc(new CustomAttribute(attName, "extern ShallowArray_Flat<" + dt->getTypeString() + ", " + MEMORY_LOCATION + ">", AccessType::PUBLIC));
-            att_cc->setMacroConditional(gpuConditional);
-            instance->addGlobalAttribute(att_cc);
-         }
+      and instance->getClassInfoSubType() == Class::SubType::Publisher) { 
+      // name = "um_constant_" + <ConstantType> + "_" + datamemberName
+      MacroConditional gpuConditional(GPUCONDITIONAL);
+      MemberContainer<DataType>::const_iterator it, end = _instances.end();
+      for (it = _instances.begin(); it != end; ++it) {
+         auto member_attr_name = it->first;
+         auto dt = it->second;
+         std::string attName = PREFIX_MEMBERNAME + "constant_"+ getName()  + "_" + dt->getName();
+         std::unique_ptr<Attribute> att_cc(new CustomAttribute(attName, "extern ShallowArray_Flat<" + dt->getTypeString() + ", " + MEMORY_LOCATION + ">", AccessType::PUBLIC));
+         att_cc->setMacroConditional(gpuConditional);
+         instance->addGlobalAttribute(att_cc);
       }
    }
 
    // Constructor 
-   std::auto_ptr<ConstructorMethod> constructor(
+   std::unique_ptr<ConstructorMethod> constructor(
       new ConstructorMethod(getPublisherName()));
    constructor->addParameter("Simulation& sim");
    constructor->addParameter(getInstanceBaseName() + "* data");
@@ -330,18 +321,18 @@ void InterfaceImplementorBase::generatePublisher(bool use_classType, std::pair<C
       constructor->setFunctionBody(constructorFB.str());
    }
 
-   std::auto_ptr<Method> consToIns(constructor.release());
-   instance->addMethod(consToIns);
+   std::unique_ptr<Method> consToIns(constructor.release());
+   instance->addMethod(std::move(consToIns));
  
    // getServiceDescriptors method
-   std::auto_ptr<Method> getServiceDescriptorsMethod(
+   std::unique_ptr<Method> getServiceDescriptorsMethod(
       new Method("getServiceDescriptors", 
 		 "const std::vector<ServiceDescriptor>&"));
    getServiceDescriptorsMethod->setVirtual();
    getServiceDescriptorsMethod->setConst();
    getServiceDescriptorsMethod->setFunctionBody(
       TAB + "return " + SERVICEDESCRIPTORS + ";\n");
-   instance->addMethod(getServiceDescriptorsMethod);
+   instance->addMethod(std::move(getServiceDescriptorsMethod));
 
    std::ostringstream extraSourceString;
    extraSourceString
@@ -350,33 +341,33 @@ void InterfaceImplementorBase::generatePublisher(bool use_classType, std::pair<C
    instance->addExtraSourceString(extraSourceString.str());
 
    // getName method
-   std::auto_ptr<Method> getNameMethod(new Method("getName", "std::string"));
+   std::unique_ptr<Method> getNameMethod(new Method("getName", "std::string"));
    getNameMethod->setVirtual();
    getNameMethod->setConst();
    getNameMethod->setFunctionBody(
       TAB + "return \"" + getName() + "Publisher\";\n");
-   instance->addMethod(getNameMethod);
+   instance->addMethod(std::move(getNameMethod));
 
    // getDescription method
-   std::auto_ptr<Method> getDescriptionMethod(new Method("getDescription", 
+   std::unique_ptr<Method> getDescriptionMethod(new Method("getDescription", 
 							 "std::string"));
    getDescriptionMethod->setVirtual();
    getDescriptionMethod->setConst();
    getDescriptionMethod->setFunctionBody(
       TAB + "return \"\";\n");
-   instance->addMethod(getDescriptionMethod);
+   instance->addMethod(std::move(getDescriptionMethod));
 
    // add duplicate method - standard methods are not added
-   std::auto_ptr<Method> dupPublisher(new Method("duplicate", "void"));
-   dupPublisher->addParameter("std::unique_ptr<Publisher>& dup");
+   std::unique_ptr<Method> dupPublisher(new Method("duplicate", "void"));
+   dupPublisher->addParameter("std::unique_ptr<Publisher>&& dup");
    dupPublisher->setFunctionBody(
       TAB + "dup.reset(new " + getPublisherName() + "(*this));\n");
    dupPublisher->setVirtual();
    dupPublisher->setConst();
-   instance->addMethod(dupPublisher);
+   instance->addMethod(std::move(dupPublisher));
 
    // createService method
-   std::auto_ptr<Method> createServiceMethod(
+   std::unique_ptr<Method> createServiceMethod(
       new Method("createService", "Service*"));
    createServiceMethod->setVirtual();
    createServiceMethod->setAccessType(AccessType::PROTECTED);
@@ -390,10 +381,10 @@ void InterfaceImplementorBase::generatePublisher(bool use_classType, std::pair<C
       << TAB << "return rval;\n";
    createServiceMethod->setFunctionBody(
       createServiceMethodFB.str());
-   instance->addMethod(createServiceMethod);
+   instance->addMethod(std::move(createServiceMethod));
 
    // createOptionalService method
-   std::auto_ptr<Method> createOptionalServiceMethod(
+   std::unique_ptr<Method> createOptionalServiceMethod(
       new Method("createOptionalService", "Service*"));
    createOptionalServiceMethod->setVirtual();
    createOptionalServiceMethod->setAccessType(AccessType::PROTECTED);
@@ -407,10 +398,10 @@ void InterfaceImplementorBase::generatePublisher(bool use_classType, std::pair<C
       << TAB << "return rval;\n";
    createOptionalServiceMethod->setFunctionBody(
       createOptionalServiceMethodFB.str());
-   instance->addMethod(createOptionalServiceMethod);
+   instance->addMethod(std::move(createOptionalServiceMethod));
 
    // getServiceNameWithInterface method
-   std::auto_ptr<Method> getServiceNameWithInterfaceMethod(
+   std::unique_ptr<Method> getServiceNameWithInterfaceMethod(
       new Method("getServiceNameWithInterface", "std::string"));
    getServiceNameWithInterfaceMethod->setVirtual();
    getServiceNameWithInterfaceMethod->setAccessType(AccessType::PROTECTED);
@@ -419,7 +410,7 @@ void InterfaceImplementorBase::generatePublisher(bool use_classType, std::pair<C
    getServiceNameWithInterfaceMethod->addParameter(
       "const std::string& " + SUBINTERFACENAME);
    getServiceNameWithInterfaceMethod->setFunctionBody(getServiceNameCode());
-   instance->addMethod(getServiceNameWithInterfaceMethod);
+   instance->addMethod(std::move(getServiceNameWithInterfaceMethod));
 
    // Don't add the standard methods
    instance->addBasicDestructor();
@@ -434,8 +425,8 @@ std::unique_ptr<Class> InterfaceImplementorBase::generateInstanceBase()
    return generateInstanceBase(use_classType, classType);
 }
 std::unique_ptr<Class> InterfaceImplementorBase::generateInstanceBase(bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType )
-{//e.g. CG_LifeNode.h/.C  [Node or Variable or Constant]
-   std::auto_ptr<Class> instance(new Class(getInstanceBaseName()));
+{//e.g. CG_LifeNode.h/.C  [Node or Variable]
+   std::unique_ptr<Class> instance(new Class(getInstanceBaseName()));
    if (use_classType)
       instance->setClassInfo(classType);
    /* as 'publicValue' data in CG_LifeNode becomes 'um_publicValue' in CG_LifeNodeCompCategory
@@ -458,10 +449,10 @@ std::unique_ptr<Class> InterfaceImplementorBase::generateInstanceBase(bool use_c
    // Add the instances.
    if (isSupportedMachineType(MachineType::GPU))
    {
-      if (instance->getClassInfoPrimeType() != Class::PrimeType::Constant)
-      {//getCompCategory, setCompCategory --> Node
-         std::auto_ptr<Method> setCC(
-               new Method(SETCOMPCATEGORY_FUNC_NAME, "void"));
+      if (instance->getClassInfoPrimeType() != Class::PrimeType::Constant) {
+         //getCompCategory, setCompCategory --> Node
+         std::unique_ptr<Method> setCC(
+            new Method(SETCOMPCATEGORY_FUNC_NAME, "void"));
          //getPublisherMethod->setVirtual();
          std::string arg1 = "_" + REF_INDEX;
          setCC->addParameter("int " + arg1);
@@ -474,8 +465,8 @@ std::unique_ptr<Class> InterfaceImplementorBase::generateInstanceBase(bool use_c
          setCC->setInline();
          MacroConditional gpuConditional(GPUCONDITIONAL);
          setCC->setMacroConditional(gpuConditional);
-         instance->addMethod(setCC);
-         std::auto_ptr<Method> getCC(
+         instance->addMethod(std::move(setCC));
+         std::unique_ptr<Method> getCC(
                new Method(GETCOMPCATEGORY_FUNC_NAME, instance->getName() + COMPCATEGORY + "*"));
          //getPublisherMethod->setVirtual();
          std::ostringstream getCCstream;
@@ -484,98 +475,92 @@ std::unique_ptr<Class> InterfaceImplementorBase::generateInstanceBase(bool use_c
          getCC->setFunctionBody(getCCstream.str());
          getCC->setInline();
          getCC->setMacroConditional(gpuConditional);
-         instance->addMethod(getCC);
+         instance->addMethod(std::move(getCC));
       }
       instance->addAttributes(getInstances(), AccessType::PROTECTED, false, true, compcat_instance.get());
    }
-   else{
+   else {
       instance->addAttributes(getInstances(), AccessType::PROTECTED, false);
    }
 
    // Add the interface base classes, implement the get methods.
-   setupInstanceInterfaces(instance);
+   setupInstanceInterfaces(std::move(instance));
 
    // Add the extra interface base classes, and implement their get 
    // methods, used for shared variables.
-   setupExtraInterfaces(instance);
+   setupExtraInterfaces(std::move(instance));
 
    // Add the friends
    FriendDeclaration publisherFriend(getPublisherName());
    instance->addFriendDeclaration(publisherFriend);
-
-   {// getServiceName method
-   std::auto_ptr<Method> getServiceNameMethod(
-      new Method("getServiceName", "const char*"));
-   getServiceNameMethod->setVirtual();
-   getServiceNameMethod->setConst();
-   getServiceNameMethod->addParameter(PUBDATATYPE + " " + PUBDATANAME);
-   std::ostringstream getServiceNameMethodFB;
-   if (isSupportedMachineType(MachineType::GPU))
    {
+      // getServiceName method
+      std::unique_ptr<Method> getServiceNameMethod(
+         new Method("getServiceName", "const char*"));
+      getServiceNameMethod->setVirtual();
+      getServiceNameMethod->setConst();
+      getServiceNameMethod->addParameter(PUBDATATYPE + " " + PUBDATANAME);
+      std::ostringstream getServiceNameMethodFB;
+      if (isSupportedMachineType(MachineType::GPU)) {
+         getServiceNameMethodFB
+            << STR_GPU_CHECK_START
+            << getInstanceServiceNames(TAB, MachineType::GPU, instance.get())
+            << getOptionalInstanceServiceNames(TAB)
+            << getExtraServiceNames(TAB)
+            << getExtraOptionalServiceNames(TAB)
+            << "#else\n";
+      }
+      else { //leave blank
+      }
       getServiceNameMethodFB
-         << STR_GPU_CHECK_START
-         << getInstanceServiceNames(TAB, MachineType::GPU, instance.get())
+         << getInstanceServiceNames(TAB)
          << getOptionalInstanceServiceNames(TAB)
          << getExtraServiceNames(TAB)
-         << getExtraOptionalServiceNames(TAB)
-         << "#else\n";
-   }
-   else{//leave blank
-   }
-   getServiceNameMethodFB
-      << getInstanceServiceNames(TAB)
-      << getOptionalInstanceServiceNames(TAB)
-      << getExtraServiceNames(TAB)
-      << getExtraOptionalServiceNames(TAB);
-   if (isSupportedMachineType(MachineType::GPU))
-   {
+         << getExtraOptionalServiceNames(TAB);
+      if (isSupportedMachineType(MachineType::GPU)) {
+         getServiceNameMethodFB
+            << STR_GPU_CHECK_END;
+      }
+      else { //leave blank
+      }
       getServiceNameMethodFB
-         << STR_GPU_CHECK_END;
+         << TAB << "return \"Error in Service Name!\";\n";
+      getServiceNameMethod->setFunctionBody(
+         getServiceNameMethodFB.str());
+      instance->addMethod(std::move(getServiceNameMethod));
    }
-   else{//leave blank
-   }
-   getServiceNameMethodFB
-      << TAB << "return \"Error in Service Name!\";\n";
-   getServiceNameMethod->setFunctionBody(
-      getServiceNameMethodFB.str());
-   instance->addMethod(getServiceNameMethod);
-   }
-   
    {
-   // getServiceDescription method
-   std::auto_ptr<Method> getServiceDescriptionMethod(
-      new Method("getServiceDescription", "const char*"));
-   getServiceDescriptionMethod->setVirtual();
-   getServiceDescriptionMethod->setConst();
-   getServiceDescriptionMethod->addParameter(PUBDATATYPE + " " + PUBDATANAME);
-   std::ostringstream getServiceDescriptionMethodFB;
-   if (isSupportedMachineType(MachineType::GPU))
-   {
+      // getServiceDescription method
+      std::unique_ptr<Method> getServiceDescriptionMethod(
+         new Method("getServiceDescription", "const char*"));
+      getServiceDescriptionMethod->setVirtual();
+      getServiceDescriptionMethod->setConst();
+      getServiceDescriptionMethod->addParameter(PUBDATATYPE + " " + PUBDATANAME);
+      std::ostringstream getServiceDescriptionMethodFB;
+      if (isSupportedMachineType(MachineType::GPU)) {
+         getServiceDescriptionMethodFB
+            << STR_GPU_CHECK_START
+            << getInstanceServiceDescriptions(TAB, MachineType::GPU, instance.get())
+            << getOptionalInstanceServiceDescriptions(TAB)
+            << getExtraServiceDescriptions(TAB)
+            << getExtraOptionalServiceDescriptions(TAB)
+            <<  "#else\n";
+      }
       getServiceDescriptionMethodFB
-         << STR_GPU_CHECK_START
-         << getInstanceServiceDescriptions(TAB, MachineType::GPU, instance.get())
+         << getInstanceServiceDescriptions(TAB)
          << getOptionalInstanceServiceDescriptions(TAB)
          << getExtraServiceDescriptions(TAB)
-         << getExtraOptionalServiceDescriptions(TAB)
-         <<  "#else\n";
-   }
-   getServiceDescriptionMethodFB
-      << getInstanceServiceDescriptions(TAB)
-      << getOptionalInstanceServiceDescriptions(TAB)
-      << getExtraServiceDescriptions(TAB)
-      << getExtraOptionalServiceDescriptions(TAB);
-   if (isSupportedMachineType(MachineType::GPU))
-   {
-   getServiceDescriptionMethodFB
-      << STR_GPU_CHECK_END;
-   }
-   getServiceDescriptionMethodFB
-      << TAB << "return \"Error in Service Description!\";\n";
-   getServiceDescriptionMethod->setFunctionBody(
-      getServiceDescriptionMethodFB.str());
-   instance->addMethod(getServiceDescriptionMethod);
-   }
-   
+         << getExtraOptionalServiceDescriptions(TAB);
+      if (isSupportedMachineType(MachineType::GPU)) {
+      getServiceDescriptionMethodFB
+         << STR_GPU_CHECK_END;
+      }
+      getServiceDescriptionMethodFB
+         << TAB << "return \"Error in Service Description!\";\n";
+      getServiceDescriptionMethod->setFunctionBody(
+         getServiceDescriptionMethodFB.str());
+      instance->addMethod(std::move(getServiceDescriptionMethod));
+   }   
    //getPublisher()
    addGetPublisherMethod(*(instance.get()));
 
@@ -600,7 +585,7 @@ void InterfaceImplementorBase::generateInstanceProxy()
 void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType )
 {
    if (getType()=="Constant" || getType()=="Edge") return;
-   std::auto_ptr<Class> instance(new Class(getInstanceProxyName()));
+   std::unique_ptr<Class> instance(new Class(getInstanceProxyName()));
    if (use_classType)
       instance->setClassInfo(classType);
    MacroConditional mpiConditional(MPICONDITIONAL);
@@ -625,7 +610,7 @@ void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pa
    if (isSupportedMachineType(MachineType::GPU))
    {
       {
-         std::auto_ptr<Method> setCC(
+         std::unique_ptr<Method> setCC(
                new Method(SETCOMPCATEGORY_FUNC_NAME, "void"));
          //getPublisherMethod->setVirtual();
          std::string arg1 = "_" + REF_INDEX;
@@ -645,10 +630,10 @@ void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pa
          MacroConditional gpuConditional(GPUCONDITIONAL);
          gpuConditional.addExtraTest("PROXY_ALLOCATION == OPTION_3");
          setCC->setMacroConditional(gpuConditional);
-         instance->addMethod(setCC);
+         instance->addMethod(std::move(setCC));
       }
       {
-         std::auto_ptr<Method> setCC(
+         std::unique_ptr<Method> setCC(
                new Method(SETCOMPCATEGORY_FUNC_NAME, "void"));
          //getPublisherMethod->setVirtual();
          std::string arg1 = "_" + REF_INDEX;
@@ -664,10 +649,10 @@ void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pa
          MacroConditional gpuConditional(GPUCONDITIONAL);
          gpuConditional.addExtraTest("PROXY_ALLOCATION == OPTION_4");
          setCC->setMacroConditional(gpuConditional);
-         instance->addMethod(setCC);
+         instance->addMethod(std::move(setCC));
       }
       {
-         std::auto_ptr<Method> getCC(
+         std::unique_ptr<Method> getCC(
                new Method(GETCOMPCATEGORY_FUNC_NAME, getInstanceBaseName() + COMPCATEGORY + "*"));
          //getPublisherMethod->setVirtual();
          std::ostringstream getCCstream;
@@ -677,10 +662,10 @@ void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pa
          getCC->setInline();
          MacroConditional gpuConditional(GPUCONDITIONAL);
          getCC->setMacroConditional(gpuConditional);
-         instance->addMethod(getCC);
+         instance->addMethod(std::move(getCC));
       }
       {
-         std::auto_ptr<Method> getCC(
+         std::unique_ptr<Method> getCC(
                new Method(GETDEMARSHALLERINDEX_FUNC_NAME, "int"));
          //getPublisherMethod->setVirtual();
          std::ostringstream getCCstream;
@@ -691,10 +676,10 @@ void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pa
          MacroConditional gpuConditional(GPUCONDITIONAL);
          gpuConditional.addExtraTest("PROXY_ALLOCATION == OPTION_3");
          getCC->setMacroConditional(gpuConditional);
-         instance->addMethod(getCC);
+         instance->addMethod(std::move(getCC));
       }
       {
-         std::auto_ptr<Method> getCC(
+         std::unique_ptr<Method> getCC(
                new Method(GETDATA_FUNC_NAME, "int"));
          //getPublisherMethod->setVirtual();
          std::ostringstream getCCstream;
@@ -704,23 +689,22 @@ void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pa
          getCC->setInline();
          MacroConditional gpuConditional(GPUCONDITIONAL);
          getCC->setMacroConditional(gpuConditional);
-         instance->addMethod(getCC);
+         instance->addMethod(std::move(getCC));
       }
-
       instance->addAttributes(getInstances(), AccessType::PROTECTED, true, true);
    }
-   else{
+   else {
       instance->addAttributes(getInstances(), AccessType::PROTECTED, true);
    }
 
    setInterfaceImplementors();
 
    // Add the interface base classes, implement the get methods.
-   setupProxyInterfaces(instance);
+   setupProxyInterfaces(std::move(instance));
 
    // Add the extra interface base classes, and implement their get 
    // methods, used for shared variables.
-   setupExtraInterfaces(instance);
+   setupExtraInterfaces(std::move(instance));
 
    // Add the friends
    FriendDeclaration publisherFriend(getPublisherName());
@@ -731,7 +715,7 @@ void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pa
       std::vector<Phase*>::iterator pend =  _instancePhases->end();
       for (piter = pbegin; piter != pend; ++piter) {
          if ((*piter)->hasPackedVariables()) {
-            std::auto_ptr<Method> demarshaller(
+            std::unique_ptr<Method> demarshaller(
    		    new Method(PREFIX+"recv_"+(*piter)->getName()+"_demarshaller", "void"));
             demarshaller->setAccessType(AccessType::PUBLIC);
             demarshaller->setMacroConditional(mpiConditional);
@@ -742,23 +726,23 @@ void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pa
    		 << (*piter)->getName() << "();\n"
    		 << TAB << "ap.reset(di);\n"; 
             demarshaller->setFunctionBody(funBody.str());
-            instance->addMethod(demarshaller);
+            instance->addMethod(std::move(demarshaller));
          }
       }
    }
 
-   std::auto_ptr<Method> initializeProxyDemarshaller(
-      new Method(PREFIX + "recv_FLUSH_LENS_demarshaller", "void"));
+   std::unique_ptr<Method> initializeProxyDemarshaller(
+      new Method(PREFIX + "recv_FLUSH_MGS_demarshaller", "void"));
    initializeProxyDemarshaller->setAccessType(AccessType::PUBLIC);
    initializeProxyDemarshaller->setMacroConditional(mpiConditional); 
    initializeProxyDemarshaller->addParameter("std::unique_ptr<" + getInstanceProxyDemarshallerName() + "> &ap");
    initializeProxyDemarshaller->setStatic();
    std::ostringstream funBody;
-   funBody << TAB << "PhaseDemarshaller_FLUSH_LENS *di = new PhaseDemarshaller_FLUSH_LENS();\n"
+   funBody << TAB << "PhaseDemarshaller_FLUSH_MGS *di = new PhaseDemarshaller_FLUSH_MGS();\n"
 	   << TAB << "ap.reset(di);\n"; 
 
    initializeProxyDemarshaller->setFunctionBody(funBody.str());
-   instance->addMethod(initializeProxyDemarshaller);
+   instance->addMethod(std::move(initializeProxyDemarshaller));
   
    addExtraInstanceProxyMethods(*(instance.get()));
    instance->addStandardMethods();
@@ -766,52 +750,52 @@ void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pa
    // Demarshaller classes
 
    //**** Proxy specific DemarshallerInstance base
-   std::auto_ptr<Class> demarshallerInstanceBase(new Class(getInstanceProxyDemarshallerName())); 
+   std::unique_ptr<Class> demarshallerInstanceBase(new Class(getInstanceProxyDemarshallerName())); 
    demarshallerInstanceBase->setAlternateFileName(getInstanceProxyName() + "Demarshaller");
    demarshallerInstanceBase->setMacroConditional(mpiConditional);
    demarshallerInstanceBase->addClass(getInstanceProxyName());
    demarshallerInstanceBase->addHeader("\"" + getInstanceProxyDemarshallerName() + ".h\"");
    demarshallerInstanceBase->addHeader("\"StructDemarshallerBase.h\"");
-   std::auto_ptr<BaseClass> demarshallerBaseBase(new BaseClass("StructDemarshallerBase"));
-   demarshallerInstanceBase->addBaseClass(demarshallerBaseBase);
+   std::unique_ptr<BaseClass> demarshallerBaseBase(new BaseClass("StructDemarshallerBase"));
+   demarshallerInstanceBase->addBaseClass(std::move(demarshallerBaseBase));
 
    // Constructors
-   std::auto_ptr<ConstructorMethod> baseConstructor1(new ConstructorMethod(getInstanceProxyDemarshallerName()));
-   std::auto_ptr<ConstructorMethod> baseConstructor2(new ConstructorMethod(getInstanceProxyDemarshallerName()));
+   std::unique_ptr<ConstructorMethod> baseConstructor1(new ConstructorMethod(getInstanceProxyDemarshallerName()));
+   std::unique_ptr<ConstructorMethod> baseConstructor2(new ConstructorMethod(getInstanceProxyDemarshallerName()));
    baseConstructor1->setInitializationStr("_proxy(0)");
    baseConstructor2->addParameter(getInstanceProxyName() + "* p");
    baseConstructor2->setInitializationStr("_proxy(p)");
-   std::auto_ptr<Method> baseConsToIns1(baseConstructor1.release());
-   std::auto_ptr<Method> baseConsToIns2(baseConstructor2.release());
+   std::unique_ptr<Method> baseConsToIns1(baseConstructor1.release());
+   std::unique_ptr<Method> baseConsToIns2(baseConstructor2.release());
    baseConsToIns1->setInline();
    baseConsToIns2->setInline();
-   demarshallerInstanceBase->addMethod(baseConsToIns1);
-   demarshallerInstanceBase->addMethod(baseConsToIns2);
+   demarshallerInstanceBase->addMethod(std::move(baseConsToIns1));
+   demarshallerInstanceBase->addMethod(std::move(baseConsToIns2));
 
    // setDestinationBase Method
-   std::auto_ptr<Method> setDestinationBaseMethod(new Method("setDestination", "void"));
+   std::unique_ptr<Method> setDestinationBaseMethod(new Method("setDestination", "void"));
    setDestinationBaseMethod->setInline();
    setDestinationBaseMethod->setPureVirtual();
    setDestinationBaseMethod->addParameter(getInstanceProxyName()+" *proxy");
-   demarshallerInstanceBase->addMethod(setDestinationBaseMethod);
+   demarshallerInstanceBase->addMethod(std::move(setDestinationBaseMethod));
 
    // proxyDestination attribute
    CustomAttribute* proxyDestination = new CustomAttribute("_proxy", getInstanceProxyName(), AccessType::PROTECTED);
    proxyDestination->setPointer();   
-   std::auto_ptr<Attribute> proxyDestinationAp(proxyDestination);
+   std::unique_ptr<Attribute> proxyDestinationAp(proxyDestination);
    demarshallerInstanceBase->addAttribute(proxyDestinationAp);
 
    demarshallerInstanceBase->addBasicInlineDestructor();
 
    //**** member  initialize demarshaller classes
-   std::auto_ptr<Class> demarshallerInstance(new Class("PhaseDemarshaller_FLUSH_LENS")); 
+   std::unique_ptr<Class> demarshallerInstance(new Class("PhaseDemarshaller_FLUSH_MGS")); 
    std::string baseName = getInstanceProxyDemarshallerName();
-   std::auto_ptr<BaseClass> demarshallerBase(new BaseClass(baseName));
-   demarshallerInstance->addBaseClass(demarshallerBase);
+   std::unique_ptr<BaseClass> demarshallerBase(new BaseClass(baseName));
+   demarshallerInstance->addBaseClass(std::move(demarshallerBase));
 
    // Constructors
-   std::auto_ptr<ConstructorMethod> constructor1(new ConstructorMethod("PhaseDemarshaller_FLUSH_LENS"));
-   std::auto_ptr<ConstructorMethod> constructor2(new ConstructorMethod("PhaseDemarshaller_FLUSH_LENS"));
+   std::unique_ptr<ConstructorMethod> constructor1(new ConstructorMethod("PhaseDemarshaller_FLUSH_MGS"));
+   std::unique_ptr<ConstructorMethod> constructor2(new ConstructorMethod("PhaseDemarshaller_FLUSH_MGS"));
 
    std::list<const DataType*> allVars;
    std::vector<Phase*>::iterator phaseIter, phaseEnd;
@@ -907,15 +891,15 @@ void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pa
       {
          setDestinationMethodFB << TAB << STR_GPU_CHECK_END;
       }
-
-      if (isSupportedMachineType(MachineType::GPU) and (*it)->isArray())
-      {//for Proxy of a Node & array data
+      if (isSupportedMachineType(MachineType::GPU) and (*it)->isArray()) {
+      //for Proxy of a Node & array data
          {
             //non-GPU support 
             CustomAttribute* demarshaller;
-            if ((*it)->isTemplateDemarshalled()) 
+            if ((*it)->isTemplateDemarshalled()) {
                demarshaller = new CustomAttribute(varName + "Demarshaller", 
                      "DemarshallerInstance< " + varDesc + " >", AccessType::PRIVATE);
+            }
             else {
                demarshaller = new CustomAttribute(varName + "Demarshaller",
                      "CG_" + varDesc + "Demarshaller", AccessType::PRIVATE);
@@ -947,9 +931,10 @@ void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pa
             type = type.replace(start+1, last-start-1, element_datatype + ", " + MEMORY_LOCATION);
             varDesc = type;
             CustomAttribute* demarshaller;
-            if ((*it)->isTemplateDemarshalled()) 
+            if ((*it)->isTemplateDemarshalled()) {
                demarshaller = new CustomAttribute(varName + "Demarshaller", 
                      "DemarshallerInstance< " + varDesc + " >", AccessType::PRIVATE);
+            }
             else {
                demarshaller = new CustomAttribute(varName + "Demarshaller",
                      "CG_" + varDesc + "Demarshaller", AccessType::PRIVATE);
@@ -965,11 +950,13 @@ void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pa
             demarshallerAp->setMacroConditional(gpuConditional);
             demarshallerInstance->addAttribute(demarshallerAp);
          }
-      }else{
+      }
+      else {
          CustomAttribute* demarshaller;
-         if ((*it)->isTemplateDemarshalled()) 
+         if ((*it)->isTemplateDemarshalled()) {
             demarshaller = new CustomAttribute(varName + "Demarshaller", 
                   "DemarshallerInstance< " + varDesc + " >", AccessType::PRIVATE);
+         }
          else {
             demarshaller = new CustomAttribute(varName + "Demarshaller",
                   "CG_" + varDesc + "Demarshaller", AccessType::PRIVATE);
@@ -980,11 +967,10 @@ void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pa
                instance->addHeader("\"CG_" + (*stypeIter) + "Demarshaller.h\"");
             }	
          }
-         std::auto_ptr<Attribute> demarshallerAp(demarshaller);
+         std::unique_ptr<Attribute> demarshallerAp(demarshaller);
          demarshallerInstance->addAttribute(demarshallerAp);
       }
-      if (isSupportedMachineType(MachineType::GPU))
-      {
+      if (isSupportedMachineType(MachineType::GPU)) {
          initString2 << "\n" << STR_GPU_CHECK_END;
       }
    }   
@@ -1002,35 +988,35 @@ void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pa
    if (! isSupportedMachineType(MachineType::GPU))
       constructor2->setInline();
 
-   std::auto_ptr<Method> consToIns1(constructor1.release());
-   std::auto_ptr<Method> consToIns2(constructor2.release());
-   demarshallerInstance->addMethod(consToIns1);
-   demarshallerInstance->addMethod(consToIns2);
+   std::unique_ptr<Method> consToIns1(constructor1.release());
+   std::unique_ptr<Method> consToIns2(constructor2.release());
+   demarshallerInstance->addMethod(std::move(consToIns1));
+   demarshallerInstance->addMethod(std::move(consToIns2));
    
-   std::auto_ptr<Method> setDestinationMethod(new Method("setDestination", "void"));
+   std::unique_ptr<Method> setDestinationMethod(new Method("setDestination", "void"));
    if (! isSupportedMachineType(MachineType::GPU))
       setDestinationMethod->setInline();
    setDestinationMethod->addParameter(getInstanceProxyName()+" *proxy");
    setDestinationMethod->setFunctionBody(setDestinationMethodFB.str());
-   demarshallerInstance->addMethod(setDestinationMethod);
+   demarshallerInstance->addMethod(std::move(setDestinationMethod));
 
    demarshallerInstance->addBasicInlineDestructor();
 
-   instance->addMemberClass(demarshallerInstance, AccessType::PRIVATE);
+   instance->addMemberClass(std::move(demarshallerInstance), AccessType::PRIVATE);
 
    //**** Phase specific member demarshaller classes
    if (_instancePhases) {   // added by Jizhu Lu on 06/30/2006 to fix a bug of "segmentation fault"
       for (phaseIter = _instancePhases->begin(); phaseIter != phaseEnd; ++phaseIter) {
         if ((*phaseIter)->hasPackedVariables()) {
           std::string phaseName = (*phaseIter)->getName();
-          std::auto_ptr<Class> demarshallerInstance(new Class("PhaseDemarshaller_" + phaseName)); 
+          std::unique_ptr<Class> demarshallerInstance(new Class("PhaseDemarshaller_" + phaseName)); 
           std::string baseName = getInstanceProxyDemarshallerName();
-          std::auto_ptr<BaseClass> demarshallerBase(new BaseClass(baseName));
-          demarshallerInstance->addBaseClass(demarshallerBase);
+          std::unique_ptr<BaseClass> demarshallerBase(new BaseClass(baseName));
+          demarshallerInstance->addBaseClass(std::move(demarshallerBase));
    
           // Constructors
-          std::auto_ptr<ConstructorMethod> constructor1(new ConstructorMethod("PhaseDemarshaller_" + phaseName));
-          std::auto_ptr<ConstructorMethod> constructor2(new ConstructorMethod("PhaseDemarshaller_" + phaseName));
+          std::unique_ptr<ConstructorMethod> constructor1(new ConstructorMethod("PhaseDemarshaller_" + phaseName));
+          std::unique_ptr<ConstructorMethod> constructor2(new ConstructorMethod("PhaseDemarshaller_" + phaseName));
    
           std::vector<const DataType*> vars = (*phaseIter)->getPackedVariables();
    
@@ -1070,12 +1056,11 @@ void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pa
                 supplement_initString2 += "#else\n";
                 initString2 << supplement_initString2 ;
              }
-   	     initString2<<", ";
-   	     constructorFB << TAB << TAB << TAB << "_demarshallers.push_back(&" << varName << "Demarshaller);\n";
-   	     initString1 << varName << "Demarshaller()";
-   	     initString2 << varName << "Demarshaller(&(proxy->" << varName <<"))";
-             if (isSupportedMachineType(MachineType::GPU))
-             {
+   	      initString2<<", ";
+   	      constructorFB << TAB << TAB << TAB << "_demarshallers.push_back(&" << varName << "Demarshaller);\n";
+   	      initString1 << varName << "Demarshaller()";
+   	      initString2 << varName << "Demarshaller(&(proxy->" << varName <<"))";
+            if (isSupportedMachineType(MachineType::GPU)) {
                 setDestinationMethodFB << TAB << STR_GPU_CHECK_START;
                 setDestinationMethodFB << TAB << "#if PROXY_ALLOCATION == OPTION_3\n";
                 //publicValueDemarshaller.setDestination(&(_proxy->_container->um_publicValue[_proxy->index]));
@@ -1092,73 +1077,78 @@ void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pa
                 setDestinationMethodFB << TAB << "#endif\n";
 
                 setDestinationMethodFB << TAB << "#else\n";
-             }
-   	     setDestinationMethodFB << indent_body << varName << "Demarshaller.setDestination(&(_proxy->" << varName << "));\n";
+            }
+   	      setDestinationMethodFB << indent_body << varName << "Demarshaller.setDestination(&(_proxy->" << varName << "));\n";
    
-             if (isSupportedMachineType(MachineType::GPU))
-             {
+            if (isSupportedMachineType(MachineType::GPU)) {
                 setDestinationMethodFB << TAB << STR_GPU_CHECK_END;
-             }
+            }
 
-             if (isSupportedMachineType(MachineType::GPU) and (*varsIter)->isArray())
-             {//for Proxy of a Node & array data in PhaseDemarshaller_<phase>
-                {
-                   //non-GPU support
-                   CustomAttribute* demarshaller;
-                   if ((*varsIter)->isTemplateDemarshalled()) demarshaller = new CustomAttribute(varName + "Demarshaller", 
-                         "DemarshallerInstance< " + varDesc + " >", AccessType::PRIVATE);
-                   else demarshaller = new CustomAttribute(varName + "Demarshaller",
-                         "CG_" + varDesc + "Demarshaller", AccessType::PRIVATE);
+            if (isSupportedMachineType(MachineType::GPU) and (*varsIter)->isArray()) {
+               //for Proxy of a Node & array data in PhaseDemarshaller_<phase>
+               {
+               //non-GPU support
+                  CustomAttribute* demarshaller;
+                  if ((*varsIter)->isTemplateDemarshalled()) {
+                     demarshaller = new CustomAttribute(varName + "Demarshaller", 
+                        "DemarshallerInstance< " + varDesc + " >", AccessType::PRIVATE);
+                  }
+                  else {
+                     demarshaller = new CustomAttribute(varName + "Demarshaller",
+                        "CG_" + varDesc + "Demarshaller", AccessType::PRIVATE);
+                  }
+                  std::unique_ptr<Attribute> demarshallerAp(demarshaller);
+                  MacroConditional gpuConditional(GPUCONDITIONAL);
+                  gpuConditional.setNegateCondition();
+                  demarshallerAp->setMacroConditional(gpuConditional);
+                  demarshallerInstance->addAttribute(demarshallerAp);
+               }
+               {
+                  //CPU-GPU support
+                  // convert ShallowArray< double >* 
+                  // into 
+                  // ShallowArray_Flat< double, Array_Flat<int>::MemLocation::UNIFIED_MEM>*
+                  std::string  type = (*varsIter)->getDescriptor(); 
+                  std::string from = "ShallowArray<";
+                  std::string to = "ShallowArray_Flat<";
+                  type = type.replace(type.find(from),from.length(),to);
+                  std::size_t start = type.find_first_of("<");
+                  std::size_t last = type.find_first_of(">");
+                  std::string element_datatype = type.substr(start+1, last-start-1);
+                  type = type.replace(start+1, last-start-1, element_datatype + ", " + MEMORY_LOCATION);
+                  varDesc = type;
+                  CustomAttribute* demarshaller;
+                  if ((*varsIter)->isTemplateDemarshalled()) demarshaller = new CustomAttribute(varName + "Demarshaller", 
+                        "DemarshallerInstance< " + varDesc + " >", AccessType::PRIVATE);
+                  else demarshaller = new CustomAttribute(varName + "Demarshaller",
+                        "CG_" + varDesc + "Demarshaller", AccessType::PRIVATE);
 
-                   std::auto_ptr<Attribute> demarshallerAp(demarshaller);
-                   MacroConditional gpuConditional(GPUCONDITIONAL);
-                   gpuConditional.setNegateCondition();
-                   demarshallerAp->setMacroConditional(gpuConditional);
-                   demarshallerInstance->addAttribute(demarshallerAp);
-                }
-                {
-                   //CPU-GPU support
-                   // convert ShallowArray< double >* 
-                   // into 
-                   // ShallowArray_Flat< double, Array_Flat<int>::MemLocation::UNIFIED_MEM>*
-                   std::string  type = (*varsIter)->getDescriptor(); 
-                   std::string from = "ShallowArray<";
-                   std::string to = "ShallowArray_Flat<";
-                   type = type.replace(type.find(from),from.length(),to);
-                   std::size_t start = type.find_first_of("<");
-                   std::size_t last = type.find_first_of(">");
-                   std::string element_datatype = type.substr(start+1, last-start-1);
-                   type = type.replace(start+1, last-start-1, element_datatype + ", " + MEMORY_LOCATION);
-                   varDesc = type;
-                   CustomAttribute* demarshaller;
-                   if ((*varsIter)->isTemplateDemarshalled()) demarshaller = new CustomAttribute(varName + "Demarshaller", 
-                         "DemarshallerInstance< " + varDesc + " >", AccessType::PRIVATE);
-                   else demarshaller = new CustomAttribute(varName + "Demarshaller",
-                         "CG_" + varDesc + "Demarshaller", AccessType::PRIVATE);
-
-                   std::auto_ptr<Attribute> demarshallerAp(demarshaller);
-                   MacroConditional gpuConditional(GPUCONDITIONAL);
-                   demarshallerAp->setMacroConditional(gpuConditional);
-                   demarshallerInstance->addAttribute(demarshallerAp);
-                }
-             }else{
-                CustomAttribute* demarshaller;
-                if ((*varsIter)->isTemplateDemarshalled()) demarshaller = new CustomAttribute(varName + "Demarshaller", 
-                      "DemarshallerInstance< " + varDesc + " >", AccessType::PRIVATE);
-                else demarshaller = new CustomAttribute(varName + "Demarshaller",
-                      "CG_" + varDesc + "Demarshaller", AccessType::PRIVATE);
-
-                std::auto_ptr<Attribute> demarshallerAp(demarshaller);
-                demarshallerInstance->addAttribute(demarshallerAp);
-             }
+                  std::unique_ptr<Attribute> demarshallerAp(demarshaller);
+                  MacroConditional gpuConditional(GPUCONDITIONAL);
+                  demarshallerAp->setMacroConditional(gpuConditional);
+                  demarshallerInstance->addAttribute(demarshallerAp);
+               }
+            }
+            else {
+               CustomAttribute* demarshaller;
+               if ((*varsIter)->isTemplateDemarshalled()) {
+                  demarshaller = new CustomAttribute(varName + "Demarshaller", 
+                     "DemarshallerInstance< " + varDesc + " >", AccessType::PRIVATE);
+               }
+               else {
+                  demarshaller = new CustomAttribute(varName + "Demarshaller",
+                     "CG_" + varDesc + "Demarshaller", AccessType::PRIVATE);
+               }
+               std::unique_ptr<Attribute> demarshallerAp(demarshaller);
+               demarshallerInstance->addAttribute(demarshallerAp);
+            }
    
    	     //if (++varsIter != varsEnd) {
    	     //   initString1 << ", ";
    	     //   initString2 << ", ";
    	     //}
              ++varsIter;
-             if (isSupportedMachineType(MachineType::GPU))
-             {
+             if (isSupportedMachineType(MachineType::GPU)) {
                 initString2 << "\n" << STR_GPU_CHECK_END;
              }
           }
@@ -1173,22 +1163,22 @@ void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pa
           if (! isSupportedMachineType(MachineType::GPU))
              constructor2->setInline();
    
-          std::auto_ptr<Method> consToIns1(constructor1.release());
-          std::auto_ptr<Method> consToIns2(constructor2.release());
-          demarshallerInstance->addMethod(consToIns1);
-          demarshallerInstance->addMethod(consToIns2);
+          std::unique_ptr<Method> consToIns1(constructor1.release());
+          std::unique_ptr<Method> consToIns2(constructor2.release());
+          demarshallerInstance->addMethod(std::move(consToIns1));
+          demarshallerInstance->addMethod(std::move(consToIns2));
       
-          std::auto_ptr<Method> setDestinationMethod(new Method("setDestination", "void"));
+          std::unique_ptr<Method> setDestinationMethod(new Method("setDestination", "void"));
           //TUAN TODO: add the subclass's body call from the source file
           //as right now, if not set inline then there is no body 
           if (! isSupportedMachineType(MachineType::GPU))
              setDestinationMethod->setInline();
           setDestinationMethod->addParameter(getInstanceProxyName()+" *proxy");
           setDestinationMethod->setFunctionBody(setDestinationMethodFB.str());
-          demarshallerInstance->addMethod(setDestinationMethod);
+          demarshallerInstance->addMethod(std::move(setDestinationMethod));
    
           demarshallerInstance->addBasicInlineDestructor();
-          instance->addMemberClass(demarshallerInstance, AccessType::PRIVATE);
+          instance->addMemberClass(std::move(demarshallerInstance), AccessType::PRIVATE);
         }
       }
    }
@@ -1200,26 +1190,26 @@ void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pa
 }
 
 void InterfaceImplementorBase::addInstanceServiceHeaders(
-   std::auto_ptr<Class>& instance) const
+   std::unique_ptr<Class>&& instance) const
 {
    instance->addDataTypeHeaders(_instances);
 }
 
 void InterfaceImplementorBase::addOptionalInstanceServiceHeaders(
-   std::auto_ptr<Class>& instance) const
+   std::unique_ptr<Class>&& instance) const
 {
    instance->addDataTypeHeaders(_optionalInstanceServices);
 }
 
 // will be implemented in derived classes.
 void InterfaceImplementorBase::addExtraServiceHeaders(
-   std::auto_ptr<Class>& instance) const
+   std::unique_ptr<Class>&& instance) const
 {
 }
 
 // will be implemented in derived classes.
 void InterfaceImplementorBase::addExtraOptionalServiceHeaders(
-   std::auto_ptr<Class>& instance) const
+   std::unique_ptr<Class>&& instance) const
 {
 }
 
@@ -1397,18 +1387,18 @@ std::string InterfaceImplementorBase::createServiceNames(
    MachineType mach_type, Class* instance) const
 {
    std::ostringstream os;
-   if (mach_type == MachineType::CPU)
-   {
+   if (mach_type == MachineType::CPU) {
       MemberContainer<DataType>::const_iterator it, end = members.end();
       for (it = members.begin(); it != end; ++it) {
          os << (*it).second->getServiceNameString(tab);
       }
    }
-   else if (mach_type == MachineType::GPU)
-   {
-      MemberContainer<DataType>::const_iterator it, end = members.end();
-      for (it = members.begin(); it != end; ++it) {
-         os << (*it).second->getServiceNameString(tab, mach_type, instance);
+   else {
+      if (mach_type == MachineType::GPU) {
+         MemberContainer<DataType>::const_iterator it, end = members.end();
+         for (it = members.begin(); it != end; ++it) {
+            os << (*it).second->getServiceNameString(tab, mach_type, instance);
+         }
       }
    }
    return os.str();
@@ -1479,16 +1469,16 @@ std::string InterfaceImplementorBase::createOptionalServiceDescriptions(
 
 
 void InterfaceImplementorBase::setupInstanceInterfaces(
-   std::auto_ptr<Class>& instance)
+   std::unique_ptr<Class>&& instance)
 {
-   std::auto_ptr<BaseClass> baseClass;
+   std::unique_ptr<BaseClass> baseClass;
    MemberContainer<MemberToInterface>::iterator it, 
       end = _interfaces.end();
    std::string baseName;
    for (it = _interfaces.begin(); it != end; ++it) {
       baseName = it->second->getInterface()->getName();
       baseClass.reset(new BaseClass(baseName));
-      instance->addBaseClass(baseClass);
+      instance->addBaseClass(std::move(baseClass));
       instance->addHeader("\"" + baseName + ".h\"");
       // add the accessor methods for interfaces
       it->second->setupAccessorMethods(*instance.get());
@@ -1496,16 +1486,16 @@ void InterfaceImplementorBase::setupInstanceInterfaces(
 }
 
 void InterfaceImplementorBase::setupProxyInterfaces(
-   std::auto_ptr<Class>& instance)
+   std::unique_ptr<Class>&& instance)
 {
-   std::auto_ptr<BaseClass> baseClass;
+   std::unique_ptr<BaseClass> baseClass;
    MemberContainer<MemberToInterface>::iterator it, 
       end = _interfaces.end();
    std::string baseName;
    for (it = _interfaces.begin(); it != end; ++it) {
       baseName = it->second->getInterface()->getName();
       baseClass.reset(new BaseClass(baseName));
-      instance->addBaseClass(baseClass);
+      instance->addBaseClass(std::move(baseClass));
       instance->addHeader("\"" + baseName + ".h\"");
       // add the accessor methods for interfaces
       it->second->setupProxyAccessorMethods(*instance.get());
@@ -1537,7 +1527,8 @@ std::string InterfaceImplementorBase::getAddConnectionFunctionBody(
          connectionAdd = "Pre";
          psetName = INATTRPSETNAME;
          psetType = getInAttrPSetName();
-      } else { // Connection::_POST
+      }
+      else { // Connection::_POST
          connectionAdd = "Post";
          psetName = OUTATTRPSETNAME;
          psetType = getOutAttrPSetName();
@@ -1551,12 +1542,13 @@ std::string InterfaceImplementorBase::getAddConnectionFunctionBody(
       //if (connectionAdd == "PreNode" )
       //   os << TAB << "assert(noPredicateMatch || matchPredicateAndCast);\n";
    }
-   else{
+   else {
       if (directionType == Connection::_PRE) {
          connectionAdd = "Pre";
          psetName = INATTRPSETNAME;
          psetType = getInAttrPSetName();
-      } else { // Connection::_POST
+      }
+      else { // Connection::_POST
          connectionAdd = "Post";
          psetName = OUTATTRPSETNAME;
          psetType = getOutAttrPSetName();
@@ -1632,7 +1624,7 @@ std::string InterfaceImplementorBase::getServiceNameCode() const
 
 void InterfaceImplementorBase::addMappingToInterface(
    const std::string& interfaceName, const std::string& interfaceMemberName, 
-   std::auto_ptr<DataType>& dtToInsert, bool ampersand) 
+   std::unique_ptr<DataType>&& dtToInsert, bool ampersand) 
 {
    MemberToInterface* curMti;
    try {
@@ -1644,7 +1636,7 @@ void InterfaceImplementorBase::addMappingToInterface(
       throw;
    }
    try {
-      curMti->addMapping(interfaceMemberName, dtToInsert, ampersand);
+      curMti->addMapping(interfaceMemberName, std::move(dtToInsert), ampersand);
    } catch(GeneralException& e) {
       std::cerr << "In " << getName() << e.getError() << std::endl;
       e.setError("");
@@ -1659,17 +1651,20 @@ void InterfaceImplementorBase::checkInstanceVariableNameSpace(
       std::ostringstream os;
       os << name + " is already included as an instance variable.";
       throw SyntaxErrorException(os.str()); 
-   } else if (_optionalInstanceServices.exists(name)) {
-      std::ostringstream os;
-      os << name + " is already included as an optional service.";
-      throw SyntaxErrorException(os.str()); 
+   } 
+   else {
+      if (_optionalInstanceServices.exists(name)) {
+         std::ostringstream os;
+         os << name + " is already included as an optional service.";
+         throw SyntaxErrorException(os.str()); 
+      }
    }
 }
 
 void InterfaceImplementorBase::addGetPublisherMethod(Class& instance) const
 {
    // getPublisher method
-   std::auto_ptr<Method> getPublisherMethod(
+   std::unique_ptr<Method> getPublisherMethod(
       new Method("getPublisher", "Publisher*"));
    getPublisherMethod->setVirtual();
    std::ostringstream getPublisherFB;
@@ -1680,7 +1675,7 @@ void InterfaceImplementorBase::addGetPublisherMethod(Class& instance) const
       << TAB << "}\n"
       << TAB << "return _publisher;\n";
    getPublisherMethod->setFunctionBody(getPublisherFB.str());
-   instance.addMethod(getPublisherMethod);
+   instance.addMethod(std::move(getPublisherMethod));
 }
 
 void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
@@ -1697,7 +1692,7 @@ void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
       std::vector<Phase*>::iterator pend =  _instancePhases->end();
       for (piter = pbegin; piter != pend; ++piter) {
          if ((*piter)->hasPackedVariables()) {
-            std::auto_ptr<Method> sender(
+            std::unique_ptr<Method> sender(
                new Method(PREFIX+"send_"+(*piter)->getName(), "void"));
             sender->setAccessType(AccessType::PROTECTED);
             //sender->setInline();
@@ -1714,9 +1709,7 @@ void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
                if ((typeMarshallerIter=typeMarshaller.find((*pviter)->getDescriptor())) == typeMarshaller.end()) {
                   miSN = typeSN++;
                   typeMarshaller[(*pviter)->getDescriptor()] = miSN;
-                  
-                  if ((*pviter)->isArray())
-                  {
+                  if ((*pviter)->isArray()) {
                      //to support new CPU-GPU design
                      //create 2 declarations [one used in HAVE_GPU and one is not]
                      funBody << STR_GPU_CHECK_START;
@@ -1735,36 +1728,44 @@ void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
                         funBody 
                            //<< TAB << TAB 
                            << TAB;
-                        if ((*pviter)->isTemplateMarshalled())
+                        if ((*pviter)->isTemplateMarshalled()) {
                            funBody << "MarshallerInstance<" << type << " > mi" << miSN << ";\n";
-                        else
+                        }
+                        else {
                            funBody << "CG_" << type << "MarshallerInstance mi" << miSN <<";\n";
+                        }
                      }
                      funBody << "#else\n";
                      {
                         funBody 
                            //<< TAB << TAB 
                            << TAB;
-                        if ((*pviter)->isTemplateMarshalled())
+                        if ((*pviter)->isTemplateMarshalled()) {
                            funBody << "MarshallerInstance<" << (*pviter)->getDescriptor() << " > mi" << miSN << ";\n";
-                        else
+                        }
+                        else {
                            funBody << "CG_" << (*pviter)->getDescriptor() << "MarshallerInstance mi" << miSN <<";\n";
+                        }
                      }
                      funBody << STR_GPU_CHECK_END;
 
                   }
-                  else{
+                  else {
                      //traditional design
                      funBody 
                         //<< TAB << TAB 
                         << TAB;
-                     if ((*pviter)->isTemplateMarshalled())
+                     if ((*pviter)->isTemplateMarshalled()) {
                         funBody << "MarshallerInstance<" << (*pviter)->getDescriptor() << " > mi" << miSN << ";\n";
-                     else
+                     }
+                     else {
                         funBody << "CG_" << (*pviter)->getDescriptor() << "MarshallerInstance mi" << miSN <<";\n";
+                     }
                   }
-               } else
-                  miSN = (*typeMarshallerIter).second;
+               }
+               else {
+                  miSN = (*typeMarshallerIter).second;                  
+               }
                funBody 
                   //<< TAB << TAB 
                   << STR_GPU_CHECK_START
@@ -1777,16 +1778,16 @@ void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
                funBody 
                   //<< TAB << TAB 
                   << TAB << "mi" << miSN << ".marshall(stream, ";
-	       if ((*pviter)->isPointer()) funBody << "*";
-	       funBody << (*pviter)->getName() << ");\n";
+               if ((*pviter)->isPointer()) funBody << "*";
+               funBody << (*pviter)->getName() << ");\n";
                funBody 
                   //<< TAB << TAB  
                   << STR_GPU_CHECK_END;
             }   
             sender->setFunctionBody(funBody.str());
-            instance.addMethod(sender);
+            instance.addMethod(std::move(sender));
 
-            std::auto_ptr<Method> getSendType(
+            std::unique_ptr<Method> getSendType(
                new Method(PREFIX+"getSendType_"+(*piter)->getName(), "void"));
             getSendType->setAccessType(AccessType::PROTECTED);
             getSendType->setMacroConditional(mpiConditional);
@@ -1794,16 +1795,14 @@ void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
             getSendType->addParameter("std::vector<MPI_Aint>& blocs");
             getSendType->setConst();
             funBody.str("");
-	    funBody.clear();
+      	   funBody.clear();
             typeMarshaller.clear();
             typeSN = 0;
             for (pviter = pvbegin; pviter != pvend; ++pviter) {
                if ((typeMarshallerIter=typeMarshaller.find((*pviter)->getDescriptor())) == typeMarshaller.end()) {
-		 miSN = typeSN++;
-		 typeMarshaller[(*pviter)->getDescriptor()] = miSN;
-
-                  if ((*pviter)->isArray())
-                  {
+                  miSN = typeSN++;
+                  typeMarshaller[(*pviter)->getDescriptor()] = miSN;
+                  if ((*pviter)->isArray()) {
                      //to support new CPU-GPU design
                      funBody << STR_GPU_CHECK_START;
                      {
@@ -1818,12 +1817,12 @@ void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
                         std::size_t last = type.find_first_of(">");
                         std::string element_datatype = type.substr(start+1, last-start-1);
                         type = type.replace(start+1, last-start-1, element_datatype + ", " + MEMORY_LOCATION);
-                        if ((*pviter)->isTemplateMarshalled())
+                        if ((*pviter)->isTemplateMarshalled()) {
                            funBody << TAB << "MarshallerInstance<" << type << " > mi" << miSN << ";\n";
-                        else
+                        }
+                        else {
                            funBody << TAB << "CG_" << type << "MarshallerInstance mi" << miSN <<";\n";
-
-
+                        }
                      }
                      funBody << "#else\n";
                      {
@@ -1834,19 +1833,20 @@ void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
                      }
                      funBody << STR_GPU_CHECK_END;
                   } 
-                  else{
+                  else {
                      //traditional design
-                     if ((*pviter)->isTemplateMarshalled())
+                     if ((*pviter)->isTemplateMarshalled()) {
                         funBody << TAB << "MarshallerInstance<" << (*pviter)->getDescriptor() << " > mi" << miSN << ";\n";
-                     else
+                     }
+                     else {
                         funBody << TAB << "CG_" << (*pviter)->getDescriptor() << "MarshallerInstance mi" << miSN <<";\n";
+                     }
                   }
-
-               } else
+               } 
+               else {
                   miSN = (*typeMarshallerIter).second;
-
-               if (isSupportedMachineType(MachineType::GPU))
-               {
+               }
+               if (isSupportedMachineType(MachineType::GPU)) {
                   funBody 
                      << STR_GPU_CHECK_START;
                   funBody << TAB << "mi" << miSN << ".getBlocks(blengths, blocs, ";
@@ -1857,22 +1857,21 @@ void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
                      << "#else\n";
                }
                funBody << TAB << "mi" << miSN << ".getBlocks(blengths, blocs, ";
-	       if ((*pviter)->isPointer()) funBody << "*";
-	       funBody << (*pviter)->getName() << ");\n";
-               if (isSupportedMachineType(MachineType::GPU))
-               {
+      	      if ((*pviter)->isPointer()) funBody << "*";
+	            funBody << (*pviter)->getName() << ");\n";
+               if (isSupportedMachineType(MachineType::GPU)) {
                   funBody 
                      << STR_GPU_CHECK_END;
                }
             }   
             getSendType->setFunctionBody(funBody.str());
-            instance.addMethod(getSendType);
+            instance.addMethod(std::move(getSendType));
          }
       }
    }
 
-   std::auto_ptr<Method> initializeProxySender(
-      new Method(PREFIX + "send_FLUSH_LENS", "void"));
+   std::unique_ptr<Method> initializeProxySender(
+      new Method(PREFIX + "send_FLUSH_MGS", "void"));
    initializeProxySender->setAccessType(AccessType::PROTECTED);
    initializeProxySender->setMacroConditional(mpiConditional);
    initializeProxySender->addParameter(OUTPUTSTREAM + "* stream");
@@ -1883,61 +1882,65 @@ void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
    int miSN, typeSN = 0;
    std::vector<DataType*>::iterator it, end = _interfaceImplementors.end();
    for (it = _interfaceImplementors.begin(); it != end; ++it) {
-     std::set<std::string> subStructTypes;
-     (*it)->getSubStructDescriptors(subStructTypes);
-     std::set<std::string>::iterator stypeIter, stypeEnd = subStructTypes.end();
-     for (stypeIter=subStructTypes.begin(); stypeIter!=stypeEnd; ++stypeIter)
-       instance.addHeader("\"CG_" + (*stypeIter) + "MarshallerInstance.h\"",MPICONDITIONAL);
-     if ((typeMarshallerIter=typeMarshaller.find((*it)->getDescriptor())) == typeMarshaller.end()) {
-       miSN = typeSN++;
-       typeMarshaller[(*it)->getDescriptor()] = miSN;
-
-      if ((*it)->isArray())
-      {
-	 //to support new CPU-GPU design
-	 //create 2 declarations [one used in HAVE_GPU and one is not]
-         funBody << STR_GPU_CHECK_START;
-         {
-	    // convert ShallowArray< double >* 
-	    // into 
-	    // ShallowArray_Flat< double, Array_Flat<int>::MemLocation::UNIFIED_MEM>*
-	    std::string  type = (*it)->getDescriptor(); 
-	    std::string from = "ShallowArray<";
-	    std::string to = "ShallowArray_Flat<";
-	    type = type.replace(type.find(from),from.length(),to);
-	    std::size_t start = type.find_first_of("<");
-	    std::size_t last = type.find_first_of(">");
-	    std::string element_datatype = type.substr(start+1, last-start-1);
-	    type = type.replace(start+1, last-start-1, element_datatype + ", " + MEMORY_LOCATION);
-
-            funBody << TAB;
-            if ((*it)->isTemplateMarshalled())
-               funBody << "MarshallerInstance<" << type << " > mi" << miSN << ";\n";
-            else
-               funBody << "CG_" << type << "MarshallerInstance mi" << miSN <<";\n";
+      std::set<std::string> subStructTypes;
+      (*it)->getSubStructDescriptors(subStructTypes);
+      std::set<std::string>::iterator stypeIter, stypeEnd = subStructTypes.end();
+      for (stypeIter=subStructTypes.begin(); stypeIter!=stypeEnd; ++stypeIter)
+         instance.addHeader("\"CG_" + (*stypeIter) + "MarshallerInstance.h\"",MPICONDITIONAL);
+      if ((typeMarshallerIter=typeMarshaller.find((*it)->getDescriptor())) == typeMarshaller.end()) {
+         miSN = typeSN++;
+         typeMarshaller[(*it)->getDescriptor()] = miSN;
+         if ((*it)->isArray()) {
+         //to support new CPU-GPU design
+         //create 2 declarations [one used in HAVE_GPU and one is not]
+            funBody << STR_GPU_CHECK_START;
+            {
+               // convert ShallowArray< double >* 
+               // into 
+               // ShallowArray_Flat< double, Array_Flat<int>::MemLocation::UNIFIED_MEM>*
+               std::string  type = (*it)->getDescriptor(); 
+               std::string from = "ShallowArray<";
+               std::string to = "ShallowArray_Flat<";
+               type = type.replace(type.find(from),from.length(),to);
+               std::size_t start = type.find_first_of("<");
+               std::size_t last = type.find_first_of(">");
+               std::string element_datatype = type.substr(start+1, last-start-1);
+               type = type.replace(start+1, last-start-1, element_datatype + ", " + MEMORY_LOCATION);
+               funBody << TAB;
+               if ((*it)->isTemplateMarshalled()) {
+                  funBody << "MarshallerInstance<" << type << " > mi" << miSN << ";\n";
+               }
+               else {
+                  funBody << "CG_" << type << "MarshallerInstance mi" << miSN <<";\n";
+               }
+            }
+            funBody << "#else\n";
+            {
+               funBody << TAB;
+               if ((*it)->isTemplateMarshalled()) {
+                  funBody << "MarshallerInstance<" << (*it)->getDescriptor() << " > mi" << miSN << ";\n";
+               }
+               else {
+                  funBody << "CG_" << (*it)->getDescriptor() << "MarshallerInstance mi" << miSN <<";\n";
+               }
+            }
+            funBody << STR_GPU_CHECK_END;
          }
-         funBody << "#else\n";
-         {
+         else {
+            //traditional design
             funBody << TAB;
-            if ((*it)->isTemplateMarshalled())
+            if ((*it)->isTemplateMarshalled()) {
                funBody << "MarshallerInstance<" << (*it)->getDescriptor() << " > mi" << miSN << ";\n";
-            else
+            }
+            else {
                funBody << "CG_" << (*it)->getDescriptor() << "MarshallerInstance mi" << miSN <<";\n";
+            }
          }
-         funBody << STR_GPU_CHECK_END;
-      }else{
-         //traditional design
-         funBody << TAB;
-         if ((*it)->isTemplateMarshalled())
-            funBody << "MarshallerInstance<" << (*it)->getDescriptor() << " > mi" << miSN << ";\n";
-         else
-            funBody << "CG_" << (*it)->getDescriptor() << "MarshallerInstance mi" << miSN <<";\n";
       }
-     } else
-       miSN = (*typeMarshallerIter).second;
-
-      if (isSupportedMachineType(MachineType::GPU))
-      {
+      else {
+         miSN = (*typeMarshallerIter).second;
+      }
+      if (isSupportedMachineType(MachineType::GPU)) {
          funBody 
             << STR_GPU_CHECK_START;
          funBody << TAB << "mi" << miSN << ".marshall(stream, ";
@@ -1949,17 +1952,15 @@ void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
       funBody << TAB << "mi" << miSN << ".marshall(stream, ";
       if ((*it)->isPointer()) funBody << "*";
       funBody << (*it)->getName() << ");\n";
-      if (isSupportedMachineType(MachineType::GPU))
-      {
+      if (isSupportedMachineType(MachineType::GPU)) {
          funBody 
             << STR_GPU_CHECK_END;
       }
    }
    initializeProxySender->setFunctionBody(funBody.str());
-   instance.addMethod(initializeProxySender);
+   instance.addMethod(std::move(initializeProxySender));
 
-   std::auto_ptr<Method> initializeProxyGetSendType(
-      new Method(PREFIX + "getSendType_FLUSH_LENS", "void"));
+   std::unique_ptr<Method> initializeProxyGetSendType(new Method(PREFIX + "getSendType_FLUSH_MGS", "void"));
    initializeProxyGetSendType->setAccessType(AccessType::PROTECTED);
    initializeProxyGetSendType->setMacroConditional(mpiConditional);
    initializeProxyGetSendType->addParameter("std::vector<int>& blengths");
@@ -1973,11 +1974,7 @@ void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
       if ((typeMarshallerIter=typeMarshaller.find((*it)->getDescriptor())) == typeMarshaller.end()) {
          miSN = typeSN++;
          typeMarshaller[(*it)->getDescriptor()] = miSN;
-
-
-
-         if ((*it)->isArray())
-         {
+         if ((*it)->isArray()) {
             //to support new CPU-GPU design
             //create 2 declarations [one used in HAVE_GPU and one is not]
             funBody << STR_GPU_CHECK_START;
@@ -1995,33 +1992,40 @@ void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
                type = type.replace(start+1, last-start-1, element_datatype + ", " + MEMORY_LOCATION);
 
                funBody << TAB;
-               if ((*it)->isTemplateMarshalled())
+               if ((*it)->isTemplateMarshalled()) {
                   funBody << "MarshallerInstance<" << type << " > mi" << miSN << ";\n";
-               else
+               }
+               else {
                   funBody << "CG_" << type << "MarshallerInstance mi" << miSN <<";\n";
+               }
             }
             funBody << "#else\n";
             {
                funBody << TAB;
-               if ((*it)->isTemplateMarshalled())
+               if ((*it)->isTemplateMarshalled()) {
                   funBody << "MarshallerInstance<" << (*it)->getDescriptor() << " > mi" << miSN << ";\n";
-               else
+               }
+               else {
                   funBody << "CG_" << (*it)->getDescriptor() << "MarshallerInstance mi" << miSN <<";\n";
+               }
             }
             funBody << STR_GPU_CHECK_END;
-         }else{
+         }
+         else {
             //traditional design
             funBody << TAB;
-            if ((*it)->isTemplateMarshalled())
+            if ((*it)->isTemplateMarshalled()) {
                funBody << "MarshallerInstance<" << (*it)->getDescriptor() << " > mi" << miSN << ";\n";
-            else
+            }
+            else {
                funBody << "CG_" << (*it)->getDescriptor() << "MarshallerInstance mi" << miSN <<";\n";
+            }
          }
-      } else
+      }
+      else {
          miSN = (*typeMarshallerIter).second;
-
-      if (isSupportedMachineType(MachineType::GPU))
-      {
+      }
+      if (isSupportedMachineType(MachineType::GPU)) {
          funBody 
             << STR_GPU_CHECK_START;
          funBody << TAB << "mi" << miSN << ".getBlocks(blengths, blocs, ";
@@ -2033,12 +2037,11 @@ void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
       funBody << TAB << "mi" << miSN << ".getBlocks(blengths, blocs, ";
       if ((*it)->isPointer()) funBody << "*";
       funBody << (*it)->getName() << ");\n";
-      if (isSupportedMachineType(MachineType::GPU))
-      {
+      if (isSupportedMachineType(MachineType::GPU)) {
          funBody 
             << STR_GPU_CHECK_END;
       }
    }
    initializeProxyGetSendType->setFunctionBody(funBody.str());
-   instance.addMethod(initializeProxyGetSendType);
+   instance.addMethod(std::move(initializeProxyGetSendType));
 }

@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef C_connection_script_declaration_H
 #define C_connection_script_declaration_H
 #include "Copyright.h"
@@ -20,7 +13,7 @@
 #include "C_production.h"
 
 #include <vector>
-class LensContext;
+class GslContext;
 class C_declaration;
 class C_directive;
 class DataItem;
@@ -35,7 +28,7 @@ class C_connection_script_declaration : public C_production
       C_connection_script_declaration(bool, C_directive *, SyntaxError *);
       virtual ~C_connection_script_declaration();
       virtual C_connection_script_declaration* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       bool isReturn() { 

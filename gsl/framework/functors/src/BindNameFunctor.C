@@ -1,22 +1,15 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "BindNameFunctor.h"
 #include "FunctorType.h"
-#include "StringDataItem.h"
-#include "LensContext.h"
+#include "CustomStringDataItem.h"
+#include "GslContext.h"
 //#include <iostream>
 //#include <sstream>
 #include "DataItem.h"
@@ -33,7 +26,7 @@
 #include "SyntaxErrorException.h"
 #include <memory>
 
-void BindNameFunctor::doInitialize(LensContext *c, 
+void BindNameFunctor::doInitialize(GslContext *c, 
 				   const std::vector<DataItem*>& args)
 {
    std::vector<DataItem*>::const_iterator iter, 
@@ -44,11 +37,11 @@ void BindNameFunctor::doInitialize(LensContext *c,
       std::pair<std::string, DataItem*> curElem;
 
       // get the name
-      StringDataItem* sdi;
-     sdi = dynamic_cast<StringDataItem*>(*iter);
+      CustomStringDataItem* sdi;
+     sdi = dynamic_cast<CustomStringDataItem*>(*iter);
       if (sdi == 0) {
 	 throw SyntaxErrorException(
-	    "Dynamic cast of DataItem to StringDataItem failed in BindNameFunctor");
+	    "Dynamic cast of DataItem to CustomStringDataItem failed in BindNameFunctor");
       }
       curElem.first = sdi->getString();
 
@@ -61,7 +54,7 @@ void BindNameFunctor::doInitialize(LensContext *c,
 }
 
 
-void BindNameFunctor::doExecute(LensContext *c, 
+void BindNameFunctor::doExecute(GslContext *c, 
 				const std::vector<DataItem*>& args, 
 				std::unique_ptr<DataItem>& rvalue)
 {
@@ -102,9 +95,9 @@ void BindNameFunctor::doExecute(LensContext *c,
 }
 
 
-void BindNameFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void BindNameFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
-   fap.reset(new BindNameFunctor(*this));
+   fap=std::make_unique<BindNameFunctor>(*this);
 }
 
 

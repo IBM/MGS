@@ -1,4 +1,13 @@
-#include "Lens.h"
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
+#include "Mgs.h"
 #include "DetectDataChangeOneCompartment.h"
 #include "CG_DetectDataChangeOneCompartment.h"
 #include <memory>
@@ -127,7 +136,7 @@ void DetectDataChangeOneCompartment::calculateInfo(RNG& rng)
 }
 #endif
 
-void DetectDataChangeOneCompartment::setUpPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_DetectDataChangeOneCompartmentInAttrPSet* CG_inAttrPset, CG_DetectDataChangeOneCompartmentOutAttrPSet* CG_outAttrPset) 
+void DetectDataChangeOneCompartment::setUpPointers(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_DetectDataChangeOneCompartmentInAttrPSet* CG_inAttrPset, CG_DetectDataChangeOneCompartmentOutAttrPSet* CG_outAttrPset) 
 {
    //VoltageArrayProducer* tmp = dynamic_cast<VoltageArrayProducer*>(data_connect);
    //if (tmp)
@@ -152,17 +161,17 @@ DetectDataChangeOneCompartment::~DetectDataChangeOneCompartment()
 {
 }
 
-void DetectDataChangeOneCompartment::duplicate(std::unique_ptr<DetectDataChangeOneCompartment>& dup) const
+void DetectDataChangeOneCompartment::duplicate(std::unique_ptr<DetectDataChangeOneCompartment>&& dup) const
 {
    dup.reset(new DetectDataChangeOneCompartment(*this));
 }
 
-void DetectDataChangeOneCompartment::duplicate(std::unique_ptr<Variable>& dup) const
+void DetectDataChangeOneCompartment::duplicate(std::unique_ptr<Variable>&& dup) const
 {
    dup.reset(new DetectDataChangeOneCompartment(*this));
 }
 
-void DetectDataChangeOneCompartment::duplicate(std::unique_ptr<CG_DetectDataChangeOneCompartment>& dup) const
+void DetectDataChangeOneCompartment::duplicate(std::unique_ptr<CG_DetectDataChangeOneCompartment>&& dup) const
 {
    dup.reset(new DetectDataChangeOneCompartment(*this));
 }

@@ -1,21 +1,14 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "DependencyParser.h"
 #include "LoaderException.h"
-#include "LensRootConfig.h"
+#include "GslRootConfig.h"
 
 #ifndef DISABLE_DYNAMIC_LOADING
    #include <dlfcn.h>
@@ -30,14 +23,14 @@
 DependencyParser::DependencyParser(const std::string& fileName)
 {
 #ifndef DISABLE_DYNAMIC_LOADING
-   _lensRoot = getenv("LENSROOT");
+   _gslRoot = getenv("GSLROOT");
       // Temporary
-   if (_lensRoot == "") {
-      std::cerr << "\nLENSROOT is not set in the environment...\n"
-	   << "Using " << LENSROOT << " to load shared objects.\n" << std::endl;
-      _lensRoot = LENSROOT;
+   if (_gslRoot == "") {
+      std::cerr << "\nGSLROOT is not set in the environment...\n"
+	   << "Using " << GSLROOT << " to load shared objects.\n" << std::endl;
+      _gslRoot = GSLROOT;
    }
-   _fileName = _lensRoot + fileName;
+   _fileName = _gslRoot + fileName;
 #else
    _fileName = fileName;
 #endif
@@ -110,7 +103,7 @@ bool DependencyParser::_load(const std::string& objName)
       }
    }
    std::string completeName;
-   completeName = _lensRoot + "/so/" + objName + ".so";
+   completeName = _gslRoot + "/so/" + objName + ".so";
    std::cout << "Loading " + objName + " from " + completeName + "\n";
 
    // attempting to load the shared object file
@@ -126,15 +119,3 @@ bool DependencyParser::_load(const std::string& objName)
    return false;
 #endif
 }
-
-
-/*
-int main(int argc, char** argv)
-{
-   DependencyParser dp("/home/gcaglar/xlens/so/Dependfile");
-   for (int i = 1; i < argc; i++) {
-      dp.load(argv[i]);
-   }
-   return 0;
-}
-*/

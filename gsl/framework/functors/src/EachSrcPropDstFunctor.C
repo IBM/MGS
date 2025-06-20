@@ -1,20 +1,13 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "EachSrcPropDstFunctor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "DataItem.h"
 #include "FunctorType.h"
 #include "NodeDescriptor.h"
@@ -42,13 +35,13 @@ EachSrcPropDstFunctor::EachSrcPropDstFunctor(const EachSrcPropDstFunctor& csf)
      _sourceSet(csf._sourceSet), _nodes(csf._nodes), _slope(csf._slope),
      _transforms(csf._transforms), _coords(csf._coords)
 {
-   if (csf._functor_ap.get()) csf._functor_ap->duplicate(_functor_ap);
+   if (csf._functor_ap.get()) csf._functor_ap->duplicate(std::move(_functor_ap));
    _nodesIter = _nodes.begin();
    _nodesEnd = _nodes.end();
 }
 
 
-void EachSrcPropDstFunctor::duplicate (std::unique_ptr<Functor> &fap) const
+void EachSrcPropDstFunctor::duplicate (std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new EachSrcPropDstFunctor(*this));
 }
@@ -59,7 +52,7 @@ EachSrcPropDstFunctor::~EachSrcPropDstFunctor()
 }
 
 
-void EachSrcPropDstFunctor::doInitialize(LensContext *c, 
+void EachSrcPropDstFunctor::doInitialize(GslContext *c, 
 					 const std::vector<DataItem*>& args)
 {
   int nbrArgs=args.size();
@@ -72,7 +65,7 @@ void EachSrcPropDstFunctor::doInitialize(LensContext *c,
     throw SyntaxErrorException(
 			       "Dynamic cast of DataItem to FunctorDataItem failed on EachSrcPropDstFunctor");
   }
-  if (fdi->getFunctor()) fdi->getFunctor()->duplicate(_functor_ap);
+  if (fdi->getFunctor()) fdi->getFunctor()->duplicate(std::move(_functor_ap));
   else {
     throw SyntaxErrorException(
 			       "Bad functor argument passed to EachSrcPropDstFunctor");
@@ -92,7 +85,7 @@ void EachSrcPropDstFunctor::doInitialize(LensContext *c,
 }
 
 
-NodeDescriptor* EachSrcPropDstFunctor::getProportionalNode(LensContext *c)
+NodeDescriptor* EachSrcPropDstFunctor::getProportionalNode(GslContext *c)
 {
 
 //   This method returns a node from the Source nodeset in the 
@@ -135,7 +128,7 @@ NodeDescriptor* EachSrcPropDstFunctor::getProportionalNode(LensContext *c)
 }
 
 
-void EachSrcPropDstFunctor::doExecute(LensContext *c, 
+void EachSrcPropDstFunctor::doExecute(GslContext *c, 
 				      const std::vector<DataItem*>& args, 
 				      std::unique_ptr<DataItem>& rvalue)
 {

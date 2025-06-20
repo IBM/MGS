@@ -1,21 +1,14 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "GetPreNodeCoordFunctor.h"
 //#include "CG_GetPreNodeCoordFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "Service.h"
 #include <memory>
 
@@ -23,11 +16,11 @@
 #include "GenericService.h"
 //#include "CoordsStruct.h"
 
-void GetPreNodeCoordFunctor::userInitialize(LensContext* CG_c) 
+void GetPreNodeCoordFunctor::userInitialize(GslContext* CG_c) 
 {
 }
 
-Service* GetPreNodeCoordFunctor::userExecute(LensContext* CG_c, Edge*& edge) 
+Service* GetPreNodeCoordFunctor::userExecute(GslContext* CG_c, Edge*& edge) 
 {
    delete _service;
    NodeDescriptor* node = edge->getPreNode();
@@ -74,17 +67,17 @@ GetPreNodeCoordFunctor& GetPreNodeCoordFunctor::operator=(
    return *this;
 }
 
-void GetPreNodeCoordFunctor::duplicate(std::unique_ptr<GetPreNodeCoordFunctor>& dup) const 
+void GetPreNodeCoordFunctor::duplicate(std::unique_ptr<GetPreNodeCoordFunctor>&& dup) const 
 {
    dup.reset(new GetPreNodeCoordFunctor(*this));
 }
 
-void GetPreNodeCoordFunctor::duplicate(std::unique_ptr<Functor>& dup) const
+void GetPreNodeCoordFunctor::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new GetPreNodeCoordFunctor(*this));
 }
 
-void GetPreNodeCoordFunctor::duplicate(std::unique_ptr<CG_GetPreNodeCoordFunctorBase>& dup) const
+void GetPreNodeCoordFunctor::duplicate(std::unique_ptr<CG_GetPreNodeCoordFunctorBase>&& dup) const
 {
    dup.reset(new GetPreNodeCoordFunctor(*this));
 }

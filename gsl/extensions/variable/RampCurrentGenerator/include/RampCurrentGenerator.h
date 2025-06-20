@@ -1,7 +1,16 @@
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
 #ifndef RampCurrentGenerator_H
 #define RampCurrentGenerator_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_RampCurrentGenerator.h"
 #include <memory>
 #include <fstream>
@@ -14,9 +23,9 @@ class RampCurrentGenerator : public CG_RampCurrentGenerator
       void finalize(RNG& rng);
       RampCurrentGenerator();
       virtual ~RampCurrentGenerator();
-      virtual void duplicate(std::unique_ptr<RampCurrentGenerator>& dup) const;
-      virtual void duplicate(std::unique_ptr<Variable>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_RampCurrentGenerator>& dup) const;
+      virtual void duplicate(std::unique_ptr<RampCurrentGenerator>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Variable>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_RampCurrentGenerator>&& dup) const;
    private:
       void update_RampProtocol(RNG& , float currentTime);
       float tstart, tend; //[ms]

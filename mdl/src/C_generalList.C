@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_generalList.h"
 #include "C_general.h"
 #include "C_instanceMapping.h"
@@ -51,70 +44,70 @@ void C_generalList::execute(MdlContext* context)
    _general->execute(context);
    if (_generalList) {
       _generalList->execute(context);
-      std::auto_ptr<std::vector<TriggeredFunction*> > triggeredFunctions;
+      std::unique_ptr<std::vector<TriggeredFunction*> > triggeredFunctions;
       _generalList->releaseTriggeredFunctions(triggeredFunctions);
       _triggeredFunctions = triggeredFunctions.release();           
-      std::auto_ptr<std::vector<Phase*> > phases;
+      std::unique_ptr<std::vector<Phase*> > phases;
       _generalList->releasePhases(phases);
       _phases = phases.release();           
-      std::auto_ptr<std::vector<UserFunction*> > userFunctions;
+      std::unique_ptr<std::vector<UserFunction*> > userFunctions;
       _generalList->releaseUserFunctions(userFunctions);
       _userFunctions = userFunctions.release();           
-      std::auto_ptr<std::vector<UserFunctionCall*> > userFunctionCalls;
+      std::unique_ptr<std::vector<UserFunctionCall*> > userFunctionCalls;
       _generalList->releaseUserFunctionCalls(userFunctionCalls);
       _userFunctionCalls = userFunctionCalls.release();           
-      std::auto_ptr<std::vector<PredicateFunction*> > predicateFunctions;
+      std::unique_ptr<std::vector<PredicateFunction*> > predicateFunctions;
       _generalList->releasePredicateFunctions(predicateFunctions);
       _predicateFunctions = predicateFunctions.release();           
-      std::auto_ptr<std::vector<DataType*> > dtv;
+      std::unique_ptr<std::vector<DataType*> > dtv;
       _generalList->releaseDataTypeVec(dtv);
       _dataTypeVec = dtv.release();           
-      std::auto_ptr<std::vector<DataType*> > odtv;
+      std::unique_ptr<std::vector<DataType*> > odtv;
       _generalList->releaseOptionalDataTypeVec(odtv);
       _optionalDataTypeVec = odtv.release();           
-      std::auto_ptr<std::vector<C_instanceMapping*> > imv;
+      std::unique_ptr<std::vector<C_instanceMapping*> > imv;
       _generalList->releaseInstanceMappingVec(imv);
       _instanceMappingVec = imv.release();           
-      std::auto_ptr<std::vector<C_sharedMapping*> > smv;
+      std::unique_ptr<std::vector<C_sharedMapping*> > smv;
       _generalList->releaseSharedMappingVec(smv);
       _sharedMappingVec = smv.release();           
-      std::auto_ptr<std::vector<C_interfaceToInstance*> > itiv;
+      std::unique_ptr<std::vector<C_interfaceToInstance*> > itiv;
       _generalList->releaseInterfaceToInstanceVec(itiv);
       _interfaceToInstanceVec = itiv.release();           
-      std::auto_ptr<std::vector<C_interfaceToShared*> > itsv;
+      std::unique_ptr<std::vector<C_interfaceToShared*> > itsv;
       _generalList->releaseInterfaceToSharedVec(itsv);
       _interfaceToSharedVec = itsv.release();           
-      std::auto_ptr<std::vector<C_psetToInstance*> > ptiv;
+      std::unique_ptr<std::vector<C_psetToInstance*> > ptiv;
       _generalList->releasePSetToInstanceVec(ptiv);
       _psetToInstanceVec = ptiv.release();           
-      std::auto_ptr<std::vector<C_psetToShared*> > ptsv;
+      std::unique_ptr<std::vector<C_psetToShared*> > ptsv;
       _generalList->releasePSetToSharedVec(ptsv);
       _psetToSharedVec = ptsv.release();           
-      std::auto_ptr<std::vector<C_regularConnection*> > conv;
+      std::unique_ptr<std::vector<C_regularConnection*> > conv;
       _generalList->releaseConnectionVec(conv);
       _connectionVec = conv.release();           
-      std::auto_ptr<std::vector<C_shared*> > shared;
+      std::unique_ptr<std::vector<C_shared*> > shared;
       _generalList->releaseSharedVec(shared);
       _sharedVec = shared.release();           
-      std::auto_ptr<std::vector<C_initialize*> > initialize;
+      std::unique_ptr<std::vector<C_initialize*> > initialize;
       _generalList->releaseInitializeVec(initialize);
       _initializeVec = initialize.release();           
-      std::auto_ptr<std::vector<C_execute*> > execute;
+      std::unique_ptr<std::vector<C_execute*> > execute;
       _generalList->releaseExecuteVec(execute);
       _executeVec = execute.release();           
-      std::auto_ptr<C_edgeConnection> preNode;
-      _generalList->releasePreNode(preNode);
+      std::unique_ptr<C_edgeConnection> preNode;
+      _generalList->releasePreNode(std::move(preNode));
       _preNode = preNode.release();           
-      std::auto_ptr<C_edgeConnection> postNode;
-      _generalList->releasePostNode(postNode);
+      std::unique_ptr<C_edgeConnection> postNode;
+      _generalList->releasePostNode(std::move(postNode));
       _postNode = postNode.release();           
-      std::auto_ptr<StructType> inAttrPSet;
-      _generalList->releaseInAttrPSet(inAttrPSet);
+      std::unique_ptr<StructType> inAttrPSet;
+      _generalList->releaseInAttrPSet(std::move(inAttrPSet));
       _inAttrPSet = inAttrPSet.release();           
-      std::auto_ptr<StructType> outAttrPSet;
-      _generalList->releaseOutAttrPSet(outAttrPSet);
+      std::unique_ptr<StructType> outAttrPSet;
+      _generalList->releaseOutAttrPSet(std::move(outAttrPSet));
       _outAttrPSet = outAttrPSet.release();           
-      std::auto_ptr<std::vector<C_computeTime*> > computeTime;
+      std::unique_ptr<std::vector<C_computeTime*> > computeTime;
       _generalList->releaseComputeTime(computeTime);
       _computeTime = computeTime.release();           
    }
@@ -177,154 +170,154 @@ C_generalList::C_generalList(const C_generalList& rv)
    copyOwnedHeap(rv);
 }
 
-void C_generalList::duplicate(std::auto_ptr<C_generalList>& rv) const
+void C_generalList::duplicate(std::unique_ptr<C_generalList>&& rv) const
 {
    rv.reset(new C_generalList(*this));
 }
 
 void C_generalList::releaseTriggeredFunctions(
-   std::auto_ptr<std::vector<TriggeredFunction*> >& triggeredFunctions) 
+   std::unique_ptr<std::vector<TriggeredFunction*> >& triggeredFunctions) 
 {
    triggeredFunctions.reset(_triggeredFunctions);
    _triggeredFunctions = 0;
 }
 
-void C_generalList::releasePhases(std::auto_ptr<std::vector<Phase*> >& phases) 
+void C_generalList::releasePhases(std::unique_ptr<std::vector<Phase*> >& phases) 
 {
    phases.reset(_phases);
    _phases = 0;
 }
 
 void C_generalList::releaseUserFunctions(
-   std::auto_ptr<std::vector<UserFunction*> >& userFunctions) 
+   std::unique_ptr<std::vector<UserFunction*> >& userFunctions) 
 {
    userFunctions.reset(_userFunctions);
    _userFunctions = 0;
 }
 
 void C_generalList::releaseUserFunctionCalls(
-   std::auto_ptr<std::vector<UserFunctionCall*> >& userFunctionCalls) 
+   std::unique_ptr<std::vector<UserFunctionCall*> >& userFunctionCalls) 
 {
    userFunctionCalls.reset(_userFunctionCalls);
    _userFunctionCalls = 0;
 }
 
 void C_generalList::releasePredicateFunctions(
-   std::auto_ptr<std::vector<PredicateFunction*> >& predicateFunctions) 
+   std::unique_ptr<std::vector<PredicateFunction*> >& predicateFunctions) 
 {
    predicateFunctions.reset(_predicateFunctions);
    _predicateFunctions = 0;
 }
 
 void C_generalList::releaseDataTypeVec(
-   std::auto_ptr<std::vector<DataType*> >& dtv) 
+   std::unique_ptr<std::vector<DataType*> >& dtv) 
 {
    dtv.reset(_dataTypeVec);
    _dataTypeVec = 0;
 }
 
 void C_generalList::releaseOptionalDataTypeVec(
-   std::auto_ptr<std::vector<DataType*> >& dtv) 
+   std::unique_ptr<std::vector<DataType*> >& dtv) 
 {
    dtv.reset(_optionalDataTypeVec);
    _optionalDataTypeVec = 0;
 }
 
 void C_generalList::releaseInstanceMappingVec(
-   std::auto_ptr<std::vector<C_instanceMapping*> >& im) 
+   std::unique_ptr<std::vector<C_instanceMapping*> >& im) 
 {
    im.reset(_instanceMappingVec);
    _instanceMappingVec = 0;
 }
 
 void C_generalList::releaseSharedMappingVec(
-   std::auto_ptr<std::vector<C_sharedMapping*> >& sm) 
+   std::unique_ptr<std::vector<C_sharedMapping*> >& sm) 
 {
    sm.reset(_sharedMappingVec);
    _sharedMappingVec = 0;
 }
 
 void C_generalList::releaseInterfaceToInstanceVec(
-   std::auto_ptr<std::vector<C_interfaceToInstance*> >& iti) 
+   std::unique_ptr<std::vector<C_interfaceToInstance*> >& iti) 
 {
    iti.reset(_interfaceToInstanceVec);
    _interfaceToInstanceVec = 0;
 }
 
 void C_generalList::releaseInterfaceToSharedVec(
-   std::auto_ptr<std::vector<C_interfaceToShared*> >& its) 
+   std::unique_ptr<std::vector<C_interfaceToShared*> >& its) 
 {
    its.reset(_interfaceToSharedVec);
    _interfaceToSharedVec = 0;
 }
 
 void C_generalList::releasePSetToInstanceVec(
-   std::auto_ptr<std::vector<C_psetToInstance*> >& pti) 
+   std::unique_ptr<std::vector<C_psetToInstance*> >& pti) 
 {
    pti.reset(_psetToInstanceVec);
    _psetToInstanceVec = 0;
 }
 
 void C_generalList::releasePSetToSharedVec(
-   std::auto_ptr<std::vector<C_psetToShared*> >& pts) 
+   std::unique_ptr<std::vector<C_psetToShared*> >& pts) 
 {
    pts.reset(_psetToSharedVec);
    _psetToSharedVec = 0;
 }
 
 void C_generalList::releaseConnectionVec(
-   std::auto_ptr<std::vector<C_regularConnection*> >& con) 
+   std::unique_ptr<std::vector<C_regularConnection*> >& con) 
 {
    con.reset(_connectionVec);
    _connectionVec = 0;
 }
 
 void C_generalList::releaseSharedVec(
-   std::auto_ptr<std::vector<C_shared*> >& shared) 
+   std::unique_ptr<std::vector<C_shared*> >& shared) 
 {
    shared.reset(_sharedVec);
    _sharedVec = 0;
 }
 
 void C_generalList::releaseInitializeVec(
-   std::auto_ptr<std::vector<C_initialize*> >& initialize) 
+   std::unique_ptr<std::vector<C_initialize*> >& initialize) 
 {
    initialize.reset(_initializeVec);
    _initializeVec = 0;
 }
 
 void C_generalList::releaseExecuteVec(
-   std::auto_ptr<std::vector<C_execute*> >& execute) 
+   std::unique_ptr<std::vector<C_execute*> >& execute) 
 {
    execute.reset(_executeVec);
    _executeVec = 0;
 }
 
-void C_generalList::releasePreNode(std::auto_ptr<C_edgeConnection>& con) 
+void C_generalList::releasePreNode(std::unique_ptr<C_edgeConnection>&& con) 
 {
    con.reset(_preNode);
    _preNode = 0;
 }
 
-void C_generalList::releasePostNode(std::auto_ptr<C_edgeConnection>& con) 
+void C_generalList::releasePostNode(std::unique_ptr<C_edgeConnection>&& con) 
 {
    con.reset(_postNode);
    _postNode = 0;
 }
 
-void C_generalList::releaseInAttrPSet(std::auto_ptr<StructType>& iaps)
+void C_generalList::releaseInAttrPSet(std::unique_ptr<StructType>&& iaps)
 {
    iaps.reset(_inAttrPSet);
    _inAttrPSet = 0;
 }
 
-void C_generalList::releaseOutAttrPSet(std::auto_ptr<StructType>& oaps)
+void C_generalList::releaseOutAttrPSet(std::unique_ptr<StructType>&& oaps)
 {
    oaps.reset(_outAttrPSet);
    _outAttrPSet = 0;
 }
 
-void C_generalList::releaseComputeTime(std::auto_ptr<std::vector<C_computeTime*> >& computeTime) 
+void C_generalList::releaseComputeTime(std::unique_ptr<std::vector<C_computeTime*> >& computeTime) 
 {
    computeTime.reset(_computeTime);
    _computeTime = 0;
@@ -443,7 +436,7 @@ std::vector<C_computeTime*>* C_generalList::getComputeTime() const
 }
 
 void C_generalList::addTriggeredFunction(
-   std::auto_ptr<TriggeredFunction>& triggeredFunction) 
+   std::unique_ptr<TriggeredFunction>&& triggeredFunction) 
 {
    isDuplicateTriggeredFunction(triggeredFunction.get()->getName());
    if (_triggeredFunctions == 0) {
@@ -453,7 +446,7 @@ void C_generalList::addTriggeredFunction(
    _triggeredFunctions->push_back(triggeredFunction.release());
 }
 
-void C_generalList::addPhase(std::auto_ptr<Phase>& phase) 
+void C_generalList::addPhase(std::unique_ptr<Phase>&& phase) 
 {
    isDuplicatePhase(phase.get());
    if (_phases == 0) {
@@ -462,7 +455,7 @@ void C_generalList::addPhase(std::auto_ptr<Phase>& phase)
    _phases->push_back(phase.release());
 }
 
-void C_generalList::addUserFunction(std::auto_ptr<UserFunction>& userFunction) 
+void C_generalList::addUserFunction(std::unique_ptr<UserFunction>&& userFunction) 
 {
    if (_userFunctions) {
       std::vector<UserFunction*>::const_iterator it, 
@@ -488,7 +481,7 @@ void C_generalList::addUserFunction(std::auto_ptr<UserFunction>& userFunction)
 }
 
 void C_generalList::addUserFunctionCall(
-   std::auto_ptr<UserFunctionCall>& userFunctionCall) 
+   std::unique_ptr<UserFunctionCall>&& userFunctionCall) 
 {
    if (_userFunctionCalls) {
       std::vector<UserFunctionCall*>::const_iterator it, 
@@ -514,7 +507,7 @@ void C_generalList::addUserFunctionCall(
 }
 
 void C_generalList::addPredicateFunction(
-   std::auto_ptr<PredicateFunction>& predicateFunction)
+   std::unique_ptr<PredicateFunction>&& predicateFunction)
 {
    if (_predicateFunctions) {
       std::vector<PredicateFunction*>::const_iterator it, 
@@ -539,7 +532,7 @@ void C_generalList::addPredicateFunction(
    _predicateFunctions->push_back(predicateFunction.release()); 
 }
 
-void C_generalList::addDataType(std::auto_ptr<DataType>& dt) 
+void C_generalList::addDataType(std::unique_ptr<DataType>&& dt) 
 {
    if (_dataTypeVec == 0) {
       _dataTypeVec = new std::vector<DataType*>();
@@ -547,7 +540,7 @@ void C_generalList::addDataType(std::auto_ptr<DataType>& dt)
    _dataTypeVec->push_back(dt.release());
 }
 
-void C_generalList::addOptionalDataType(std::auto_ptr<DataType>& dt) 
+void C_generalList::addOptionalDataType(std::unique_ptr<DataType>&& dt) 
 {
    if (_optionalDataTypeVec == 0) {
       _optionalDataTypeVec = new std::vector<DataType*>();
@@ -555,7 +548,7 @@ void C_generalList::addOptionalDataType(std::auto_ptr<DataType>& dt)
    _optionalDataTypeVec->push_back(dt.release());
 }
 
-void C_generalList::addInstanceMapping(std::auto_ptr<C_instanceMapping>& im) 
+void C_generalList::addInstanceMapping(std::unique_ptr<C_instanceMapping>&& im) 
 {
    if (_instanceMappingVec == 0) {
       _instanceMappingVec = new std::vector<C_instanceMapping*>();
@@ -563,7 +556,7 @@ void C_generalList::addInstanceMapping(std::auto_ptr<C_instanceMapping>& im)
    _instanceMappingVec->push_back(im.release());
 }
 
-void C_generalList::addSharedMapping(std::auto_ptr<C_sharedMapping>& sm) 
+void C_generalList::addSharedMapping(std::unique_ptr<C_sharedMapping>&& sm) 
 {
    if (_sharedMappingVec == 0) {
       _sharedMappingVec = new std::vector<C_sharedMapping*>();
@@ -572,7 +565,7 @@ void C_generalList::addSharedMapping(std::auto_ptr<C_sharedMapping>& sm)
 }
 
 void C_generalList::addInterfaceToInstance(
-   std::auto_ptr<C_interfaceToInstance>& iti) 
+   std::unique_ptr<C_interfaceToInstance>&& iti) 
 {
    if (_interfaceToInstanceVec == 0) {
       _interfaceToInstanceVec = new std::vector<C_interfaceToInstance*>();
@@ -581,7 +574,7 @@ void C_generalList::addInterfaceToInstance(
 }
 
 void C_generalList::addInterfaceToShared(
-   std::auto_ptr<C_interfaceToShared>& its) 
+   std::unique_ptr<C_interfaceToShared>&& its) 
 {
    if (_interfaceToSharedVec == 0) {
       _interfaceToSharedVec = new std::vector<C_interfaceToShared*>();
@@ -590,7 +583,7 @@ void C_generalList::addInterfaceToShared(
 }
 
 void C_generalList::addPSetToInstance(
-   std::auto_ptr<C_psetToInstance>& pti) 
+   std::unique_ptr<C_psetToInstance>&& pti) 
 {
    if (_psetToInstanceVec == 0) {
       _psetToInstanceVec = new std::vector<C_psetToInstance*>();
@@ -599,7 +592,7 @@ void C_generalList::addPSetToInstance(
 }
 
 void C_generalList::addPSetToShared(
-   std::auto_ptr<C_psetToShared>& pts) 
+   std::unique_ptr<C_psetToShared>&& pts) 
 {
    if (_psetToSharedVec == 0) {
       _psetToSharedVec = new std::vector<C_psetToShared*>();
@@ -607,7 +600,7 @@ void C_generalList::addPSetToShared(
    _psetToSharedVec->push_back(pts.release());
 }
 
-void C_generalList::addConnection(std::auto_ptr<C_regularConnection>& con) 
+void C_generalList::addConnection(std::unique_ptr<C_regularConnection>&& con) 
 {
    if (_connectionVec == 0) {
       _connectionVec = new std::vector<C_regularConnection*>();
@@ -615,7 +608,7 @@ void C_generalList::addConnection(std::auto_ptr<C_regularConnection>& con)
    _connectionVec->push_back(con.release());
 }
 
-void C_generalList::addShared(std::auto_ptr<C_shared>& shared) 
+void C_generalList::addShared(std::unique_ptr<C_shared>&& shared) 
 {
    if (_sharedVec == 0) {
       _sharedVec = new std::vector<C_shared*>();
@@ -623,7 +616,7 @@ void C_generalList::addShared(std::auto_ptr<C_shared>& shared)
    _sharedVec->push_back(shared.release());
 }
 
-void C_generalList::addInitialize(std::auto_ptr<C_initialize>& initialize) 
+void C_generalList::addInitialize(std::unique_ptr<C_initialize>&& initialize) 
 {
    if (_initializeVec == 0) {
       _initializeVec = new std::vector<C_initialize*>();
@@ -631,7 +624,7 @@ void C_generalList::addInitialize(std::auto_ptr<C_initialize>& initialize)
    _initializeVec->push_back(initialize.release());
 }
 
-void C_generalList::addExecute(std::auto_ptr<C_execute>& execute) 
+void C_generalList::addExecute(std::unique_ptr<C_execute>&& execute) 
 {
    if (_executeVec == 0) {
       _executeVec = new std::vector<C_execute*>();
@@ -639,7 +632,7 @@ void C_generalList::addExecute(std::auto_ptr<C_execute>& execute)
    _executeVec->push_back(execute.release());
 }
 
-void C_generalList::addPreNode(std::auto_ptr<C_edgeConnection>& con) 
+void C_generalList::addPreNode(std::unique_ptr<C_edgeConnection>&& con) 
 {
    if ( _preNode != 0) {
       throw DuplicateException("multiple preNode connection requests");
@@ -647,7 +640,7 @@ void C_generalList::addPreNode(std::auto_ptr<C_edgeConnection>& con)
    _preNode = con.release();
 }
 
-void C_generalList::addPostNode(std::auto_ptr<C_edgeConnection>& con) 
+void C_generalList::addPostNode(std::unique_ptr<C_edgeConnection>&& con) 
 {
    if ( _postNode != 0) {
       throw DuplicateException("multiple postNode connection requests");
@@ -655,7 +648,7 @@ void C_generalList::addPostNode(std::auto_ptr<C_edgeConnection>& con)
    _postNode = con.release();
 }
 
-void C_generalList::addInAttrPSet(std::auto_ptr<StructType>& iaps)
+void C_generalList::addInAttrPSet(std::unique_ptr<StructType>&& iaps)
 {
    if ( _inAttrPSet != 0) {
       throw DuplicateException("multiple InAttrPSet's are present");
@@ -663,7 +656,7 @@ void C_generalList::addInAttrPSet(std::auto_ptr<StructType>& iaps)
    _inAttrPSet = iaps.release();
 }
 
-void C_generalList::addOutAttrPSet(std::auto_ptr<StructType>& oaps)
+void C_generalList::addOutAttrPSet(std::unique_ptr<StructType>&& oaps)
 {
    if ( _outAttrPSet != 0) {
       throw DuplicateException("multiple OutAttrPSet's are present");
@@ -671,7 +664,7 @@ void C_generalList::addOutAttrPSet(std::auto_ptr<StructType>& oaps)
    _outAttrPSet = oaps.release();
 }
 
-void C_generalList::addComputeTime(std::auto_ptr<C_computeTime>& computeTime) 
+void C_generalList::addComputeTime(std::unique_ptr<C_computeTime>&& computeTime) 
 {
    isDuplicateComputeTime(computeTime.get());
    if (_computeTime == 0) {
@@ -856,33 +849,33 @@ void C_generalList::copyOwnedHeap(const C_generalList& rv)
 {
    // duplicates
    if (rv._generalList) {
-      std::auto_ptr<C_generalList> dup;
-      rv._generalList->duplicate(dup);
+      std::unique_ptr<C_generalList> dup;
+      rv._generalList->duplicate(std::move(dup));
       _generalList = dup.release();
    }
    if (rv._general) {
-      std::auto_ptr<C_general> dup;
-      rv._general->duplicate(dup);
+      std::unique_ptr<C_general> dup;
+      rv._general->duplicate(std::move(dup));
       _general = dup.release();
    }
    if (rv._preNode) {
-      std::auto_ptr<C_edgeConnection> dup;
-      rv._preNode->duplicate(dup);
+      std::unique_ptr<C_edgeConnection> dup;
+      rv._preNode->duplicate(std::move(dup));
       _preNode = dup.release();
    }
    if (rv._postNode) {
-      std::auto_ptr<C_edgeConnection> dup;
-      rv._postNode->duplicate(dup);
+      std::unique_ptr<C_edgeConnection> dup;
+      rv._postNode->duplicate(std::move(dup));
       _postNode = dup.release();
    }
    if (rv._inAttrPSet) {
-      std::auto_ptr<StructType> dup;
-      rv._inAttrPSet->duplicate(dup);
+      std::unique_ptr<StructType> dup;
+      rv._inAttrPSet->duplicate(std::move(dup));
       _inAttrPSet = dup.release();
    }
    if (rv._outAttrPSet) {
-      std::auto_ptr<StructType> dup;
-      rv._outAttrPSet->duplicate(dup);
+      std::unique_ptr<StructType> dup;
+      rv._outAttrPSet->duplicate(std::move(dup));
       _outAttrPSet = dup.release();
    }
 
@@ -891,9 +884,9 @@ void C_generalList::copyOwnedHeap(const C_generalList& rv)
       _triggeredFunctions = new std::vector<TriggeredFunction*>();
       std::vector<TriggeredFunction*>::const_iterator it
 	 , end = rv._triggeredFunctions->end();
-      std::auto_ptr<TriggeredFunction> dup;   
+      std::unique_ptr<TriggeredFunction> dup;   
       for (it = rv._triggeredFunctions->begin(); it != end; ++it) {
-	 (*it)->duplicate(dup);
+	 (*it)->duplicate(std::move(dup));
 	 _triggeredFunctions->push_back(dup.release());
       }
    }
@@ -901,9 +894,9 @@ void C_generalList::copyOwnedHeap(const C_generalList& rv)
       _phases = new std::vector<Phase*>();
       std::vector<Phase*>::const_iterator it
 	 , end = rv._phases->end();
-      std::auto_ptr<Phase> dup;   
+      std::unique_ptr<Phase> dup;   
       for (it = rv._phases->begin(); it != end; ++it) {
-	 (*it)->duplicate(dup);
+	 (*it)->duplicate(std::move(dup));
 	 _phases->push_back(dup.release());
       }
    }
@@ -911,9 +904,9 @@ void C_generalList::copyOwnedHeap(const C_generalList& rv)
       _userFunctions = new std::vector<UserFunction*>();
       std::vector<UserFunction*>::const_iterator it
 	 , end = rv._userFunctions->end();
-      std::auto_ptr<UserFunction> dup;   
+      std::unique_ptr<UserFunction> dup;   
       for (it = rv._userFunctions->begin(); it != end; ++it) {
-	 (*it)->duplicate(dup);
+	 (*it)->duplicate(std::move(dup));
 	 _userFunctions->push_back(dup.release());
       }
    }
@@ -921,9 +914,9 @@ void C_generalList::copyOwnedHeap(const C_generalList& rv)
       _userFunctionCalls = new std::vector<UserFunctionCall*>();
       std::vector<UserFunctionCall*>::const_iterator it
 	 , end = rv._userFunctionCalls->end();
-      std::auto_ptr<UserFunctionCall> dup;   
+      std::unique_ptr<UserFunctionCall> dup;   
       for (it = rv._userFunctionCalls->begin(); it != end; ++it) {
-	 (*it)->duplicate(dup);
+	 (*it)->duplicate(std::move(dup));
 	 _userFunctionCalls->push_back(dup.release());
       }
    }
@@ -931,9 +924,9 @@ void C_generalList::copyOwnedHeap(const C_generalList& rv)
       _predicateFunctions = new std::vector<PredicateFunction*>();
       std::vector<PredicateFunction*>::const_iterator it
 	 , end = rv._predicateFunctions->end();
-      std::auto_ptr<PredicateFunction> dup;   
+      std::unique_ptr<PredicateFunction> dup;   
       for (it = rv._predicateFunctions->begin(); it != end; ++it) {
-	 (*it)->duplicate(dup);
+	 (*it)->duplicate(std::move(dup));
 	 _predicateFunctions->push_back(dup.release());
       }
    }
@@ -941,9 +934,9 @@ void C_generalList::copyOwnedHeap(const C_generalList& rv)
       _dataTypeVec = new std::vector<DataType*>();
       std::vector<DataType*>::const_iterator it
 	 , end = rv._dataTypeVec->end();
-      std::auto_ptr<DataType> dup;   
+      std::unique_ptr<DataType> dup;   
       for (it = rv._dataTypeVec->begin(); it != end; ++it) {
-	 (*it)->duplicate(dup);
+	 (*it)->duplicate(std::move(dup));
 	 _dataTypeVec->push_back(dup.release());
       }
    }
@@ -951,9 +944,9 @@ void C_generalList::copyOwnedHeap(const C_generalList& rv)
       _optionalDataTypeVec = new std::vector<DataType*>();
       std::vector<DataType*>::const_iterator it
 	 , end = rv._optionalDataTypeVec->end();
-      std::auto_ptr<DataType> dup;   
+      std::unique_ptr<DataType> dup;   
       for (it = rv._optionalDataTypeVec->begin(); it != end; ++it) {
-	 (*it)->duplicate(dup);
+	 (*it)->duplicate(std::move(dup));
 	 _optionalDataTypeVec->push_back(dup.release());
       }
    }
@@ -961,9 +954,9 @@ void C_generalList::copyOwnedHeap(const C_generalList& rv)
       _instanceMappingVec = new std::vector<C_instanceMapping*>();
       std::vector<C_instanceMapping*>::const_iterator it
 	 , end = rv._instanceMappingVec->end();
-      std::auto_ptr<C_instanceMapping> dup;   
+      std::unique_ptr<C_instanceMapping> dup;   
       for (it = rv._instanceMappingVec->begin(); it != end; ++it) {
-	 (*it)->duplicate(dup);
+	 (*it)->duplicate(std::move(dup));
 	 _instanceMappingVec->push_back(dup.release());
       }
    }
@@ -971,9 +964,9 @@ void C_generalList::copyOwnedHeap(const C_generalList& rv)
       _sharedMappingVec = new std::vector<C_sharedMapping*>();
       std::vector<C_sharedMapping*>::const_iterator it
 	 , end = rv._sharedMappingVec->end();
-      std::auto_ptr<C_sharedMapping> dup;   
+      std::unique_ptr<C_sharedMapping> dup;   
       for (it = rv._sharedMappingVec->begin(); it != end; ++it) {
-	 (*it)->duplicate(dup);
+	 (*it)->duplicate(std::move(dup));
 	 _sharedMappingVec->push_back(dup.release());
       }
    }
@@ -981,9 +974,9 @@ void C_generalList::copyOwnedHeap(const C_generalList& rv)
       _interfaceToInstanceVec = new std::vector<C_interfaceToInstance*>();
       std::vector<C_interfaceToInstance*>::iterator it,
 	 end = rv._interfaceToInstanceVec->end();
-      std::auto_ptr<C_interfaceToInstance> dup;   
+      std::unique_ptr<C_interfaceToInstance> dup;   
       for (it = rv._interfaceToInstanceVec->begin(); it != end; ++it) {
-	 (*it)->duplicate(dup);
+	 (*it)->duplicate(std::move(dup));
 	 _interfaceToInstanceVec->push_back(dup.release());
       }
    }
@@ -991,9 +984,9 @@ void C_generalList::copyOwnedHeap(const C_generalList& rv)
       _interfaceToSharedVec = new std::vector<C_interfaceToShared*>();
       std::vector<C_interfaceToShared*>::iterator it,
 	 end = rv._interfaceToSharedVec->end();
-      std::auto_ptr<C_interfaceToShared> dup;   
+      std::unique_ptr<C_interfaceToShared> dup;   
       for (it = rv._interfaceToSharedVec->begin(); it != end; ++it) {
-	 (*it)->duplicate(dup);
+	 (*it)->duplicate(std::move(dup));
 	 _interfaceToSharedVec->push_back(dup.release());
       }
    }
@@ -1001,9 +994,9 @@ void C_generalList::copyOwnedHeap(const C_generalList& rv)
       _psetToInstanceVec = new std::vector<C_psetToInstance*>();
       std::vector<C_psetToInstance*>::iterator it,
 	 end = rv._psetToInstanceVec->end();
-      std::auto_ptr<C_psetToInstance> dup;   
+      std::unique_ptr<C_psetToInstance> dup;   
       for (it = rv._psetToInstanceVec->begin(); it != end; ++it) {
-	 (*it)->duplicate(dup);
+	 (*it)->duplicate(std::move(dup));
 	 _psetToInstanceVec->push_back(dup.release());
       }
    }
@@ -1011,9 +1004,9 @@ void C_generalList::copyOwnedHeap(const C_generalList& rv)
       _psetToSharedVec = new std::vector<C_psetToShared*>();
       std::vector<C_psetToShared*>::iterator it,
 	 end = rv._psetToSharedVec->end();
-      std::auto_ptr<C_psetToShared> dup;   
+      std::unique_ptr<C_psetToShared> dup;   
       for (it = rv._psetToSharedVec->begin(); it != end; ++it) {
-	 (*it)->duplicate(dup);
+	 (*it)->duplicate(std::move(dup));
 	 _psetToSharedVec->push_back(dup.release());
       }
    }
@@ -1021,36 +1014,36 @@ void C_generalList::copyOwnedHeap(const C_generalList& rv)
       _connectionVec = new std::vector<C_regularConnection*>();
       std::vector<C_regularConnection*>::iterator it,
 	 end = rv._connectionVec->end();
-      std::auto_ptr<C_regularConnection> dup;   
+      std::unique_ptr<C_regularConnection> dup;   
       for (it = rv._connectionVec->begin(); it != end; ++it) {
-	 (*it)->duplicate(dup);
+	 (*it)->duplicate(std::move(dup));
 	 _connectionVec->push_back(dup.release());
       }
    }
    if (rv._sharedVec) {
       _sharedVec = new std::vector<C_shared*>();
       std::vector<C_shared*>::iterator it, end = rv._sharedVec->end();
-      std::auto_ptr<C_shared> dup;   
+      std::unique_ptr<C_shared> dup;   
       for (it = rv._sharedVec->begin(); it != end; ++it) {
-	 (*it)->duplicate(dup);
+	 (*it)->duplicate(std::move(dup));
 	 _sharedVec->push_back(dup.release());
       }
    }
    if (rv._initializeVec) {
       _initializeVec = new std::vector<C_initialize*>();
       std::vector<C_initialize*>::iterator it, end = rv._initializeVec->end();
-      std::auto_ptr<C_initialize> dup;   
+      std::unique_ptr<C_initialize> dup;   
       for (it = rv._initializeVec->begin(); it != end; ++it) {
-	 (*it)->duplicate(dup);
+	 (*it)->duplicate(std::move(dup));
 	 _initializeVec->push_back(dup.release());
       }
    }
    if (rv._executeVec) {
       _executeVec = new std::vector<C_execute*>();
       std::vector<C_execute*>::iterator it, end = rv._executeVec->end();
-      std::auto_ptr<C_execute> dup;   
+      std::unique_ptr<C_execute> dup;   
       for (it = rv._executeVec->begin(); it != end; ++it) {
-	 (*it)->duplicate(dup);
+	 (*it)->duplicate(std::move(dup));
 	 _executeVec->push_back(dup.release());
       }
    }

@@ -1,23 +1,16 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BMC-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
-#include "Lens.h"
+// =============================================================================
+#include "Mgs.h"
 #include "StringUtils.h"
 #include "TissueFunctor.h"
 #include "CG_TissueFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "LayerDefinitionContext.h"
 #include "Simulation.h"
 #include "Grid.h"
@@ -31,7 +24,7 @@
 #include "FloatDataItem.h"
 #include "FloatArrayDataItem.h"
 #include "StructDataItem.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "DataItemArrayDataItem.h"
 #include "ConstantDataItem.h"
 #include "Struct.h"
@@ -47,7 +40,7 @@
 #include "IntArrayDataItem.h"
 #include "DoubleDataItem.h"
 #include "DoubleArrayDataItem.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "StringArrayDataItem.h"
 #include <mpi.h>
 #include <typeinfo>
@@ -75,7 +68,7 @@
 #include "Params.h"
 #include "TissueGrowthSimulator.hpp"
 
-#include "LENSTissueSlicer.h"
+#include "MgsTissueSlicer.h"
 #include "TouchDetector.h"
 #include "ORTouchSpace.h"
 #include "ComputeBranch.h"
@@ -215,10 +208,10 @@ TissueFunctor::TissueFunctor(TissueFunctor const& f)
       _capsuleCptPointIndexMap(f._capsuleCptPointIndexMap),
       _capsuleJctPointIndexMap(f._capsuleJctPointIndexMap),
       _channelBranchIndices1(f._channelBranchIndices1),
-      _channelBranchIndices2(f._channelBranchIndices2),
-      _channelJunctionIndices1(f._channelJunctionIndices1),
-      _channelJunctionIndices2(f._channelJunctionIndices2),
 #ifdef MICRODOMAIN_CALCIUM
+      _channelJunctionIndices1(f._channelJunctionIndices1),
+      _channelBranchIndices2(f._channelBranchIndices2),
+      _channelJunctionIndices2(f._channelJunctionIndices2),
       _microdomainOnBranch(f._microdomainOnBranch),
       _microdomainOnJunction(f._microdomainOnJunction),
 #endif
@@ -235,6 +228,7 @@ TissueFunctor::TissueFunctor(TissueFunctor const& f)
       _junctionPointTypeCounter(f._junctionPointTypeCounter),
       _forwardSolvePointTypeCounter(f._forwardSolvePointTypeCounter),
       _backwardSolvePointTypeCounter(f._backwardSolvePointTypeCounter),
+      
       _tissueParams(f._tissueParams),
       _synapseGeneratorMap(f._synapseGeneratorMap),
       _synapseReceptorMaps(f._synapseReceptorMaps),
@@ -242,14 +236,14 @@ TissueFunctor::TissueFunctor(TissueFunctor const& f)
       _probedLayoutsMap(f._probedLayoutsMap),
       _probedNodesMap(f._probedNodesMap),
       _compartmentVariableTypes(f._compartmentVariableTypes),
-      _electricalSynapseTypesMap(f._electricalSynapseTypesMap),
       _bidirectionalConnectionTypesMap(f._bidirectionalConnectionTypesMap),
+      _electricalSynapseTypesMap(f._electricalSynapseTypesMap),
       _chemicalSynapseTypesMap(f._chemicalSynapseTypesMap),
       _compartmentVariableTypesMap(f._compartmentVariableTypesMap),
       _junctionTypesMap(f._junctionTypesMap),
       _channelTypesMap(f._channelTypesMap),
-      _preSynapticPointTypesMap(f._preSynapticPointTypesMap),
       _synapticCleftTypesMap(f._synapticCleftTypesMap),
+      _preSynapticPointTypesMap(f._preSynapticPointTypesMap),
       _endPointTypesMap(f._endPointTypesMap),
       _junctionPointTypesMap(f._junctionPointTypesMap),
       _forwardSolvePointTypesMap(f._forwardSolvePointTypesMap),
@@ -258,13 +252,13 @@ TissueFunctor::TissueFunctor(TissueFunctor const& f)
       _segmentDescriptor(f._segmentDescriptor)
 #endif
 {
-  if (f._layoutFunctor.get()) f._layoutFunctor->duplicate(_layoutFunctor);
-  if (f._nodeInitFunctor.get()) f._nodeInitFunctor->duplicate(_nodeInitFunctor);
+  if (f._layoutFunctor.get()) f._layoutFunctor->duplicate(std::move(_layoutFunctor));
+  if (f._nodeInitFunctor.get()) f._nodeInitFunctor->duplicate(std::move(_nodeInitFunctor));
   if (f._connectorFunctor.get())
-    f._connectorFunctor->duplicate(_connectorFunctor);
-  if (f._probeFunctor.get()) f._probeFunctor->duplicate(_probeFunctor);
-  if (f._MGSifyFunctor.get()) f._MGSifyFunctor->duplicate(_MGSifyFunctor);
-  if (f._params.get()) f._params->duplicate(_params);
+    f._connectorFunctor->duplicate(std::move(_connectorFunctor));
+  if (f._probeFunctor.get()) f._probeFunctor->duplicate(std::move(_probeFunctor));
+  if (f._MGSifyFunctor.get()) f._MGSifyFunctor->duplicate(std::move(_MGSifyFunctor));
+  if (f._params.get()) f._params->duplicate(std::move(_params));
   _generatedChemicalSynapses = f._generatedChemicalSynapses;
   _nonGeneratedMixedChemicalSynapses = f._nonGeneratedMixedChemicalSynapses;
   _generatedSynapticClefts = f._generatedSynapticClefts;
@@ -280,8 +274,8 @@ TissueFunctor::TissueFunctor(TissueFunctor const& f)
 //     2.  detect touches
 //     3.  generate spines
 //  based on the inputs passed to the object
-//!void TissueFunctor::userInitialize(LensContext* CG_c, String& commandLineArgs1, String& commandLineArgs2, 
-//!				   String& compartmentParamFile, String& channelParamFile, String& synapseParamFile,
+//!void TissueFunctor::userInitialize(GslContext* CG_c, CustomString& commandLineArgs1, CustomString& commandLineArgs2, 
+//!				   CustomString& compartmentParamFile, CustomString& channelParamFile, CustomString& synapseParamFile,
 //!				   Functor*& layoutFunctor, Functor*& nodeInitFunctor, 
 //!				   Functor*& connectorFunctor, Functor*& probeFunctor,
 //!				   Functor*& MGSifyFunctor)
@@ -337,7 +331,7 @@ TissueFunctor::TissueFunctor(TissueFunctor const& f)
 //!  }
 //!
 //!#ifdef HAVE_MPI
-//!  String command = "NULL ";
+//!  CustomString command = "NULL ";
 //!  command += commandLineArgs1;
 //!  if (_tissueContext->_commandLine.parse(command.c_str()) == false)
 //!  {
@@ -426,9 +420,9 @@ TissueFunctor::TissueFunctor(TissueFunctor const& f)
 //!  }
 //!}
 void TissueFunctor::userInitialize(
-    LensContext* CG_c, String& commandLineArgs1, String& commandLineArgs2,
-    String& compartmentParamFile, String& channelParamFile,
-    String& synapseParamFile, Functor*& layoutFunctor,
+    GslContext* CG_c, CustomString& commandLineArgs1, CustomString& commandLineArgs2,
+    CustomString& compartmentParamFile, CustomString& channelParamFile,
+    CustomString& synapseParamFile, Functor*& layoutFunctor,
     Functor*& nodeInitFunctor, Functor*& connectorFunctor,
     Functor*& probeFunctor)
 {
@@ -436,10 +430,10 @@ void TissueFunctor::userInitialize(
   _size = CG_c->sim->getNumProcesses();
   _rank = CG_c->sim->getRank();
 #endif
-  layoutFunctor->duplicate(_layoutFunctor);
-  nodeInitFunctor->duplicate(_nodeInitFunctor);
-  connectorFunctor->duplicate(_connectorFunctor);
-  probeFunctor->duplicate(_probeFunctor);
+  layoutFunctor->duplicate(std::move(_layoutFunctor));
+  nodeInitFunctor->duplicate(std::move(_nodeInitFunctor));
+  connectorFunctor->duplicate(std::move(_connectorFunctor));
+  probeFunctor->duplicate(std::move(_probeFunctor));
 
   // Validate inputs
   {
@@ -482,7 +476,7 @@ void TissueFunctor::userInitialize(
   }
 
 #ifdef HAVE_MPI
-  String command = "NULL ";
+  CustomString command = "NULL ";
   command += commandLineArgs1;
   if (_tissueContext->_commandLine.parse(command.c_str()) == false)
   {
@@ -576,7 +570,7 @@ void TissueFunctor::userInitialize(
 // GOAL: growth neurons that have either AXON_PAR, BASAL_PAR
 //                                       APICAL_PAR
 //                           that are not-NULL
-void TissueFunctor::neuroGen(Params* params, LensContext* CG_c)
+void TissueFunctor::neuroGen(Params* params, GslContext* CG_c)
 {
 #ifdef HAVE_MPI
   double start, now, then;
@@ -852,7 +846,7 @@ void TissueFunctor::neuroGen(Params* params, LensContext* CG_c)
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-void TissueFunctor::neuroDev(Params* params, LensContext* CG_c)
+void TissueFunctor::neuroDev(Params* params, GslContext* CG_c)
 {
   if (_rank == 0) printf("Developing tissue...\n");
 #ifdef HAVE_MPI
@@ -1109,7 +1103,7 @@ void TissueFunctor::neuroDev(Params* params, LensContext* CG_c)
 //   perform
 //   1. generate Capsules from Segments structure
 //   2. detect touches between any 2 capsules
-void TissueFunctor::touchDetect(Params* params, LensContext* CG_c)
+void TissueFunctor::touchDetect(Params* params, GslContext* CG_c)
 {
 #ifdef IDEA1
   _tissueContext->_params = params;
@@ -1162,7 +1156,7 @@ void TissueFunctor::touchDetect(Params* params, LensContext* CG_c)
       new InferiorOliveGlomeruliDetector(_tissueContext);
 #endif
 
-  LENSTissueSlicer* lensTissueSlicer = new LENSTissueSlicer(
+  MGSTissueSlicer* mgsTissueSlicer = new MGSTissueSlicer(
       _rank, nSlicers, nTouchDetectors, _tissueContext, params);
   TouchAggregator* touchAggregator =
       new TouchAggregator(_rank, nTouchDetectors, _tissueContext);
@@ -1231,7 +1225,7 @@ void TissueFunctor::touchDetect(Params* params, LensContext* CG_c)
     }
     touchDetector->resetBufferSize(false);
     director->clearCommunicationCouples();
-    director->addCommunicationCouple(lensTissueSlicer, touchDetector);
+    director->addCommunicationCouple(mgsTissueSlicer, touchDetector);
     director->addCommunicationCouple(touchDetector, touchAggregator);
 #ifdef IDEA1
     _tissueContext->makeProperComputeBranch();
@@ -1254,9 +1248,9 @@ void TissueFunctor::touchDetect(Params* params, LensContext* CG_c)
 #ifdef IDEA1
     //_tissueContext->makeProperComputeBranch();
 #endif
-    director->addCommunicationCouple(lensTissueSlicer, touchDetector);
+    director->addCommunicationCouple(mgsTissueSlicer, touchDetector);
     director->iterate();
-    delete lensTissueSlicer;
+    delete mgsTissueSlicer;
 
     touchDetector->setPass(TissueContext::SECOND_PASS);
     touchDetector->setUpCapsules();
@@ -1297,7 +1291,7 @@ void TissueFunctor::touchDetect(Params* params, LensContext* CG_c)
     director->iterate();
 
     director->clearCommunicationCouples();
-    director->addCommunicationCouple(lensTissueSlicer, touchDetector);
+    director->addCommunicationCouple(mgsTissueSlicer, touchDetector);
     director->addCommunicationCouple(touchDetector, touchAggregator);
     director->iterate();
 
@@ -1331,7 +1325,7 @@ void TissueFunctor::touchDetect(Params* params, LensContext* CG_c)
                                      secondPassVolumeCapsuleMap);
     touchDetector->setCapsuleOffset(-nVolCaps);
     director->clearCommunicationCouples();
-    director->addCommunicationCouple(lensTissueSlicer, touchDetector);
+    director->addCommunicationCouple(mgsTissueSlicer, touchDetector);
     director->iterate();
 
     _tissueContext->resetCapsuleMaps(firstPassNeuronCapsuleMap,
@@ -1342,7 +1336,7 @@ void TissueFunctor::touchDetect(Params* params, LensContext* CG_c)
 
     delete touchAggregator;
     delete touchDetectTissueSlicer;
-    delete lensTissueSlicer;
+    delete mgsTissueSlicer;
     delete touchDetector;
     delete communicator;
     delete director;
@@ -1372,7 +1366,7 @@ void TissueFunctor::touchDetect(Params* params, LensContext* CG_c)
 //     modify Touch(capA,capB) --> Touch(capA,head)
 //   2. adding new touches,
 //       Touch(neck,capB)
-void TissueFunctor::createSpines(Params* params, LensContext* CG_c)
+void TissueFunctor::createSpines(Params* params, GslContext* CG_c)
 {  // not implemented yet
    // loop throughs all  _tissueContext->_touchVector
    //
@@ -1380,7 +1374,7 @@ void TissueFunctor::createSpines(Params* params, LensContext* CG_c)
                    tend = _tissueContext->_touchVector.end();
            for (; titer != tend; ++titer)
            {
-           if (!_tissueContext->isLensTouch(*titer, _rank)) continue;
+           if (!_tissueContext->isMgsTouch(*titer, _rank)) continue;
            key_size_t key1, key2;
              key1 = titer->getKey1();
              key2 = titer->getKey2();
@@ -1440,7 +1434,7 @@ void TissueFunctor::createSpines(Params* params, LensContext* CG_c)
 //    nodeIndex  = index in the grid (where it holds one or many instances
 //                 of such NodeType's nodeCategory[nodeType])
 //    densityIndex = index in the density vector, i.e. the exact instance to handle 
-int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
+int TissueFunctor::compartmentalize(GslContext* lc, NDPairList* params,
                                     std::string& nodeCategory,
                                     std::string& nodeType, int nodeIndex,
                                     int densityIndex)
@@ -1778,7 +1772,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
             ConstantDataItem* cdi =
               dynamic_cast<ConstantDataItem*>(aptr_cst.get());
             std::unique_ptr<Constant> aptr_dim;
-            cdi->getConstant()->duplicate(aptr_dim);
+            cdi->getConstant()->duplicate(std::move(aptr_dim));
             Constant* dim = aptr_dim.release();
             dimensions.push_back(dynamic_cast<CG_CompartmentDimension*>(dim));
 
@@ -2095,7 +2089,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
       ct->getInstance(aptr_cst, dimParams, lc);
       ConstantDataItem* cdi = dynamic_cast<ConstantDataItem*>(aptr_cst.get());
       std::unique_ptr<Constant> aptr_dim;
-      cdi->getConstant()->duplicate(aptr_dim);
+      cdi->getConstant()->duplicate(std::move(aptr_dim));
       Constant* dim = aptr_dim.release();
       _tissueContext->_junctionDimensionMap[junctionCapsule] =
         dynamic_cast<CG_CompartmentDimension*>(dim);
@@ -2165,7 +2159,7 @@ std::vector<DataItem*> const* TissueFunctor::extractCompartmentalization(
 //    HISTORY:
 //      1.1: use (x,y,z,r,dist2soma, surface_area, volume, length)
 //      1.0: use (x,y,z,r,dist2soma)
-StructDataItem* TissueFunctor::getDimension(LensContext* lc, double* cds,
+StructDataItem* TissueFunctor::getDimension(GslContext* lc, double* cds,
                                             dyn_var_t radius,
                                             dyn_var_t dist2soma,
                                             dyn_var_t surface_area,
@@ -2268,7 +2262,7 @@ StructDataItem* TissueFunctor::getDimension(LensContext* lc, double* cds,
 //         radius = the common radius between 2 points
 //         dist2soma = the dist2soma from cds1
 //
-StructDataItem* TissueFunctor::getDimension(LensContext* lc, double* cds1,
+StructDataItem* TissueFunctor::getDimension(GslContext* lc, double* cds1,
                                             double* cds2, dyn_var_t radius,
                                             dyn_var_t dist2soma,
                                             dyn_var_t surface_area,
@@ -2307,8 +2301,8 @@ void TissueFunctor::getNodekind(const NDPairList* ndpl,
   {
     if ((*ndpiter)->getName() == "nodekind")
     {
-      StringDataItem* nkDI =
-          dynamic_cast<StringDataItem*>((*ndpiter)->getDataItem());
+      CustomStringDataItem* nkDI =
+          dynamic_cast<CustomStringDataItem*>((*ndpiter)->getDataItem());
       if (nkDI == 0)
       {
         std::cerr << "TissueFunctor: nodekind parameter is not a string!"
@@ -2565,18 +2559,18 @@ void TissueFunctor::connect(Simulation* sim, Connector* connector,
 {
   std::unique_ptr<ParameterSet> inAttrPSet, outAttrPSet;
   to->getGridLayerDescriptor()->getNodeType()->getInAttrParameterSet(
-      inAttrPSet);
+    std::move(inAttrPSet));
   from->getGridLayerDescriptor()->getNodeType()->getOutAttrParameterSet(
-      outAttrPSet);
+    std::move(outAttrPSet));
   inAttrPSet->set(ndpl);
   connector->nodeToNode(from, outAttrPSet.get(), to, inAttrPSet.get(), sim);
 }
 
-std::unique_ptr<Functor> TissueFunctor::userExecute(LensContext* CG_c,
-                                                  String& tissueElement,
+std::unique_ptr<Functor> TissueFunctor::userExecute(GslContext* CG_c,
+                                                  CustomString& tissueElement,
                                                   NDPairList*& params)
 {
-  params->duplicate(_params);
+  params->duplicate(std::move(_params));
   std::unique_ptr<Functor> rval;
 
   if (tissueElement == "Layout")
@@ -2589,7 +2583,7 @@ std::unique_ptr<Functor> TissueFunctor::userExecute(LensContext* CG_c,
       //normal NTS "Layout"
       TissueElement* element = dynamic_cast<TissueElement*>(_layoutFunctor.get());
       element->setTissueFunctor(this);
-      _layoutFunctor->duplicate(rval);
+      _layoutFunctor->duplicate(std::move(rval));
     }
     else {
       //special "Layout" for being used in Zipper
@@ -2605,7 +2599,7 @@ std::unique_ptr<Functor> TissueFunctor::userExecute(LensContext* CG_c,
 
       TissueElement* element=dynamic_cast<TissueElement*>(_layoutFunctor.get());
       element->setTissueFunctor(this);
-      _layoutFunctor->duplicate(rval);
+      _layoutFunctor->duplicate(std::move(rval));
     }
   }
   else if (tissueElement == "NodeInit")
@@ -2613,20 +2607,20 @@ std::unique_ptr<Functor> TissueFunctor::userExecute(LensContext* CG_c,
     TissueElement* element =
         dynamic_cast<TissueElement*>(_nodeInitFunctor.get());
     element->setTissueFunctor(this);
-    _nodeInitFunctor->duplicate(rval);
+    _nodeInitFunctor->duplicate(std::move(rval));
   }
   else if (tissueElement == "Connector")
   {
     TissueElement* element =
         dynamic_cast<TissueElement*>(_connectorFunctor.get());
     element->setTissueFunctor(this);
-    _connectorFunctor->duplicate(rval);
+    _connectorFunctor->duplicate(std::move(rval));
   }
   else if (tissueElement == "Probe")
   {
     TissueElement* element = dynamic_cast<TissueElement*>(_probeFunctor.get());
     element->setTissueFunctor(this);
-    _probeFunctor->duplicate(rval);
+    _probeFunctor->duplicate(std::move(rval));
   }
   else if (tissueElement=="MGSify") 
   {
@@ -2637,7 +2631,7 @@ std::unique_ptr<Functor> TissueFunctor::userExecute(LensContext* CG_c,
       exit(-1);
     }
     element->setTissueFunctor(this);
-    _MGSifyFunctor->duplicate(rval);
+    _MGSifyFunctor->duplicate(std::move(rval));
   }
   else if (tissueElement=="Connect") {
     doConnector(CG_c);
@@ -2661,7 +2655,7 @@ std::unique_ptr<Functor> TissueFunctor::userExecute(LensContext* CG_c,
 //    Shallow<int> rval;
 //    with rval.size() == _nbrGridNodes
 //       rval.assign(_nbrGridNodes, 0);
-ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
+ShallowArray<int> TissueFunctor::doLayout(GslContext* lc)
 {
   NDPairList* ndpl=_params.get();
   NDPair* ndp=ndpl->back();
@@ -2681,7 +2675,7 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
   return rval;
 }
 
-ShallowArray<int> TissueFunctor::doLayoutHybrid(LensContext* lc)
+ShallowArray<int> TissueFunctor::doLayoutHybrid(GslContext* lc)
 {
   NDPairList* ndpl=_params.get();
   NDPair* ndp=ndpl->back();
@@ -2692,7 +2686,7 @@ ShallowArray<int> TissueFunctor::doLayoutHybrid(LensContext* lc)
   assert(ndp->getName()=="PROBED");
 
   if (ndp->getName()=="PROBED") {
-    StringDataItem* prDI = dynamic_cast<StringDataItem*>(ndp->getDataItem());
+    CustomStringDataItem* prDI = dynamic_cast<CustomStringDataItem*>(ndp->getDataItem());
     if (prDI == 0) {
       std::cerr<<"TissueFunctor: probed parameter is not a string!"<<std::endl;
       exit(-1);
@@ -2713,7 +2707,7 @@ ShallowArray<int> TissueFunctor::doLayoutHybrid(LensContext* lc)
 //   nodeCategory = "SynapticClefts"
 //   nodeType  = "Voltage"
 //   nodeComputeOrder = 2
-ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
+ShallowArray<int> TissueFunctor::doLayoutNTS(GslContext* lc)
 {
   assert(_params.get());
   std::vector<std::string> nodekind;
@@ -2945,11 +2939,11 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
       //Check to make sure only consider the touch with at least 
       //one capsule supposed to be handled
       //by the current MPI process
-      //assert(_tissueContext->isLensTouch(*titer, _rank));
+      //assert(_tissueContext->isMgsTouch(*titer, _rank));
 #ifdef IDEA1
       ++mm;
-      //if (!_tissueContext->isLensTouch(*titer, _rank)) continue;
-      if (!_tissueContext->isLensTouch(*titer, _rank)) 
+      //if (!_tissueContext->isMgsTouch(*titer, _rank)) continue;
+      if (!_tissueContext->isMgsTouch(*titer, _rank)) 
       {
         if (bidirectional)
         {
@@ -2970,7 +2964,7 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
       }
       ++nn;
 #else
-      if (!_tissueContext->isLensTouch(*titer, _rank))  continue;
+      if (!_tissueContext->isMgsTouch(*titer, _rank))  continue;
 #endif
 
       key_size_t key1, key2;
@@ -3012,7 +3006,7 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
 #else
       if (_segmentDescriptor.getFlag(key1) &&
           _tissueContext->isTouchToEnd(*preCapsule, *titer))
-      {  // pre component is LENS junction (i.e. explicit junction)
+      {  // pre component is MGS junction (i.e. explicit junction)
 #ifdef SINGLE_JUNCTIONAL_CAPSULE_CAN_FORM_MULTIPLE_SYNAPSE
         if (point &&
             _capsuleJctPointIndexMap[nodeType].find(std::make_pair(preCapsule, postCapsule)) !=
@@ -3029,7 +3023,7 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
       }
 #endif
       else
-      {  // pre component is LENS branch
+      {  // pre component is MGS branch
         if (point &&
             _capsuleCptPointIndexMap[nodeType].find(preCapsule) !=
                 _capsuleCptPointIndexMap[nodeType].end())
@@ -3086,7 +3080,7 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
           if (_tissueContext->isTouchToEnd(*postCapsule, *titer) &&
               _segmentDescriptor.getFlag(postCapsule->getKey()))
           {
-            // post component is LENS junction
+            // post component is MGS junction
             postJunction = true;
             indexPost = _tissueContext->getRankOfEndPoint(postBranch);
             Sphere postEndSphere;
@@ -3096,7 +3090,7 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
 #endif
           else
           {
-            // post component is LENS branch
+            // post component is MGS branch
             postJunction = false;
             indexPost = _tissueContext->getRankOfBeginPoint(postBranch);
             // assert(indexPost==_tissueContext->_decomposition->getRank(postCapsule->getSphere()));
@@ -4083,7 +4077,7 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
 //     2. specific data:
 //         + via NodeInit() in GSL
 //         + via data in *params.par files
-void TissueFunctor::doNodeInit(LensContext* lc)
+void TissueFunctor::doNodeInit(GslContext* lc)
 {
   //NOTE: _params holds the NDPairList data passed to tissueFunctor as part of the InitNodes
   // statement
@@ -4231,7 +4225,7 @@ void TissueFunctor::doNodeInit(LensContext* lc)
     if ((*node)->getNode())
     {
       NDPairList paramsLocal = *(_params.get());
-      (*gld)->getNodeType()->getInitializationParameterSet(initPset);
+      (*gld)->getNodeType()->getInitializationParameterSet(std::move(initPset));
       if (ifunctor) {
 	std::vector<DataItem*> nullArgs;
 	std::unique_ptr<DataItem> rval_ap;
@@ -4291,7 +4285,7 @@ void TissueFunctor::doNodeInit(LensContext* lc)
           ConstantDataItem* cdi =
               dynamic_cast<ConstantDataItem*>(aptr_cst.get());
           std::unique_ptr<Constant> aptr_brd;
-          cdi->getConstant()->duplicate(aptr_brd);
+          cdi->getConstant()->duplicate(std::move(aptr_brd));
           Constant* brd = aptr_brd.release();
           branchData = (dynamic_cast<CG_BranchData*>(brd));
           assert(branchData);
@@ -4311,7 +4305,7 @@ void TissueFunctor::doNodeInit(LensContext* lc)
             //   first connection fills into the first position in the array
             //   next connection fills into the next position in the array
             for (diter = dimensions.begin(); diter != dend; ++diter)
-              _lensConnector.constantToNode(*diter, *node, &emptyOutAttr,
+              _mgsConnector.constantToNode(*diter, *node, &emptyOutAttr,
                   &dim2cpt, lc->sim);
           }
 #ifdef MICRODOMAIN_CALCIUM
@@ -4330,18 +4324,18 @@ void TissueFunctor::doNodeInit(LensContext* lc)
             NDPairList brd2cptWithMicroDomainSupport = brd2cpt;
             //NOTE: 'result' holds comma-separated string of name of all microdomains
             brd2cptWithMicroDomainSupport.push_back(new NDPair("domainName", result));
-            _lensConnector.constantToNode(branchData, *node, &emptyOutAttr,
+            _mgsConnector.constantToNode(branchData, *node, &emptyOutAttr,
                 &brd2cptWithMicroDomainSupport, lc->sim);
           }
           else
           {
-            _lensConnector.constantToNode(branchData, *node, &emptyOutAttr,
+            _mgsConnector.constantToNode(branchData, *node, &emptyOutAttr,
                 &brd2cpt, lc->sim);
           }
 #else
           // step 2: connect branchData to the data member 'branchData'
           //  of each HHVoltage node instance, for example
-          _lensConnector.constantToNode(branchData, *node, &emptyOutAttr,
+          _mgsConnector.constantToNode(branchData, *node, &emptyOutAttr,
                                         &brd2cpt, lc->sim);
 #endif
 
@@ -4375,7 +4369,7 @@ void TissueFunctor::doNodeInit(LensContext* lc)
           ConstantDataItem* cdi =
               dynamic_cast<ConstantDataItem*>(aptr_cst.get());
           std::unique_ptr<Constant> aptr_brd;
-          cdi->getConstant()->duplicate(aptr_brd);
+          cdi->getConstant()->duplicate(std::move(aptr_brd));
           Constant* brd = aptr_brd.release();
           branchData = (dynamic_cast<CG_BranchData*>(brd));
           assert(branchData);
@@ -4390,7 +4384,7 @@ void TissueFunctor::doNodeInit(LensContext* lc)
             //   the connection is established in such a way that the
             //   first connection fills into the first position in the array
             //   next connection fills into the next position in the array
-            _lensConnector.constantToNode(miter->second, *node, &emptyOutAttr,
+            _mgsConnector.constantToNode(miter->second, *node, &emptyOutAttr,
                 &dim2cpt, lc->sim);
           }
 
@@ -4410,18 +4404,18 @@ void TissueFunctor::doNodeInit(LensContext* lc)
             NDPairList brd2cptWithMicroDomainSupport = brd2cpt;
             //NOTE: 'result' holds comma-separated string of name of all microdomains
             brd2cptWithMicroDomainSupport.push_back(new NDPair("domainName", result));
-            _lensConnector.constantToNode(branchData, *node, &emptyOutAttr,
+            _mgsConnector.constantToNode(branchData, *node, &emptyOutAttr,
                 &brd2cptWithMicroDomainSupport, lc->sim);
           }
           else
           {
-            _lensConnector.constantToNode(branchData, *node, &emptyOutAttr,
+            _mgsConnector.constantToNode(branchData, *node, &emptyOutAttr,
                 &brd2cpt, lc->sim);
           }
 #else
           // step 2: connect branchData to the data member 'branchData'
           //  of each HHVoltageJunction node instance, for example
-          _lensConnector.constantToNode(branchData, *node, &emptyOutAttr,
+          _mgsConnector.constantToNode(branchData, *node, &emptyOutAttr,
                                         &brd2cpt, lc->sim);
 #endif
 
@@ -4505,7 +4499,7 @@ void TissueFunctor::doNodeInit(LensContext* lc)
 // Calcium)
 // based on the condition given in different parameter files (SynParams.par,
 // ChanParams.par)
-void TissueFunctor::doConnector(LensContext* lc)
+void TissueFunctor::doConnector(GslContext* lc)
 {
   assert(_compartmentVariableLayers.size() ==
          _compartmentVariableTypesMap.size());
@@ -4869,7 +4863,7 @@ void TissueFunctor::doConnector(LensContext* lc)
   }
   else if (sim->isSimulatePass())
   {
-    connector = &_lensConnector;
+    connector = &_mgsConnector;
   }
   else
   {
@@ -5426,7 +5420,7 @@ void TissueFunctor::doConnector(LensContext* lc)
       //Check to make sure only consider the touch with at least 
       //one capsule supposed to be handled
       //by the current MPI process
-      if (!_tissueContext->isLensTouch(*titer, _rank)) continue;
+      if (!_tissueContext->isMgsTouch(*titer, _rank)) continue;
       key_size_t key1, key2;
       key1 = titer->getKey1();
       key2 = titer->getKey2();
@@ -7108,7 +7102,7 @@ void TissueFunctor::doConnector(LensContext* lc)
 //                    neuron based on the order given in neurons.txt
 //
 // NOTE: It is mainly used identify the data (to be recorded) 
-void TissueFunctor::doProbe(LensContext* lc, std::unique_ptr<NodeSet>& rval)
+void TissueFunctor::doProbe(GslContext* lc, std::unique_ptr<NodeSet>&& rval)
 {
   std::vector<SegmentDescriptor::SegmentKeyData> maskVector;
   NDPairList::iterator ndpiter = _params->end(),
@@ -7122,8 +7116,8 @@ void TissueFunctor::doProbe(LensContext* lc, std::unique_ptr<NodeSet>& rval)
               << std::endl;
     exit(EXIT_FAILURE);
   }
-  StringDataItem* categoryDI =
-      dynamic_cast<StringDataItem*>((*ndpiter)->getDataItem());
+  CustomStringDataItem* categoryDI =
+      dynamic_cast<CustomStringDataItem*>((*ndpiter)->getDataItem());
   if (categoryDI == 0)
   {
     std::cerr << "CATEGORY parameter of TissueProbe must be a string!"
@@ -7141,8 +7135,8 @@ void TissueFunctor::doProbe(LensContext* lc, std::unique_ptr<NodeSet>& rval)
     std::cerr << "Second parameter of TissueProbe must be TYPE!" << std::endl;
     exit(EXIT_FAILURE);
   }
-  StringDataItem* typeDI =
-      dynamic_cast<StringDataItem*>((*ndpiter)->getDataItem());
+  CustomStringDataItem* typeDI =
+      dynamic_cast<CustomStringDataItem*>((*ndpiter)->getDataItem());
   if (typeDI == 0)
   {
     std::cerr << "TYPE parameter of TissueProbe must be a string!" << std::endl;
@@ -7170,7 +7164,7 @@ void TissueFunctor::doProbe(LensContext* lc, std::unique_ptr<NodeSet>& rval)
     {
       NumericDataItem* ndi =
           dynamic_cast<NumericDataItem*>((*ndpiter)->getDataItem());
-      if (ndi <= 0)
+      if (ndi->getInt() <= 0)
       {
         std::cerr << "TissueProbe parameter specification must comprise "
                      "unsigned integers!" << std::endl;
@@ -7400,7 +7394,7 @@ void TissueFunctor::doProbe(LensContext* lc, std::unique_ptr<NodeSet>& rval)
 // GOAL:  <internal use by tissueFunctor("Layout", <PROBE="pr0"...>)>
 //    return the set of node instances to be selected
 //      via the variable nodeDescriptors
-Grid* TissueFunctor::doProbe(LensContext* lc, std::vector<NodeDescriptor*>& nodeDescriptors)
+Grid* TissueFunctor::doProbe(GslContext* lc, std::vector<NodeDescriptor*>& nodeDescriptors)
 {
   Grid* rval=0;
   std::vector<SegmentDescriptor::SegmentKeyData> maskVector;
@@ -7412,7 +7406,7 @@ Grid* TissueFunctor::doProbe(LensContext* lc, std::vector<NodeDescriptor*>& node
   int remaining=_params->size();
 
   assert((*ndpiter)->getName()=="PROBED");
-  StringDataItem* layoutDI = dynamic_cast<StringDataItem*>((*ndpiter)->getDataItem());
+  CustomStringDataItem* layoutDI = dynamic_cast<CustomStringDataItem*>((*ndpiter)->getDataItem());
   layout=layoutDI->getString();
 
   std::vector<float> vN;
@@ -7548,7 +7542,7 @@ Grid* TissueFunctor::doProbe(LensContext* lc, std::vector<NodeDescriptor*>& node
   }
   return rval;
 }
-Grid* TissueFunctor::doProbe_Number(LensContext* lc, std::vector<NodeDescriptor*>& nodeDescriptors,
+Grid* TissueFunctor::doProbe_Number(GslContext* lc, std::vector<NodeDescriptor*>& nodeDescriptors,
         const std::string layout,
         NDPairList::iterator& ndpiter, NDPairList::iterator& ndpend_reverse,
         int& remaining,
@@ -7582,7 +7576,7 @@ Grid* TissueFunctor::doProbe_Number(LensContext* lc, std::vector<NodeDescriptor*
       unsigned int idx=-1;
       for (; ndpiter!=ndpend_reverse; --ndpiter, --remaining) {
         NumericDataItem* ndi=dynamic_cast<NumericDataItem*>((*ndpiter)->getDataItem());
-        if (ndi<=0) {
+        if (ndi->getInt() <= 0) {
           std::cerr<<"TissueProbe parameter specification must comprise unsigned integers!"<<std::endl;
           exit(0);
         }
@@ -7600,7 +7594,7 @@ Grid* TissueFunctor::doProbe_Number(LensContext* lc, std::vector<NodeDescriptor*
 
       mask=_segmentDescriptor.getMask(maskVector);
       targetKey=_segmentDescriptor.getSegmentKey(maskVector, ids);
-      delete ids;
+      delete [] ids;
     }
 
     //SELECTION PROCESS
@@ -7800,7 +7794,7 @@ Grid* TissueFunctor::doProbe_Number(LensContext* lc, std::vector<NodeDescriptor*
   }
   return rval;
 }
-Grid* TissueFunctor::doProbe_Region(LensContext* lc, std::vector<NodeDescriptor*>& nodeDescriptors,
+Grid* TissueFunctor::doProbe_Region(GslContext* lc, std::vector<NodeDescriptor*>& nodeDescriptors,
     const std::string layout,
     NDPairList::iterator& ndpiter, NDPairList::iterator& ndpend_reverse,
     int& remaining,
@@ -7833,7 +7827,7 @@ Grid* TissueFunctor::doProbe_Region(LensContext* lc, std::vector<NodeDescriptor*
     unsigned int idx=-1;
     for (; ndpiter!=ndpend_reverse; --ndpiter, --remaining) {
       NumericDataItem* ndi=dynamic_cast<NumericDataItem*>((*ndpiter)->getDataItem());
-      if (ndi<=0) {
+      if (ndi->getInt() <= 0) {
         std::cerr<<"TissueProbe parameter specification must comprise unsigned integers!"<<std::endl;
         exit(0);
       }
@@ -7851,7 +7845,7 @@ Grid* TissueFunctor::doProbe_Region(LensContext* lc, std::vector<NodeDescriptor*
 
     mask=_segmentDescriptor.getMask(maskVector);
     targetKey=_segmentDescriptor.getSegmentKey(maskVector, ids);
-    delete ids;
+    delete [] ids;
   }
 
   //SELECTION PROCESS
@@ -8026,7 +8020,7 @@ Grid* TissueFunctor::doProbe_Region(LensContext* lc, std::vector<NodeDescriptor*
   return rval;
 }
 
-void TissueFunctor::doMGSify(LensContext* lc)
+void TissueFunctor::doMGSify(GslContext* lc)
 {
   std::vector<std::vector<GridLayerDescriptor*> > layers;
   layers.push_back(_compartmentVariableLayers);
@@ -8050,7 +8044,7 @@ void TissueFunctor::doMGSify(LensContext* lc)
       (*liter)->replaceDensityVector(mgsrval, _nbrGridNodes);
     }
   }
-  delete [] mgsrval;
+  delete mgsrval;
 }
 
 // GOAL: map the values from *.par file to the data member
@@ -8154,7 +8148,7 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
     //else if (tokens[0] == "string")
     //{
     //  ////////////
-		//	StringDataItem* paramDI = new StringDataItem(cpiter->second);
+		//	CustomStringDataItem* paramDI = new CustomStringDataItem(cpiter->second);
     //  std::unique_ptr<DataItem> paramDI_ap(paramDI);
     //  NDPair* ndp = new NDPair(varName, paramDI_ap);
     //  paramsLocal.push_back(ndp);
@@ -8214,7 +8208,7 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
     //else if (tokens[0] == "string")
     //{
     //  ////////////
-		//	StringDataItem* paramDI = new StringDataItem(cpiter->second);
+		//	CustomStringDataItem* paramDI = new CustomStringDataItem(cpiter->second);
     //  std::unique_ptr<DataItem> paramDI_ap(paramDI);
     //  NDPair* ndp = new NDPair(varName, paramDI_ap);
     //  paramsLocal.push_back(ndp);
@@ -8518,9 +8512,8 @@ bool TissueFunctor::setGenerated(
           // equal and must be on the same side (i.e. either both first keys or
           //                                    both second keys)
           // if (key_spineneck == key_inloop_spineneck)
-          if ((key_spineneck == key_inloop_spineneck)
+          if (key_spineneck == key_inloop_spineneck)
               //  and (isSide1 == isSide1_inloop)
-              )
           {
             if (0)
             {  // debug purpose
@@ -8725,9 +8718,8 @@ bool TissueFunctor::setGenerated(
             // or
             //                                    both second keys)
             // if (key_spinehead == key_inloop_spinehead)
-            if ((key_spinehead == key_inloop_spinehead)
+            if (key_spinehead == key_inloop_spinehead)
                 //  and (isSide1 == isSide1_inloop)
-                )
             {
               if (0)
               {
@@ -9013,17 +9005,17 @@ TissueFunctor::~TissueFunctor()
 #endif
 }
 
-void TissueFunctor::duplicate(std::unique_ptr<TissueFunctor>& dup) const
+void TissueFunctor::duplicate(std::unique_ptr<TissueFunctor>&& dup) const
 {
   dup.reset(new TissueFunctor(*this));
 }
 
-void TissueFunctor::duplicate(std::unique_ptr<Functor>& dup) const
+void TissueFunctor::duplicate(std::unique_ptr<Functor>&& dup) const
 {
   dup.reset(new TissueFunctor(*this));
 }
 
-void TissueFunctor::duplicate(std::unique_ptr<CG_TissueFunctorBase>& dup) const
+void TissueFunctor::duplicate(std::unique_ptr<CG_TissueFunctorBase>&& dup) const
 {
   dup.reset(new TissueFunctor(*this));
 }
@@ -9717,7 +9709,7 @@ std::pair<std::string, std::string> TissueFunctor::getCategoryTypePair(NDPairLis
     std::cerr<<"First parameter of TissueProbe must be PROBED or CATEGORY!"<<std::endl;
     exit(0);
   }
-  StringDataItem* categoryDI = dynamic_cast<StringDataItem*>((*ndpiter)->getDataItem());
+  CustomStringDataItem* categoryDI = dynamic_cast<CustomStringDataItem*>((*ndpiter)->getDataItem());
   if (categoryDI==0) {
     std::cerr<<"CATEGORY parameter of TissueProbe must be a string!"<<std::endl;
     exit(0);
@@ -9734,7 +9726,7 @@ std::pair<std::string, std::string> TissueFunctor::getCategoryTypePair(NDPairLis
     std::cerr<<"Second parameter of TissueProbe must be TYPE!"<<std::endl;
     exit(0);
   }
-  StringDataItem* typeDI = dynamic_cast<StringDataItem*>((*ndpiter)->getDataItem());
+  CustomStringDataItem* typeDI = dynamic_cast<CustomStringDataItem*>((*ndpiter)->getDataItem());
   if (typeDI==0) {
     std::cerr<<"TYPE parameter of TissueProbe must be a string!"<<std::endl;
     exit(0);
@@ -9838,14 +9830,13 @@ bool TissueFunctor::isValidCategoryString(std::string category, std::string task
 //   return the Layer data (i.e. GridLayerDescriptor*)
 GridLayerDescriptor* TissueFunctor::getGridLayerDescriptor(std::string category, int typeIdx, bool esyn)
 {
-  GridLayerDescriptor* layer;
+  GridLayerDescriptor* layer=0;
   if (category=="BRANCH") layer=_compartmentVariableLayers[typeIdx];
   else if (category=="JUNCTION") layer=_junctionLayers[typeIdx];
   else if (category=="CHANNEL") layer=_channelLayers[typeIdx];
   else if (category=="SYNAPSE") layer = esyn ? _electricalSynapseLayers[typeIdx] : _chemicalSynapseLayers[typeIdx];
   else if (category == "CLEFT")
     layer = _synapticCleftLayers[typeIdx];
-
   return layer;
 }
 

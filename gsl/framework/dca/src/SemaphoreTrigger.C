@@ -1,21 +1,14 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BMC-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "SemaphoreTrigger.h"
 #include "Simulation.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "BoolDataItem.h"
 #include "TriggerDataItem.h"
 #include "PhaseDataItem.h"
@@ -35,9 +28,9 @@ SemaphoreTrigger::SemaphoreTrigger(Simulation& sim,
       exit(-1);
    }
    std::vector<DataItem*>::const_iterator iter = args.begin();
-   StringDataItem* descriptionDI = dynamic_cast<StringDataItem*>(*iter);
+   CustomStringDataItem* descriptionDI = dynamic_cast<CustomStringDataItem*>(*iter);
    if (descriptionDI == 0) {
-      std::cerr<<"Dynamic cast of DataItem to StringDataItem failed on SemaphoreTrigger!"<<std::endl;
+      std::cerr<<"Dynamic cast of DataItem to CustomStringDataItem failed on SemaphoreTrigger!"<<std::endl;
       exit(-1);
    }
    _description = descriptionDI->getString();
@@ -58,9 +51,9 @@ SemaphoreTrigger::SemaphoreTrigger(Simulation& sim,
    ++iter;
 
    if (args.size() == 8) {
-//      StringDataItem* opDI = dynamic_cast<StringDataItem*>(*iter);
+//      CustomStringDataItem* opDI = dynamic_cast<CustomStringDataItem*>(*iter);
 //      if (opDI == 0) {
-//	 std::cerr<<"Dynamic cast of DataItem to StringDataItem failed on SemaphoreTrigger!"<<std::endl;
+//	 std::cerr<<"Dynamic cast of DataItem to CustomStringDataItem failed on SemaphoreTrigger!"<<std::endl;
 //	 exit(-1);
 //      }
 //      _op = opDI->getString();
@@ -213,7 +206,7 @@ bool SemaphoreTrigger::isSingle()
    return (_triggerA->status() == _criterionA);
 }
 
-void SemaphoreTrigger::duplicate(std::unique_ptr<Trigger>& dup) const
+void SemaphoreTrigger::duplicate(std::unique_ptr<Trigger>&& dup) const
 {
    dup.reset(new SemaphoreTrigger(*this));
 }

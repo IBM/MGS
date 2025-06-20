@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
@@ -22,13 +15,13 @@
 
 SyntaxErrorException::SyntaxErrorException(std::string errCode, 
 					   bool first)
-   : _lensErrorCode(errCode), _first(first)
+   : _gslErrorCode(errCode), _first(first)
 {
 }
 
 
 SyntaxErrorException::SyntaxErrorException(const SyntaxErrorException& l)
-   : _lensErrorCode(l._lensErrorCode), _first(l._first)
+   : _gslErrorCode(l._gslErrorCode), _first(l._first)
 {
 }
 
@@ -36,7 +29,7 @@ SyntaxErrorException& SyntaxErrorException::operator=(
    const SyntaxErrorException& l)
 {
    if (this != &l) {
-      _lensErrorCode = l._lensErrorCode;
+      _gslErrorCode = l._gslErrorCode;
       _first = l._first;
    }
    return *this;
@@ -44,7 +37,7 @@ SyntaxErrorException& SyntaxErrorException::operator=(
 
 std::string SyntaxErrorException::getError()
 {
-   return(_lensErrorCode + " (SyntaxErrorException)");
+   return(_gslErrorCode + " (SyntaxErrorException)");
 }
 
 std::string SyntaxErrorException::what()
@@ -54,12 +47,12 @@ std::string SyntaxErrorException::what()
 
 void SyntaxErrorException::printError()
 {
-   if (_lensErrorCode != "") {
-      std::cerr << _lensErrorCode << std::endl;      
+   if (_gslErrorCode != "") {
+      std::cerr << _gslErrorCode << std::endl;      
    }
 }
 
 void SyntaxErrorException::resetError()
 {
-   _lensErrorCode = "";
+   _gslErrorCode = "";
 }

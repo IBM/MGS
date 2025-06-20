@@ -112,7 +112,7 @@ InterfaceMappingElement \
 InterfaceToMember \
 InternalException \
 IntType \
-LensType \
+GslType \
 LessOp \
 LessEqualOp \
 LoadPhase \

@@ -1,20 +1,13 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "OutAttrDefaultFunctor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "DataItem.h"
 #include "FunctorType.h"
 #include "NodeSet.h"
@@ -37,11 +30,11 @@ OutAttrDefaultFunctor::OutAttrDefaultFunctor()
 OutAttrDefaultFunctor::OutAttrDefaultFunctor(const OutAttrDefaultFunctor& csf)
 {
    if (csf._pset.get()) {
-      csf._pset->duplicate(_pset);
+      csf._pset->duplicate(std::move(_pset));
    }
 }
 
-void OutAttrDefaultFunctor::duplicate (std::unique_ptr<Functor> &fap) const
+void OutAttrDefaultFunctor::duplicate (std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new OutAttrDefaultFunctor(*this));
 }
@@ -52,20 +45,20 @@ OutAttrDefaultFunctor::~OutAttrDefaultFunctor()
 }
 
 
-void OutAttrDefaultFunctor::doInitialize(LensContext *c, 
+void OutAttrDefaultFunctor::doInitialize(GslContext *c, 
 					 const std::vector<DataItem*>& args)
 {
 }
 
 
 void OutAttrDefaultFunctor::doExecute(
-   LensContext *c, const std::vector<DataItem*>& args, 
+   GslContext *c, const std::vector<DataItem*>& args, 
    std::unique_ptr<DataItem>& rvalue)
 {
    ConnectionContext *cc = c->connectionContext;
    std::unique_ptr<ParameterSet> pset;
    NodeType *nt = cc->sourceNode->getGridLayerDescriptor()->getNodeType();
-   nt->getOutAttrParameterSet(pset);
+   nt->getOutAttrParameterSet(std::move(pset));
 
    ParameterSetDataItem *psdi= new ParameterSetDataItem();
    psdi->setParameterSet(pset);

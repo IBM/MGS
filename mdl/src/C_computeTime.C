@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_computeTime.h"
 #include "C_general.h"
 #include "C_generalList.h"
@@ -23,7 +16,7 @@
 
 #include <memory>
 #include <string>
-#include <values.h>
+#include <float.h>
 #include <iostream>
 
 void C_computeTime::execute(MdlContext* context) 
@@ -42,15 +35,15 @@ void C_computeTime::addToList(C_generalList* gl)
    const std::vector<std::string>& ids = _identifierList->getIdentifiers();
    std::vector<std::string>::const_iterator it, end = ids.end();
    for (it = ids.begin(); it != end; ++ it) {
-      std::auto_ptr<UserFunction> computeTime(
+      std::unique_ptr<UserFunction> computeTime(
 	 new UserFunction(*it));
-      gl->addUserFunction(computeTime);
+      gl->addUserFunction(std::move(computeTime));
    }
 }
 
 
 C_computeTime::C_computeTime() 
-   : C_general(), _identifierList(0) , _computeTime(MAXFLOAT)
+   : C_general(), _identifierList(0) , _computeTime(FLT_MAX)
 {
 
 }
@@ -83,12 +76,12 @@ C_computeTime& C_computeTime::operator=(const C_computeTime& rv)
    return *this;
 }
 
-void C_computeTime::duplicate(std::auto_ptr<C_computeTime>& rv) const
+void C_computeTime::duplicate(std::unique_ptr<C_computeTime>&& rv) const
 {
    rv.reset(new C_computeTime(*this));
 }
 
-void C_computeTime::duplicate(std::auto_ptr<C_general>& rv) const
+void C_computeTime::duplicate(std::unique_ptr<C_general>&& rv) const
 {
    rv.reset(new C_computeTime(*this));
 }
@@ -101,8 +94,8 @@ C_computeTime::~C_computeTime()
 void C_computeTime::copyOwnedHeap(const C_computeTime& rv)
 {
    if (rv._identifierList) {
-      std::auto_ptr<C_identifierList> dup;
-      rv._identifierList->duplicate(dup);
+      std::unique_ptr<C_identifierList> dup;
+      rv._identifierList->duplicate(std::move(dup));
       _identifierList = dup.release();
    } else {
       _identifierList = 0;

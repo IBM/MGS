@@ -1,24 +1,17 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BMC-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
-#include "Lens.h"
+// =============================================================================
+#include "Mgs.h"
 #include "Zipper.h"
 #include "CG_ZipperBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "Connector.h"
-#include "LensConnector.h"
+#include "MgsConnector.h"
 #include "GranuleConnector.h"
 #include "NoConnectConnector.h"
 #include "ConnectionContext.h"
@@ -27,7 +20,7 @@
 #include "Simulation.h"
 #include "NodeSetDataItem.h"
 #include "FunctorDataItem.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "IntDataItem.h"
 #include "FloatDataItem.h"
 #include "NodeSet.h"
@@ -44,11 +37,11 @@
 #include <memory>
 #include <cmath>
 
-void Zipper::userInitialize(LensContext* CG_c) 
+void Zipper::userInitialize(GslContext* CG_c) 
 {
 }
 
-void Zipper::userExecute(LensContext* CG_c, std::vector<DataItem*>::const_iterator begin, std::vector<DataItem*>::const_iterator end) 
+void Zipper::userExecute(GslContext* CG_c, std::vector<DataItem*>::const_iterator begin, std::vector<DataItem*>::const_iterator end) 
 {
   CG_c->connectionContext->reset();
   ConnectionContext* cc = CG_c->connectionContext;
@@ -154,8 +147,8 @@ void Zipper::userExecute(LensContext* CG_c, std::vector<DataItem*>::const_iterat
 
   std::string branchPropListName("");
   if (it!=end) {
-    StringDataItem* branchPropListNameDI=0;
-    branchPropListNameDI = dynamic_cast<StringDataItem*>(*it);    
+    CustomStringDataItem* branchPropListNameDI=0;
+    branchPropListNameDI = dynamic_cast<CustomStringDataItem*>(*it);    
     if (branchPropListNameDI==0)
       throw SyntaxErrorException("Argument 5 is non-compliant.\n" + mes);
     else
@@ -208,7 +201,7 @@ void Zipper::userExecute(LensContext* CG_c, std::vector<DataItem*>::const_iterat
     } else if (CG_c->sim->isCostAggregationPass()) {
       lc=_granuleConnector;
     } else if (CG_c->sim->isSimulatePass()) {
-      lc=_lensConnector;
+      lc=_mgsConnector;
     } else {
       std::cerr<<"Error, ConnectNodeSetsFunctor : no connection context set!"<<std::endl;
       exit(0);
@@ -308,36 +301,36 @@ Zipper::Zipper()
 {
    _noConnector = new NoConnectConnector;
    _granuleConnector = new GranuleConnector;
-   _lensConnector = new LensConnector;
+   _mgsConnector = new MgsConnector;
 }
 
 Zipper::Zipper(Zipper const & z) 
-  : CG_ZipperBase(), _noConnector(z._noConnector), _granuleConnector(z._granuleConnector), _lensConnector(z._lensConnector), _branchPropListMap(z._branchPropListMap)
+  : CG_ZipperBase(), _noConnector(z._noConnector), _granuleConnector(z._granuleConnector), _mgsConnector(z._mgsConnector), _branchPropListMap(z._branchPropListMap)
 {
   //TUAN : why new?
    _noConnector = new NoConnectConnector;
    _granuleConnector = new GranuleConnector;
-   _lensConnector = new LensConnector;
+   _mgsConnector = new MgsConnector;
 }
 
 Zipper::~Zipper() 
 {
   if (_noConnector) delete _noConnector;
   if (_granuleConnector) delete _granuleConnector;
-  if (_lensConnector) delete _lensConnector;
+  if (_mgsConnector) delete _mgsConnector;
 }
 
-void Zipper::duplicate(std::unique_ptr<Zipper>& dup) const
+void Zipper::duplicate(std::unique_ptr<Zipper>&& dup) const
 {
    dup.reset(new Zipper(*this));
 }
 
-void Zipper::duplicate(std::unique_ptr<Functor>& dup) const
+void Zipper::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new Zipper(*this));
 }
 
-void Zipper::duplicate(std::unique_ptr<CG_ZipperBase>& dup) const
+void Zipper::duplicate(std::unique_ptr<CG_ZipperBase>&& dup) const
 {
    dup.reset(new Zipper(*this));
 }

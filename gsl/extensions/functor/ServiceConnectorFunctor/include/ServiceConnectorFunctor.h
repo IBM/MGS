@@ -1,24 +1,17 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef ServiceConnectorFunctor_H
 #define ServiceConnectorFunctor_H
-#include "Lens.h"
+#include "Mgs.h"
 
 #include "CG_ServiceConnectorFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 #include <vector>
 #include <string>
@@ -38,13 +31,13 @@ class Service;
 class ServiceConnectorFunctor : public CG_ServiceConnectorFunctorBase
 {
    public:
-      void userInitialize(LensContext* CG_c);
-      void userExecute(LensContext* CG_c, std::vector<DataItem*>::const_iterator begin, std::vector<DataItem*>::const_iterator end);
+      void userInitialize(GslContext* CG_c);
+      void userExecute(GslContext* CG_c, std::vector<DataItem*>::const_iterator begin, std::vector<DataItem*>::const_iterator end);
       ServiceConnectorFunctor();
       virtual ~ServiceConnectorFunctor();
-      virtual void duplicate(std::unique_ptr<ServiceConnectorFunctor>& dup) const;
-      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_ServiceConnectorFunctorBase>& dup) const;   
+      virtual void duplicate(std::unique_ptr<ServiceConnectorFunctor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_ServiceConnectorFunctorBase>&& dup) const;   
    private:
       inline void connectToService(Service* service, 
 				   const std::string& acceptorName) const;
@@ -91,7 +84,7 @@ class ServiceConnectorFunctor : public CG_ServiceConnectorFunctorBase
       EdgeSetDataItem* _destinationEdgeSetDI;
       NodeSetDataItem* _sourceNodeSetDI;
       NodeSetDataItem* _destinationNodeSetDI;
-      LensContext* _execContext;
+      GslContext* _execContext;
 
       std::vector<ServiceConnectorElement> _elements;
 

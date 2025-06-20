@@ -1,14 +1,12 @@
-// =================================================================
+// =============================================================================
+// (C) Copyright 2018 New Jersey Institute of Technology. All rights reserved.
 //
-// (C) Copyright 2018 New Jersey Institute of Technology.
-//
-// =================================================================
-
+// =============================================================================
 
 #ifndef ChannelNap_GPe_mouseCompCategory_H
 #define ChannelNap_GPe_mouseCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelNap_GPe_mouseCompCategory.h"
 #include "CountableModel.h"
 

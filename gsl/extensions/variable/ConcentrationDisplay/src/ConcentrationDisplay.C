@@ -1,19 +1,12 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BMC-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
-#include "Lens.h"
+// =============================================================================
+#include "Mgs.h"
 #include "ConcentrationDisplay.h"
 #include "CG_ConcentrationDisplay.h"
 #include "Simulation.h"
@@ -159,7 +152,7 @@ void ConcentrationDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairLi
 }
 
 void ConcentrationDisplay::setUpPointers(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_ConcentrationDisplayInAttrPSet* CG_inAttrPset,
     CG_ConcentrationDisplayOutAttrPSet* CG_outAttrPset)
@@ -177,17 +170,17 @@ ConcentrationDisplay::ConcentrationDisplay() : CG_ConcentrationDisplay(), outFil
 
 ConcentrationDisplay::~ConcentrationDisplay() { delete outFile; }
 
-void ConcentrationDisplay::duplicate(std::unique_ptr<ConcentrationDisplay>& dup) const
+void ConcentrationDisplay::duplicate(std::unique_ptr<ConcentrationDisplay>&& dup) const
 {
   dup.reset(new ConcentrationDisplay(*this));
 }
 
-void ConcentrationDisplay::duplicate(std::unique_ptr<Variable>& dup) const
+void ConcentrationDisplay::duplicate(std::unique_ptr<Variable>&& dup) const
 {
   dup.reset(new ConcentrationDisplay(*this));
 }
 
-void ConcentrationDisplay::duplicate(std::unique_ptr<CG_ConcentrationDisplay>& dup) const
+void ConcentrationDisplay::duplicate(std::unique_ptr<CG_ConcentrationDisplay>&& dup) const
 {
   dup.reset(new ConcentrationDisplay(*this));
 }

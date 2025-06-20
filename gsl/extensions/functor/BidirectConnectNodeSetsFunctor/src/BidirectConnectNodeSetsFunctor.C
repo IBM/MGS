@@ -1,23 +1,16 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "BidirectConnectNodeSetsFunctor.h"
 #include "CG_BidirectConnectNodeSetsFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "Connector.h"
-#include "LensConnector.h"
+#include "MgsConnector.h"
 #include "GranuleConnector.h"
 #include "NoConnectConnector.h"
 #include "ConnectionContext.h"
@@ -34,11 +27,11 @@
 #include <memory>
 #include <map>
 
-void BidirectConnectNodeSetsFunctor::userInitialize(LensContext* CG_c) 
+void BidirectConnectNodeSetsFunctor::userInitialize(GslContext* CG_c) 
 {
 }
 
-void BidirectConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, NodeSet*& destination, Functor*& sampling, Functor*& sourceOutAttr, Functor*& destinationInAttr, Functor*& destinationOutAttr, Functor*& sourceInAttr) 
+void BidirectConnectNodeSetsFunctor::userExecute(GslContext* CG_c, NodeSet*& source, NodeSet*& destination, Functor*& sampling, Functor*& sourceOutAttr, Functor*& destinationInAttr, Functor*& destinationOutAttr, Functor*& sourceInAttr) 
 {
    CG_c->connectionContext->reset();
    ConnectionContext* cc = CG_c->connectionContext;
@@ -66,7 +59,7 @@ void BidirectConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& so
    } else if (CG_c->sim->isCostAggregationPass()) {
      lc=_granuleConnector;
    } else if (CG_c->sim->isSimulatePass()) {
-     lc=_lensConnector;
+     lc=_mgsConnector;
    } else {
      std::cerr<<"Error, BidirectConnectNodeSetsFunctor : no connection context set!"<<std::endl;
      exit(0);
@@ -150,24 +143,24 @@ BidirectConnectNodeSetsFunctor::BidirectConnectNodeSetsFunctor()
 {
    _noConnector = new NoConnectConnector;
    _granuleConnector = new GranuleConnector;
-   _lensConnector = new LensConnector;
+   _mgsConnector = new MgsConnector;
 }
 
 BidirectConnectNodeSetsFunctor::~BidirectConnectNodeSetsFunctor() 
 {
 }
 
-void BidirectConnectNodeSetsFunctor::duplicate(std::unique_ptr<BidirectConnectNodeSetsFunctor>& dup) const
+void BidirectConnectNodeSetsFunctor::duplicate(std::unique_ptr<BidirectConnectNodeSetsFunctor>&& dup) const
 {
    dup.reset(new BidirectConnectNodeSetsFunctor(*this));
 }
 
-void BidirectConnectNodeSetsFunctor::duplicate(std::unique_ptr<Functor>& dup) const
+void BidirectConnectNodeSetsFunctor::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new BidirectConnectNodeSetsFunctor(*this));
 }
 
-void BidirectConnectNodeSetsFunctor::duplicate(std::unique_ptr<CG_BidirectConnectNodeSetsFunctorBase>& dup) const
+void BidirectConnectNodeSetsFunctor::duplicate(std::unique_ptr<CG_BidirectConnectNodeSetsFunctorBase>&& dup) const
 {
    dup.reset(new BidirectConnectNodeSetsFunctor(*this));
 }

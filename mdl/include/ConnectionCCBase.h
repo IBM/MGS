@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef ConnectionCCBase_H
 #define ConnectionCCBase_H
 #include "Mdl.h"
@@ -34,13 +27,13 @@ class ConnectionCCBase : public CompCategoryBase {
       ConnectionCCBase(const ConnectionCCBase& rv);
       ConnectionCCBase& operator=(const ConnectionCCBase& rv);
       virtual ~ConnectionCCBase();
-      void addConnection(std::auto_ptr<RegularConnection>& con);
+      void addConnection(std::unique_ptr<RegularConnection>&& con);
       virtual std::string generateExtra() const;
       void setUserFunctions(
-	 std::auto_ptr<std::vector<UserFunction*> >& userFunction);
+	 std::unique_ptr<std::vector<UserFunction*> >& userFunction);
       bool userFunctionCallExists(const std::string& name) const;
       void setPredicateFunctions(
-	 std::auto_ptr<std::vector<PredicateFunction*> >& predicateFunction);
+	 std::unique_ptr<std::vector<PredicateFunction*> >& predicateFunction);
       bool predicateFunctionCallExists(const std::string& name) const;
 
       std::vector<PredicateFunction*>* getPredicateFunctions() {

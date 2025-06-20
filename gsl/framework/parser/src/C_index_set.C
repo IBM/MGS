@@ -1,24 +1,17 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_index_set.h"
 #include "C_index_entry.h"
 #include "SyntaxError.h"
 #include "C_production.h"
 
-void C_index_set::internalExecute(LensContext *c)
+void C_index_set::internalExecute(GslContext *c)
 {
    std::list<C_index_entry*>::iterator iter, end = _listIndexEntry->end();
    for(iter = _listIndexEntry->begin(); iter != end; ++iter) {

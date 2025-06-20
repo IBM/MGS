@@ -239,7 +239,7 @@ int yyFlexLexer::yylex()
 	return 0;
 	}
 
-#define YY_DECL int LensLexer::yylex()
+#define YY_DECL int GslLexer::yylex()
 
 
 /* Done after the current pattern has been matched and before the
@@ -709,7 +709,7 @@ static yyconst short int yy_chk[1021] =
 //#include <sstream>
 #include <fstream>
 #include <string>
-#include "LensLexer.h"
+#include "GslLexer.h"
 using namespace std;
 
 #line 716 "lex.yy.cc"

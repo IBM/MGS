@@ -1,3 +1,12 @@
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
 #include "../include/StringUtils.h"
 #include <string>
 #include <limits>
@@ -90,12 +99,14 @@ bool StringUtils::streamGet(std::istringstream & istream, char* str, int num, ch
 
 void StringUtils::ltrim(std::string &s)
 {
-	s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), 
+            [](unsigned char ch) { return !std::isspace(ch); }));
 }
 
 void StringUtils::rtrim(std::string &s)
 {
-	s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+    s.erase(std::find_if(s.rbegin(), s.rend(), 
+            [](unsigned char ch) { return !std::isspace(ch); }).base(), s.end());
 }
 
 void StringUtils::trim(std::string &s)

@@ -1,20 +1,13 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_argument_decl_args.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_argument_list.h"
 #include "C_declarator.h"
 #include "Functor.h"
@@ -25,7 +18,7 @@
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 
-void C_argument_decl_args::internalExecute(LensContext *c)
+void C_argument_decl_args::internalExecute(GslContext *c)
 {
 
    _declarator->execute(c);

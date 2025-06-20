@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "NodeSet.h"
 #include "GridLayerDescriptor.h"
 #include "Grid.h"
@@ -322,7 +315,7 @@ void NodeSet::setIndices(const std::vector<int>& indices)
    _allIndices = false;
 }
 
-void NodeSet::duplicate(std::unique_ptr<NodeSet>& dup) const
+void NodeSet::duplicate(std::unique_ptr<NodeSet>&& dup) const
 {
    dup.reset(new NodeSet(*this));
 }

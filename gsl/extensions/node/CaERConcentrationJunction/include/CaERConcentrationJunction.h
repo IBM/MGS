@@ -1,7 +1,16 @@
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
 #ifndef CaERConcentrationJunction_H
 #define CaERConcentrationJunction_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_CaERConcentrationJunction.h"
 #include "rndm.h"
 #include "MaxComputeOrder.h"
@@ -14,13 +23,13 @@ class CaERConcentrationJunction : public CG_CaERConcentrationJunction
   void predictJunction(RNG& rng);
   void correctJunction(RNG& rng);
   virtual bool checkSite(
-      const String& CG_direction, const String& CG_component,
+      const CustomString& CG_direction, const CustomString& CG_component,
       NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
       Constant* CG_constant,
       CG_CaERConcentrationJunctionInAttrPSet* CG_inAttrPset,
       CG_CaERConcentrationJunctionOutAttrPSet* CG_outAttrPset);
   virtual bool confirmUniqueDeltaT(
-      const String& CG_direction, const String& CG_component,
+      const CustomString& CG_direction, const CustomString& CG_component,
       NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
       Constant* CG_constant,
       CG_CaERConcentrationJunctionInAttrPSet* CG_inAttrPset,

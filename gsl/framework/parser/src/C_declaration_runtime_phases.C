@@ -1,32 +1,25 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_declaration_runtime_phases.h"
 #include "C_phase_list.h"
 #include "DataItem.h"
 #include "SyntaxError.h"
 #include "C_production.h"
 #include "RuntimePhase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 
 C_declaration* C_declaration_runtime_phases::duplicate() const
 {
    return new C_declaration_runtime_phases(*this);
 }
 
-void C_declaration_runtime_phases::internalExecute(LensContext *c)
+void C_declaration_runtime_phases::internalExecute(GslContext *c)
 {
    std::unique_ptr<Phase> phase(new RuntimePhase());
    c->setCurrentPhase(phase);

@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_shared.h"
 #include "C_general.h"
 #include "C_generalList.h"
@@ -43,9 +36,9 @@ void C_shared::execute(MdlContext* context)
 
 void C_shared::addToList(C_generalList* gl) 
 {
-   std::auto_ptr<C_shared> shared;
+   std::unique_ptr<C_shared> shared;
    shared.reset(new C_shared(*this));
-   gl->addShared(shared);
+   gl->addShared(std::move(shared));
 }
 
 
@@ -64,23 +57,23 @@ C_shared::C_shared(const C_shared& rv)
    : C_general(rv), _generalList(0), _general(0) 
 {
    if (rv._generalList) {
-      std::auto_ptr<C_generalList> dup;
-      rv._generalList->duplicate(dup);
+      std::unique_ptr<C_generalList> dup;
+      rv._generalList->duplicate(std::move(dup));
       _generalList = dup.release();
    }
    if (rv._general) {
-      std::auto_ptr<C_general> dup;
-      rv._general->duplicate(dup);
+      std::unique_ptr<C_general> dup;
+      rv._general->duplicate(std::move(dup));
       _general = dup.release();
    }
 }
 
-void C_shared::duplicate(std::auto_ptr<C_shared>& rv) const
+void C_shared::duplicate(std::unique_ptr<C_shared>&& rv) const
 {
    rv.reset(new C_shared(*this));
 }
 
-void C_shared::duplicate(std::auto_ptr<C_general>& rv) const
+void C_shared::duplicate(std::unique_ptr<C_general>&& rv) const
 {
    rv.reset(new C_shared(*this));
 }
@@ -91,7 +84,7 @@ void C_shared::setGeneral(C_general* general)
    _general = general;
 }
 
-void C_shared::releasePhases(std::auto_ptr<std::vector<Phase*> >& phases) 
+void C_shared::releasePhases(std::unique_ptr<std::vector<Phase*> >& phases) 
 {
    if (_generalList) {
       _generalList->releasePhases(phases); 
@@ -102,7 +95,7 @@ void C_shared::releasePhases(std::auto_ptr<std::vector<Phase*> >& phases)
 }
 
 void C_shared::releaseTriggeredFunctions(
-   std::auto_ptr<std::vector<TriggeredFunction*> >& triggeredFunction) 
+   std::unique_ptr<std::vector<TriggeredFunction*> >& triggeredFunction) 
 {
    if (_generalList) {
       _generalList->releaseTriggeredFunctions(triggeredFunction); 
@@ -112,7 +105,7 @@ void C_shared::releaseTriggeredFunctions(
    }
 }
 
-void C_shared::releaseDataTypeVec(std::auto_ptr<std::vector<DataType*> >& dtv) 
+void C_shared::releaseDataTypeVec(std::unique_ptr<std::vector<DataType*> >& dtv) 
 {
    if (_generalList) {
       _generalList->releaseDataTypeVec(dtv); 
@@ -123,7 +116,7 @@ void C_shared::releaseDataTypeVec(std::auto_ptr<std::vector<DataType*> >& dtv)
 }
 
 void C_shared::releaseOptionalDataTypeVec(
-   std::auto_ptr<std::vector<DataType*> >& dtv) 
+   std::unique_ptr<std::vector<DataType*> >& dtv) 
 {
    if (_generalList) {
       _generalList->releaseOptionalDataTypeVec(dtv); 

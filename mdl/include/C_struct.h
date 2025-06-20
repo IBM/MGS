@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef C_struct_H
 #define C_struct_H
 #include "Mdl.h"
@@ -27,7 +20,8 @@ class C_dataTypeList;
 class C_generalList;
 
 class C_struct : public C_general {
-
+   protected:
+      using C_general::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       virtual void addToList(C_generalList* gl);
@@ -36,8 +30,8 @@ class C_struct : public C_general {
       C_struct(const std::string& name, C_dataTypeList* dtl, 
 	       bool frameWorkElement = false);
       C_struct(const C_struct& rv);
-      virtual void duplicate(std::auto_ptr<C_struct>& rv) const;
-      virtual void duplicate(std::auto_ptr<C_general>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_struct>&& rv) const;
+      virtual void duplicate(std::unique_ptr<C_general>&& rv) const;
       virtual ~C_struct();
       
    protected:

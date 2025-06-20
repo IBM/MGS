@@ -1,20 +1,13 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "RadialSamplerFunctor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ConnectionContext.h"
 #include "DataItem.h"
 #include "IntArrayDataItem.h"
@@ -60,7 +53,7 @@ RadialSamplerFunctor::RadialSamplerFunctor(const RadialSamplerFunctor& rsf)
   _square_radius = _radius * _radius;
 }
 
-void RadialSamplerFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void RadialSamplerFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new RadialSamplerFunctor(*this));
 }
@@ -71,7 +64,7 @@ RadialSamplerFunctor::~RadialSamplerFunctor()
 }
 
 
-void RadialSamplerFunctor::doInitialize(LensContext *c, 
+void RadialSamplerFunctor::doInitialize(GslContext *c, 
 					const std::vector<DataItem*>& args)
 {
   int nbrArgs=args.size();
@@ -125,7 +118,7 @@ void RadialSamplerFunctor::doInitialize(LensContext *c,
   }
 }
 
-void RadialSamplerFunctor::doExecute(LensContext *c, 
+void RadialSamplerFunctor::doExecute(GslContext *c, 
 				     const std::vector<DataItem*>& args, 
 				     std::unique_ptr<DataItem>& rvalue)
 {

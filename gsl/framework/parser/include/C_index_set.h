@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef C_index_set_H
 #define C_index_set_H
 #include "Copyright.h"
@@ -21,7 +14,7 @@
 #include "C_production.h"
 
 class C_index_entry;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_index_set : public C_production
@@ -34,7 +27,7 @@ class C_index_set : public C_production
       virtual C_index_set* duplicate() const;
       std::list<C_index_entry*>* releaseList();
       virtual ~C_index_set();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       const std::list<C_index_entry *>& getIndexEntryList() const;

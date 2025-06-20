@@ -1,23 +1,16 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "GaussianFunctor.h"
 #include "FunctorType.h"
 #include "FunctorDataItem.h"
 #include "NumericDataItem.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "InstanceFactoryQueriable.h"
 //#include <iostream>
 #include "rndm.h"
@@ -30,7 +23,7 @@
 class FunctorType;
 class Simulation;
 
-void GaussianFunctor::doInitialize(LensContext *c, 
+void GaussianFunctor::doInitialize(GslContext *c, 
 				   const std::vector<DataItem*>& args)
 {
    // get mean and stddev
@@ -49,7 +42,7 @@ void GaussianFunctor::doInitialize(LensContext *c,
 
 }
 
-void GaussianFunctor::doExecute(LensContext *c, 
+void GaussianFunctor::doExecute(GslContext *c, 
 				const std::vector<DataItem*>& args, 
 				std::unique_ptr<DataItem>& rvalue)
 {
@@ -60,7 +53,7 @@ void GaussianFunctor::doExecute(LensContext *c,
 }
 
 
-void GaussianFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void GaussianFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new GaussianFunctor(*this));
 }

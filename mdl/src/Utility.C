@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "Utility.h"
 #include <string>
 #include <vector>
@@ -87,9 +80,9 @@ namespace mdl {
    {
       MemberContainer<DataType>::iterator it, end = services.end();
       DataType* cur;
-      std::auto_ptr<Attribute> attCup;
+      std::unique_ptr<Attribute> attCup;
       CustomAttribute* cusAtt;
-      std::auto_ptr<Method> methodCup;
+      std::unique_ptr<Method> methodCup;
       std::string methodName;
       std::string returnType;
 
@@ -108,7 +101,7 @@ namespace mdl {
 	 methodCup.reset(new Method(methodName, returnType, 
 				    functionBody.str()));
       
-	 instance.addMethod(methodCup);
+	 instance.addMethod(std::move(methodCup));
 
 	 cusAtt = new CustomAttribute(cur->getName(), cur->getDescriptor());
 	 cusAtt->setPointer();

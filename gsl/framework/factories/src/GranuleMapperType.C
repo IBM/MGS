@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "GranuleMapperType.h"
 #include "GranuleMapperDataItem.h"
 #include "DataItem.h"
@@ -28,7 +21,7 @@ GranuleMapperType::GranuleMapperType(Simulation& s, const std::string& name, con
 
 void GranuleMapperType::getInstance(std::unique_ptr<DataItem> & adi, 
 			      std::vector<DataItem*> const * args, 
-			      LensContext* c)
+			      GslContext* c)
 {
    GranuleMapperDataItem* di = new GranuleMapperDataItem();
    std::unique_ptr<GranuleMapper> apgm;
@@ -48,7 +41,7 @@ void GranuleMapperType::getInstance(std::unique_ptr<DataItem> & adi,
 
 void GranuleMapperType::getInstance(std::unique_ptr<DataItem> & adi, 
 			      const NDPairList& ndplist,
-			      LensContext* c)
+			      GslContext* c)
 {
    throw SyntaxErrorException(
       "GranuleMappers can not be instantiated with Name-DataItem pair lists.");

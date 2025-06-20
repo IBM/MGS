@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "Parser.h"
 #include "Simulation.h"
 
@@ -32,7 +25,7 @@ std::vector<std::string> getNamesOfSupportedConstantType() {
    return FactoryMap<ConstantType>::getFactoryMap()->getNamesOfSupportedType();
 }
 void Parser::help() {
-   std::cout << "Usage: lensparser lensFile <options> <switches>\n" << std::endl;
+   std::cout << "Usage: gslparser gslFile <options> <switches>\n" << std::endl;
    std::cout << "  For options, a value is needed:" << std::endl;
    std::cout << "    -h :      Help" << std::endl;
 #ifndef DISABLE_PTHREADS
@@ -53,7 +46,7 @@ void Parser::help() {
    std::cout << "    -o :      Output graph partitioning to file" << std::endl;
    std::cout << "    -m :      Suppress full simulatation (partition only)" << std::endl;
    std::cout << std::endl;
-   std::cout << "  lensFile: the lens spec file to parse (mandatory)" << std::endl;
+   std::cout << "  gslFile: the gsl specification file to parse (mandatory)" << std::endl;
    std::cout << std::endl << std::endl;
 
    std::cout << "Supported NodeTypes: ";

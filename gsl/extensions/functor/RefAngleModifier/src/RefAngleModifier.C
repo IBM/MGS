@@ -1,21 +1,14 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "RefAngleModifier.h"
 #include "CG_RefAngleModifierBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ParameterSet.h"
 #include <memory>
 
@@ -26,7 +19,7 @@
 #include "NodeDescriptor.h"
 #include "ConnectionContext.h"
 #include <cmath>
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ParameterSet.h"
 #include <vector>
 #include "Grid.h"
@@ -34,7 +27,7 @@
 #include <math.h>
 
 
-std::unique_ptr<ParameterSet> RefAngleModifier::userExecute(LensContext* CG_c) 
+std::unique_ptr<ParameterSet> RefAngleModifier::userExecute(GslContext* CG_c) 
 {
    std::vector<DataItem*> nullArgs;
    std::unique_ptr<DataItem> rval_ap;
@@ -103,12 +96,12 @@ std::unique_ptr<ParameterSet> RefAngleModifier::userExecute(LensContext* CG_c)
    NDPairList ndpl;
    ndpl.push_back(ndp);
    std::unique_ptr<ParameterSet> pset;
-   psdi->getParameterSet()->duplicate(pset);
+   psdi->getParameterSet()->duplicate(std::move(pset));
    pset->set(ndpl);
    return pset;
 }
 
-void RefAngleModifier::userInitialize(LensContext* CG_c, int& directionFlag, int& wrapFlag, Functor*& f) 
+void RefAngleModifier::userInitialize(GslContext* CG_c, int& directionFlag, int& wrapFlag, Functor*& f) 
 {
 }
 
@@ -121,17 +114,17 @@ RefAngleModifier::~RefAngleModifier()
 {
 }
 
-void RefAngleModifier::duplicate(std::unique_ptr<RefAngleModifier>& dup) const
+void RefAngleModifier::duplicate(std::unique_ptr<RefAngleModifier>&& dup) const
 {
    dup.reset(new RefAngleModifier(*this));
 }
 
-void RefAngleModifier::duplicate(std::unique_ptr<Functor>& dup) const
+void RefAngleModifier::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new RefAngleModifier(*this));
 }
 
-void RefAngleModifier::duplicate(std::unique_ptr<CG_RefAngleModifierBase>& dup) const
+void RefAngleModifier::duplicate(std::unique_ptr<CG_RefAngleModifierBase>&& dup) const
 {
    dup.reset(new RefAngleModifier(*this));
 }

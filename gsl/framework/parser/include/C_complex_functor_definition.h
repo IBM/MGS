@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef C_complex_functor_definition_H
 #define C_complex_functor_definition_H
 #include "Copyright.h"
@@ -25,7 +18,7 @@ class C_functor_category;
 class C_declarator;
 class C_complex_functor_declaration_body;
 class C_parameter_type;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_complex_functor_definition : public C_production
@@ -37,7 +30,7 @@ class C_complex_functor_definition : public C_production
 				   SyntaxError *);
       virtual ~C_complex_functor_definition();
       virtual C_complex_functor_definition* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       const std::string& getCategory() const;

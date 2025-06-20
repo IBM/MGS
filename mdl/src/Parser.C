@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "Parser.h"
 
 void Parser::help() {
@@ -28,20 +21,20 @@ void Parser::help() {
    std::cout << std::endl << std::endl;
 }
 
-int Parser::countOptions(String arg) {
+int Parser::countOptions(CustomString arg) {
 	int count = 0;
 	for (OptionVector::size_type i = 0; i < getOptions().size(); i++) {
 		if (getOption(i).getLongName() != Option::LONG_NAME_NONE) {
-			String longName = "--" + getOption(i).getLongName();
+			CustomString longName = "--" + getOption(i).getLongName();
 			if (longName.compare(0, arg.length(), arg) == 0) count++;
 		}
 	}
 	return(count);
 }
-int Parser::findOption(String arg) {
+int Parser::findOption(CustomString arg) {
 	for (OptionVector::size_type i = 0; i < getOptions().size(); i++) {
 		if (getOption(i).getLongName() != Option::LONG_NAME_NONE) { 
-                        String longName = "--" + getOption(i).getLongName();
+                        CustomString longName = "--" + getOption(i).getLongName();
 			if (longName.compare(0, arg.length(), arg) == 0) return(i);
 		}
 	}
@@ -64,9 +57,9 @@ int Parser::findOption(char c) {
 	}
 	return(-1);
 }
-int Parser::countType(String arg, Option::Type type) {
+int Parser::countType(CustomString arg, Option::Type type) {
 	int count = 0;
-	for (String::size_type i = 1; i < arg.length(); i++) {
+	for (CustomString::size_type i = 1; i < arg.length(); i++) {
 		int j = findOption(arg[i]);
 		if (j >= 0 && getOption(j).getType() == type) {
 			count++;
@@ -88,11 +81,11 @@ Parser::ParameterVector Parser::parse(int argc, char *argv[]) {
         // First we copy the argv array into the args vector,
 	// breaking up argvs of the form --option=value as we go.
 	for (int i = 1; i < argc; i++) {
-		String arg(argv[i]);
+		CustomString arg(argv[i]);
 		if (arg.length() > 2 && arg.compare(0, 2, "--") == 0) {
-			String::size_type position = arg.find('=');
+			CustomString::size_type position = arg.find('=');
 			if (position != std::string::npos) {
-				String value = arg.substr(position + 1, arg.length() - position - 1);
+				CustomString value = arg.substr(position + 1, arg.length() - position - 1);
 				arg = arg.substr(0, position);
 				args.push_back(arg);
 				args.push_back(value);
@@ -149,7 +142,7 @@ Parser::ParameterVector Parser::parse(int argc, char *argv[]) {
 				throw Exception("Option \"" + args[i] + "\" has wrong number of values.");
 			}
 			//
-			for (String::size_type j = 1; j < args[i].length(); j++) {
+			for (CustomString::size_type j = 1; j < args[i].length(); j++) {
 				int optionCount = countOptions(args[i][j]);
 				if (optionCount < 1) {
 					throw Exception("Parameter \"-" + args[i].substr(j, 1) + "\" did not match any options.");
@@ -194,7 +187,7 @@ Parser::ParameterVector Parser::parse(int argc, char *argv[]) {
 	// Output debugging info...
 	/*for (ParameterVector::size_type i = 0; i < parameterVector.size(); i++) {
 		Option option = parameterVector[i].getOption();
-		String value = parameterVector[i].getValue();
+		CustomString value = parameterVector[i].getValue();
 		std::cout << "Parameter Vector: " <<
 			option.getShortName() << " / " << option.getLongName() << " / " << value << "\n";
 	}*/

@@ -1,21 +1,14 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "GetDstNodeCoordFunctor.h"
 #include "CG_GetDstNodeCoordFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "Service.h"
 #include <memory>
 
@@ -24,12 +17,12 @@
 #include "ConnectionContext.h"
 #include "NodeDescriptor.h"
 
-void GetDstNodeCoordFunctor::userInitialize(LensContext* CG_c, int& dim) 
+void GetDstNodeCoordFunctor::userInitialize(GslContext* CG_c, int& dim) 
 {
   _dim=dim;
 }
 
-int GetDstNodeCoordFunctor::userExecute(LensContext* CG_c)
+int GetDstNodeCoordFunctor::userExecute(GslContext* CG_c)
 {
    CG_c->connectionContext->destinationNode->getNodeCoords(_coords.coords);
    return _coords.coords[_dim];
@@ -44,17 +37,17 @@ GetDstNodeCoordFunctor::~GetDstNodeCoordFunctor()
 {
 }
 
-void GetDstNodeCoordFunctor::duplicate(std::unique_ptr<GetDstNodeCoordFunctor>& dup) const
+void GetDstNodeCoordFunctor::duplicate(std::unique_ptr<GetDstNodeCoordFunctor>&& dup) const
 {
    dup.reset(new GetDstNodeCoordFunctor(*this));
 }
 
-void GetDstNodeCoordFunctor::duplicate(std::unique_ptr<Functor>& dup) const
+void GetDstNodeCoordFunctor::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new GetDstNodeCoordFunctor(*this));
 }
 
-void GetDstNodeCoordFunctor::duplicate(std::unique_ptr<CG_GetDstNodeCoordFunctorBase>& dup) const
+void GetDstNodeCoordFunctor::duplicate(std::unique_ptr<CG_GetDstNodeCoordFunctorBase>&& dup) const
 {
    dup.reset(new GetDstNodeCoordFunctor(*this));
 }

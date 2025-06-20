@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_dataType.h"
 #include "C_general.h"
 #include "C_generalList.h"
@@ -31,17 +24,17 @@ void C_dataType::execute(MdlContext* context)
       throw InternalException("_typeClassifier is 0 in C_dataType::execute");
    }
    _typeClassifier->execute(context);
-   std::auto_ptr<DataType> dt;
-   _typeClassifier->releaseDataType(dt);
+   std::unique_ptr<DataType> dt;
+   _typeClassifier->releaseDataType(std::move(dt));
    dt->setDerived(_derived);      
    _nameCommentList->execute(context);
    const std::vector<NameComment>& ncVec = 
       _nameCommentList->getNameCommentVec();
    _dataTypeVec = new std::vector<DataType*>;
    std::vector<NameComment>::const_iterator it, end = ncVec.end();
-   std::auto_ptr<DataType> dtToIns;
+   std::unique_ptr<DataType> dtToIns;
    for (it = ncVec.begin(); it != end; ++it) {
-      dt->duplicate(dtToIns);
+      dt->duplicate(std::move(dtToIns));
       dtToIns->setName(it->getName());
       dtToIns->setComment(it->getComment());
       if (it->getBlockSize() < 0) {
@@ -68,14 +61,14 @@ void C_dataType::execute(MdlContext* context)
 
 void C_dataType::addToList(C_generalList* gl) 
 {
-   std::auto_ptr<DataType> dt;
+   std::unique_ptr<DataType> dt;
    std::vector<DataType*>::iterator it, end = _dataTypeVec->end();
    for (it = _dataTypeVec->begin(); it != end; ++it) {
       dt.reset(*it);
       if (_optional) {
-	 gl->addOptionalDataType(dt);
+	 gl->addOptionalDataType(std::move(dt));
       } else {
-	 gl->addDataType(dt);
+	 gl->addDataType(std::move(dt));
       }
    }
    delete _dataTypeVec;
@@ -102,30 +95,30 @@ C_dataType::C_dataType(const C_dataType& rv)
      _typeClassifier(0), _nameCommentList(0), _dataTypeVec(0) 
 {
    if (rv._typeClassifier) {
-      std::auto_ptr<C_typeClassifier> dup;
-      rv._typeClassifier->duplicate(dup);
+      std::unique_ptr<C_typeClassifier> dup;
+      rv._typeClassifier->duplicate(std::move(dup));
       _typeClassifier = dup.release();
    }
    if (rv._nameCommentList) {
-      std::auto_ptr<C_nameCommentList> dup;
-      rv._nameCommentList->duplicate(dup);
+      std::unique_ptr<C_nameCommentList> dup;
+      rv._nameCommentList->duplicate(std::move(dup));
       _nameCommentList = dup.release();
    }
    deepCopyVector(rv);
 }
 
-void C_dataType::duplicate(std::auto_ptr<C_dataType>& rv) const
+void C_dataType::duplicate(std::unique_ptr<C_dataType>&& rv) const
 {
    rv.reset(new C_dataType(*this));
 }
 
-void C_dataType::duplicate(std::auto_ptr<C_general>& rv) const
+void C_dataType::duplicate(std::unique_ptr<C_general>&& rv) const
 {
    rv.reset(new C_dataType(*this));
 }
 
 void C_dataType::releaseDataTypeVec(
-   std::auto_ptr<std::vector<DataType*> >& dtv) 
+   std::unique_ptr<std::vector<DataType*> >& dtv) 
 {
    dtv.reset(_dataTypeVec);
    _dataTypeVec = 0;
@@ -157,9 +150,9 @@ void C_dataType::deepCopyVector(const C_dataType& rv)
       _dataTypeVec = new std::vector<DataType*>();
       std::vector<DataType*>::const_iterator end = rv._dataTypeVec->end();
       std::vector<DataType*>::const_iterator it;
-      std::auto_ptr<DataType> dup;   
+      std::unique_ptr<DataType> dup;   
       for (it = rv._dataTypeVec->begin(); it != end; it++) {
-	 (*it)->duplicate(dup);
+	 (*it)->duplicate(std::move(dup));
 	 _dataTypeVec->push_back(dup.release());
       }
    }

@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef Constant_H
 #define Constant_H
 //#include "Copyright.h"
@@ -23,7 +16,7 @@
 
 class DataItem;
 class Edge;
-class LensContext;
+class GslContext;
 class NodeDescriptor;
 class ParameterSet;
 //class Variable;
@@ -41,11 +34,11 @@ class Constant : public Publishable
       virtual ~Constant();
       virtual void getOutAttrParameterSet(
 	 std::unique_ptr<ParameterSet>& outAttrPSet) const = 0;
-      virtual void duplicate(std::unique_ptr<Constant>& dup) const = 0;
-      void initialize(LensContext *c, const std::vector<DataItem*>& args);
+      virtual void duplicate(std::unique_ptr<Constant>&& dup) const = 0;
+      void initialize(GslContext *c, const std::vector<DataItem*>& args);
       void initialize(const NDPairList& ndplist);
    protected:
-      virtual void doInitialize(LensContext *c, 
+      virtual void doInitialize(GslContext *c, 
 				const std::vector<DataItem*>& args) = 0;
       virtual void doInitialize(const NDPairList& ndplist) = 0;
 };

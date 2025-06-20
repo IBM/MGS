@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_variable.h"
 #include "C_connectionCCBase.h"
 #include "MdlContext.h"
@@ -27,7 +20,7 @@ void C_variable::execute(MdlContext* context)
    executeCompCategoryBase(context, cc);
    executeConnectionCCBase(context, cc);
    cc->checkAllMemberToInterfaces();	 
-   std::auto_ptr<Generatable> conMember;
+   std::unique_ptr<Generatable> conMember;
    conMember.reset(cc);
    context->_generatables->addMember(_name, conMember);
 }
@@ -51,7 +44,7 @@ C_variable::C_variable(const C_variable& rv)
 
 }
 
-void C_variable::duplicate(std::auto_ptr<C_variable>& rv) const
+void C_variable::duplicate(std::unique_ptr<C_variable>&& rv) const
 {
    rv.reset(new C_variable(*this));
 }

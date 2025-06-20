@@ -1,14 +1,12 @@
-// =================================================================
+// =============================================================================
+// (C) Copyright 2018 New Jersey Institute of Technology. All rights reserved.
 //
-// (C) Copyright 2018 New Jersey Institute of Technology.
-//
-// =================================================================
-
+// =============================================================================
 
 #ifndef ChannelKDR_STR_MSN_mouse_H
 #define ChannelKDR_STR_MSN_mouse_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ChannelKDR_STR_MSN_mouse.h"
 #include "rndm.h"
 

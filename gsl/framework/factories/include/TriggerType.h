@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef TRIGGERTYPE_H
 #define TRIGGERTYPE_H
 #include "Copyright.h"
@@ -45,10 +38,10 @@ class TriggerType : public InstanceFactory
       std::string getModelName() {return _modelName;}
       virtual void getInstance(std::unique_ptr<DataItem> &, 
 			       std::vector<DataItem*> const *, 
-			       LensContext* c = 0);
+			       GslContext* c = 0);
       virtual void getInstance(std::unique_ptr<DataItem> & adi, 
 			       const NDPairList& ndplist,
-			       LensContext* c);
+			       GslContext* c);
       virtual std::string getName() {return _name;}
       virtual std::string getDescription() {return _description;}
       virtual ~TriggerType();

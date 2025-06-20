@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-11-14-2018
-//
-// (C) Copyright IBM Corp. 2005-2018  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef Generatable_H
 #define Generatable_H
 #include "Mdl.h"
@@ -40,15 +33,15 @@ class Generatable {
       Generatable(const std::string& fileName);
       Generatable(const Generatable& rv);
       Generatable& operator=(const Generatable& rv);
-      virtual void duplicate(std::auto_ptr<Generatable>& rv) const = 0;
+      virtual void duplicate(std::unique_ptr<Generatable>&& rv) const = 0;
       virtual ~Generatable();        
 
       //void addSupportForMachineType(MachineType mach){ _supportedMachineTypes.insert(mach) };
       void addSupportForMachineType(MachineType mach){ _supportedMachineType = (mach);};
       bool isSupportedMachineType(MachineType mach) const { 
-	 //const bool is_in = _supportedMachineTypes.find(mach) != _supportedMachineTypes.end();
-	 const bool is_in = _supportedMachineType == mach;
-	 return is_in;
+	      //const bool is_in = _supportedMachineTypes.find(mach) != _supportedMachineTypes.end();
+	      const bool is_in = _supportedMachineType == mach;
+	      return is_in;
       };
       /*
       std::set<MachineType>& getSupportedMachineType() const { 
@@ -56,7 +49,7 @@ class Generatable {
       };
       */
       MachineType getSupportedMachineType() const { 
-	 return _supportedMachineType;
+	      return _supportedMachineType;
       };
 
       // Used to print out code for feedback to the user.
@@ -76,24 +69,26 @@ class Generatable {
 				std::vector<std::string> >& modules);
 
       LinkType getLinkType() const {
-	 return _linkType;
+	      return _linkType;
       }
 
       void setLinkType(LinkType obj) {
-	 _linkType = obj;
+	      _linkType = obj;
       }
 
       bool isFrameWorkElement() const {
-	 return _frameWorkElement;
+	      return _frameWorkElement;
       }
       
       void setFrameWorkElement(bool val = true) {
-	 _frameWorkElement = val;
+	      _frameWorkElement = val;
       }
-      void setCommandLine(CommandLine& obj){ _cmdLine = &obj;}
-      CommandLine* getCommandLine(){ 
-	 assert(_cmdLine != 0); 
-	 return _cmdLine;
+      void setCommandLine(CommandLine& obj) {
+         _cmdLine = &obj;
+      }
+      CommandLine* getCommandLine() { 
+	      assert(_cmdLine != 0); 
+	      return _cmdLine;
       }
 
    protected:
@@ -133,19 +128,19 @@ class Generatable {
 
       // used by generateType, dictates which insrance type will be created.
       virtual std::string getInstanceNameForType() const {
-	 return getModuleName();
+	      return getModuleName();
       }
       
       // This function is called by the getType function, it returns the
       // arguments that are necessary in creating a new instance.
       virtual std::string getInstanceNameForTypeArguments() const {
-	 return "";
+	      return "";
       }
 
       // This function adds a doInitialize function to the class given using
       // the members.
       void addDoInitializeMethods(
-	 Class& instance, const MemberContainer<DataType>& members) const;
+	      Class& instance, const MemberContainer<DataType>& members) const;
 
       std::string getDoInitializeMethodBody(
 	 const MemberContainer<DataType>& members, const Class* instance=nullptr) const;
@@ -155,7 +150,7 @@ class Generatable {
 
       // This function can be overridden to add an attribute to the class of generate type.
       virtual void addGenerateTypeClassAttribute(Class& c) const {
-	 return;
+	      return;
       }
 
       // The classes that this generatable has.

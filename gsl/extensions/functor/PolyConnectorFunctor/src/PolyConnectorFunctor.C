@@ -1,24 +1,17 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
 #include "PolyConnectorFunctor.h"
 #include "CG_PolyConnectorFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 #include <cassert>
 #include "NodeType.h"
@@ -41,18 +34,18 @@
 #include "Simulation.h"
 #include "Granule.h"
 #include "Connector.h"
-#include "LensConnector.h"
+#include "MgsConnector.h"
 #include "GranuleConnector.h"
 #include "NoConnectConnector.h"
 #include "Simulation.h"
 
 #include <iostream>
 
-void PolyConnectorFunctor::userInitialize(LensContext* CG_c) 
+void PolyConnectorFunctor::userInitialize(GslContext* CG_c) 
 {
 }
 
-void PolyConnectorFunctor::userExecute(LensContext* CG_c, std::vector<DataItem*>::const_iterator begin, std::vector<DataItem*>::const_iterator end) 
+void PolyConnectorFunctor::userExecute(GslContext* CG_c, std::vector<DataItem*>::const_iterator begin, std::vector<DataItem*>::const_iterator end) 
 {
   CG_c->connectionContext->reset();
 #ifdef DEBUG
@@ -173,7 +166,7 @@ void PolyConnectorFunctor::userExecute(LensContext* CG_c, std::vector<DataItem*>
    } else if (CG_c->sim->isCostAggregationPass()) {
      lc=&_granuleConnector;
    } else if (CG_c->sim->isSimulatePass()) {
-     lc=&_lensConnector;
+     lc=&_mgsConnector;
    } else {
      std::cerr<<"Error, PolyConnectorFunctor: no connection context set!"<<std::endl;
      exit(0);
@@ -318,17 +311,17 @@ PolyConnectorFunctor::~PolyConnectorFunctor()
 {
 }
 
-void PolyConnectorFunctor::duplicate(std::unique_ptr<PolyConnectorFunctor>& dup) const
+void PolyConnectorFunctor::duplicate(std::unique_ptr<PolyConnectorFunctor>&& dup) const
 {
    dup.reset(new PolyConnectorFunctor(*this));
 }
 
-void PolyConnectorFunctor::duplicate(std::unique_ptr<Functor>& dup) const
+void PolyConnectorFunctor::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new PolyConnectorFunctor(*this));
 }
 
-void PolyConnectorFunctor::duplicate(std::unique_ptr<CG_PolyConnectorFunctorBase>& dup) const
+void PolyConnectorFunctor::duplicate(std::unique_ptr<CG_PolyConnectorFunctorBase>&& dup) const
 {
    dup.reset(new PolyConnectorFunctor(*this));
 }

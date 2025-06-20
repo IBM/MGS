@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "Generatable.h"
 #include "InternalException.h"
 #include "Class.h"
@@ -21,6 +14,7 @@
 #include "BaseClass.h"
 #include "DataType.h"
 #include "MemberContainer.h"
+#include "CommandLine.h"
 
 #include <string>
 #include <memory>
@@ -66,13 +60,17 @@ Generatable& Generatable::operator=(const Generatable& rv)
 void Generatable::generateFiles(const std::string& originalFileName) 
 {
    std::string modName = "\"" + originalFileName + "\"";
-   _fileOutput = modName == _fileName;
+   if (_cmdLine && _cmdLine->skipIncludes()) {
+      _fileOutput = modName == _fileName;  // Only generate the main file
+   } else {
+      _fileOutput = true;  // Generate all files including includes
+   }
    
    internalGenerateFiles();
    createDirectoryStructure();
    generateModuleMk(); // hack for MBL
-   for (std::vector<Class*>::iterator it = _classes.begin()
-	   ; it != _classes.end(); it++) {
+   
+   for (std::vector<Class*>::iterator it = _classes.begin(); it != _classes.end(); it++) {
      (*it)->setFileOutput(_fileOutput);
      (*it)->generate(getModuleName());
    }
@@ -92,8 +90,8 @@ void Generatable::copyOwnedHeap(const Generatable& rv)
 {
    std::vector<Class*>::const_iterator it, end = rv._classes.end();
    for (it = rv._classes.begin(); it != end; it++) {
-      std::auto_ptr<Class> dup;
-      (*it)->duplicate(dup);
+      std::unique_ptr<Class> dup;
+      (*it)->duplicate(std::move(dup));
       _classes.push_back(dup.release());
    }
 }
@@ -114,21 +112,8 @@ void Generatable::generateModuleMk()
    }
 
    std::ostringstream os;
-   os << "# =================================================================\n"
-      << "# Licensed Materials - Property of IBM\n"
-      << "#\n"
-      << "# \"Restricted Materials of IBM\n"
-      << "#\n"
-      << "# BCM-YKT-07-18-2017\n"
-      << "#\n"
-      << "# (C) Copyright IBM Corp. 2005-2017  All rights reserved\n"
-      << "# US Government Users Restricted Rights -\n"
-      << "# Use, duplication or disclosure restricted by\n"
-      << "# GSA ADP Schedule Contract with IBM Corp.\n"
-      << "#\n"
-      << "# =================================================================\n\n";
 
-   os << "# The pathname is relative to the lens directory" << "\n"
+   os << "# The pathname is relative to the MGS directory" << "\n"
       << "THIS_DIR := " << "extensions/" << getModuleTypeName() 
       << "/" << getModuleName() << "\n"
       << "THIS_STEM := " << getModuleName() << "\n"
@@ -143,16 +128,16 @@ void Generatable::generateModuleMk()
       std::vector<Class*>::iterator end = _classes.end();
       std::vector<Class*>::iterator it;
       for (it = _classes.begin(); it != end;) {
-	if ( (*it)->generateSourceFile() ) {
-	  os << (*it)->getFileName() << ".C ";
-	  it++;
-	  if (it != end) {
-	    os << "\\\n";
-	  } else {
-	    os << "\n";
-	  }
-	}
-	else it++;
+	      if ( (*it)->generateSourceFile() ) {
+	         os << (*it)->getFileName() << ".C ";
+	         it++;
+	         if (it != end) {
+	            os << "\\\n";
+	         } else {
+	            os << "\n";
+	         }
+	      }
+	      else it++;
       }
    } else {
       throw InternalException(
@@ -232,18 +217,18 @@ void Generatable::generateType()
    std::string moduleTypeNameCap = getModuleTypeName();
    moduleTypeNameCap[0] += 'A' - 'a';
    std::string moduleTypeNameCapType = moduleTypeNameCap + "Type";
-   std::string fullName = PREFIX + getModuleName() + "Type";/* constant, functor, struct, e.g. CG_BiasType, CG_EdgeSetInputType */
-   std::auto_ptr<Class> instance(new Class(fullName));
+   std::string fullName = PREFIX + getModuleName() + "Type"; /* constant, functor, struct, e.g. CG_BiasType, CG_EdgeSetInputType */
+   std::unique_ptr<Class> instance(new Class(fullName));
 
    std::string instanceInitializer = 
       "new " + getInstanceNameForType() + "(" + 
       getInstanceNameForTypeArguments() + ")";
 
-   std::auto_ptr<BaseClass> baseClass(new BaseClass(moduleTypeNameCapType));
+   std::unique_ptr<BaseClass> baseClass(new BaseClass(moduleTypeNameCapType));
    
    addGenerateTypeClassAttribute(*(instance.get()));
 
-   instance->addBaseClass(baseClass);
+   instance->addBaseClass(std::move(baseClass));
    instance->addHeader("\"" + moduleTypeNameCapType + ".h\"");
    instance->addHeader("<memory>");
    instance->addHeader("<string>");
@@ -251,16 +236,16 @@ void Generatable::generateType()
    instance->addExtraSourceHeader("\"InstanceFactoryQueriable.h\"");
    instance->addClass(moduleTypeNameCap);
 
-   std::auto_ptr<Method> getGeneratableAutoMethod(
+   std::unique_ptr<Method> getGeneratableAutoMethod(
       new Method("get" + moduleTypeNameCap, "void") );
    getGeneratableAutoMethod->setVirtual(true);
    getGeneratableAutoMethod->addParameter(
       "std::unique_ptr<" + moduleTypeNameCap + ">& aptr");
    getGeneratableAutoMethod->setFunctionBody(
       TAB + "aptr.reset(" + instanceInitializer +");\n");
-   instance->addMethod(getGeneratableAutoMethod);
+   instance->addMethod(std::move(getGeneratableAutoMethod));
 
-   std::auto_ptr<Method> getGeneratableMethod(
+   std::unique_ptr<Method> getGeneratableMethod(
       new Method("get" + moduleTypeNameCap, moduleTypeNameCap + "*") );
    getGeneratableMethod->setVirtual(true);
    std::ostringstream getGeneratableMethodFunctionBody;
@@ -270,21 +255,21 @@ void Generatable::generateType()
       << TAB << "return s;\n";
    getGeneratableMethod->setFunctionBody(
       getGeneratableMethodFunctionBody.str());
-   instance->addMethod(getGeneratableMethod);
+   instance->addMethod(std::move(getGeneratableMethod));
 
-   std::auto_ptr<Method> getNameMethod(
+   std::unique_ptr<Method> getNameMethod(
       new Method("getName", "std::string",
 		 TAB + "return \"" + getModuleName() + "\";\n") );
    getNameMethod->setVirtual(true);
-   instance->addMethod(getNameMethod);
+   instance->addMethod(std::move(getNameMethod));
 
-   std::auto_ptr<Method> getDescriptionMethod(
+   std::unique_ptr<Method> getDescriptionMethod(
       new Method("getDescription", "std::string", TAB + "return \"" 
 		 + getTypeDescription() + "\";\n") );
    getDescriptionMethod->setVirtual(true);
-   instance->addMethod(getDescriptionMethod);
+   instance->addMethod(std::move(getDescriptionMethod));
 
-   std::auto_ptr<Method> getQueriableMethod(
+   std::unique_ptr<Method> getQueriableMethod(
       new Method("getQueriable", "void"));
    getQueriableMethod->setVirtual(true);
    getQueriableMethod->addParameter(
@@ -294,7 +279,7 @@ void Generatable::generateType()
       << TAB << "dup.reset(new InstanceFactoryQueriable(this));\n"
       << TAB << "dup->setName(getName());\n";
    getQueriableMethod->setFunctionBody(getQueriableMethodFunctionBody.str());
-   instance->addMethod(getQueriableMethod);
+   instance->addMethod(std::move(getQueriableMethod));
    
    instance->addStandardMethods();
    _classes.push_back(instance.release());
@@ -309,7 +294,7 @@ void Generatable::generateFactory()
    std::string loadedBaseTypeName = moduleTypeNameCap + "Type";
 
    std::string fullName = PREFIX + getModuleName() + "Factory";
-   std::auto_ptr<Class> instance(new Class(fullName));
+   std::unique_ptr<Class> instance(new Class(fullName));
 
    instance->addClass(loadedBaseTypeName);
    instance->addClass("NDPairList");
@@ -317,14 +302,14 @@ void Generatable::generateFactory()
    instance->addExtraSourceHeader("\"" + loadedInstanceTypeName + ".h\"");
    instance->addExtraSourceHeader("\"FactoryMap.h\"");
 
-   std::auto_ptr<Method> constructor(new Method(fullName));
+   std::unique_ptr<Method> constructor(new Method(fullName));
    constructor->setFunctionBody(TAB + "FactoryMap<" + loadedBaseTypeName +
 				">::getFactoryMap()->addFactory(\""
 				+ getModuleName() + "\", " 
 				+ PREFIX + getModuleName() 
 				+ "FactoryFunction);\n");
 
-   std::auto_ptr<Method> factoryFunction(
+   std::unique_ptr<Method> factoryFunction(
       new Method(fullName + "Function", loadedBaseTypeName 
 						    + "*"));   
    factoryFunction->addParameter("Simulation& s");
@@ -334,11 +319,11 @@ void Generatable::generateFactory()
       TAB + TAB + "return new " + loadedInstanceTypeName + "(" 
       + getLoadedInstanceTypeArguments() + ");\n");
 
-   std::auto_ptr<Method> destructor(new Method("~" + fullName));
+   std::unique_ptr<Method> destructor(new Method("~" + fullName));
 
-   instance->addMethod(factoryFunction);
-   instance->addMethod(constructor);
-   instance->addMethod(destructor);
+   instance->addMethod(std::move(factoryFunction));
+   instance->addMethod(std::move(constructor));
+   instance->addMethod(std::move(destructor));
 
 // Disabled for now for strange AIX behavior with gcc 3.3.3
 //   instance->addExtraSourceString(fullName + " " + fullName + ";\n");
@@ -364,21 +349,21 @@ void Generatable::addDoInitializeMethods(
 {
    instance.addExtraSourceHeader("\"SyntaxErrorException.h\"");
    instance.addExtraSourceHeader("<sstream>");
-   std::auto_ptr<Method> doInitMethod(new Method("doInitialize", "void") );
-   doInitMethod->addParameter("LensContext *c");
+   std::unique_ptr<Method> doInitMethod(new Method("doInitialize", "void") );
+   doInitMethod->addParameter("GslContext *c");
    doInitMethod->addParameter("const std::vector<DataItem*>& args");
    doInitMethod->setVirtual();
    doInitMethod->setAccessType(AccessType::PROTECTED);
    doInitMethod->setFunctionBody(getDoInitializeMethodBody(members, &instance));
-   instance.addMethod(doInitMethod);
+   instance.addMethod(std::move(doInitMethod));
 
    instance.addExtraSourceHeader("\"NDPairList.h\"");
-   std::auto_ptr<Method> setUpMethod(new Method("doInitialize", "void") );
+   std::unique_ptr<Method> setUpMethod(new Method("doInitialize", "void") );
    setUpMethod->addParameter("const NDPairList& ndplist");
    setUpMethod->setVirtual();
    setUpMethod->setAccessType(AccessType::PROTECTED);
    setUpMethod->setFunctionBody(getSetupFromNDPairListMethodBody(members, &instance));
-   instance.addMethod(setUpMethod);
+   instance.addMethod(std::move(setUpMethod));
 }
 
 std::string Generatable::getDoInitializeMethodBody(

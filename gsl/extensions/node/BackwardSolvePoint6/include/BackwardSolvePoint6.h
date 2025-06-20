@@ -1,22 +1,15 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef BackwardSolvePoint6_H
 #define BackwardSolvePoint6_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_BackwardSolvePoint6.h"
 #include "rndm.h"
 
@@ -26,7 +19,7 @@ class BackwardSolvePoint6 : public CG_BackwardSolvePoint6
       void produceInitialState(RNG& rng);
       void produceArea(RNG& rng);
       void produceBackwardSolution(RNG& rng);
-      virtual void setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_BackwardSolvePoint6InAttrPSet* CG_inAttrPset, CG_BackwardSolvePoint6OutAttrPSet* CG_outAttrPset);
+      virtual void setPointers(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_BackwardSolvePoint6InAttrPSet* CG_inAttrPset, CG_BackwardSolvePoint6OutAttrPSet* CG_outAttrPset);
       virtual ~BackwardSolvePoint6();
 };
 

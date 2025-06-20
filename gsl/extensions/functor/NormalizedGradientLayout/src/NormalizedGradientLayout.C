@@ -1,7 +1,7 @@
-#include "Lens.h"
+#include "Mgs.h"
 #include "NormalizedGradientLayout.h"
 #include "CG_NormalizedGradientLayoutBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ShallowArray.h"
 #include "VolumeOdometer.h"
 #include "Grid.h"
@@ -13,11 +13,11 @@
 #include <cmath>
 #include <algorithm>
 
-void NormalizedGradientLayout::userInitialize(LensContext* CG_c, int& total, double& slope, ShallowArray< int >& origin, ShallowArray< bool >& gradientDimensions) 
+void NormalizedGradientLayout::userInitialize(GslContext* CG_c, int& total, double& slope, ShallowArray< int >& origin, ShallowArray< bool >& gradientDimensions) 
 {
 }
 
-ShallowArray< int > NormalizedGradientLayout::userExecute(LensContext* CG_c) 
+ShallowArray< int > NormalizedGradientLayout::userExecute(GslContext* CG_c) 
 {
   if (std::abs(init.slope)>1) {
     std::cerr << "Warning: absolute value of slope argument to NormalizedGardientFunctor is greater 1, this will results in many grid points grid point with zero density" << std::endl;
@@ -87,17 +87,17 @@ NormalizedGradientLayout::~NormalizedGradientLayout()
 {
 }
 
-void NormalizedGradientLayout::duplicate(std::unique_ptr<NormalizedGradientLayout>& dup) const
+void NormalizedGradientLayout::duplicate(std::unique_ptr<NormalizedGradientLayout>&& dup) const
 {
    dup.reset(new NormalizedGradientLayout(*this));
 }
 
-void NormalizedGradientLayout::duplicate(std::unique_ptr<Functor>& dup) const
+void NormalizedGradientLayout::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new NormalizedGradientLayout(*this));
 }
 
-void NormalizedGradientLayout::duplicate(std::unique_ptr<CG_NormalizedGradientLayoutBase>& dup) const
+void NormalizedGradientLayout::duplicate(std::unique_ptr<CG_NormalizedGradientLayoutBase>&& dup) const
 {
    dup.reset(new NormalizedGradientLayout(*this));
 }

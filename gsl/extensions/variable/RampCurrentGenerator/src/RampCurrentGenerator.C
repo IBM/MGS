@@ -1,4 +1,13 @@
-#include "Lens.h"
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
+#include "Mgs.h"
 #include "RampCurrentGenerator.h"
 #include "CG_RampCurrentGenerator.h"
 #include "rndm.h"
@@ -205,17 +214,17 @@ RampCurrentGenerator::~RampCurrentGenerator()
     delete outFile; 
 }
 
-void RampCurrentGenerator::duplicate(std::unique_ptr<RampCurrentGenerator>& dup) const
+void RampCurrentGenerator::duplicate(std::unique_ptr<RampCurrentGenerator>&& dup) const
 {
    dup.reset(new RampCurrentGenerator(*this));
 }
 
-void RampCurrentGenerator::duplicate(std::unique_ptr<Variable>& dup) const
+void RampCurrentGenerator::duplicate(std::unique_ptr<Variable>&& dup) const
 {
    dup.reset(new RampCurrentGenerator(*this));
 }
 
-void RampCurrentGenerator::duplicate(std::unique_ptr<CG_RampCurrentGenerator>& dup) const
+void RampCurrentGenerator::duplicate(std::unique_ptr<CG_RampCurrentGenerator>&& dup) const
 {
    dup.reset(new RampCurrentGenerator(*this));
 }

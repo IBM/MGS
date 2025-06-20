@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_phaseIdentifierList.h"
 #include "MdlContext.h"
 #include "C_phaseIdentifier.h"
@@ -33,7 +26,7 @@ void C_phaseIdentifierList::execute(MdlContext* context)
    _phaseIdentifier->execute(context);
    if (_phaseIdentifierList) {
       _phaseIdentifierList->execute(context);
-      std::auto_ptr<std::vector<C_phaseIdentifier*> > rel;
+      std::unique_ptr<std::vector<C_phaseIdentifier*> > rel;
       _phaseIdentifierList->releasePhaseIdentifiers(rel);
       _phaseIdentifiers = rel.release();
    } else {
@@ -81,7 +74,7 @@ C_phaseIdentifierList& C_phaseIdentifierList::operator=(
 }
 
 void C_phaseIdentifierList::duplicate(
-   std::auto_ptr<C_phaseIdentifierList>& rv) const
+   std::unique_ptr<C_phaseIdentifierList>&& rv) const
 {
    rv.reset(new C_phaseIdentifierList(*this));
 }
@@ -94,13 +87,13 @@ C_phaseIdentifierList::~C_phaseIdentifierList()
 void C_phaseIdentifierList::copyOwnedHeap(const C_phaseIdentifierList& rv)
 {
    if (rv._phaseIdentifier) {
-      std::auto_ptr<C_phaseIdentifier> dup;
-      rv._phaseIdentifier->duplicate(dup);
+      std::unique_ptr<C_phaseIdentifier> dup;
+      rv._phaseIdentifier->duplicate(std::move(dup));
       _phaseIdentifier = dup.release();
    }
    if (rv._phaseIdentifierList) {
-      std::auto_ptr<C_phaseIdentifierList> dup;
-      rv._phaseIdentifierList->duplicate(dup);
+      std::unique_ptr<C_phaseIdentifierList> dup;
+      rv._phaseIdentifierList->duplicate(std::move(dup));
       _phaseIdentifierList = dup.release();
    }
    if (rv._phaseIdentifiers) {
@@ -108,8 +101,8 @@ void C_phaseIdentifierList::copyOwnedHeap(const C_phaseIdentifierList& rv)
       std::vector<C_phaseIdentifier*>::const_iterator it, 
 	 end = rv._phaseIdentifiers->end();
       for(it = rv._phaseIdentifiers->begin(); it != end; ++it) {
-	 std::auto_ptr<C_phaseIdentifier> dup;
-	 (*it)->duplicate(dup);
+	 std::unique_ptr<C_phaseIdentifier> dup;
+	 (*it)->duplicate(std::move(dup));
 	 _phaseIdentifiers->push_back(dup.release());
       }
    }

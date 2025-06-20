@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "Interface.h"
 #include "DataType.h"
 #include "Generatable.h"
@@ -33,12 +26,12 @@ Interface::Interface(const std::string& fileName)
 {
 }
 
-void Interface::duplicate(std::auto_ptr<Generatable>& rv) const
+void Interface::duplicate(std::unique_ptr<Generatable>&& rv) const
 {
    rv.reset(new Interface(*this));
 }
 
-void Interface::duplicate(std::auto_ptr<Interface>& rv) const
+void Interface::duplicate(std::unique_ptr<Interface>&& rv) const
 {
    rv.reset(new Interface(*this));
 }
@@ -69,54 +62,53 @@ void Interface::addProducerMethods(Class& c)
    MemberContainer<DataType>::const_iterator end = _members.end();
    MemberContainer<DataType>::const_iterator it;
    for (it = _members.begin(); it != end; it ++) {
-      if (it->second->isArray())
-      {
-	 //to support new CPU-GPU design
-	 //create 2 methods [one used in HAVE_GPU and one is not]
-	 {
-	    //#if defined(HAVE_GPU)
-	    // convert ShallowArray< double >* 
-	    // into 
-	    // ShallowArray_Flat< double, Array_Flat<int>::MemLocation::UNIFIED_MEM>*
-	    std::string  type = it->second->getTypeString(); 
-	    std::string from = "ShallowArray<";
-	    std::string to = "ShallowArray_Flat<";
-	    type = type.replace(type.find(from),from.length(),to);
-	    std::size_t start = type.find_first_of("<");
-	    std::size_t last = type.find_first_of(">");
-	    std::string element_datatype = type.substr(start+1, last-start-1);
-	    type = type.replace(start+1, last-start-1, element_datatype + ", " + MEMORY_LOCATION);
+		if (it->second->isArray()) {
+			//to support new CPU-GPU design
+			//create 2 methods [one used in HAVE_GPU and one is not]
+			{
+				//#if defined(HAVE_GPU)
+				// convert ShallowArray< double >* 
+				// into 
+				// ShallowArray_Flat< double, Array_Flat<int>::MemLocation::UNIFIED_MEM>*
+				std::string  type = it->second->getTypeString(); 
+				std::string from = "ShallowArray<";
+				std::string to = "ShallowArray_Flat<";
+				type = type.replace(type.find(from),from.length(),to);
+				std::size_t start = type.find_first_of("<");
+				std::size_t last = type.find_first_of(">");
+				std::string element_datatype = type.substr(start+1, last-start-1);
+				type = type.replace(start+1, last-start-1, element_datatype + ", " + MEMORY_LOCATION);
 
-	    std::auto_ptr<Method> producer(
-		  new Method(PREFIX + "get_" + _name + "_" + it->second->getName()
-		     , type));
+				std::unique_ptr<Method> producer(
+				new Method(PREFIX + "get_" + _name + "_" + it->second->getName()
+					, type));
 
-	    MacroConditional gpuConditional(GPUCONDITIONAL);
-	    producer->setMacroConditional(gpuConditional);
-	    producer->setPureVirtual();
-	    c.addMethod(producer);
+				MacroConditional gpuConditional(GPUCONDITIONAL);
+				producer->setMacroConditional(gpuConditional);
+				producer->setPureVirtual();
+				c.addMethod(std::move(producer));
 
-	 }
-	 {
-	    std::auto_ptr<Method> producer(
-		  new Method(PREFIX + "get_" + _name + "_" + it->second->getName()
-		     , it->second->getTypeString()));
+			}
+			{
+				std::unique_ptr<Method> producer(
+				new Method(PREFIX + "get_" + _name + "_" + it->second->getName()
+					, it->second->getTypeString()));
 
-	    MacroConditional gpuConditional(GPUCONDITIONAL);
-	    gpuConditional.setNegateCondition();
-	    producer->setMacroConditional(gpuConditional);
-	    producer->setPureVirtual();
-	    c.addMethod(producer);
-	 }
-
-      }else{
-	 std::auto_ptr<Method> producer(
-	       new Method(PREFIX + "get_" + _name + "_" + it->second->getName()
-		  , it->second->getTypeString()));
-	 producer->setPureVirtual();
-	 c.addMethod(producer);
-      }
-   }
+				MacroConditional gpuConditional(GPUCONDITIONAL);
+				gpuConditional.setNegateCondition();
+				producer->setMacroConditional(gpuConditional);
+				producer->setPureVirtual();
+				c.addMethod(std::move(producer));
+			}
+		}
+		else {
+			std::unique_ptr<Method> producer(
+				new Method(PREFIX + "get_" + _name + "_" + it->second->getName()
+				, it->second->getTypeString()));
+			producer->setPureVirtual();
+			c.addMethod(std::move(producer));
+		}
+	}
 }
 
 
@@ -142,13 +134,14 @@ void Interface::internalGenerateFiles()
 
 void Interface::generateInstance() 
 {
-   std::auto_ptr<Class> instance(new Class(getName()));
+   std::unique_ptr<Class> instance(new Class(getName()));
    instance->addDataTypeHeaders(_members);
    instance->addBasicInlineDestructor(true);
    addProducerMethods(*instance);
    _classes.push_back(instance.release());
 }
 
-void Interface::addDataTypeToMembers(std::auto_ptr<DataType>& dataType) {
-   _members.addMemberToFront(dataType->getName(), dataType);
+void Interface::addDataTypeToMembers(std::unique_ptr<DataType>&& dataType) 
+{
+   _members.addMemberToFront(dataType->getName(), std::move(dataType));
 }

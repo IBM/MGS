@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 // SysTimer.cpp
 //
 // Ravi Rao, Sept 15, 2001
@@ -25,24 +18,23 @@
 #include "SysTimer.h"
 #include <time.h>
 
-clock_t myStartTime;             // holds the last time the watch was started
+clock_t _myStartTime;             // holds the last time the watch was started
 // added Ravi Rao
-struct timeval myStartTimeval;
+struct timeval _myStartTimeval;
 
-struct timeval myElapsedTimeval;
+struct timeval _myElapsedTimeval;
 
 SysTimer::SysTimer()
-: amRunning(false),
-myElapsed(0),
-myCumulative(0)
+: _amRunning(false),
+_myElapsed(0),
+_myCumulative(0)
 {
-   myStartTimeval.tv_sec = 0;
-   myStartTimeval.tv_usec = 0;
-   myElapsedTimeval.tv_sec = 0;
-   myElapsedTimeval.tv_usec = 0;
-   myCumulativeTimeval.tv_sec = 0;
-   myCumulativeTimeval.tv_usec = 0;
-
+   _myStartTimeval.tv_sec = 0;
+   _myStartTimeval.tv_usec = 0;
+   _myElapsedTimeval.tv_sec = 0;
+   _myElapsedTimeval.tv_usec = 0;
+   _myCumulativeTimeval.tv_sec = 0;
+   _myCumulativeTimeval.tv_usec = 0;
 }
 
 
@@ -50,13 +42,13 @@ void SysTimer::start()
 // precondition: stopwatch is not running
 // postcondition: stopwatch is running
 {
-   if (amRunning) {
-      std::cerr << "attempt to start an already running stopwatch" << std::endl;
+   if (_amRunning) {
+      std::cerr << "WARNING: Attempt made to start an already running stopwatch."<<std::endl<<std::endl;
    }
    else {
-      amRunning = true;
-      myStartTime = clock();
-      gettimeofday(&myStartTimeval, NULL);
+      _amRunning = true;
+      _myStartTime = clock();
+      gettimeofday(&_myStartTimeval, NULL);
    }
 }
 
@@ -65,21 +57,21 @@ void SysTimer::stop()
 // precondition: stopwatch is running
 // postcondition: stopwatch is stopped
 {
-   if (! amRunning) {
-      std::cerr << "attempt to stop a non-running stopwatch" << std::endl;
+   if (! _amRunning) {
+      std::cerr << "WARNING: Attempt made to stop a non-running stopwatch."<<std::endl<<std::endl;
    }
    else {
       clock_t myEndTime = clock();
       struct timeval myEndTimeval;
       gettimeofday(&myEndTimeval, NULL);
       // set the status variables
-      myElapsed = myEndTime - myStartTime;
-      myCumulative += myElapsed;
+      _myElapsed = myEndTime - _myStartTime;
+      _myCumulative += _myElapsed;
 
-      timevalSubtract(myElapsedTimeval, myEndTimeval, myStartTimeval);
-      timevalAdd(myCumulativeTimeval, myCumulativeTimeval, myElapsedTimeval);
+      timevalSubtract(_myElapsedTimeval, myEndTimeval, _myStartTimeval);
+      timevalAdd(_myCumulativeTimeval, _myCumulativeTimeval, _myElapsedTimeval);
 
-      amRunning = false;         // turn off the stopwatch
+      _amRunning = false;         // turn off the stopwatch
    }
 }
 
@@ -88,19 +80,18 @@ void SysTimer::reset()
 // postcondition: all history of stopwatch use erased
 //                and the stopwatch is stopped
 {
-
-   amRunning = false;
-   myElapsed = 0;
-   myCumulative = 0;
-   myElapsedTimeval.tv_sec =  myElapsedTimeval.tv_usec = 0;
-   myCumulativeTimeval.tv_sec  = myCumulativeTimeval.tv_usec = 0;
+   _amRunning = false;
+   _myElapsed = 0;
+   _myCumulative = 0;
+   _myElapsedTimeval.tv_sec =  _myElapsedTimeval.tv_usec = 0;
+   _myCumulativeTimeval.tv_sec  = _myCumulativeTimeval.tv_usec = 0;
 }
 
 
 bool SysTimer::isRunning() const
 // postcondition: returns true iff stopwatch is currently running
 {
-   return amRunning;
+   return _amRunning;
 }
 
 
@@ -108,8 +99,8 @@ double SysTimer::lapTime() const
 // precondition: stopwatch is running
 // postcondition: returns time in microseconds since last start
 {
-   return amRunning ?
-      (double)(clock() - myStartTime) / CLOCKS_PER_SEC : 0.0;
+   return _amRunning ?
+      (double)(clock() - _myStartTime) / CLOCKS_PER_SEC : 0.0;
 }
 
 
@@ -120,12 +111,12 @@ double SysTimer::lapWallTime()
 
    struct timeval temp, temp2;
    gettimeofday(&temp, NULL);
-   timevalSubtract(temp2, temp, myStartTimeval);
+   timevalSubtract(temp2, temp, _myStartTimeval);
 
    double result;
    result = temp2.tv_sec + temp2.tv_usec/1000000.0;
 
-   if( amRunning)
+   if( _amRunning)
       return(result);
    else
       return(0);
@@ -137,7 +128,7 @@ double SysTimer::elapsedTime() const
 // precondition: stopwatch is not running
 // postcondition: returns time in microseconds between last stop and start
 {
-   return amRunning ? 0.0 : (double)myElapsed / CLOCKS_PER_SEC;
+   return _amRunning ? 0.0 : (double)_myElapsed / CLOCKS_PER_SEC;
 }
 
 
@@ -145,14 +136,14 @@ double SysTimer::elapsedWallTime() const
 // precondition: stopwatch is not running
 // postcondition: returns time in microseconds between last stop and start
 {
-   return amRunning ? 0.0 : (double)myElapsedTimeval.tv_sec + (myElapsedTimeval.tv_usec/1000000.0);
+   return _amRunning ? 0.0 : (double)_myElapsedTimeval.tv_sec + (_myElapsedTimeval.tv_usec/1000000.0);
 }
 
 
 double SysTimer::cumulativeTime() const
 // postcondition: returns total time stopwatch has been active
 {
-   return ((double)myCumulative / CLOCKS_PER_SEC) + lapTime();
+   return ((double)_myCumulative / CLOCKS_PER_SEC) + lapTime();
 }
 
 
@@ -161,7 +152,7 @@ double SysTimer::cumulativeWallTime()
 {
    double result;
 
-   result = myCumulativeTimeval.tv_sec + myCumulativeTimeval.tv_usec/1000000.0;
+   result = _myCumulativeTimeval.tv_sec + _myCumulativeTimeval.tv_usec/1000000.0;
    result += lapWallTime();
    return result;
 }

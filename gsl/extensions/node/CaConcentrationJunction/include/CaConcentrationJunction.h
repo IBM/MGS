@@ -1,22 +1,15 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef CaConcentrationJunction_H
 #define CaConcentrationJunction_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_CaConcentrationJunction.h"
 #include "rndm.h"
 #include "MaxComputeOrder.h"
@@ -28,28 +21,28 @@ class CaConcentrationJunction : public CG_CaConcentrationJunction
   void initializeJunction(RNG& rng);
   void predictJunction(RNG& rng);
   void correctJunction(RNG& rng);
-  virtual bool checkSite(const String& CG_direction, const String& CG_component,
+  virtual bool checkSite(const CustomString& CG_direction, const CustomString& CG_component,
                          NodeDescriptor* CG_node, Edge* CG_edge,
                          VariableDescriptor* CG_variable, Constant* CG_constant,
                          CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset,
                          CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset);
   virtual bool confirmUniqueDeltaT(
-      const String& CG_direction, const String& CG_component,
+      const CustomString& CG_direction, const CustomString& CG_component,
       NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
       Constant* CG_constant,
       CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset,
       CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset);
   virtual ~CaConcentrationJunction();
 #ifdef MICRODOMAIN_CALCIUM
-  virtual void createMicroDomainData(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset);
-  virtual void setupCurrent2Microdomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset);
+  virtual void createMicroDomainData(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset);
+  virtual void setupCurrent2Microdomain(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset);
   std::map<int, int> _mapCurrentToMicrodomainIndex; // first 'int' = index in channelCaCurrents_microdomain
   //second 'int' = index of Ca_microdomain that this current is supposed to project to
   std::map<int, int> _mapFluxToMicrodomainIndex; // first 'int' = index in channelCaFluxes_microdomain
-  virtual void setupFlux2Microdomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset);
+  virtual void setupFlux2Microdomain(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset);
   void updateMicrodomains(double& LHS, double& RHS);
   void updateMicrodomains_Ca();
-  virtual void setupReceptorCurrent2Microdomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset);
+  virtual void setupReceptorCurrent2Microdomain(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset);
   std::map<int, int> _mapReceptorCurrentToMicrodomainIndex; // first 'int' = index in receptorCaCurrents_microdomain
   //second 'int' = index of Ca_microdomain that this current is supposed to project to
 #endif

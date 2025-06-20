@@ -1,21 +1,19 @@
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+// (C) University of Canterbury 2017-2018. All rights reserved.
+//
+// =============================================================================
 #ifndef Htree_H
 #define Htree_H
-/*
-@ University of Canterbury 2017-2018. All rights reserved.
- */
-// =================================================================
-// Licensed Materials - Property of IBM
-//
-// "Restricted Materials of IBM"
-//
-// BCM-YKT-11-19-2018
-//
-// (C) Copyright IBM Corp. 2005-2018  All rights reserved
-// =================================================================
-
 
 #include "CG_Htree.h"
-#include "Lens.h"
+#include "Mgs.h"
 #include "NVUMacros.h" // nvu index macros
 #include "matrixOperations.h"
 #include "rndm.h"
@@ -123,8 +121,8 @@ public:
   void writeToFiles(RNG &rng);
   //virtual void dataCollection(Trigger* trigger, NDPairList* ndPairList);
 
-  virtual void setPointers(const String &CG_direction,
-                           const String &CG_component, NodeDescriptor *CG_node,
+  virtual void setPointers(const CustomString &CG_direction,
+                           const CustomString &CG_component, NodeDescriptor *CG_node,
                            Edge *CG_edge, VariableDescriptor *CG_variable,
                            Constant *CG_constant,
                            CG_HtreeInAttrPSet *CG_inAttrPset,

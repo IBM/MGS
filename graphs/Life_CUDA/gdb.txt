@@ -150,7 +150,7 @@ b CG_LifeNodeCompCategory::CG_LifeNodeCompCategory
 b CG_LifeNodeCompCategory::allocateNodes
 b CG_LifeNodeCompCategory::allocateNode
 b NoConnectConnector::nodeToNode
-b LensConnector::nodeToNode
+b MgsConnector::nodeToNode
 b ConnectNodeSetsFunctor.C:48
 ##b RadialSamplerFunctor.C:160
 b CG_LifeNode::addPreNode
@@ -174,7 +174,7 @@ b Simulation.C:446
 #b MRG32k3a_S_GPU::reSeedShared
 #b SysTimer::start()
 #b SysTimer::reset()
-b LensContext.C:88 if (i == 17)
+b GslContext.C:88 if (i == 17)
 
 
 

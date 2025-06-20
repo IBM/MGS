@@ -1,25 +1,17 @@
-/* =================================================================
-Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+// 
+// =============================================================================
+// 
+// (C) Copyright 2018 New Jersey Institute of Technology. All rights reserved.
+// 
+// =============================================================================
 
-"Restricted Materials of IBM"
-
-BMC-YKT-07-18-2017
-
-(C) Copyright IBM Corp. 2005-2017  All rights reserved
-
-US Government Users Restricted Rights -
-Use, duplication or disclosure restricted by
-GSA ADP Schedule Contract with IBM Corp.
-
-=================================================================
-
-(C) Copyright 2018 New Jersey Institute of Technology.
-
-=================================================================
-*/
-
-
-#include "Lens.h"
+#include "Mgs.h"
 #include "ChannelNat.h"
 #include "CG_ChannelNat.h"
 #include "rndm.h"
@@ -30,7 +22,7 @@ GSA ADP Schedule Contract with IBM Corp.
 #include "NumberUtils.h"
 #include "MaxComputeOrder.h"
 #include "Python.h"
-#include "String.h"
+#include "CustomString.h"
 
 #define SMALL 1.0E-6
 #define decimal_places 6
@@ -834,7 +826,7 @@ void ChannelNat::initialize(RNG& rng)
       (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA))
   {
     std::ostringstream os;
-    std::string data_path(((String)getSharedMembers().data_path).c_str()); //#, getSharedMembers().data_path.size());
+    std::string data_path(((CustomString)getSharedMembers().data_path).c_str()); //#, getSharedMembers().data_path.size());
     const char* title="gslparser";
     Py_SetProgramName((char*)title);  /* optional but recommended */
     Py_Initialize();

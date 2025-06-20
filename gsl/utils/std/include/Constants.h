@@ -1,3 +1,12 @@
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
 #ifndef _CONSTANTS_H
 #define _CONSTANTS_H
 
@@ -30,10 +39,10 @@
 #define fieldDelimiter "\t"
 
 #ifdef USE_DOUBLES
- #define dyn_var_t double
+#define dyn_var_t double
 //using dyn_var_t = double;
 #else
- #define dyn_var_t float
+#define dyn_var_t float
 //using dyn_var_t = float;
 #endif
 

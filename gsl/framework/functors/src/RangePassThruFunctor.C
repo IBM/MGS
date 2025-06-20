@@ -1,27 +1,20 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "RangePassThruFunctor.h"
 #include "FunctorType.h"
 #include "NumericDataItem.h"
-#include "LensContext.h"
+#include "GslContext.h"
 //#include <iostream>
 #include "DataItem.h"
 #include "FloatDataItem.h"
 #include "FunctorDataItem.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "InstanceFactoryQueriable.h"
 #include "DataItemQueriable.h"
 #include "FunctorDataItem.h"
@@ -32,7 +25,7 @@ class FunctorType;
 class Simulation;
 class FloatDataItem;
 
-void RangePassThruFunctor::doInitialize(LensContext *c, 
+void RangePassThruFunctor::doInitialize(GslContext *c, 
 					const std::vector<DataItem*>& args)
 {
 
@@ -45,10 +38,10 @@ void RangePassThruFunctor::doInitialize(LensContext *c,
    }
    _left_limit = ndi->getFloat();
 
-   StringDataItem* sdi = dynamic_cast<StringDataItem*>(args[1]);
+   CustomStringDataItem* sdi = dynamic_cast<CustomStringDataItem*>(args[1]);
    if (sdi == 0) {
       throw SyntaxErrorException(
-	 "Dynamic cast of DataItem to StringDataItem failed in RangePassThruFunctor");
+	 "Dynamic cast of DataItem to CustomStringDataItem failed in RangePassThruFunctor");
    }
    _left_oper = sdi->getString();
 
@@ -59,10 +52,10 @@ void RangePassThruFunctor::doInitialize(LensContext *c,
    }
    _testFunct = fdi->getFunctor();
 
-   sdi = dynamic_cast<StringDataItem*>(args[3]);
+   sdi = dynamic_cast<CustomStringDataItem*>(args[3]);
    if (sdi == 0) {
       throw SyntaxErrorException(
-	 "Dynamic cast of DataItem to StringDataItem failed in RangePassThruFunctor");
+	 "Dynamic cast of DataItem to CustomStringDataItem failed in RangePassThruFunctor");
    }
    _right_oper = sdi->getString();
 
@@ -76,7 +69,7 @@ void RangePassThruFunctor::doInitialize(LensContext *c,
 }
 
 
-void RangePassThruFunctor::doExecute(LensContext *c, 
+void RangePassThruFunctor::doExecute(GslContext *c, 
 				     const std::vector<DataItem*>& args, 
 				     std::unique_ptr<DataItem>& rvalue)
 {
@@ -239,7 +232,7 @@ void RangePassThruFunctor::doExecute(LensContext *c,
 }
 
 
-void RangePassThruFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void RangePassThruFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    Functor *p = new RangePassThruFunctor(*this);
    fap.reset(p);

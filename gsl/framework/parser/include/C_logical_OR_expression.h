@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef C_logical_OR_expression_H
 #define C_logical_OR_expression_H
 #include "Copyright.h"
@@ -23,7 +16,7 @@
 class C_logical_AND_expression;
 class GridLayerDescriptor;
 class Grid;
-class LensContext;
+class GslContext;
 class SyntaxError;
 
 class C_logical_OR_expression : public C_production_grid
@@ -36,7 +29,7 @@ class C_logical_OR_expression : public C_production_grid
       virtual ~C_logical_OR_expression ();
       std::list<C_logical_AND_expression*>* releaseSet();
       virtual C_logical_OR_expression* duplicate() const;
-      virtual void internalExecute(LensContext *, Grid* g);
+      virtual void internalExecute(GslContext *, Grid* g);
       virtual void checkChildren();
       virtual void recursivePrint();
       const std::list<GridLayerDescriptor*>& getLayers() const;

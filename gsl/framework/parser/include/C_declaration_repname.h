@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef C_declaration_repname_H
 #define C_declaration_repname_H
 #include "Copyright.h"
@@ -21,7 +14,7 @@
 
 class C_declarator;
 class C_repname;
-class LensContext;
+class GslContext;
 
 class C_declaration_repname : public C_declaration
 {
@@ -30,7 +23,7 @@ class C_declaration_repname : public C_declaration
       C_declaration_repname(C_declarator *, C_repname *, SyntaxError *);
       virtual C_declaration_repname* duplicate() const;
       virtual ~C_declaration_repname();
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

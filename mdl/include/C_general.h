@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef C_general_H
 #define C_general_H
 #include "Mdl.h"
@@ -25,13 +18,14 @@ class MdlContext;
 class C_generalList;
 
 class C_general : public C_production {
-
+   protected:
+      using C_production::duplicate;  // Make base class method visible
    public:
       virtual void execute(MdlContext* context);
       virtual void addToList(C_generalList* gl);
       C_general();
       C_general(const C_general& rv);
-      virtual void duplicate(std::auto_ptr<C_general>& rv) const;
+      virtual void duplicate(std::unique_ptr<C_general>&& rv) const;
       virtual ~C_general();
 
 };

@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 // ThreadPool.h -- structures to define a thread pool
 // Ravi Rao, 10/2/2001
 
@@ -25,10 +18,11 @@
 // Note: acc. to pthread documentation,
 // the pthread.h must be the first included file
 
-#ifndef LINUX
+#if !defined(LINUX) && !defined(DARWIN)
 #include <sys/processor.h>
 #include <sys/thread.h>
 #endif
+
 #include <unistd.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -77,7 +71,7 @@ class ThreadPool
       struct thread_data
       {
          pthread_t pthread_id;
-      #ifndef LINUX
+      #if !defined(LINUX) && !defined(DARWIN)
          tid_t kernel_thread_id;
       #endif
          int to_cancel;          // Determines whether this thread will be cancelled or not
@@ -174,7 +168,7 @@ inline ThreadPool::ThreadPool(int N, int numCpus, bool bindThreadsToCpus)
    thread_data_array = new thread_data[_numThreads];
    for(int i = 0; i < _numThreads; i++) {
       thread_data_array[i].pthread_id = 0;
-      #ifndef LINUX
+      #if !defined(LINUX) && !defined(DARWIN)
       thread_data_array[i].kernel_thread_id = 0;
       #endif
       // Default is "to cancel" the thread
@@ -211,7 +205,7 @@ inline ThreadPool::ThreadPool(int N, int numCpus, bool bindThreadsToCpus)
       }
 
    }
-   #ifndef LINUX
+   #if !defined(LINUX) && !defined(DARWIN)
    if (bindThreadsToCpus) {
       bindCpus(_numCpus);
    }
@@ -267,10 +261,8 @@ inline void ThreadPool::findUniqueKernels(int index)
    // We know that the unique kernels are in the first "index - 1" elements of the 
    // thread_data_array. We now compare the kernel id in 'index' to the ones before it.
    int is_unique = 1;
-   #ifndef LINUX
-   int i;
-
-   for(i = 0; i <= index - 1; i++) {
+   #if !defined(LINUX) && !defined(DARWIN)
+   for(int i = 0; i <= index - 1; i++) {
       if(thread_data_array[i].kernel_thread_id == thread_data_array[index].kernel_thread_id) 
       {
          is_unique = 0;
@@ -300,7 +292,7 @@ inline void *ThreadPool::worker()
    // Multiple user threads may run on a single kernel thread.
    // Now wait at the first barrier.
 
-   #ifndef LINUX
+   #if !defined(LINUX) && !defined(DARWIN)
    tid_t kernel_thr_id = thread_self();
    #endif
    barrier1->arrive(tasknum);
@@ -308,7 +300,7 @@ inline void *ThreadPool::worker()
    // Stuff this thread's ids in the thread data array
 
    thread_data_array[next_thread_data_index].pthread_id =  pt_id;
-   #ifndef LINUX
+   #if !defined(LINUX) && !defined(DARWIN)
    thread_data_array[next_thread_data_index].kernel_thread_id =  kernel_thr_id;
    #endif
 

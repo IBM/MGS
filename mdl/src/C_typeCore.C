@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_typeCore.h"
 #include "MdlContext.h"
 #include "DataType.h"
@@ -25,7 +18,7 @@ void C_typeCore::execute(MdlContext* context)
 {
    if (_id != "") {
       try {
-	 std::auto_ptr<DataType> dup;
+	 std::unique_ptr<DataType> dup;
 	 StructType* st;
 	 Generatable* gen = context->_generatables->getMember(_id);
 	 st = dynamic_cast<StructType*>(gen);
@@ -34,7 +27,7 @@ void C_typeCore::execute(MdlContext* context)
 	    stream << _id << " is found, but has a different type.";
 	    throw NotFoundException(stream.str());	    
 	 }
-	 st->duplicate(dup);
+	 st->duplicate(std::move(dup));
 	 delete _dataType;
 	 _dataType = dup.release();
       } catch (NotFoundException& e) {
@@ -68,18 +61,18 @@ C_typeCore::C_typeCore(const C_typeCore& rv)
    : C_production(rv), _dataType(0), _id(rv._id) 
 {
    if (rv._dataType) {
-      std::auto_ptr<DataType> dup;
-      rv._dataType->duplicate(dup);
+      std::unique_ptr<DataType> dup;
+      rv._dataType->duplicate(std::move(dup));
       _dataType = dup.release();
    }
 }
 
-void C_typeCore::duplicate(std::auto_ptr<C_typeCore>& rv) const
+void C_typeCore::duplicate(std::unique_ptr<C_typeCore>&& rv) const
 {
    rv.reset(new C_typeCore(*this));
 }
 
-void C_typeCore::releaseDataType(std::auto_ptr<DataType>& dt) 
+void C_typeCore::releaseDataType(std::unique_ptr<DataType>&& dt) 
 {
    dt.reset(_dataType);
    _dataType = 0;

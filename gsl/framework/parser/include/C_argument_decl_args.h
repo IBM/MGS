@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef C_ARGUMENT_DECL_ARGS_H
 #define C_ARGUMENT_DECL_ARGS_H
 #include "Copyright.h"
@@ -21,7 +14,7 @@
 #include <memory>
 #include "C_argument.h"
 
-class LensContext;
+class GslContext;
 class DataItem;
 class C_declarator;
 class C_argument_list;
@@ -35,7 +28,7 @@ class C_argument_decl_args: public C_argument
 			   SyntaxError *);
       virtual ~C_argument_decl_args();
       virtual C_argument_decl_args* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 

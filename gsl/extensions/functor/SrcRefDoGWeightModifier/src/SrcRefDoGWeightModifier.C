@@ -1,21 +1,14 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "SrcRefDoGWeightModifier.h"
 #include "CG_SrcRefDoGWeightModifierBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ParameterSet.h"
 #include "NDPair.h"
 #include "NDPairList.h"
@@ -28,7 +21,7 @@
 #include "Grid.h"
 #include "GridLayerDescriptor.h"
 
-void SrcRefDoGWeightModifier::userInitialize(LensContext* CG_c, Functor*& f, float& sigma1, float& max1, float& sigma2, float& max2, int& wrapDistance) 
+void SrcRefDoGWeightModifier::userInitialize(GslContext* CG_c, Functor*& f, float& sigma1, float& max1, float& sigma2, float& max2, int& wrapDistance) 
 {
   _sigma1=sigma1;
   _max1=max1;
@@ -37,7 +30,7 @@ void SrcRefDoGWeightModifier::userInitialize(LensContext* CG_c, Functor*& f, flo
   _wrapDistance=wrapDistance;
 }
 
-std::unique_ptr<ParameterSet> SrcRefDoGWeightModifier::userExecute(LensContext* CG_c) 
+std::unique_ptr<ParameterSet> SrcRefDoGWeightModifier::userExecute(GslContext* CG_c) 
 {
    std::vector<DataItem*> nullArgs;
    std::unique_ptr<DataItem> rval_ap;
@@ -111,7 +104,7 @@ std::unique_ptr<ParameterSet> SrcRefDoGWeightModifier::userExecute(LensContext* 
    ndpl.push_back(ndp2);
 
    std::unique_ptr<ParameterSet> pset;
-   psdi->getParameterSet()->duplicate(pset);
+   psdi->getParameterSet()->duplicate(std::move(pset));
    pset->set(ndpl);
    return pset;
 }
@@ -125,17 +118,17 @@ SrcRefDoGWeightModifier::~SrcRefDoGWeightModifier()
 {
 }
 
-void SrcRefDoGWeightModifier::duplicate(std::unique_ptr<SrcRefDoGWeightModifier>& dup) const
+void SrcRefDoGWeightModifier::duplicate(std::unique_ptr<SrcRefDoGWeightModifier>&& dup) const
 {
    dup.reset(new SrcRefDoGWeightModifier(*this));
 }
 
-void SrcRefDoGWeightModifier::duplicate(std::unique_ptr<Functor>& dup) const
+void SrcRefDoGWeightModifier::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new SrcRefDoGWeightModifier(*this));
 }
 
-void SrcRefDoGWeightModifier::duplicate(std::unique_ptr<CG_SrcRefDoGWeightModifierBase>& dup) const
+void SrcRefDoGWeightModifier::duplicate(std::unique_ptr<CG_SrcRefDoGWeightModifierBase>&& dup) const
 {
    dup.reset(new SrcRefDoGWeightModifier(*this));
 }

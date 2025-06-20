@@ -1,7 +1,17 @@
-#include "Lens.h"
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
+#include "Mgs.h"
 #include "DNEdgeSet.h"
 #include "CG_DNEdgeSet.h"
 #include "rndm.h"
+#include <cfloat>
 #ifdef HAVE_GPU
 #include "CG_DNEdgeSetCompCategory.h"
 #endif
@@ -61,8 +71,8 @@ void DNEdgeSet::initialize(RNG& rng)
   biasCorrectionW = SHD.alpha;
   biasCorrectionS = SHD.beta;
 
-  auto oend = SHD.optimization.end();
-  for (auto oiter=SHD.optimization.begin(); oiter!=oend; ++oiter) {
+  ShallowArray<CustomString>::const_iterator oiter, oend = SHD.optimization.end();
+  for (oiter=SHD.optimization.begin(); oiter!=oend; ++oiter) {
     if (*oiter=="Momentum") momentum=true;
     else if (*oiter=="RMSprop") rmsprop=true;
     else if (*oiter=="Adam") momentum=rmsprop=true;

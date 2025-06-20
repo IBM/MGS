@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef _C_NODESET_H_
 #define _C_NODESET_H_
 #include "Copyright.h"
@@ -23,7 +16,7 @@ class C_gridset;
 class C_nodeset_extension;
 class C_declarator;
 class C_declarator_nodeset_extension;
-class LensContext;
+class GslContext;
 class NodeSet;
 class SyntaxError;
 
@@ -37,7 +30,7 @@ class C_nodeset : public C_production
       C_nodeset(C_declarator_nodeset_extension *, SyntaxError *);
       virtual ~C_nodeset ();
       virtual C_nodeset* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
       NodeSet* getNodeSet() {

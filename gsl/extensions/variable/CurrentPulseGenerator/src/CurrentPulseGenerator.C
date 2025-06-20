@@ -1,6 +1,15 @@
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
 #include "CG_CurrentPulseGenerator.h"
 #include "CurrentPulseGenerator.h"
-#include "Lens.h"
+#include "Mgs.h"
 #include "MaxComputeOrder.h"
 #include "rndm.h"
 #include <iostream>
@@ -299,18 +308,18 @@ CurrentPulseGenerator::~CurrentPulseGenerator()
 }
 
 void CurrentPulseGenerator::duplicate(
-    std::unique_ptr<CurrentPulseGenerator>& dup) const
+    std::unique_ptr<CurrentPulseGenerator>&& dup) const
 {
   dup.reset(new CurrentPulseGenerator(*this));
 }
 
-void CurrentPulseGenerator::duplicate(std::unique_ptr<Variable>& dup) const
+void CurrentPulseGenerator::duplicate(std::unique_ptr<Variable>&& dup) const
 {
   dup.reset(new CurrentPulseGenerator(*this));
 }
 
 void CurrentPulseGenerator::duplicate(
-    std::unique_ptr<CG_CurrentPulseGenerator>& dup) const
+    std::unique_ptr<CG_CurrentPulseGenerator>&& dup) const
 {
   dup.reset(new CurrentPulseGenerator(*this));
 }

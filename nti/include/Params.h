@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BMC-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// ================================================================
-
+// =============================================================================
 #ifndef PARAMS_H
 #define PARAMS_H
 
@@ -76,7 +69,7 @@ class Params
 	  _target1.clear();
 	  _target2.clear();
 	}
-	bool operator<(const ChannelTarget& ct)
+	bool operator<(const ChannelTarget& ct) const
 	{
 	  bool rval = (_type < ct._type);
 	  if (_type == ct._type)
@@ -115,7 +108,7 @@ class Params
 	  _target.clear();
 	  _parameter = 0;
 	}
-	bool operator<(const ElectricalSynapseTarget& st)
+	bool operator<(const ElectricalSynapseTarget& st) const
 	{
 	  bool rval = (_type < st._type);
 	  if (_type == st._type)
@@ -165,7 +158,7 @@ class Params
 	  _targets.clear();
 	  _parameter = 0;
 	}
-	bool operator<(const ChemicalSynapseTarget& st)
+	bool operator<(const ChemicalSynapseTarget& st) const
 	{
 	  bool rval = _targets < st._targets;
 	  return rval;

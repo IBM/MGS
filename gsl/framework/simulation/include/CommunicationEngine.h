@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef CommunicationEngine_H
 #define CommunicationEngine_H
 #include "Copyright.h"
@@ -68,8 +61,8 @@ class CommunicationEngine
     };
 
   CommunicationEngine(int MachineNodeCount, IIterator<ISender> *Senders, IIterator<IReceiver> *Receivers, Simulation *sim) :
-  _nprocs(MachineNodeCount), _nsteps(0), _myrank(0), P2P_TAG(21), _senders(Senders), _receivers(Receivers), _receivermaps(0), _sendervectors(0), _wsndCounts(0), _wsndDispls(0), 
-    _wrcvCounts(0), _wrcvDispls(0), _vsbuff(0), _vrbuff(0), _vOutputStream(0), _sim(sim)
+  _nprocs(MachineNodeCount), _nsteps(0), _myrank(0), _senders(Senders), _receivers(Receivers), _receivermaps(0), _sendervectors(0), P2P_TAG(21), 
+  _wsndCounts(0), _wsndDispls(0), _wrcvCounts(0), _wrcvDispls(0), _vOutputStream(0), _vsbuff(0), _vrbuff(0), _sim(sim)
     {
       _myrank = getRank();
       int tmp = _nprocs + _nprocs - 1;
@@ -390,7 +383,7 @@ class CommunicationEngine
     SenderVector sv = _sendervectors[comstep];
 
 #ifdef VERBOSE
-    /* MPI_W begin: measure MPI send communiation + LENS marshalling */
+    /* MPI_W begin: measure MPI send communiation + GSL marshalling */
     double now, then;
     now = MPI_Wtime();
 #endif
@@ -399,7 +392,7 @@ class CommunicationEngine
     }
 #ifdef VERBOSE
     then = MPI_Wtime();
-    /* MPI_W end: measure MPI send communiation + LENS marshalling */
+    /* MPI_W end: measure MPI send communiation + GSL marshalling */
     marshallPlusSendElapsed += (then-now);
 #endif
   }
@@ -428,7 +421,7 @@ class CommunicationEngine
 
       // immediately dispatch using single list of all my receivers - not just the ones for this step
 #ifdef VERBOSE
-      /* MPI_W begin: measure LENS demarshalling */
+      /* MPI_W begin: measure GSL demarshalling */
       double now, then;
       now=MPI_Wtime();
 #endif
@@ -436,7 +429,7 @@ class CommunicationEngine
 #ifdef VERBOSE
       then=MPI_Wtime();
       demarshallElapsed += (then-now);
-      /* MPI_W end: measure LENS demarshalling */
+      /* MPI_W end: measure GSL demarshalling */
 #endif
       // if the receiver is in the list for this step and it is done, one less to wait for
       if (_allreceivers[sourcerank]->done() && rv->find(sourcerank) != rv->end()) npending--;

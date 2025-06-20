@@ -1,21 +1,14 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "ReversedSrcRefGaussianWeightModifier.h"
 #include "CG_ReversedSrcRefGaussianWeightModifierBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ParameterSet.h"
 #include "NDPair.h"
 #include "NDPairList.h"
@@ -28,14 +21,14 @@
 #include "Grid.h"
 #include "GridLayerDescriptor.h"
 
-void ReversedSrcRefGaussianWeightModifier::userInitialize(LensContext* CG_c, Functor*& f, float& sigma, float& max, int& wrapDistance) 
+void ReversedSrcRefGaussianWeightModifier::userInitialize(GslContext* CG_c, Functor*& f, float& sigma, float& max, int& wrapDistance) 
 {
   _sigma=sigma;
   _max=max;
   _wrapDistance=wrapDistance;
 }
 
-std::unique_ptr<ParameterSet> ReversedSrcRefGaussianWeightModifier::userExecute(LensContext* CG_c) 
+std::unique_ptr<ParameterSet> ReversedSrcRefGaussianWeightModifier::userExecute(GslContext* CG_c) 
 {
    std::vector<DataItem*> nullArgs;
    std::unique_ptr<DataItem> rval_ap;
@@ -109,7 +102,7 @@ std::unique_ptr<ParameterSet> ReversedSrcRefGaussianWeightModifier::userExecute(
    ndpl.push_back(ndp2);
 
    std::unique_ptr<ParameterSet> pset;
-   psdi->getParameterSet()->duplicate(pset);
+   psdi->getParameterSet()->duplicate(std::move(pset));
    pset->set(ndpl);
    return pset;
 }
@@ -123,17 +116,17 @@ ReversedSrcRefGaussianWeightModifier::~ReversedSrcRefGaussianWeightModifier()
 {
 }
 
-void ReversedSrcRefGaussianWeightModifier::duplicate(std::unique_ptr<ReversedSrcRefGaussianWeightModifier>& dup) const
+void ReversedSrcRefGaussianWeightModifier::duplicate(std::unique_ptr<ReversedSrcRefGaussianWeightModifier>&& dup) const
 {
    dup.reset(new ReversedSrcRefGaussianWeightModifier(*this));
 }
 
-void ReversedSrcRefGaussianWeightModifier::duplicate(std::unique_ptr<Functor>& dup) const
+void ReversedSrcRefGaussianWeightModifier::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new ReversedSrcRefGaussianWeightModifier(*this));
 }
 
-void ReversedSrcRefGaussianWeightModifier::duplicate(std::unique_ptr<CG_ReversedSrcRefGaussianWeightModifierBase>& dup) const
+void ReversedSrcRefGaussianWeightModifier::duplicate(std::unique_ptr<CG_ReversedSrcRefGaussianWeightModifierBase>&& dup) const
 {
    dup.reset(new ReversedSrcRefGaussianWeightModifier(*this));
 }

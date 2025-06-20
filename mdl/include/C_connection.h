@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef C_connection_H
 #define C_connection_H
 #include "Mdl.h"
@@ -30,14 +23,15 @@ class ConnectionCCBase;
 class Connection;
 
 class C_connection : public C_general {
-
    public:
+      using C_general::duplicate;  // Make base class method visible
+      using C_general::execute;  // Make base class method visible
       virtual void execute(MdlContext* context);
       virtual void addToList(C_generalList* gl) = 0;
       C_connection();
       C_connection(C_interfacePointerList* ipl, C_generalList* gl);
       C_connection(const C_connection& rv);
-      virtual void duplicate(std::auto_ptr<C_connection>& rv) const = 0;
+      virtual void duplicate(std::unique_ptr<C_connection>&& rv) const = 0;
       virtual ~C_connection();
 
    protected:

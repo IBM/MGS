@@ -1,20 +1,13 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_declaration_pset.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "C_parameter_type_pair.h"
 #include "C_declarator.h"
 #include "C_ndpair_clause_list.h"
@@ -29,7 +22,7 @@
 
 #include <memory>
 
-void C_declaration_pset::internalExecute(LensContext *c)
+void C_declaration_pset::internalExecute(GslContext *c)
 {
    _parameterTypePair->execute(c);
    _declarator->execute(c);
@@ -60,13 +53,13 @@ void C_declaration_pset::internalExecute(LensContext *c)
 	 _parameterTypePair->getModelName(), dummy);
       if (_parameterTypePair->getParameterType() == 
 	  C_parameter_type_pair::_INIT)
-         nt->getInitializationParameterSet(pset);
+         nt->getInitializationParameterSet(std::move(pset));
       else if (_parameterTypePair->getParameterType() == 
 	       C_parameter_type_pair::_IN)
-         nt->getInAttrParameterSet(pset);
+         nt->getInAttrParameterSet(std::move(pset));
       else if (_parameterTypePair->getParameterType() == 
 	       C_parameter_type_pair::_OUT)
-         nt->getOutAttrParameterSet(pset);
+         nt->getOutAttrParameterSet(std::move(pset));
    }
 
    try {

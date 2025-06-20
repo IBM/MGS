@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "Connector.h"
 #include "Grid.h"
 #include "EdgeType.h"
@@ -95,7 +88,7 @@ void Connector::constantToVariable(
     source->getOutAttrParameterSet(outAttrPSet);
     outAttrPSet->set(*sourceOutAttr);
     std::unique_ptr<ParameterSet> inAttrPSet;
-    destination->getVariable()->getInAttrParameterSet(inAttrPSet);
+    destination->getVariable()->getInAttrParameterSet(std::move(inAttrPSet));
     inAttrPSet->set(*destinationInAttr);
     source->addPostVariable(destination, outAttrPSet.get());
     destination->getVariable()->addPreConstant(source, inAttrPSet.get());
@@ -125,7 +118,7 @@ void Connector::constantToNodeSet(
         int toPartitionId = sim->getGranule(*(*it))->getPartitionId();                                        
         if (toPartitionId == myRank)                                                                          
 	{                                                                                                     
-	  (*it)->getGridLayerDescriptor()->getNodeType()->getInAttrParameterSet(inAttrPSet);                  
+	  (*it)->getGridLayerDescriptor()->getNodeType()->getInAttrParameterSet(std::move(inAttrPSet));                  
 	  inAttrPSet->set(*destinationInAttr);                                                                
 	  node = (*it)->getNode();                                                                            
 	  source->addPostNode((*it), outAttrPSet.get());                                                      
@@ -160,7 +153,7 @@ void Connector::constantToNode(
      source->getOutAttrParameterSet(outAttrPSet);
      outAttrPSet->set(*sourceOutAttr);
      std::unique_ptr<ParameterSet> inAttrPSet;  
-     destination->getGridLayerDescriptor()->getNodeType()->getInAttrParameterSet(inAttrPSet);
+     destination->getGridLayerDescriptor()->getNodeType()->getInAttrParameterSet(std::move(inAttrPSet));
      inAttrPSet->set(*destinationInAttr);
      source->addPostNode(node, outAttrPSet.get());
      node->addPreConstant(source, inAttrPSet.get());
@@ -178,7 +171,7 @@ void Connector::constantToEdgeSet(
    outAttrPSet->set(*sourceOutAttr);
    std::unique_ptr<ParameterSet> inAttrPSet;
    for (; it != end; ++it) {
-     (*it)->getInAttrParameterSet(inAttrPSet);
+     (*it)->getInAttrParameterSet(std::move(inAttrPSet));
      inAttrPSet->set(*destinationInAttr);
      source->addPostEdge(*it, outAttrPSet.get());
      (*it)->addPreConstant(source, inAttrPSet.get());

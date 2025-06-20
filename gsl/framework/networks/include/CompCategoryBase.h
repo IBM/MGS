@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef CompCategoryBase_H
 #define CompCategoryBase_H
 #include "Copyright.h"
@@ -28,7 +21,7 @@
 
 class WorkUnit;
 class Phase;
-class LensContext;
+class GslContext;
 class Node;
 class NodeDescriptor;
 
@@ -47,7 +40,7 @@ class CompCategoryBase : public CompCategory
 			   std::unique_ptr<Phase>& phase);
       std::string getSimulationPhaseName(const std::string& name);
       std::string getPhaseType(const std::string& name);
-      void setUnmappedPhases(LensContext* c);
+      void setUnmappedPhases(GslContext* c);
       std::map<std::string, bool> const & getPhaseCommunicationTable() {return _phaseCommunicationTable;}
       
    protected:

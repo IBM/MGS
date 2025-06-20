@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_connectionCCBase.h"
 #include "C_compCategoryBase.h"
 #include "C_generalList.h"
@@ -54,12 +47,12 @@ C_connectionCCBase::C_connectionCCBase(const C_connectionCCBase& rv)
 {
 }
 
-void C_connectionCCBase::duplicate(std::auto_ptr<C_compCategoryBase>& rv) const
+void C_connectionCCBase::duplicate(std::unique_ptr<C_compCategoryBase>&& rv) const
 {
    rv.reset(new C_connectionCCBase(*this));
 }
 
-void C_connectionCCBase::duplicate(std::auto_ptr<C_connectionCCBase>& rv) const
+void C_connectionCCBase::duplicate(std::unique_ptr<C_connectionCCBase>&& rv) const
 {
    rv.reset(new C_connectionCCBase(*this));
 }
@@ -68,17 +61,17 @@ void C_connectionCCBase::executeConnectionCCBase(MdlContext* context,
 						 ConnectionCCBase* cc) const
 {
    if (_generalList->getUserFunctions()) { 
-      std::auto_ptr<std::vector<UserFunction*> > userFunctions;
+      std::unique_ptr<std::vector<UserFunction*> > userFunctions;
       _generalList->releaseUserFunctions(userFunctions);
       cc->setUserFunctions(userFunctions);
    }
    if (_generalList->getPredicateFunctions()) { 
-      std::auto_ptr<std::vector<PredicateFunction*> > predicateFunctions;
+      std::unique_ptr<std::vector<PredicateFunction*> > predicateFunctions;
       _generalList->releasePredicateFunctions(predicateFunctions);
       cc->setPredicateFunctions(predicateFunctions);
    }
    if (_generalList->getConnectionVec()) {
-      std::auto_ptr<std::vector<C_regularConnection*> > connectionVec;
+      std::unique_ptr<std::vector<C_regularConnection*> > connectionVec;
       _generalList->releaseConnectionVec(connectionVec);
       std::vector<C_regularConnection*>::iterator it, 
 	 end = connectionVec->end();

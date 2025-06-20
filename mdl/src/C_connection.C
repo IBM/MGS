@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_connection.h"
 #include "C_general.h"
 #include "C_generalList.h"
@@ -58,13 +51,13 @@ C_connection::C_connection(const C_connection& rv)
    : C_general(rv), _interfacePointerList(0), _generalList(0)
 {
    if (rv._interfacePointerList) {
-      std::auto_ptr<C_interfacePointerList> dup;
-      rv._interfacePointerList->duplicate(dup);
+      std::unique_ptr<C_interfacePointerList> dup;
+      rv._interfacePointerList->duplicate(std::move(dup));
       _interfacePointerList = dup.release();
    }
    if (rv._generalList) {
-      std::auto_ptr<C_generalList> dup;
-      rv._generalList->duplicate(dup);
+      std::unique_ptr<C_generalList> dup;
+      rv._generalList->duplicate(std::move(dup));
       _generalList = dup.release();
    }
 }
@@ -81,14 +74,14 @@ void C_connection::doConnectionWork(MdlContext* context,
 {
    if (_interfacePointerList) {
       _interfacePointerList->execute(context);
-      std::auto_ptr<std::vector<Interface*> > interfaceVec;
+      std::unique_ptr<std::vector<Interface*> > interfaceVec;
       _interfacePointerList->releaseInterfaceVec(interfaceVec);
       std::vector<Interface*>::iterator it; 
       std::vector<Interface*>::iterator end = interfaceVec->end();
       for (it = interfaceVec->begin(); it != end; it++) {
-	 std::auto_ptr<InterfaceToMember> im;
+	 std::unique_ptr<InterfaceToMember> im;
 	 im.reset(new InterfaceToMember(*it));
-	 connection->addInterfaceToMember(im);
+	 connection->addInterfaceToMember(std::move(im));
       }
    } else {
       throw InternalException(
@@ -104,16 +97,16 @@ void C_connection::doConnectionWork(MdlContext* context,
    }
 
    if (_generalList->getInterfaceToInstanceVec()) {
-      std::auto_ptr<std::vector<C_interfaceToInstance*> > itiVec;
+      std::unique_ptr<std::vector<C_interfaceToInstance*> > itiVec;
       _generalList->releaseInterfaceToInstanceVec(itiVec);
       std::vector<C_interfaceToInstance*>::iterator it, end = itiVec->end();
       for (it = itiVec->begin(); it != end; ++it) {
 	 const DataType* curDt;
-	 std::auto_ptr<DataType> dtToInsert;
+	 std::unique_ptr<DataType> dtToInsert;
 	 try { 
 	    curDt = 
 	       connectionBase->getInstances().getMember((*it)->getMember());
-	    curDt->duplicate(dtToInsert);
+	    curDt->duplicate(std::move(dtToInsert));
 	    if((*it)->getSubAttributePathExists()) {
 	       dtToInsert->setSubAttributePath((*it)->getSubAttributePath());
 	    }
@@ -125,18 +118,18 @@ void C_connection::doConnectionWork(MdlContext* context,
 	 }
 	 connection->addMappingToInterface(
 	    (*it)->getInterface(), (*it)->getInterfaceMember(), getTypeStr(), 
-	    dtToInsert);
+	    std::move(dtToInsert));
 	 delete *it;
       }
    }
 
    if (_generalList->getInterfaceToSharedVec()) {     
-      std::auto_ptr<std::vector<C_interfaceToShared*> > itsVec;
+      std::unique_ptr<std::vector<C_interfaceToShared*> > itsVec;
       _generalList->releaseInterfaceToSharedVec(itsVec);
       std::vector<C_interfaceToShared*>::iterator it, end = itsVec->end();
       for (it = itsVec->begin(); it != end; ++it) {
 	 const DataType* curDt;
-	 std::auto_ptr<DataType> dtToInsert;
+	 std::unique_ptr<DataType> dtToInsert;
 	 SharedCCBase* shared = 0;
 	 shared = dynamic_cast<SharedCCBase*>(connectionBase);
 	 if (shared == 0) {
@@ -146,7 +139,7 @@ void C_connection::doConnectionWork(MdlContext* context,
 	 }	       
 	 try { 
 	    curDt = shared->getShareds().getMember((*it)->getMember());
-	    curDt->duplicate(dtToInsert);
+	    curDt->duplicate(std::move(dtToInsert));
 	    if((*it)->getSubAttributePathExists()) {
 	       dtToInsert->setSubAttributePath((*it)->getSubAttributePath());
 	    }
@@ -157,23 +150,23 @@ void C_connection::doConnectionWork(MdlContext* context,
 	 }
 	 connection->addMappingToInterface(
 	    (*it)->getInterface(), (*it)->getInterfaceMember(), getTypeStr(), 
-	    dtToInsert);
+	    std::move(dtToInsert));
 	 delete *it;
       }
    }
 
    if (_generalList->getPSetToInstanceVec()) {
-      std::auto_ptr<std::vector<C_psetToInstance*> > ptiVec;
+      std::unique_ptr<std::vector<C_psetToInstance*> > ptiVec;
       _generalList->releasePSetToInstanceVec(ptiVec);
       std::vector<C_psetToInstance*>::iterator it, end = ptiVec->end();
       for (it = ptiVec->begin(); it != end; ++it) {
 	 PSetToMember& curPSetMappings = connection->getPSetMappings();
 	 const DataType* curDt;
-	 std::auto_ptr<DataType> dtToInsert;
+	 std::unique_ptr<DataType> dtToInsert;
 	 try { 
 	    curDt = 
 	       connectionBase->getInstances().getMember((*it)->getMember());
-	    curDt->duplicate(dtToInsert);
+	    curDt->duplicate(std::move(dtToInsert));
 	    if((*it)->getSubAttributePathExists()) {
 	       dtToInsert->setSubAttributePath((*it)->getSubAttributePath());
 	    }
@@ -184,7 +177,7 @@ void C_connection::doConnectionWork(MdlContext* context,
 	    throw ConnectionException(os.str());
 	 }
 	 try {
-	    curPSetMappings.addMapping((*it)->getPSetMember(), dtToInsert);
+	    curPSetMappings.addMapping((*it)->getPSetMember(), std::move(dtToInsert));
 	 } catch(GeneralException& e) {
 	    std::ostringstream os;
 	    os << "in " << getTypeStr() << ", " << e.getError();
@@ -195,13 +188,13 @@ void C_connection::doConnectionWork(MdlContext* context,
    }
 
    if (_generalList->getPSetToSharedVec()) {     
-      std::auto_ptr<std::vector<C_psetToShared*> > ptsVec;
+      std::unique_ptr<std::vector<C_psetToShared*> > ptsVec;
       _generalList->releasePSetToSharedVec(ptsVec);
       std::vector<C_psetToShared*>::iterator it, end = ptsVec->end();
       for (it = ptsVec->begin(); it != end; ++it) {
 	 PSetToMember& curPSetMappings = connection->getPSetMappings();
 	 const DataType* curDt;
-	 std::auto_ptr<DataType> dtToInsert;	 
+	 std::unique_ptr<DataType> dtToInsert;	 
 	 SharedCCBase* shared = 0;
 	 if (shared == 0) {
 	    shared = dynamic_cast<SharedCCBase*>(connectionBase);
@@ -213,7 +206,7 @@ void C_connection::doConnectionWork(MdlContext* context,
 	 }
 	 try { 
 	    curDt = shared->getShareds().getMember((*it)->getMember());
-	    curDt->duplicate(dtToInsert);
+	    curDt->duplicate(std::move(dtToInsert));
 	    if((*it)->getSubAttributePathExists()) {
 	       dtToInsert->setSubAttributePath((*it)->getSubAttributePath());
 	    }
@@ -223,7 +216,7 @@ void C_connection::doConnectionWork(MdlContext* context,
 	    throw ConnectionException(os.str());
 	 }
 	 try {
-	    curPSetMappings.addMapping((*it)->getPSetMember(), dtToInsert);
+	    curPSetMappings.addMapping((*it)->getPSetMember(), std::move(dtToInsert));
 	 } catch(GeneralException& e) {
 	    std::ostringstream os;
 	    os << "in " << getTypeStr() << ", " << e.getError();

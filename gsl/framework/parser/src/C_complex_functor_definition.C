@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_complex_functor_definition.h"
 #include "C_functor_category.h"
 #include "C_declarator.h"
@@ -21,7 +14,7 @@
 #include "C_production.h"
 #include <iostream>
 
-void C_complex_functor_definition::internalExecute(LensContext *c)
+void C_complex_functor_definition::internalExecute(GslContext *c)
 {
    _functorCategory->execute(c);
    _declarator->execute(c);

@@ -1,8 +1,7 @@
-#// =================================================================
-#//
-#// (C) Copyright 2018 New Jersey Institute of Technology.
-#//
-#// =================================================================
+// =============================================================================
+// (C) Copyright 2018 New Jersey Institute of Technology. All rights reserved.
+//
+// =============================================================================
 CHANNEL_TARGETS 6
 MTYPE BRANCHTYPE
 #1 Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] Nas [Voltage] [Voltage] KDR [Voltage] [Voltage] KIR [Voltage] [Voltage] KAf [Voltage] [Voltage] KAs [Voltage] [Voltage] KRP [Voltage] [Voltage] 

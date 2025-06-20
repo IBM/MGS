@@ -1,19 +1,12 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
-#include "Lens.h"
+// =============================================================================
+#include "Mgs.h"
 #include "CaConcentrationJunction.h"
 #include "CG_CaConcentrationJunction.h"
 #include "rndm.h"
@@ -478,7 +471,7 @@ void CaConcentrationJunction::printDebugHH(std::string phase)
 //  Even if we retain (x,y,z) this value change with the #capsule per compartment
 //   and geometric sampling --> so not a good choice
 bool CaConcentrationJunction::checkSite(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset,
     CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset)
@@ -492,7 +485,7 @@ bool CaConcentrationJunction::checkSite(
 }
 
 bool CaConcentrationJunction::confirmUniqueDeltaT(
-    const String& CG_direction, const String& CG_component,
+    const CustomString& CG_direction, const CustomString& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset,
     CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset)
@@ -505,7 +498,7 @@ CaConcentrationJunction::~CaConcentrationJunction() {}
 
 
 #ifdef MICRODOMAIN_CALCIUM
-void CaConcentrationJunction::createMicroDomainData(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset) 
+void CaConcentrationJunction::createMicroDomainData(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset) 
 {
   std::string listmicroDomains (CG_inAttrPset->domainName.c_str());
   if (listmicroDomains.empty())
@@ -514,7 +507,7 @@ void CaConcentrationJunction::createMicroDomainData(const String& CG_direction, 
   else{
     std::vector<std::string> tokens;  // extract all names of microdomains as token
     assert(microdomainNames.size() == 0);
-    StringUtils::Tokenize(listmicroDomains, tokens, " ,");
+    CustomStringUtils::Tokenize(listmicroDomains, tokens, " ,");
     int numMicrodomains = tokens.size();
 
     microdomainNames.increaseSizeTo(numMicrodomains);
@@ -551,7 +544,7 @@ void CaConcentrationJunction::createMicroDomainData(const String& CG_direction, 
     
     for (unsigned ii = 0; ii < numMicrodomains; ++ii)
     {
-      String domainName(tokens[ii].c_str());
+      CustomString domainName(tokens[ii].c_str());
       microdomainNames[ii] = domainName;
       int offset = ii * numCpts;
 #if MICRODOMAIN_DATA_FROM == _MICRODOMAIN_DATA_FROM_CHANPARAM
@@ -610,11 +603,11 @@ void CaConcentrationJunction::createMicroDomainData(const String& CG_direction, 
   }
 }
 
-void CaConcentrationJunction::setupCurrent2Microdomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset) 
+void CaConcentrationJunction::setupCurrent2Microdomain(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset) 
 {
   //put channel producing Ca2+ influx to the right location
   //from that we can update the [Ca2+] in the associated microdomain
-  String microdomainName = CG_inAttrPset->domainName;
+  CustomString microdomainName = CG_inAttrPset->domainName;
   int ii = 0;
   while (microdomainNames[ii] != microdomainName)
   {
@@ -623,11 +616,11 @@ void CaConcentrationJunction::setupCurrent2Microdomain(const String& CG_directio
   _mapCurrentToMicrodomainIndex[channelCaCurrents_microdomain.size()-1] = ii;
 }
 
-void CaConcentrationJunction::setupFlux2Microdomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset) 
+void CaConcentrationJunction::setupFlux2Microdomain(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset) 
 {
   //put channel producing Ca2+ influx to the right location
   //from that we can update the [Ca2+] in the associated microdomain
-  String microdomainName = CG_inAttrPset->domainName;
+  CustomString microdomainName = CG_inAttrPset->domainName;
   int ii = 0;
   while (microdomainNames[ii] != microdomainName)
   {
@@ -636,11 +629,11 @@ void CaConcentrationJunction::setupFlux2Microdomain(const String& CG_direction, 
   _mapFluxToMicrodomainIndex[channelCaFluxes_microdomain.size()-1] = ii;
 }
 
-void CaConcentrationJunction::setupReceptorCurrent2Microdomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset) 
+void CaConcentrationJunction::setupReceptorCurrent2Microdomain(const CustomString& CG_direction, const CustomString& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset) 
 {
   //put channel producing Ca2+ influx to the right location
   //from that we can update the [Ca2+] in the associated microdomain
-  String microdomainName = CG_inAttrPset->domainName;
+  CustomString microdomainName = CG_inAttrPset->domainName;
   int ii = 0;
   while (microdomainNames[ii] != microdomainName)
   {

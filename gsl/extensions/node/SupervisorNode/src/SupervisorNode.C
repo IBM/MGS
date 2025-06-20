@@ -1,10 +1,20 @@
-#include "Lens.h"
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
+#include "Mgs.h"
 #include "SupervisorNode.h"
 #include "CG_SupervisorNode.h"
 #include "rndm.h"
 #include "IsToast.h"
 #include <math.h>
 #include <algorithm>
+#include <cfloat>
 #ifdef HAVE_GPU
 #include "CG_SupervisorNodeCompCategory.h"
 #endif

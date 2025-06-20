@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "Phase.h"
 #include "PhaseType.h"
 #include "Class.h"
@@ -26,7 +19,7 @@
 #include <string>
 #include <sstream>
 
-Phase::Phase(const std::string& name, std::auto_ptr<PhaseType>& phaseType,
+Phase::Phase(const std::string& name, std::unique_ptr<PhaseType>&& phaseType,
 	     const std::vector<std::string>& pvn)
    : _name(name), _packedVariableNames(pvn)
 {
@@ -82,11 +75,11 @@ std::string Phase::getGenerateString() const
 
 void Phase::generateVirtualUserMethod(Class& c) const
 {
-   std::auto_ptr<Method> method(new Method(_name, "void"));
+   std::unique_ptr<Method> method(new Method(_name, "void"));
    method->setVirtual();
    method->setPureVirtual(true);
    method->addParameter("RNG& rng");
-   c.addMethod(method);
+   c.addMethod(std::move(method));
 }
 
 void Phase::generateUserMethod(Class& c) const
@@ -96,10 +89,10 @@ void Phase::generateUserMethod(Class& c) const
 
 void Phase::generateInternalUserMethod(Class& c) const
 {
-   std::auto_ptr<Method> method(new Method(_name, "void"));
+   std::unique_ptr<Method> method(new Method(_name, "void"));
    //method->setInline();
    method->addParameter("RNG& rng");
-   c.addMethod(method);
+   c.addMethod(std::move(method));
 }    
 
 
@@ -115,8 +108,8 @@ void Phase::generateInstancePhaseMethod(
 void Phase::copyOwnedHeap(const Phase& rv)
 {
    if (rv._phaseType) {
-      std::auto_ptr<PhaseType> dup;
-      rv._phaseType->duplicate(dup);
+      std::unique_ptr<PhaseType> dup;
+      rv._phaseType->duplicate(std::move(dup));
       _phaseType = dup.release();
    } else {
       _phaseType = 0;

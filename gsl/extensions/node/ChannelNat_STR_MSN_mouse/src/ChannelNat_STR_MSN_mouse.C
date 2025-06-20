@@ -1,11 +1,9 @@
-// =================================================================
+// =============================================================================
+// (C) Copyright 2018 New Jersey Institute of Technology. All rights reserved.
 //
-// (C) Copyright 2018 New Jersey Institute of Technology.
-//
-// =================================================================
+// =============================================================================
 
-
-#include "Lens.h"
+#include "Mgs.h"
 #include "ChannelNat_STR_MSN_mouse.h"
 #include "CG_ChannelNat_STR_MSN_mouse.h"
 #include "rndm.h"

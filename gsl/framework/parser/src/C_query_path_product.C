@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_query_path_product.h"
 #include "C_query_path.h"
 #include "C_declarator.h"
@@ -20,14 +13,14 @@
 #include "ServiceDescriptor.h"
 #include "TriggerType.h"
 #include "Publisher.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 #include "C_production.h"
 
 #include <assert.h>
 
-void C_query_path_product::internalExecute(LensContext *c)
+void C_query_path_product::internalExecute(GslContext *c)
 {
    _queryPath->execute(c);
    _declarator->execute(c);

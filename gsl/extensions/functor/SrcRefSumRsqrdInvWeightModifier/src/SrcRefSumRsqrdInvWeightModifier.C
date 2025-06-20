@@ -1,21 +1,14 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "SrcRefSumRsqrdInvWeightModifier.h"
 #include "CG_SrcRefSumRsqrdInvWeightModifierBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ParameterSet.h"
 #include "NDPair.h"
 #include "NDPairList.h"
@@ -26,7 +19,7 @@
 #include <list>
 #include <cmath>
 
-void SrcRefSumRsqrdInvWeightModifier::userInitialize(LensContext* CG_c, Functor*& f, int& maxDim, bool& setDistance) 
+void SrcRefSumRsqrdInvWeightModifier::userInitialize(GslContext* CG_c, Functor*& f, int& maxDim, bool& setDistance) 
 {
   assert(maxDim>0);
   _setDistance=setDistance;
@@ -75,7 +68,7 @@ void SrcRefSumRsqrdInvWeightModifier::userInitialize(LensContext* CG_c, Functor*
   }
 }
 
-std::unique_ptr<ParameterSet> SrcRefSumRsqrdInvWeightModifier::userExecute(LensContext* CG_c) 
+std::unique_ptr<ParameterSet> SrcRefSumRsqrdInvWeightModifier::userExecute(GslContext* CG_c) 
 {
    std::vector<DataItem*> nullArgs;
    std::unique_ptr<DataItem> rval_ap;
@@ -123,7 +116,7 @@ std::unique_ptr<ParameterSet> SrcRefSumRsqrdInvWeightModifier::userExecute(LensC
    }
 
    std::unique_ptr<ParameterSet> pset;
-   psdi->getParameterSet()->duplicate(pset);
+   psdi->getParameterSet()->duplicate(std::move(pset));
    pset->set(ndpl);
    return pset;
 }
@@ -137,17 +130,17 @@ SrcRefSumRsqrdInvWeightModifier::~SrcRefSumRsqrdInvWeightModifier()
 {
 }
 
-void SrcRefSumRsqrdInvWeightModifier::duplicate(std::unique_ptr<SrcRefSumRsqrdInvWeightModifier>& dup) const
+void SrcRefSumRsqrdInvWeightModifier::duplicate(std::unique_ptr<SrcRefSumRsqrdInvWeightModifier>&& dup) const
 {
    dup.reset(new SrcRefSumRsqrdInvWeightModifier(*this));
 }
 
-void SrcRefSumRsqrdInvWeightModifier::duplicate(std::unique_ptr<Functor>& dup) const
+void SrcRefSumRsqrdInvWeightModifier::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new SrcRefSumRsqrdInvWeightModifier(*this));
 }
 
-void SrcRefSumRsqrdInvWeightModifier::duplicate(std::unique_ptr<CG_SrcRefSumRsqrdInvWeightModifierBase>& dup) const
+void SrcRefSumRsqrdInvWeightModifier::duplicate(std::unique_ptr<CG_SrcRefSumRsqrdInvWeightModifierBase>&& dup) const
 {
    dup.reset(new SrcRefSumRsqrdInvWeightModifier(*this));
 }

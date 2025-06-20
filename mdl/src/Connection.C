@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-11-14-2018
-//
-// (C) Copyright IBM Corp. 2005-2018  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "Connection.h"
 #include "MemberContainer.h"
 #include "InterfaceToMember.h"
@@ -480,15 +473,15 @@ std::string Connection::getParametersForDirectionType(DirectionType type)
    }   
 }
 
-void Connection::addInterfaceToMember(std::auto_ptr<InterfaceToMember>& im) 
+void Connection::addInterfaceToMember(std::unique_ptr<InterfaceToMember>&& im) 
 {
-   _interfaces.addMemberToFront(im->getInterface()->getName(), im);
+   _interfaces.addMemberToFront(im->getInterface()->getName(), std::move(im));
 }
 
 
 void Connection::addMappingToInterface(
    const std::string& interface, const std::string& interfaceMember,
-   const std::string& typeStr, std::auto_ptr<DataType>& dtToInsert)
+   const std::string& typeStr, std::unique_ptr<DataType>&& dtToInsert)
 {
    InterfaceToMember* curIm;
    try {
@@ -499,7 +492,7 @@ void Connection::addMappingToInterface(
       throw;
    }
    try {
-      curIm->addMapping(interfaceMember, dtToInsert);
+      curIm->addMapping(interfaceMember, std::move(dtToInsert));
    } catch(GeneralException& e) {
       std::ostringstream os;
       os << "in " << typeStr << ", " << e.getError();

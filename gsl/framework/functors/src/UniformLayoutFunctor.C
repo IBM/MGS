@@ -1,22 +1,15 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "UniformLayoutFunctor.h"
 #include "FunctorType.h"
 #include "NumericDataItem.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "InstanceFactoryQueriable.h"
 #include "DataItemQueriable.h"
 #include "FunctorDataItem.h"
@@ -25,7 +18,7 @@
 class FunctorType;
 class Simulation;
 
-void UniformLayoutFunctor::doInitialize(LensContext *c, 
+void UniformLayoutFunctor::doInitialize(GslContext *c, 
 					const std::vector<DataItem*>& args)
 {
    NumericDataItem* densityDI = 
@@ -43,7 +36,7 @@ void UniformLayoutFunctor::doInitialize(LensContext *c,
 }
 
 
-void UniformLayoutFunctor::doExecute(LensContext *c, 
+void UniformLayoutFunctor::doExecute(GslContext *c, 
 				     const std::vector<DataItem*>& args, 
 				     std::unique_ptr<DataItem>& rvalue)
 {
@@ -51,7 +44,7 @@ void UniformLayoutFunctor::doExecute(LensContext *c,
 }
 
 
-void UniformLayoutFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void UniformLayoutFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new UniformLayoutFunctor(*this));
 }

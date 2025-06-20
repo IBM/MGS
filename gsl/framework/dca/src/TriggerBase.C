@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "TriggerBase.h"
 #include "Triggerable.h"
 #include "TriggerableCaller.h"
@@ -84,12 +77,12 @@ void TriggerBase::copyOwnedHeap(const TriggerBase& rv)
    std::vector<TriggerableCaller*>::const_iterator it, 
       end = rv._serialTriggerableCallers.end();
    for (it = rv._serialTriggerableCallers.begin(); it != end; ++it) {
-      (*it)->duplicate(dup);
+      (*it)->duplicate(std::move(dup));
       _serialTriggerableCallers.push_back(dup.release());
    }
    end = rv._parallelTriggerableCallers.end();
    for (it = rv._parallelTriggerableCallers.begin(); it != end; ++it) {
-      (*it)->duplicate(dup);
+      (*it)->duplicate(std::move(dup));
       _parallelTriggerableCallers.push_back(dup.release());
    }
    // workunits should not be copied, instead make your own with the copied

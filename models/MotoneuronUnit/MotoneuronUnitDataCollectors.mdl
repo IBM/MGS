@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef MOTONEURONUNITDATACOLLECTORS_MDL
 #define MOTONEURONUNITDATACOLLECTORS_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
@@ -79,7 +72,8 @@ Variable MotoneuronUnitDataCollector
   double* [] a_p_Nap_last;
   double* [] a_s_Ks_last;  
   */
-#endif // saveSimple
+#endif
+// saveSimple
   UserFunction getNodeIndices;
 
   // Flags
@@ -94,7 +88,8 @@ Variable MotoneuronUnitDataCollector
   bool op_save_s_EverythingElse;
   bool op_save_i_EverythingElse;
   //  bool op_save_a_EverythingElse;
-#endif // saveSimple
+#endif
+// saveSimple
 
 #if saveSimple == 1  
   Connection Pre Node () Expects MotoneuronSimpleProducer
@@ -171,7 +166,8 @@ Variable MotoneuronUnitDataCollector
     
     getNodeIndices();
   }
-#endif // saveSimple
+#endif
+// saveSimple
   
   InitPhase initialize;
   TriggeredFunction dataCollection;

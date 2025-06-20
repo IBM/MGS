@@ -1,20 +1,13 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "NdplNodeInitFunctor.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "DataItem.h"
 #include "FunctorType.h"
 #include "NDPair.h"
@@ -43,11 +36,11 @@ NdplNodeInitFunctor::NdplNodeInitFunctor()
 NdplNodeInitFunctor::NdplNodeInitFunctor(const NdplNodeInitFunctor& csf)
 {
    if (csf._functor_ap.get())
-      csf._functor_ap->duplicate(_functor_ap);
+      csf._functor_ap->duplicate(std::move(_functor_ap));
 }
 
 
-void NdplNodeInitFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void NdplNodeInitFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new NdplNodeInitFunctor(*this));
 }
@@ -58,7 +51,7 @@ NdplNodeInitFunctor::~NdplNodeInitFunctor()
 }
 
 
-void NdplNodeInitFunctor::doInitialize(LensContext *c, 
+void NdplNodeInitFunctor::doInitialize(GslContext *c, 
 				       const std::vector<DataItem*>& args)
 {
    if (args.size() != 1) {
@@ -75,11 +68,11 @@ void NdplNodeInitFunctor::doInitialize(LensContext *c,
       throw SyntaxErrorException(
 	 "Functor provided to NdplNodeInitFunctor is not valid!");
    }
-   functor->duplicate(_functor_ap);
+   functor->duplicate(std::move(_functor_ap));
 }
 
 
-void NdplNodeInitFunctor::doExecute(LensContext *c, 
+void NdplNodeInitFunctor::doExecute(GslContext *c, 
 				    const std::vector<DataItem*>& args, 
 				    std::unique_ptr<DataItem>& rvalue)
 {
@@ -97,8 +90,7 @@ void NdplNodeInitFunctor::doExecute(LensContext *c,
       GridLayerDescriptor* gld = (*iter);
       std::vector<NodeDescriptor*>  nodes;
       nodeset->getNodes(nodes, gld);
-      c->sim->getNodeType(
-	 gld->getModelName(), dummy)->getInitializationParameterSet(initPset);
+      c->sim->getNodeType(gld->getModelName(), dummy)->getInitializationParameterSet(std::move(initPset));
       nodesIter = nodes.begin();
       nodesEnd = nodes.end();
       for (; nodesIter != nodesEnd; ++nodesIter) {

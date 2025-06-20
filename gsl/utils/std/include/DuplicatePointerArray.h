@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef DuplicatePointerArray_H
 #define DuplicatePointerArray_H
 #include "Copyright.h"
@@ -131,7 +124,15 @@ void DuplicatePointerArray<T, blockSize, blockIncrementSize>::
 internalCopy(T*& lval, T*& rval)
 {
    std::unique_ptr<T> dup;
-   rval->duplicate(dup);
+   // Use decltype and SFINAE to detect the parameter type of duplicate
+   using Args = decltype(&T::duplicate);
+   if constexpr (std::is_same_v<Args, void (T::*)(std::unique_ptr<T>&) const>) {
+      // lvalue reference version
+      rval->duplicate(dup);
+   } else {
+      // rvalue reference version
+      rval->duplicate(std::move(dup));
+   }
    lval = dup.release();
 }
 

@@ -1,21 +1,14 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "BindFrontFunctor.h"
 #include "FunctorType.h"
-#include "LensContext.h"
+#include "GslContext.h"
 //#include <iostream>
 #include "DataItem.h"
 #include "FunctorDataItem.h"
@@ -28,7 +21,7 @@ class Functor;
 class FunctorType;
 class Simulation;
 
-void BindFrontFunctor::doInitialize(LensContext *c,
+void BindFrontFunctor::doInitialize(GslContext *c,
 				    const std::vector<DataItem*>& args)
 {
 
@@ -41,7 +34,7 @@ void BindFrontFunctor::doInitialize(LensContext *c,
    }
 
    std::unique_ptr<Functor> fap;
-   fdi->getFunctor()->duplicate(fap);
+   fdi->getFunctor()->duplicate(std::move(fap));
    _bind_functor = fap.release();
 
    std::vector<DataItem*>::const_iterator iter, 
@@ -56,7 +49,7 @@ void BindFrontFunctor::doInitialize(LensContext *c,
 }
 
 
-void BindFrontFunctor::doExecute(LensContext *c, 
+void BindFrontFunctor::doExecute(GslContext *c, 
 				 const std::vector<DataItem*>& args, 
 				 std::unique_ptr<DataItem>& rvalue)
 {
@@ -75,7 +68,7 @@ void BindFrontFunctor::doExecute(LensContext *c,
 }
 
 
-void BindFrontFunctor::duplicate(std::unique_ptr<Functor> &fap) const
+void BindFrontFunctor::duplicate(std::unique_ptr<Functor>&& fap) const
 {
    fap.reset(new BindFrontFunctor(*this));
 }
@@ -92,7 +85,7 @@ BindFrontFunctor::BindFrontFunctor(const BindFrontFunctor &f)
 {
    if (f._bind_functor) {
       std::unique_ptr<Functor> fap;
-      f._bind_functor->duplicate(fap);
+      f._bind_functor->duplicate(std::move(fap));
       _bind_functor = fap.release();
    }
 

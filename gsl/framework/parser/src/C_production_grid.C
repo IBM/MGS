@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
@@ -39,7 +32,7 @@ C_production_grid::~C_production_grid()
 {
 }
 
-void C_production_grid::execute(LensContext *c, Grid* g)
+void C_production_grid::execute(GslContext *c, Grid* g)
 {
    try {
       internalExecute(c, g);
@@ -54,7 +47,7 @@ void C_production_grid::execute(LensContext *c, Grid* g)
 
 }
 
-void C_production_grid::internalExecute(LensContext *c)
+void C_production_grid::internalExecute(GslContext *c)
 {
    std::cerr << "Internal error, internalExecute of C_production_grid called, exiting..." 
 	     << std::endl;

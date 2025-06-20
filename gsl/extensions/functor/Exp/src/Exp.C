@@ -1,29 +1,22 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
-#include "Lens.h"
+// =============================================================================
+#include "Mgs.h"
 #include "Exp.h"
 #include "CG_ExpBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include <memory>
 
-void Exp::userInitialize(LensContext* CG_c, Functor*& f) 
+void Exp::userInitialize(GslContext* CG_c, Functor*& f) 
 {
 }
 
-double Exp::userExecute(LensContext* CG_c) 
+double Exp::userExecute(GslContext* CG_c) 
 {
   std::vector<DataItem*> nullArgs;
   std::unique_ptr<DataItem> rval_ap;
@@ -45,17 +38,17 @@ Exp::~Exp()
 {
 }
 
-void Exp::duplicate(std::unique_ptr<Exp>& dup) const
+void Exp::duplicate(std::unique_ptr<Exp>&& dup) const
 {
    dup.reset(new Exp(*this));
 }
 
-void Exp::duplicate(std::unique_ptr<Functor>& dup) const
+void Exp::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new Exp(*this));
 }
 
-void Exp::duplicate(std::unique_ptr<CG_ExpBase>& dup) const
+void Exp::duplicate(std::unique_ptr<CG_ExpBase>&& dup) const
 {
    dup.reset(new Exp(*this));
 }

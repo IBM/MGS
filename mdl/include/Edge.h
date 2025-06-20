@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef Edge_H
 #define Edge_H
 #include "Mdl.h"
@@ -30,14 +23,14 @@ class Edge : public SharedCCBase {
       Edge(const std::string& fileName);
       Edge(const Edge& rv);
       Edge operator=(const Edge& rv);
-      virtual void duplicate(std::auto_ptr<Generatable>& rv) const;
+      virtual void duplicate(std::unique_ptr<Generatable>&& rv) const;
       virtual ~Edge();
       virtual std::string getType() const;
       virtual std::string generateExtra() const;
       EdgeConnection* getPreNode();
-      void setPreNode(std::auto_ptr<EdgeConnection>& con);
+      void setPreNode(std::unique_ptr<EdgeConnection>&& con);
       EdgeConnection* getPostNode();
-      void setPostNode(std::auto_ptr<EdgeConnection>& con);
+      void setPostNode(std::unique_ptr<EdgeConnection>&& con);
 
    protected:
       virtual std::string getModuleTypeName() const;

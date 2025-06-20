@@ -1,7 +1,16 @@
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
 #ifndef ECS_MediumCompCategory_H
 #define ECS_MediumCompCategory_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_ECS_MediumCompCategory.h"
 
 class NDPairList;

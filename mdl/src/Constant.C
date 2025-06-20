@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "Constant.h"
 #include "InterfaceImplementorBase.h"
 #include "Generatable.h"
@@ -31,7 +24,7 @@ Constant::Constant(const std::string& fileName)
 
 }
 
-void Constant::duplicate(std::auto_ptr<Generatable>& rv) const
+void Constant::duplicate(std::unique_ptr<Generatable>&& rv) const
 {
    rv.reset(new Constant(*this));
 }
@@ -75,42 +68,42 @@ void Constant::addExtraInstanceBaseMethods(Class& instance) const
 {
    /* e.g. ConstantBase */
    std::string baseName = getType() + "Base";
-   std::auto_ptr<BaseClass> base(new BaseClass(baseName));  
+   std::unique_ptr<BaseClass> base(new BaseClass(baseName));  
    CustomAttribute* cusAtt = new CustomAttribute("_sim", "Simulation", AccessType::PROTECTED);
    cusAtt->setReference();
    cusAtt->setConstructorParameterNameExtra("sim");
-   std::auto_ptr<Attribute> simAtt(cusAtt);
-   base->addAttribute(simAtt);
+   std::unique_ptr<Attribute> simAtt(cusAtt);
+   base->addAttribute(std::move(simAtt));
 
    instance.addHeader("\"" + baseName + ".h\"");
    instance.addHeader("\"" + getOutAttrPSetName() + ".h\""); /* e.g. CG_BiasOutAttrPSet */
 
-   instance.addBaseClass(base);
+   instance.addBaseClass(std::move(base));
 
    // addPostVariable method
-   std::auto_ptr<Method> addPostVariableMethod(new Method("addPostVariable", 
+   std::unique_ptr<Method> addPostVariableMethod(new Method("addPostVariable", 
 							  "void"));
    addPostVariableMethod->setVirtual();
    addPostVariableMethod->addParameter("VariableDescriptor* " + PREFIX + "variable");
    addPostVariableMethod->addParameter("ParameterSet* " + PREFIX + "pset");
    addPostVariableMethod->setFunctionBody(getAddPostVariableFunctionBody());
-   instance.addMethod(addPostVariableMethod);
+   instance.addMethod(std::move(addPostVariableMethod));
 
    // addPostEdge method
-   std::auto_ptr<Method> addPostEdgeMethod(new Method("addPostEdge", "void"));
+   std::unique_ptr<Method> addPostEdgeMethod(new Method("addPostEdge", "void"));
    addPostEdgeMethod->setVirtual();
    addPostEdgeMethod->addParameter("Edge* " + PREFIX + "edge");
    addPostEdgeMethod->addParameter("ParameterSet* " + PREFIX + "pset");
    addPostEdgeMethod->setFunctionBody(getAddPostEdgeFunctionBody());
-   instance.addMethod(addPostEdgeMethod);
+   instance.addMethod(std::move(addPostEdgeMethod));
 
    // addPostNode method
-   std::auto_ptr<Method> addPostNodeMethod(new Method("addPostNode", "void"));
+   std::unique_ptr<Method> addPostNodeMethod(new Method("addPostNode", "void"));
    addPostNodeMethod->setVirtual();
    addPostNodeMethod->addParameter("NodeDescriptor* " + PREFIX + "node");
    addPostNodeMethod->addParameter("ParameterSet* " + PREFIX + "pset");
    addPostNodeMethod->setFunctionBody(getAddPostNodeFunctionBody());
-   instance.addMethod(addPostNodeMethod);
+   instance.addMethod(std::move(addPostNodeMethod));
 
    // add CUDA GPU support
    // inline int getIndex(){return __index__;};
@@ -128,7 +121,7 @@ void Constant::addExtraInstanceBaseMethods(Class& instance) const
    instance.addDuplicateType("Constant");
 
    // Add out attribute PSet method
-   std::auto_ptr<Method> getOutAttrParameterSetMethod(
+   std::unique_ptr<Method> getOutAttrParameterSetMethod(
       new Method("getOutAttrParameterSet", "void"));
    getOutAttrParameterSetMethod->setConst();
    getOutAttrParameterSetMethod->setVirtual();
@@ -136,7 +129,7 @@ void Constant::addExtraInstanceBaseMethods(Class& instance) const
       "std::unique_ptr<ParameterSet>& " + OUTATTRPSETNAME);
    getOutAttrParameterSetMethod->setFunctionBody(
       TAB + OUTATTRPSETNAME + ".reset(new " + getOutAttrPSetName() + "());\n");
-   instance.addMethod(getOutAttrParameterSetMethod);
+   instance.addMethod(std::move(getOutAttrParameterSetMethod));
 
    addDoInitializeMethods(instance, getInstances());
 }
@@ -152,7 +145,7 @@ void Constant::addGenerateTypeClassAttribute(Class& c) const
    CustomAttribute* cusAtt = new CustomAttribute("_sim", "Simulation", AccessType::PROTECTED);
    cusAtt->setReference();
    cusAtt->setConstructorParameterNameExtra("sim");
-   std::auto_ptr<Attribute> simAtt(cusAtt);
+   std::unique_ptr<Attribute> simAtt(cusAtt);
    c.addAttribute(simAtt);
 }
 

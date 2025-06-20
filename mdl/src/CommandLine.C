@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "CommandLine.h"
 #include "Utility.h"
 #include "Parser.h"
@@ -21,7 +14,15 @@
 #include <iostream>
 
 CommandLine::CommandLine() 
-   : _fileName(""), _static(false)
+   : _fileName(""), _static(false), _skipIncludes(true)
+{
+}
+
+CommandLine::CommandLine(CommandLine& cl) 
+   : _fileName(cl._fileName), _static(cl._static), 
+   _printWarning(cl._printWarning),
+   _skipIncludes(cl._skipIncludes),
+   _includePath(cl._includePath)
 {
 }
 
@@ -31,10 +32,11 @@ bool CommandLine::parse(int argc, char** argv)
 
    Parser parser;
 
-   parser.addOption(Option('f', "mdlFile", Option::TYPE_NONE));
-   parser.addOption(Option('i', "includePath", Option::TYPE_REQUIRED));
-   parser.addOption(Option('s', "static", Option::TYPE_NONE));
-   parser.addOption(Option('n', "no-warning", Option::TYPE_NONE));
+   parser.addOption(Option('f', "mdl-file", Option::TYPE_NONE));
+   parser.addOption(Option('i', "include-path", Option::TYPE_REQUIRED));
+   parser.addOption(Option('s', "static-linking", Option::TYPE_NONE));
+   parser.addOption(Option('n', "no-warnings", Option::TYPE_NONE));
+   parser.addOption(Option('k', "keep-includes", Option::TYPE_NONE));
 
    // No arguments: show help and quit
    if (argc == 1) {
@@ -46,22 +48,26 @@ bool CommandLine::parse(int argc, char** argv)
    try {
       for (Parser::ParameterVector::size_type i = 0; i < parameterVector.size(); i++) {
          Option option = parameterVector[i].getOption();
-         Parser::String value = parameterVector[i].getValue();
+         Parser::CustomString value = parameterVector[i].getValue();
          if (option == Option::OPTION_NONE) {
-            std::cout << "The input MDL File Name is " << value << "\n";
+            std::cout << "Input MDL filename : " << value << "\n";
             _fileName = value;
          } else if (option.getShortName() == 's') {
-            std::cout << "Static link will be applied\n";
+            std::cout << "-s: Static linking applied.\n";
             _static = true;
          } else if (option.getShortName() == 'n') {
-            std::cout << "No warning is printed\n";
+            std::cout << "-n: Warnings suppressed.\n";
             _printWarning = false;
          } else if (option.getShortName() == 'i') {
             mdl::tokenize(value, _includePath, ':');
+            std::cout<<"-i: Include path set to: "<<value<<".\n";
+         } else if (option.getShortName() == 'k') {
+            _skipIncludes = false;
+            std::cout<<"-k: Keeping included files current by regenerating.\n";
          }
       }
    } catch (Parser::Exception exception) {
-      std::cerr << "Exception: " << exception.getMessage() << "...exiting...\n";
+      std::cerr << "ERROR: " << exception.getMessage() << "...Exiting...\n";
    }
 
    return true;

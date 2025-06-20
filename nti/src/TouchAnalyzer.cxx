@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BMC-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. and EPFL 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// ================================================================
-
+// =============================================================================
 #include "TouchAnalyzer.h"
 #include "TouchDetector.h"
 #include "Tissue.h"
@@ -78,10 +71,18 @@ TouchAnalyzer::TouchAnalyzer(
   
   TouchTableEntry tableEntry;
 
-  Datatype datatype(2, &tableEntry, 0, sizeof(TouchTableEntry));
-  datatype.set(0, MPI_DOUBLE, 2, &tableEntry.key1);
-  datatype.set(1, MPI_LONG, 1, &tableEntry.count);
-  _typeTouchTableEntry = datatype.commit();
+  // Create the base type without bounds
+  Datatype baseTouchTableEntryType(2, &tableEntry);
+  baseTouchTableEntryType.set(0, MPI_DOUBLE, 2, &tableEntry.key1);
+  baseTouchTableEntryType.set(1, MPI_LONG, 1, &tableEntry.count);
+  MPI_Datatype baseTouchTableEntryTypeMPI = baseTouchTableEntryType.commit();
+
+  // Then use MPI_Type_create_resized
+  MPI_Datatype finalTouchTableEntryType;
+  MPI_Type_create_resized(baseTouchTableEntryTypeMPI, 0, sizeof(TouchTableEntry), &finalTouchTableEntryType);
+  MPI_Type_commit(&finalTouchTableEntryType);
+  _typeTouchTableEntry = finalTouchTableEntryType;
+
   _tableEntriesSendBuf = new TouchTableEntry[_sendBufSize];
   _tableEntriesRecvBuf = new TouchTableEntry[_recvBufSize];
 }

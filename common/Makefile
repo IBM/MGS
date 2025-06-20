@@ -1,22 +1,16 @@
-#// =================================================================
-#// Licensed Materials - Property of IBM
-#//
-#// "Restricted Materials of IBM"
-#//
-#// BMC-YKT-03-25-2018
-#//
-#// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-#//
-#// US Government Users Restricted Rights -
-#// Use, duplication or disclosure restricted by
-#// GSA ADP Schedule Contract with IBM Corp.
-#//
-#// ================================================================
+# =============================================================================
+# (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+#
+# Distributed under the terms of the Apache License
+# Version 2.0, January 2004.
+# (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+#
+# =============================================================================
 OBJDIR= ./obj
 SRCDIR= ./src
 INCDIR= ./include
 CC=g++
-CFLAGS=-I$(INCDIR) -Wall -Werror -lgmp -std=c++11 -Wno-deprecated-declarations # -pedantic
+CFLAGS=-I$(INCDIR) -Wall -Werror -std=c++17 -Wno-deprecated-declarations # -pedantic
 CFLAGS+= -fPIC 
 ifeq ($(USE_SUITESPARSE), 1)
    OTHER_LIBS := -I$(SUITESPARSE)/include -L$(SUITESPARSE)/lib -lcxsparse -DUSE_SUITESPARSE
@@ -42,6 +36,16 @@ else
    UTILS_LIB = $(TARGET_LIB_DIR)/libutils_db.a
 endif
 
+ifeq ($(shell uname), Darwin)
+    # Add Darwin-specific include paths
+   CFLAGS += -I/opt/homebrew/include -I/opt/homebrew/opt/gmp/include
+   LDFLAGS += -L/opt/homebrew/lib -lgmp -stdlib=libc++ 
+   # Add necessary runtime path
+   LDFLAGS += -Wl,-rpath,/opt/homebrew/lib -L/opt/homebrew/opt/open-mpi/lib -lmpi
+else
+   CFLAGS += -lgmp 
+   LDFLAGS += -lgmp 
+endif
 
 .DEFAULT_GOAL := final
 

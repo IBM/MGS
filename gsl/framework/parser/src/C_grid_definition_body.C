@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_grid_definition_body.h"
 #include "C_int_constant_list.h"
 #include "C_dim_declaration.h"
@@ -20,7 +13,7 @@
 #include "Repertoire.h"
 #include "RepertoireDataItem.h"
 #include "Grid.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 #include "C_production.h"
@@ -29,7 +22,7 @@
 #include "Simulation.h"
 #endif
 
-void C_grid_definition_body::internalExecute(LensContext *c)
+void C_grid_definition_body::internalExecute(GslContext *c)
 {
    _dimDecl->execute(c);
    // execute is not called on _gridTransUnit until we actually try to create 
@@ -83,7 +76,7 @@ C_grid_definition_body::~C_grid_definition_body()
 
 
 Repertoire* C_grid_definition_body::createRepertoire(
-   std::string const& repName, LensContext* c)
+   std::string const& repName, GslContext* c)
 {
 #ifdef DEBUG_TIMER 
    Simulation* sim = c->sim;

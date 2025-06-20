@@ -1,13 +1,23 @@
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
 #ifndef TRANSFERFUNCTION_H
 #define TRANSFERFUNCTION_H
 
 #include <math.h>
-#include "String.h"
+#include "CustomString.h"
 
 enum TRANSFER_FUNC_ENUM
 {
    TANH=0,
    RELU,
+   IDENTITY,
    NUM_TRANSFER_FUNC
 };
 
@@ -23,18 +33,23 @@ class TransferFunction
      int setType(String type) {
        int index=0;
        if (type == "tanh") {
-	 transfer = &tanh;
-	 derivativeOfTransfer = &dtanh;
-	 index=TANH;
-       }
+        transfer = &tanh;
+        derivativeOfTransfer = &dtanh;
+        index=TANH;
+      }
        else if (type == "relu") {
-	 transfer = &relu;
-	 derivativeOfTransfer = &drelu;
-	 index=RELU;
+        transfer = &relu;
+        derivativeOfTransfer = &drelu;
+        index=RELU;
+       }
+       else if (type == "identity") {
+        transfer = &identity;
+        derivativeOfTransfer = &didentity;
+        index=IDENTITY;
        }
        else {
-	 std::cerr << "Unrecognized transfer function!" << std::endl;
-	 exit(-1);
+        std::cerr << "Unrecognized transfer function!" << std::endl;
+        exit(-1);
        }
        return index;
      }

@@ -1,7 +1,7 @@
-# The pathname is relative to the lens directory
+# The pathname is relative to the gsl directory
 # Define some common prefixes/suffixes for use
 THIS_DIR := framework/functors
-THIS_STEM := functors
+THIS_STEM := functorss
 
 SRC_PREFIX := $(THIS_DIR)/src
 OBJ_PREFIX := $(THIS_DIR)/obj

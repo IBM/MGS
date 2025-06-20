@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
@@ -21,7 +14,7 @@
 #include "Trigger.h"
 #include "DataItem.h"
 #include "BoolDataItem.h"
-#include "StringDataItem.h"
+#include "CustomStringDataItem.h"
 #include "UnsignedIntDataItem.h"
 #include "TriggerDataItem.h"
 #include "Queriable.h"
@@ -43,7 +36,7 @@ CompositeTriggerDescriptor::CompositeTriggerDescriptor(Simulation& s)
    std::vector<std::pair<std::string, DataItem*> > v;
 
    p.first = "Description";
-   p.second = new StringDataItem;
+   p.second = new CustomStringDataItem;
    v.push_back(p);
 
    p.first = "Trigger A";
@@ -55,7 +48,7 @@ CompositeTriggerDescriptor::CompositeTriggerDescriptor(Simulation& s)
    v.push_back(p);
 
    p.first = "Operator : AND && OR || XOR";
-   p.second = new StringDataItem;
+   p.second = new CustomStringDataItem;
    v.push_back(p);
 
    p.first = "Trigger B";
@@ -147,7 +140,7 @@ Trigger* CompositeTriggerDescriptor :: getTrigger(NDPairList& ndp)
    }
    else {
       bool descriptionPassed = false;
-      StringDataItem descriptionDI;
+      CustomStringDataItem descriptionDI;
 
       if (itr1 == end) {
 	 descriptionDI.setString(_description);

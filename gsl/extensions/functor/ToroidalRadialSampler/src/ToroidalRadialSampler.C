@@ -1,24 +1,17 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
 #include "ToroidalRadialSampler.h"
 #include "CG_ToroidalRadialSamplerBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "ConnectionContext.h"
 #include "ParameterSet.h"
 #include "NodeSet.h"
@@ -30,11 +23,11 @@
 #include <list>
 #include <cmath>
 
-void ToroidalRadialSampler::userInitialize(LensContext* CG_c, float& radius)
+void ToroidalRadialSampler::userInitialize(GslContext* CG_c, float& radius)
 {
 }
 
-void ToroidalRadialSampler::userExecute(LensContext* CG_c) 
+void ToroidalRadialSampler::userExecute(GslContext* CG_c) 
 {
    ConnectionContext *cc = CG_c->connectionContext;
    ConnectionContext::Responsibility resp = cc->current;
@@ -204,17 +197,17 @@ ToroidalRadialSampler::~ToroidalRadialSampler()
 {
 }
 
-void ToroidalRadialSampler::duplicate(std::unique_ptr<ToroidalRadialSampler>& dup) const
+void ToroidalRadialSampler::duplicate(std::unique_ptr<ToroidalRadialSampler>&& dup) const
 {
    dup.reset(new ToroidalRadialSampler(*this));
 }
 
-void ToroidalRadialSampler::duplicate(std::unique_ptr<Functor>& dup) const
+void ToroidalRadialSampler::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new ToroidalRadialSampler(*this));
 }
 
-void ToroidalRadialSampler::duplicate(std::unique_ptr<CG_ToroidalRadialSamplerBase>& dup) const
+void ToroidalRadialSampler::duplicate(std::unique_ptr<CG_ToroidalRadialSamplerBase>&& dup) const
 {
    dup.reset(new ToroidalRadialSampler(*this));
 }

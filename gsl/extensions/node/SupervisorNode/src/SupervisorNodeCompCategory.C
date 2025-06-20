@@ -1,7 +1,17 @@
-#include "Lens.h"
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
+#include "Mgs.h"
 #include "SupervisorNodeCompCategory.h"
 #include "NDPairList.h"
 #include "CG_SupervisorNodeCompCategory.h"
+#include <cfloat>
 #include <string>
 #include <map>
 
@@ -47,21 +57,22 @@ void SupervisorNodeCompCategory::initializeShared(RNG& rng)
 #endif
   dataset = mnist::read_dataset<std::vector, std::vector, uint8_t, uint8_t>
     (std::string(SHD.dataLocation.c_str()));
-  std::cerr<<"mnist_reader loaded "<<dataset.training_images.size()<<" training images."<<std::endl;
-  std::cerr<<"mnist_reader loaded "<<dataset.test_images.size()<<" test images."
-	   <<std::endl<<std::endl;
-
 #ifdef HAVE_GPU
 #if defined(LOAD_ALL_IMAGES_IN_GPU)
   loadDataToGPU();
 #endif
 #endif
-
   shuffleDeck(dataset.training_images.size(),rng);
   SHD.x->increaseSizeTo(IMG_SIZE);
   for (int i=0; i<IMG_SIZE; ++i) (*(SHD.x))[i]=PRELIM_STATE;
   SHD.imageIndex=-1;
   SHD.trainingEpoch=1;
+  if (getSimulation().getRank()==0) {
+    std::cerr<<"MNIST reader loaded "<<dataset.training_images.size()<<" training images."<<std::endl<<std::endl;
+    std::cerr<<"MNIST reader loaded "<<dataset.test_images.size()<<" test images."
+      <<std::endl<<std::endl;
+    _sim.benchmark_start("DNN Training");
+  }
 }
 
 #ifdef HAVE_GPU
@@ -72,20 +83,16 @@ void SupervisorNodeCompCategory::loadDataToGPU()
   count_test = dataset.test_images.size();
   size_t size = (count_train + count_test) * IMG_SIZE*sizeof(double);
   cudaMallocManaged(&d_buffer, size);
-  for (int ii=0; ii < count_train; ii++)
-  {
+  for (int ii=0; ii < count_train; ii++) {
     int idx = ii*IMG_SIZE;
-    for (int jj=0; jj < IMG_SIZE; jj++)
-    {
+    for (int jj=0; jj < IMG_SIZE; jj++) {
       d_buffer[idx+jj]=double(dataset.training_images[ii][jj])/255.0;
     }
   }
   int offset = count_train * IMG_SIZE;
-  for (int ii=0; ii < count_test; ii++)
-  {
+  for (int ii=0; ii < count_test; ii++) {
     int idx = ii*IMG_SIZE;
-    for (int jj=0; jj < IMG_SIZE; jj++)
-    {
+    for (int jj=0; jj < IMG_SIZE; jj++) {
       d_buffer[offset + idx+jj]=double(dataset.test_images[ii][jj])/255.0;
     }
   }
@@ -125,13 +132,13 @@ void SupervisorNodeCompCategory::updateShared_origin(RNG& rng)
   if (!SHD.test) {
     do {
       if (++SHD.imageIndex==dataset.training_images.size()) {
-	SHD.imageIndex=0;
-	shuffleDeck(dataset.training_images.size(),rng);
-	if (SHD.shready) output=true;
-	if (++SHD.trainingEpoch>SHD.trainingEpochs) {
-	  SHD.test = true;
-	  shuffleDeck(dataset.test_images.size(),rng);
-	}
+        SHD.imageIndex=0;
+        shuffleDeck(dataset.training_images.size(),rng);
+        if (SHD.shready) output=true;
+        if (++SHD.trainingEpoch>SHD.trainingEpochs) {
+          SHD.test = true;
+          shuffleDeck(dataset.test_images.size(),rng);
+	      }
       }
       label = dataset.training_labels[_shuffledDeck[SHD.imageIndex]];
       if (SHD.shready) SHD.labels[SHD.labelIndex]=label;
@@ -143,9 +150,9 @@ void SupervisorNodeCompCategory::updateShared_origin(RNG& rng)
   else {
     do {
       if (++SHD.imageIndex==dataset.test_images.size()) {
-	SHD.imageIndex=0;
-	shuffleDeck(dataset.test_images.size(),rng);
-	if (SHD.shready) output=true;
+        SHD.imageIndex=0;
+        shuffleDeck(dataset.test_images.size(),rng);
+        if (SHD.shready) output=true;
       }
       label = dataset.test_labels[_shuffledDeck[SHD.imageIndex]];
       if (SHD.shready) SHD.labels[SHD.labelIndex]=label;
@@ -176,21 +183,20 @@ void SupervisorNodeCompCategory::updateShared_GPU(RNG& rng)
   
   if (!SHD.test) {
     do {
-      if (++SHD.imageIndex == count_train) {
-	SHD.imageIndex=0;
-	shuffleDeck(count_train, rng);
-	if (SHD.shready) output=true;
-	if (++SHD.trainingEpoch>SHD.trainingEpochs) {
-	  SHD.test = true;
-	  shuffleDeck(count_test, rng);
-	}
+        if (++SHD.imageIndex == count_train) {
+        SHD.imageIndex=0;
+        shuffleDeck(count_train, rng);
+        if (SHD.shready) output=true;
+        if (++SHD.trainingEpoch>SHD.trainingEpochs) {
+          SHD.test = true;
+          shuffleDeck(count_test, rng);
+        }
       }
       label = dataset.training_labels[_shuffledDeck[SHD.imageIndex]];
       if (SHD.shready) SHD.labels[SHD.labelIndex]=label;
     } while (label>SHD.numberOfLabels-1);
 #ifdef DEBUG_LOAD_SINGLE_IMAGE
-    if (not loaded_train_image)
-    {
+    if (not loaded_train_image) {
       SHD.x->changeRef(training_images[_shuffledDeck[SHD.imageIndex]], IMG_SIZE);
       loaded_train_image = true;
     }
@@ -201,16 +207,15 @@ void SupervisorNodeCompCategory::updateShared_GPU(RNG& rng)
   else {
     do {
       if (++SHD.imageIndex==dataset.test_images.size()) {
-	SHD.imageIndex=0;
-	shuffleDeck(dataset.test_images.size(),rng);
-	if (SHD.shready) output=true;
+        SHD.imageIndex=0;
+        shuffleDeck(dataset.test_images.size(),rng);
+        if (SHD.shready) output=true;
       }
       label = dataset.test_labels[_shuffledDeck[SHD.imageIndex]];
       if (SHD.shready) SHD.labels[SHD.labelIndex]=label;
     } while (label>SHD.numberOfLabels-1);
 #ifdef DEBUG_LOAD_SINGLE_IMAGE
-    if (not loaded_test_image)
-    {
+    if (not loaded_test_image) {
       SHD.x->changeRef(test_images[_shuffledDeck[SHD.imageIndex]], IMG_SIZE);
       loaded_test_image = true;
     }
@@ -238,26 +243,25 @@ void SupervisorNodeCompCategory::outputError(unsigned currentLabel)
 #if defined(HAVE_GPU)
         outError += nodesIter->_container->um_sumOfSquaredError[nodesIter->__index__];
 #else
-	outError += nodesIter->sumOfSquaredError;
+      	outError += nodesIter->sumOfSquaredError;
 #endif
-#if defined(HAVE_GPU)
-	{
+#if defined(HAVE_GPU) {
         std::cerr<<getSimulation().getRank()<<" : "
-                 <<currentLabel<<" : "
-                 <<( (currentLabel==nodesIter->getGlobalIndex()) ? 1.0 : 0.0)
-                 <<"   |   "<<*(nodesIter->_container->um_logits[nodesIter->__index__])[nodesIter->getGlobalIndex()]
-                 <<"   |   "<<(nodesIter->_container->um_predictions[nodesIter->__index__])[nodesIter->getGlobalIndex()]
-                 <<std::endl<<std::flush;
-	}
+          <<currentLabel<<" : "
+          <<( (currentLabel==nodesIter->getGlobalIndex()) ? 1.0 : 0.0)
+          <<"   |   "<<*(nodesIter->_container->um_logits[nodesIter->__index__])[nodesIter->getGlobalIndex()]
+          <<"   |   "<<(nodesIter->_container->um_predictions[nodesIter->__index__])[nodesIter->getGlobalIndex()]
+          <<std::endl<<std::flush;
+        }
 #else
-	std::cerr<<getSimulation().getRank()<<" : "
-		 <<currentLabel<<" : "
-		 <<( (currentLabel==nodesIter->getGlobalIndex()) ? 1.0 : 0.0)
-		 <<"   |   "<<*(nodesIter->logits)[nodesIter->getGlobalIndex()]
-		 <<"   |   "<<(nodesIter->predictions)[nodesIter->getGlobalIndex()]
-		 <<std::endl<<std::flush;
+        std::cerr<<getSimulation().getRank()<<" : "
+          <<currentLabel<<" : "
+          <<( (currentLabel==nodesIter->getGlobalIndex()) ? 1.0 : 0.0)
+          <<"   |   "<<*(nodesIter->logits)[nodesIter->getGlobalIndex()]
+          <<"   |   "<<(nodesIter->predictions)[nodesIter->getGlobalIndex()]
+          <<std::endl<<std::flush;
 #endif
-       }
+      }
     }
     MPI_Barrier(MPI_COMM_WORLD);
   }
@@ -278,6 +282,7 @@ void SupervisorNodeCompCategory::outputError(unsigned currentLabel)
   }
   SHD.numberOfInputs = 0;
   SHD.refreshErrors = true;
+  _sim.benchmark_timelapsed_diff("DNN Training");
 }
 
 bool SupervisorNodeCompCategory::isReady()

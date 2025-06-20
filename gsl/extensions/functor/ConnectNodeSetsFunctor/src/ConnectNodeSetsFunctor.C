@@ -1,23 +1,16 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "ConnectNodeSetsFunctor.h"
 #include "CG_ConnectNodeSetsFunctorBase.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "Connector.h"
-#include "LensConnector.h"
+#include "MgsConnector.h"
 #include "GranuleConnector.h"
 #include "NoConnectConnector.h"
 #include "ConnectionContext.h"
@@ -33,11 +26,11 @@
 #include <thread>
 #endif
 
-void ConnectNodeSetsFunctor::userInitialize(LensContext* CG_c) 
+void ConnectNodeSetsFunctor::userInitialize(GslContext* CG_c) 
 {
 }
 
-void ConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, NodeSet*& destination, Functor*& sampling, Functor*& sourceOutAttr, Functor*& destinationInAttr) 
+void ConnectNodeSetsFunctor::userExecute(GslContext* CG_c, NodeSet*& source, NodeSet*& destination, Functor*& sampling, Functor*& sourceOutAttr, Functor*& destinationInAttr) 
 {
 //#define DEBUG_TIMER
 #ifdef DEBUG_TIMER
@@ -80,7 +73,7 @@ void ConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, No
    } else if (CG_c->sim->isCostAggregationPass()) {
      lc=_granuleConnector;
    } else if (CG_c->sim->isSimulatePass()) {
-     lc=_lensConnector;
+     lc=_mgsConnector;
    } else {
      std::cerr<<"Error, ConnectNodeSetsFunctor : no connection context set!"<<std::endl;
      exit(0);
@@ -255,7 +248,7 @@ void ConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, No
 	} else if (CG_c->sim->isCostAggregationPass()) {
 	   msg = "_granuleConnector";
 	} else if (CG_c->sim->isSimulatePass()) {
-	   msg = "_lensConnector";
+	   msg = "_mgsConnector";
 	} 
 	std::cout << ".........." << msg << std::endl;
        CG_c->sim->benchmark_timelapsed(".. ConnectNodeSetsFunctor (userExecute() end)");
@@ -277,24 +270,24 @@ ConnectNodeSetsFunctor::ConnectNodeSetsFunctor()
 {
    _noConnector = new NoConnectConnector;
    _granuleConnector = new GranuleConnector;
-   _lensConnector = new LensConnector;
+   _mgsConnector = new MgsConnector;
 }
 
 ConnectNodeSetsFunctor::~ConnectNodeSetsFunctor() 
 {
 }
 
-void ConnectNodeSetsFunctor::duplicate(std::unique_ptr<ConnectNodeSetsFunctor>& dup) const
+void ConnectNodeSetsFunctor::duplicate(std::unique_ptr<ConnectNodeSetsFunctor>&& dup) const
 {
    dup.reset(new ConnectNodeSetsFunctor(*this));
 }
 
-void ConnectNodeSetsFunctor::duplicate(std::unique_ptr<Functor>& dup) const
+void ConnectNodeSetsFunctor::duplicate(std::unique_ptr<Functor>&& dup) const
 {
    dup.reset(new ConnectNodeSetsFunctor(*this));
 }
 
-void ConnectNodeSetsFunctor::duplicate(std::unique_ptr<CG_ConnectNodeSetsFunctorBase>& dup) const
+void ConnectNodeSetsFunctor::duplicate(std::unique_ptr<CG_ConnectNodeSetsFunctorBase>&& dup) const
 {
    dup.reset(new ConnectNodeSetsFunctor(*this));
 }

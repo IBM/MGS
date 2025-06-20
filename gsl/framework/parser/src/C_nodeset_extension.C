@@ -1,27 +1,20 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include "C_nodeset_extension.h"
 #include "C_node_type_set_specifier.h"
 #include "C_index_set_specifier.h"
-#include "LensContext.h"
+#include "GslContext.h"
 #include "Grid.h"
 #include "SyntaxError.h"
 #include "C_production.h"
 
-void C_nodeset_extension::internalExecute(LensContext *c)
+void C_nodeset_extension::internalExecute(GslContext *c)
 {
    if(_indexSetSpecifier) {
       _indexSetSpecifier->execute(c);
@@ -31,7 +24,7 @@ void C_nodeset_extension::internalExecute(LensContext *c)
 
    // Note: executing this copy constructor can lead to recursion in 
    // ConnectionScriptFunctor, for now we'll set to NULL
-   //_storedContext = new LensContext(c);
+   //_storedContext = new GslContext(c);
    _storedContext = 0;
 }
 
@@ -74,7 +67,7 @@ C_nodeset_extension::C_nodeset_extension(const C_nodeset_extension& rv)
       _indexSetSpecifier = rv._indexSetSpecifier->duplicate();
    }
    if(rv._storedContext) {
-      _storedContext = new LensContext(*rv._storedContext);
+      _storedContext = new GslContext(*rv._storedContext);
    }
    if(rv._layers) {
       _layers = new std::list<GridLayerDescriptor*>(*(rv._layers));

@@ -1,7 +1,16 @@
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
+//
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
+//
+// =============================================================================
+
 #ifndef CurrentPulseGenerator_H
 #define CurrentPulseGenerator_H
 
-#include "Lens.h"
+#include "Mgs.h"
 #include "CG_CurrentPulseGenerator.h"
 #include <memory>
 #include <fstream>
@@ -14,9 +23,9 @@ class CurrentPulseGenerator : public CG_CurrentPulseGenerator
       void finalize(RNG& rng);
       CurrentPulseGenerator();
       virtual ~CurrentPulseGenerator();
-      virtual void duplicate(std::unique_ptr<CurrentPulseGenerator>& dup) const;
-      virtual void duplicate(std::unique_ptr<Variable>& dup) const;
-      virtual void duplicate(std::unique_ptr<CG_CurrentPulseGenerator>& dup) const;
+      virtual void duplicate(std::unique_ptr<CurrentPulseGenerator>&& dup) const;
+      virtual void duplicate(std::unique_ptr<Variable>&& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_CurrentPulseGenerator>&& dup) const;
    private:
       void update_PeriodicProtocol(RNG& , float currentTime);
       void update_DualExpProtocol(RNG& , float currentTime);

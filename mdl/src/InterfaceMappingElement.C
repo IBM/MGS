@@ -1,25 +1,19 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
+#include <memory>
 #include "InterfaceMappingElement.h"
 #include "Constants.h"
 #include <string>
 #include <sstream>
 
 InterfaceMappingElement::InterfaceMappingElement(
-   const std::string& name, std::auto_ptr<DataType>& type, 
+   const std::string& name, std::unique_ptr<DataType>&& type, 
    const std::string& typeString, bool amp)
    : _name(name), _type(0), _needsAmpersand(amp), _typeString(typeString)
 {
@@ -55,8 +49,8 @@ void InterfaceMappingElement::destructOwnedHeap()
 void InterfaceMappingElement::copyOwnedHeap(const InterfaceMappingElement& rv)
 {
    if (rv._type) {
-      std::auto_ptr<DataType> dup;
-      rv._type->duplicate(dup);
+      std::unique_ptr<DataType> dup;
+      rv._type->duplicate(std::move(dup));
       _type = dup.release();
    } else {
       _type = 0;

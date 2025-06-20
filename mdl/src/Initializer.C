@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #include <memory>
 #include <iostream>
 #include <fstream>
@@ -37,15 +30,13 @@ extern int yydebug;
 #endif
 
 Initializer::Initializer(int argc, char** argv)
-   : _argc(argc), _argv(argv)
-{
+   : _argc(argc), _argv(argv), _generatables(0){
 }
 
-bool Initializer::execute()
-{
+bool Initializer::execute() {
    CommandLine commandLine;
-   std::auto_ptr<MdlLexer> scanner;
-   std::auto_ptr<MdlContext> context;
+   std::unique_ptr<MdlLexer> scanner;
+   std::unique_ptr<MdlContext> context;
 
    if (!commandLine.parse(_argc, _argv)) {
       return false;
@@ -53,7 +44,7 @@ bool Initializer::execute()
 
    std::string fileName = commandLine.getFileName();
    char const * infilename = fileName.c_str();
-   std::istream *infile;
+   std::istream *infile = 0;
    std::ostream *outfile = &std::cout;
 #if YYDEBUG
    yydebug = 0;
@@ -63,26 +54,30 @@ bool Initializer::execute()
    std::ostringstream command;
    if (mkstemp(temporaryName)) {                          // added by Jizhu Lu on 01/10/2006
       #ifdef LINUX
-      command << "cpp ";
+      command << "cpp -I$MGSROOT/models/std";
       #endif
       #ifdef AIX
-      command << "/usr/gnu/bin/gcpp ";
+      command << "/usr/gnu/bin/gcpp -I$MGSROOT/models/std";
       #endif
-      command << " " << infilename << " " << temporaryName;
+      #ifdef __APPLE__
+      command << "/usr/bin/cpp -I$MGSROOT/models/std";
+      #endif
 
+      // Add include paths first
       const std::vector<std::string>& includePath = 
-	 commandLine.getIncludePath();
+         commandLine.getIncludePath();
       std::vector<std::string>::const_iterator it, 
-	 end = includePath.end();
+         end = includePath.end();
       for (it = includePath.begin(); it != end; ++it) {
-	 command << " -I" << *it;
+         command << " -I" << *it;
       }
-
+      // Then add input and output files
+      command << " " << infilename << " " << temporaryName;
       system(command.str().c_str());
       infile = new std::ifstream(temporaryName);
    }
    else {
-      std::cerr << "Unable to open temporary file, cpp problem, aborting..." 
+      std::cerr << "ERROR: Unable to open temporary file, cpp problem, aborting..." 
 		<< std::endl;
       return false;
    }
@@ -93,14 +88,14 @@ bool Initializer::execute()
    _generatables = new MemberContainer<Generatable>();
    context->_generatables = _generatables;
    try {
-      mdlparse(context.get());
+      int result = mdlparse(context.get());
    } catch (InternalException& e) {
-      std::cerr << "Internal error: " << e.getError() << std::endl;
+      std::cerr << "Internal ERROR: " << e.getError() << std::endl;
       std::cerr << "Quitting..." << std::endl;      
       return false;
    } catch (GeneralException& e) {
       if (e.getError() != "") {
-	 std::cerr << "Uncaught exception at main level: " << e.getError() 
+         std::cerr << "Uncaught exception at main level: " << e.getError() 
 		   << std::endl;
       }
       std::cerr << "Quitting..." << std::endl;
@@ -110,7 +105,6 @@ bool Initializer::execute()
       std::cerr << "Quitting..." << std::endl;
       return false;
    }
-
    // If there was an error return /wo starting...
    if (context->isError()) {
       std::cerr << "Quitting due to errors..." << std::endl;
@@ -125,26 +119,26 @@ bool Initializer::execute()
    }
    try {
       for (it = context->_generatables->begin(); it != end; it++) {
-	 it->second->generate();
+         it->second->generate();
       }
    } catch (InternalException& e) {
-      std::cerr << "Internal error: " << e.getError() << std::endl;
+      std::cerr << "Internal ERROR: " << e.getError() << std::endl;
       std::cerr << "Quitting..." << std::endl;
       return false;
    }
 
    if (commandLine.isStatic()) {
       for (it = context->_generatables->begin(); it != end; it++) {
-	 it->second->setLinkType(Generatable::_STATIC);
+         it->second->setLinkType(Generatable::_STATIC);
       }
    }
 
    try {
       for (it = context->_generatables->begin(); it != end; it++) {
-	 it->second->generateFiles(fileName);
+	      it->second->generateFiles(fileName);
       }
    } catch (InternalException& e) {
-      std::cerr << "Internal error: " << e.getError() << std::endl;
+      std::cerr << "Internal ERROR: " << e.getError() << std::endl;
       std::cerr << "Quitting..." << std::endl;      
       return false;
    } catch (...) {
@@ -158,62 +152,56 @@ bool Initializer::execute()
    }
    generateMakefileExtension(); // hack for MBL
    generateCopyModules(); // hack for MBL
-//   generateCopyModulesPy();
+   // generateCopyModulesPy();
    
    //free memory/resources
-   delete infile;
-   unlink(temporaryName);                      // added by Jizhu Lu on 01/10/2006 to remove the temporary file.
+   if (infile) delete infile;
+   //remove the cpp temporary file
+   unlink(temporaryName); // added by Jizhu Lu on 01/10/2006 to remove the temporary file.
    return true;
 }
 
-void Initializer::generateMakefileExtension()
-{   
-  std::ostringstream os;
-
-  std::map<std::string, std::vector<std::string> >::iterator it, 
-    end = _extensionModules.end();
-  for(it = _extensionModules.begin(); it != end; ++it) {
-    std::string type = it->first;
-    for(unsigned int i = 0; i < type.size(); ++i) {
-      if ((type[i] >= 'a') && (type[i] <= 'z')) {
-        type[i] += 'A' - 'a';
+void Initializer::generateMakefileExtension() {
+   std::ostringstream os;
+   std::map<std::string, std::vector<std::string> >::iterator it, 
+      end = _extensionModules.end();
+   for(it = _extensionModules.begin(); it != end; ++it) {
+      std::string type = it->first;
+      for(unsigned int i = 0; i < type.size(); ++i) {
+         if ((type[i] >= 'a') && (type[i] <= 'z')) {
+           type[i] += 'A' - 'a';
+         }
       }
-    }
 
-    os << "#{{{" << type << "\n";
-    //std::endl;
-    os << type << "_MODULES += ";
-    std::vector<std::string>::iterator it2, end2 = it->second.end();
-    for (it2 = it->second.begin(); it2 != end2; ++it2) {
-      if (it2 != it->second.begin()) {
-        os << "\t";
+      os << "#{{{" << type << "\n";
+      os << type << "_MODULES += ";
+      std::vector<std::string>::iterator it2, end2 = it->second.end();
+      for (it2 = it->second.begin(); it2 != end2; ++it2) {
+         if (it2 != it->second.begin()) {
+         os << "\t";
+         }
+         os << *it2 << " \\\n";
       }
-      os << *it2 << " \\\n";
-    }
-    os << "#}}}\n";
-    os << "\n";
-  }   
-  std::ofstream fs("Extensions.mk");
-  if (fs.is_open())
-  {
-    fs << os.str();
-    fs.close();
-  }
-  else
-  {
-    std::cerr << "Cannot create/open Extensions.mk file" << std::endl;
-    assert(0);
-  }
+      os << "#}}}\n";
+      os << "\n";
+   }   
+   std::ofstream fs("Extensions.mk");
+   if (fs.is_open()) {
+      fs << os.str();
+      fs.close();
+   }
+   else {
+      std::cerr << "ERROR: Cannot create/open Extensions.mk file" << std::endl;
+      assert(0);
+   }
 }
 
-void Initializer::generateCopyModules()
-{
+void Initializer::generateCopyModules() {
    std::ostringstream os;
-   
    std::map<std::string, std::vector<std::string> >::iterator it, 
       end = _copyModules.end();
    for(it = _copyModules.begin(); it != end; ++it) {
-     os << "mkdir -p $LENSROOT/extensions/" << it->first << "\n";
+     os << "mkdir -p $GSLROOT/extensions/" << it->first << "\n";
      os << "cp -r ";
      std::vector<std::string>::iterator it2, end2 = it->second.end();
      for (it2 = it->second.begin(); it2 != end2; ++it2) {
@@ -222,45 +210,40 @@ void Initializer::generateCopyModules()
        }
        os << *it2 << " ";
      }
-     os << " $LENSROOT/extensions/" << it->first << "> /dev/null 2>&1 || : \n";
+     os << " $GSLROOT/extensions/" << it->first << "> /dev/null 2>&1 || : \n";
    }   
    //TUAN: no need to overwrite Extensions.mk if we call mdlparser directly
    // this can be done (if needed), by calling via the ../define script
-   //os << "touch $LENSROOT/Extensions.mk\n";
-   //os << "cp $LENSROOT/Extensions.mk $LENSROOT/Extensions.mk.bak\n";
-   //os << "cp Extensions.mk $LENSROOT/\n";
+   //os << "touch $GSLROOT/Extensions.mk\n";
+   //os << "cp $GSLROOT/Extensions.mk $GSLROOT/Extensions.mk.bak\n";
+   //os << "cp Extensions.mk $GSLROOT/\n";
    std::ofstream fs("copyModules");
-   if (fs.is_open())
-   {
-     fs << os.str();
-     fs.close();
-     system("sh copyModules");
+   if (fs.is_open()) {
+      fs << os.str();
+      fs.close();
+      system("sh copyModules");
    }
-   else
-   {
-     std::cerr << "Cannot create/open copyModules file" << std::endl;
+   else {
+     std::cerr << "ERROR: Cannot create/open copyModules file" << std::endl;
      assert(0);
    }
 }
 
-void Initializer::generateCopyModulesPy()
-{
+void Initializer::generateCopyModulesPy() {
    std::ostringstream os;
-   
    // The fixed body of the string
    os << "#!/usr/bin/python\n"
       << "\n"
       << "modules = [";
-
    std::map<std::string, std::vector<std::string> >::iterator it, 
       end = _copyModules.end();
    for(it = _copyModules.begin(); it != end; ++it) {
       std::vector<std::string>::iterator it2, end2 = it->second.end();
       for (it2 = it->second.begin(); it2 != end2; ++it2) {
-	 if ((it != _copyModules.begin()) || (it2 != it->second.begin())) {
-	    os << ", ";
-	 }
-	 os << "(\"" << it->first << "\",\"" << *it2 << "\")";
+	      if ((it != _copyModules.begin()) || (it2 != it->second.begin())) {
+	         os << ", ";
+         }
+   	   os << "(\"" << it->first << "\",\"" << *it2 << "\")";
       }
    }   
    os << "]\n"
@@ -276,8 +259,7 @@ void Initializer::generateCopyModulesPy()
    cmd += fileName;
    system(cmd.c_str());
 }
-Initializer::~Initializer()
-{
+Initializer::~Initializer() {
    if (_generatables)
-     delete _generatables;
+      delete _generatables;
 }

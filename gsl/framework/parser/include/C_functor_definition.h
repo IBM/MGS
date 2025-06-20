@@ -1,18 +1,11 @@
-// =================================================================
-// Licensed Materials - Property of IBM
+// =============================================================================
+// (C) Copyright IBM Corp. 2005-2025. All rights reserved.
 //
-// "Restricted Materials of IBM"
+// Distributed under the terms of the Apache License
+// Version 2.0, January 2004.
+// (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
+// =============================================================================
 #ifndef _C_FUNCTOR_DEFINITION_H
 #define _C_FUNCTOR_DEFINITION_H
 #include "Copyright.h"
@@ -27,7 +20,7 @@ class C_parameter_type;
 class C_parameter_type_list;
 class C_complex_functor_definition;
 class C_connection_script_definition;
-class LensContext;
+class GslContext;
 class FunctorType;
 class ScriptFunctorType;
 class SyntaxError;
@@ -45,7 +38,7 @@ class C_functor_definition : public C_production
       C_functor_definition(C_connection_script_definition *, SyntaxError *);
       virtual ~C_functor_definition();
       virtual C_functor_definition* duplicate() const;
-      virtual void internalExecute(LensContext *);
+      virtual void internalExecute(GslContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
 
@@ -94,9 +87,9 @@ class C_functor_definition : public C_production
       std::list<C_parameter_type>* _function_list;
       std::list<C_parameter_type>* _return_list;
 
-      void basicWork(LensContext *c);
-      void constrDefWork(LensContext *c);
-      void complexWork(LensContext *c);
-      void scriptWork(LensContext *c);
+      void basicWork(GslContext *c);
+      void constrDefWork(GslContext *c);
+      void complexWork(GslContext *c);
+      void scriptWork(GslContext *c);
 };
 #endif
