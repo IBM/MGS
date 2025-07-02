@@ -1526,7 +1526,7 @@ COLAB_OBJS += obj/socket.o obj/speclang.tab.o obj/lex.yy.o
 
 NEEDED_PURE_OBJS := $(filter-out $(foreach file, ${COLAB_OBJS_FILENAME_ONLY}, $(file)), $(PURE_OBJS))
 NEEDED_OBJS := $(patsubst %, $(OBJS_DIR)/%, $(NEEDED_PURE_OBJS))
-BASE_OBJECTS := $(OBJS)
+
 COLAB_SOURCES_DIRS := $(patsubst %,%/src, $(COLAB_MODULES))
 vpath %.C $(COLAB_SOURCES_DIRS)
 vpath %.c $(COLAB_SOURCES_DIRS)
@@ -2364,8 +2364,7 @@ $(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/
             if (self.options.asNts is True) or (self.options.asNtsNVU is True):
                 retStr += "$(NTI_OBJS) "
                 
-        retStr += "-o $(BIN_DIR)/$(EXE_FILE) "
-        return retStr
+        retStr += "-o $(BIN_DIR)/$(EXE_FILE) "        return retStr
 
     def getDependfileTarget(self):
         retStr = "$(SO_DIR)/Dependfile: $(DEF_SYMBOLS) $(UNDEF_SYMBOLS) $(BIN_DIR)/createDF\n"
