@@ -103,9 +103,9 @@ void Communicator::tableMerge(Sender* s, Receiver* r, int cycle, int phase)
       MPI_Status status;
       for (int flag=0; flag==0; flip=!flip) {
         i = flip ? 1 : 0;
-        flag=request[i].Test(status);
         if (more[i]==0) i = flip ? 0 : 1;
-        if (flag) more[i] = status.Get_tag();	  
+        MPI_Test(&request[i], &flag, &status);
+        if (flag) more[i] =  status.MPI_TAG;	  
       }
       MPI_Get_count(&status, recvtype, &recvcount);
       s->mergeWithSendBuf(i, recvcount, cycle, phase);
@@ -127,7 +127,7 @@ void Communicator::tableMerge(Sender* s, Receiver* r, int cycle, int phase)
     std::vector<MPI_Request> requestVector;
     MPI_Request request;
     MPI_Isend(sendbufs[0], sendbufsize, sendtype, sendRank, tag, MPI_COMM_WORLD, &request);
-    requestVector.push_back(request);
+    requestVector.push_back(MPI_Request(request));
     while (tag) {
       bool reused=false;
       for (int i=0; i<requestVector.size(); ++i) {
@@ -153,9 +153,8 @@ void Communicator::tableMerge(Sender* s, Receiver* r, int cycle, int phase)
           sendbufsize = sendcount;
           tag=0;
         }
-        MPI_Request request;
         MPI_Isend(sendbufs[idx], sendbufsize, sendtype, sendRank, tag, MPI_COMM_WORLD, &request);
-        requestVector.push_back(request);
+      	requestVector.push_back(MPI_Request(request));
       }
     }
   }

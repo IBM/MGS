@@ -107,7 +107,7 @@ void Constant::addExtraInstanceBaseMethods(Class& instance) const
 
    // add CUDA GPU support
    // inline int getIndex(){return __index__;};
-   std::auto_ptr<Method> getIndexMethod(new Method("getIndex", "inline int"));
+   std::unique_ptr<Method> getIndexMethod(new Method("getIndex", "inline int"));
    getIndexMethod->setInline();
    MacroConditional gpuConditional(GPUCONDITIONAL);
    getIndexMethod->setMacroConditional(gpuConditional);
@@ -115,7 +115,7 @@ void Constant::addExtraInstanceBaseMethods(Class& instance) const
    getIndexMethodFB 
       << TAB << TAB << TAB << "return __index__;\n";
    getIndexMethod->setFunctionBody(getIndexMethodFB.str());
-   instance.addMethod(getIndexMethod);
+   instance.addMethod(std::move(getIndexMethod));
 
    // add duplicate method
    instance.addDuplicateType("Constant");

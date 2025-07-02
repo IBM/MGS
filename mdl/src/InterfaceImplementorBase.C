@@ -910,7 +910,7 @@ void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pa
                   instance->addHeader("\"CG_" + (*stypeIter) + "Demarshaller.h\"");
                }	
             }
-            std::auto_ptr<Attribute> demarshallerAp(demarshaller);
+            std::unique_ptr<Attribute> demarshallerAp(demarshaller);
             MacroConditional gpuConditional(GPUCONDITIONAL);
             gpuConditional.setNegateCondition();
             demarshallerAp->setMacroConditional(gpuConditional);
@@ -945,7 +945,7 @@ void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pa
                   instance->addHeader("\"CG_" + (*stypeIter) + "Demarshaller.h\"");
                }	
             }
-            std::auto_ptr<Attribute> demarshallerAp(demarshaller);
+            std::unique_ptr<Attribute> demarshallerAp(demarshaller);
             MacroConditional gpuConditional(GPUCONDITIONAL);
             demarshallerAp->setMacroConditional(gpuConditional);
             demarshallerInstance->addAttribute(demarshallerAp);

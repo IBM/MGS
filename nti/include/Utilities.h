@@ -21,9 +21,11 @@
 // MPI_Datatype ClassName::getDatatype() {
 //   if (fieldDatatype == MPI_DATATYPE_NULL) {
 //     ClassName className;
-//     Datatype datatype(2, &className, MPI_Aint lowerBound, MPI_Aint extent);
-//     datatype.set(0, MPI_DOUBLE, 1, &className.placeHolderA);
-//     datatype.set(1, MPI_DOUBLE, 1, &className.placeHolderB);
+//     Datatype datatype(4, &className);
+//     datatype.set(0, MPI_LB, 0);
+//     datatype.set(1, MPI_DOUBLE, 1, &className.placeHolderA);
+//     datatype.set(2, MPI_DOUBLE, 1, &className.placeHolderB);
+//     datatype.set(3, MPI_UB, sizeof(ClassName));
 //     fieldDatatype = datatype.commit();
 //   }
 //   return(fieldDatatype);
@@ -38,16 +40,15 @@ class Datatype {
 		MPI_Datatype *fieldDatatypes;
 		MPI_Datatype fieldDatatype;
 		bool fieldCommitted;
-		MPI_Aint lowerBound;
-		MPI_Aint extent;
 		// Private and no definition...
 		Datatype(const Datatype &);
 		Datatype &operator=(const Datatype &);
 		static MPI_Aint getAddress(void *pointer);
 	public:
-		Datatype(int n, void *start, MPI_Aint lowerBound, MPI_Aint extent);
+		Datatype(int n, void *start);
 		virtual ~Datatype();
 		//
+		void set(int i, MPI_Datatype datatype, MPI_Aint displacement);
 		void set(int i, MPI_Datatype datatype, int length, void *address);
 		MPI_Datatype create();
 		MPI_Datatype commit();
@@ -59,7 +60,7 @@ inline MPI_Aint Datatype::getAddress(void *pointer) {
 	MPI_Get_address(pointer, &address);
 	return(address);
 }
-inline Datatype::Datatype(int n, void *start, MPI_Aint lb, MPI_Aint ext) {
+inline Datatype::Datatype(int n, void *start) {
 	fieldN = n;
 	fieldStart = start;
 	fieldLengths = new int[n];
@@ -67,13 +68,17 @@ inline Datatype::Datatype(int n, void *start, MPI_Aint lb, MPI_Aint ext) {
 	fieldDatatypes = new MPI_Datatype[n];
 	fieldDatatype = MPI_DATATYPE_NULL;
 	fieldCommitted = false;
-	lowerBound = lb;
-	extent = ext;
 }
 inline Datatype::~Datatype() {
 	delete[] (fieldLengths);
 	delete[] (fieldDisplacements);
 	delete[] (fieldDatatypes);
+}
+inline void Datatype::set(int i, MPI_Datatype datatype, MPI_Aint displacement) {
+	fieldDatatypes[i] = datatype;
+	fieldLengths[i] = 1;
+	fieldDisplacements[i] = displacement;
+	//std::cout << "Displacement[" << i << "] = " << fieldDisplacements[i] << "\n";
 }
 inline void Datatype::set(int i, MPI_Datatype datatype, int length, void *address) {
 	fieldDatatypes[i] = datatype;
@@ -83,9 +88,7 @@ inline void Datatype::set(int i, MPI_Datatype datatype, int length, void *addres
 }
 inline MPI_Datatype Datatype::create() {
 	if (fieldDatatype == MPI_DATATYPE_NULL) {
-	  MPI_Datatype tmpType;
-	  MPI_Type_create_struct(fieldN, fieldLengths, fieldDisplacements, fieldDatatypes, &tmpType);
-	  MPI_Type_create_resized(tmpType, lowerBound, extent, &fieldDatatype);
+		MPI_Type_create_struct(fieldN, fieldLengths, fieldDisplacements, fieldDatatypes, &fieldDatatype);
 	}
 	return(fieldDatatype);
 }

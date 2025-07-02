@@ -209,7 +209,7 @@ void MemberToInterface::setupAccessorMethods(Class& instance) const
 						method->setFunctionBody(body);
 					}
 					method->setVirtual();
-					instance.addMethod(method);
+					instance.addMethod(std::move(method));
 				}
 				{
 					//#if ! defined(HAVE_GPU)

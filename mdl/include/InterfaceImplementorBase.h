@@ -137,7 +137,7 @@ class InterfaceImplementorBase : public Generatable {
 	      std::unique_ptr<Class>&& instance) const;
       virtual void addExtraOptionalServiceHeaders(
 	   std::unique_ptr<Class>&& instance) const;
-      std::string getInstanceServices(const std::string& tab) const;
+      std::string getInstanceServices(const std::string& tab, const Class* instance=nullptr) const;
       std::string getOptionalInstanceServices(const std::string& tab) const;
       virtual std::string getExtraServices(const std::string& tab) const;
       virtual std::string getExtraOptionalServices(

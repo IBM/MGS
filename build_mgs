@@ -500,7 +500,7 @@ if which bison | grep -q1 /\bison; then
   exit 1; 
 fi
 
-VALID_BISON_VERSION=2.3
+VALID_BISON_VERSION=3.0
 BISON_VERSION=`bison --version 2>&1 | awk 'NR==1{ gsub(/"/,""); print $NF }'`
 echo version $BISON_VERSION...
 read c_major c_minor c_rev<<EOF
