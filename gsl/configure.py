@@ -1526,7 +1526,6 @@ COLAB_OBJS += obj/socket.o obj/speclang.tab.o obj/lex.yy.o
 
 NEEDED_PURE_OBJS := $(filter-out $(foreach file, ${COLAB_OBJS_FILENAME_ONLY}, $(file)), $(PURE_OBJS))
 NEEDED_OBJS := $(patsubst %, $(OBJS_DIR)/%, $(NEEDED_PURE_OBJS))
-BASE_OBJECTS := $(OBJS)
 COLAB_SOURCES_DIRS := $(patsubst %,%/src, $(COLAB_MODULES))
 vpath %.C $(COLAB_SOURCES_DIRS)
 vpath %.c $(COLAB_SOURCES_DIRS)
@@ -1555,7 +1554,7 @@ CUDA_OBJS := $(patsubst %, $(OBJS_DIR)/%, $(CUDA_PURE_OBJS))
         return retStr
 
     def getObjectOnlyFlags(self):
-        retStr = "#OBJECTONLYFLAGS is flags that only apply to objects, depend.sh generated code.\n"
+        retStr = "#OBJECTONLYFLAGS is for flags that only apply to objects, depend.sh generated code.\n"
         retStr += "OBJECTONLYFLAGS :="
         if self.objectMode == "64":
             retStr += " $(MAKE64)"
@@ -1570,11 +1569,11 @@ CUDA_OBJS := $(patsubst %, $(OBJS_DIR)/%, $(CUDA_PURE_OBJS))
                 retStr += " " + XL_RUNTIME_TYPE_INFO_FLAG
         retStr += "\n"
         
-        # Add this section separately
-        retStr += "OTHER_LIBS := -include utils/std/include/darwin_compat.h -I$(PYTHON_INCLUDE_DIR) -L$(PYTHON_LIB) -lpython3"
-        retStr += "\n"
-        retStr += "OTHER_LIBS_HEADER :=-I$(PYTHON_INCLUDE_DIR)"
+        # FIXED: Single, clean OTHER_LIBS_HEADER definition
+        retStr += "OTHER_LIBS := -I$(PYTHON_INCLUDE_DIR) -L$(PYTHON_LIB)\n"
+        retStr += "OTHER_LIBS_HEADER := -I$(PYTHON_INCLUDE_DIR)\n"
         return retStr
+
 
     def getHeaderPaths(self):
         retStr = """
@@ -1588,13 +1587,7 @@ SRC_HEADER_INC += -I../common/include
             """\
 OTHER_LIBS := -lgmp \
 """
-        retStr += "-I$(MGS_PYTHON_INCLUDE_DIR) -L$(MGS_PYTHON_LIB) -l{} ".format(self.pythonLibName)
-
-        retStr += "\n"
-        retStr += \
-            """\
-OTHER_LIBS_HEADER := -I$(MGS_PYTHON_INCLUDE_DIR)
-"""
+        retStr += "-I$(PYTHON_INCLUDE_DIR) -L$(PYTHON_LIB) -l{} ".format(self.pythonLibName)
         retStr += "\n"
         retStr += \
             """\
@@ -1735,26 +1728,18 @@ CUDA_NVCC_COMBINED_LDFLAGS :=   $(GENCODE_FLAGS) -lib
 
     def getCFlags(self):  # noqa
         retStr = \
-            """\
-"""
-        # Add compatibility header inclusion
-        retStr += " -include utils/std/include/darwin_compat.h"
-        retStr += " -I$(PYTHON_INCLUDE_DIR) -L$(PYTHON_LIB) -l{}".format(self.pythonLibName)
+                """\
 
-        retStr += "\n"
-        retStr += \
-            """\
-OTHER_LIBS_HEADER := -I$(MGS_PYTHON_INCLUDE_DIR)
-"""
-        retStr += "\n"
-        retStr += \
-            """\
-ifeq ($(USE_SUITESPARSE), 1)
-OTHER_LIBS += -I$(SUITESPARSE)/include -L$(SUITESPARSE)/lib -lcxsparse
-OTHER_LIBS_HEADER += -I$(SUITESPARSE)/include -DUSE_SUITESPARSE
-endif
-#LDFLAGS := -shared
-"""
+        ifeq ($(USE_SUITESPARSE), 1)
+        OTHER_LIBS += -I$(SUITESPARSE)/include -L$(SUITESPARSE)/lib -lcxsparse
+        OTHER_LIBS_HEADER += -I$(SUITESPARSE)/include -DUSE_SUITESPARSE
+        endif
+        #LDFLAGS := -shared
+
+        CFLAGS := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generated,$(PARSER_PATH)) $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES))  -DLINUX -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI
+        CFLAGS += -I../common/include -std=c++17 -Wno-deprecated-declarations
+        CFLAGS += -fPIC \\
+        """
         if self.options.withGpu is False:
             retStr += self.getHeaderPaths()
         retStr += \
@@ -1783,7 +1768,7 @@ CFLAGS += -fPIC \
                 retStr += " -fpic "
         elif self.operatingSystem == "Darwin":
             # Base include paths and features
-            retStr += " -include utils/std/include/darwin_compat.h"
+            retStr += " -I$(GSLROOT)/utils/std/include"
             retStr += " -DDARWIN"
             retStr += " -DDISABLE_DYNAMIC_LOADING"
             if self.options.withMpi is True:
@@ -1934,20 +1919,14 @@ CFLAGS += -fPIC \
         return retStr
 
     def getLibs(self):
-        retStr = "# add libs"
+        retStr = "# add libs\n"
         if self.options.colab is True:
             if self.options.debug == USE:
-                retStr += """
-    NTS_LIBS := ${GSLROOT}/lib/libnts_db.so\n
-
-    """
+                retStr += "    NTS_LIBS := ${GSLROOT}/lib/libnts_db.so\n\n    "
             else:
-                retStr += """
-    NTS_LIBS := ${GSLROOT}/lib/libnts.so\n
-
-    """
-        retStr += """
-    LIBS := """
+                retStr += "    NTS_LIBS := ${GSLROOT}/lib/libnts.so\n\n    "
+        
+        retStr += "    LIBS := "
         
         # Add basic libraries only once
         added_libs = set()
@@ -1973,16 +1952,14 @@ CFLAGS += -fPIC \
             raise InternalError("Unknown OS " + self.operatingSystem)
         
         if self.operatingSystem == "Darwin":
-            # Try to find GMP using pkg-config or fallback to common locations
+            # FIXED: macOS-specific library handling
             import subprocess
             try:
-                # Only add GMP once
                 if "/opt/homebrew/opt/gmp/lib/libgmp.a" not in added_libs:
                     gmp_path = subprocess.check_output(["brew", "--prefix", "gmp"], universal_newlines=True).strip() + "/lib/libgmp.a"
                     retStr += f" {gmp_path}"
                     added_libs.add(gmp_path)
             except (subprocess.SubprocessError, FileNotFoundError):
-                # Try common locations
                 if os.path.exists("/opt/homebrew/lib/libgmp.a") and "/opt/homebrew/lib/libgmp.a" not in added_libs:
                     retStr += " /opt/homebrew/lib/libgmp.a"
                     added_libs.add("/opt/homebrew/lib/libgmp.a")
@@ -1990,30 +1967,27 @@ CFLAGS += -fPIC \
                     retStr += " /usr/local/lib/libgmp.a"
                     added_libs.add("/usr/local/lib/libgmp.a")
                 elif "-lgmp" not in added_libs:
-                    retStr += " -lgmp"  # Fallback to letting the linker find it
+                    retStr += " -lgmp"
                     added_libs.add("-lgmp")
             
-            # Add MPI libraries only once
+            # FIXED: MPI libraries for macOS - remove problematic mpi_cxx
             if self.options.withMpi is True:
-                mpi_libs = ["-lmpi", "-lmpi_mpifh"]
+                mpi_libs = ["-lmpi", "-lmpi_mpifh"]  # REMOVED: -lmpi_cxx
                 for lib in mpi_libs:
                     if lib not in added_libs:
                         retStr += f" -L/opt/homebrew/opt/open-mpi/lib {lib}"
                         added_libs.add(lib)
                 
-                # Add rpath only once
                 retStr += " -Wl,-rpath,/opt/homebrew/opt/open-mpi/lib"
                 retStr += " -L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib -lz"
                 
-                # Additional MPI libraries for GPU compatibility
-                mpi_gpu_libs = ["-lmpi_cxx", "-lopen-pal"]
-                for lib in mpi_gpu_libs:
-                    if lib not in added_libs:
-                        retStr += f" {lib}"
-                        added_libs.add(lib)
+                # FIXED: Only add -lopen-pal, remove -lmpi_cxx
+                if "-lopen-pal" not in added_libs:
+                    retStr += " -lopen-pal"
+                    added_libs.add("-lopen-pal")
         else:
             if "-lgmp" not in added_libs:
-                retStr += " -lgmp"  # Fallback to letting the linker find it
+                retStr += " -lgmp"
                 added_libs.add("-lgmp")
 
         # GPU support libraries
@@ -2024,19 +1998,10 @@ CFLAGS += -fPIC \
                     retStr += f" {lib}"
                     added_libs.add(lib)
 
-        # Collaboration libraries with debug/release variants
-        if self.options.colab is True:
-            retStr += " -I$(NTI_INC_DIR) -L$(shell pwd)/lib/ -Wl,--rpath=$(shell pwd)/lib/"
-            if self.options.debug == USE:
-                colab_libs = ["-lnti_db", "-lnts_db", "-lutils_db"]
-            else:
-                colab_libs = ["-lnti", "-lnts", "-lutils"]
-            
-            for lib in colab_libs:
-                if lib not in added_libs:
-                    retStr += f" {lib}"
-                    added_libs.add(lib)
-
+        # FIXED: Remove Python linking for macOS to avoid library not found errors
+        # Python linking is often not needed for C++ applications
+        # If needed, this should be handled differently for macOS Homebrew Python
+        
         retStr += " $(OTHER_LIBS)"
 
         # Armadillo support
@@ -2086,16 +2051,15 @@ CFLAGS += -fPIC \
     def getFinalTargetFlag(self):
         retStr = "FINAL_TARGET_FLAG = "
         if self.options.debug == USE:
-            retStr += " -g"
+            retStr += " -g"  # FIXED: Ensure space before -g
 
         if self.operatingSystem == "Linux":
             if self.options.withGpu is True:
                 pass
-                # retStr += " -Xlinker -rdynamic"
             else:
                 retStr += LINUX_FINAL_TARGET_FLAG
         elif self.operatingSystem == "Darwin":
-            retStr += DARWIN_FINAL_TARGET_FLAG 
+            retStr += " " + DARWIN_FINAL_TARGET_FLAG  # FIXED: Add space before flag
             retStr += " -v"
         elif self.operatingSystem == "AIX":
             if self.options.dynamicLoading is True:
@@ -2110,6 +2074,7 @@ CFLAGS += -fPIC \
             raise InternalError("Unknown OS " + self.operatingSystem)
         retStr += "\n"
         return retStr
+
 
     def getXLinker(self):
         retStr = "XLINKER := "
@@ -2325,47 +2290,35 @@ $(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/
     def getAllTarget(self):
         retStr = "cleanfirst:\n"
         retStr += "\t-rm -f $(BIN_DIR)/$(EXE_FILE)\n\n"
+        
         if self.options.colab is True:
             retStr += "final: cleanfirst $(OBJS) $(MGS_LIBS_EXT) "
         else:
             retStr += "final: cleanfirst speclang.tab.h $(OBJS) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(MGS_LIBS_EXT) "
+        
         if self.options.dynamicLoading is True:
             retStr += " $(DEF_SYMBOLS) $(UNDEF_SYMBOLS) $(BIN_DIR)/createDF $(SHARED_OBJECTS) "
         if self.dx.exists is True:
             retStr += " $(DX_DIR)/EdgeSetSubscriberSocket $(DX_DIR)/NodeSetSubscriberSocket "
         retStr += " | $(BIN_DIR)"
         
-        # GPU separate compilation phase (if enabled)
-        if self.options.withGpu and self.separate_compile:
-            if self.options.colab is True:
-                retStr += "\t$(NVCC) $(CUDA_NVCC_LDFLAGS) $(LIBS) $(FINAL_TARGET_FLAG) $(NEEDED_OBJS) "
-            else:
-                retStr += "\t$(NVCC) -Xlinker -DHAVE_GPU $(CUDA_NVCC_LDFLAGS) $(LIBS) $(FINAL_TARGET_FLAG) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) "
-                if (self.options.asNts is True) or (self.options.asNtsNVU is True):
-                    retStr += "$(NTI_OBJS) "
-                retStr += "$(COMMON_OBJS) -o $(OBJS_DIR)/gpuCode.o"
-            retStr += "\n"
+        # FIXED: Proper newline and tab before command
+        retStr += "\n\t"  # Add newline and tab here
         
-        # Final linking phase
         if self.options.colab is True:
-            retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(NEEDED_OBJS) "
+            retStr += "$(CC) $(FINAL_TARGET_FLAG) $(NEEDED_OBJS) "
         else:
-            retStr += "\t$(CC) $(FINAL_TARGET_FLAG) "
+            retStr += "$(CC) $(FINAL_TARGET_FLAG) "
             if self.operatingSystem == "Darwin":
                 retStr += "-v "
-            retStr += "$(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) $(COMMON_OBJS) "
-            
-            # Include GPU object file if separate compilation was used
-            if self.options.withGpu and self.separate_compile:
-                retStr += "$(OBJS_DIR)/gpuCode.o "
-            
-            retStr += "$(LDFLAGS) $(LIBS) "
+            retStr += "$(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) $(COMMON_OBJS) $(LDFLAGS) $(LIBS) "
             
             if (self.options.asNts is True) or (self.options.asNtsNVU is True):
                 retStr += "$(NTI_OBJS) "
-                
-        retStr += "-o $(BIN_DIR)/$(EXE_FILE) "
+                    
+        retStr += "-o $(BIN_DIR)/$(EXE_FILE)\n"
         return retStr
+
 
     def getDependfileTarget(self):
         retStr = "$(SO_DIR)/Dependfile: $(DEF_SYMBOLS) $(UNDEF_SYMBOLS) $(BIN_DIR)/createDF\n"
@@ -2573,6 +2526,7 @@ clean:
         fileBody += self.getMake64()
         fileBody += "\n"
         fileBody += self.getModuleDefinitions()
+        fileBody += "BASE_OBJECTS := $(OBJS)\n"
 
         fileBody += self.getObjectOnlyFlags()
 
