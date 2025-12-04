@@ -1,214 +1,251 @@
-# Build instructions
+# MGS: Model Graph Simulator
 
-./build_script  *[print out help instruction]*  
+**A high-performance framework for composing and executing large-scale heterogeneous network simulations**
 
-**GSL:**  
-  ./build_gsl -h     *[print out help instruction]*  
-  ./build_gsl --rebuild --release -d 4   is good for release  
-  ./build_gsl --rebuild -d 4 is good for debugging  
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS-lightgrey.svg)]()
 
-**NTI:**  
- make debug=yes    debug  
- make              release  
+## Overview
 
-**External libraries required:**  
-  bison v2.4.1  or above [built using m4 >= 1.4.17]
-  flex v2.5.4   or above
-  lgmp  
-  python
-    pybind11
-    env PYTHON_INCLUDE_DIR
-  cxsparse library
-    env SUITESPARSE
-  mnist (header only) 
-    Download and extract mnist-master.zip from https://github.com/wichtounet/mnist to gsl/utils
-      
-# Container-based build
-## Step 0
+MGS (Model Graph Simulator) is a domain-specific language and execution framework designed at IBM Research for building complex network simulations from composable, interoperable models. Originally developed for massively parallel systems like IBM Blue Gene, MGS enables researchers to:
 
-We need to make sure the proper Nvidia driver is installed on the host machine. 
-Table 1 in the link below tells the minimal Nvidia driver version that works for each version of CUDA library.
-https://docs.nvidia.com/deploy/cuda-compatibility/index.html
+- **Define heterogeneous model types** that communicate through well-defined interfaces
+- **Compose models into hypergraphs** where vertices are model instances and edges represent data dependencies
+- **Execute efficiently** on distributed systems, multi-core CPUs, and GPUs
+- **Scale simulations** from laptops to supercomputers without code changes
 
-The container is based on CUDA 10.0.  The link to download and instruction to install the Nvidia driver:
-https://developer.nvidia.com/cuda-10.0-download-archive?target_os=Linux&target_arch=x86_64&target_distro=Ubuntu&target_version=1604&target_type=deblocal
+### Key Innovations
 
-The link to all *.deb files:
-https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/
+🔷 **Declarative Graph Specification**: Define network topology and model composition using intuitive domain-specific languages (MDL/GSL)
 
-## Step 1 [only run this if you get an error when running the container in Step 3]
-If inotify exceeds limit, then docker can not launch a new container, we can increase it
-```console
-sudo -i
-echo 1048576 > /proc/sys/fs/inotify/max_user_watches
-exit
-```
-## Step 2 [ignore if docker --version >= 19.03]
- https://github.com/NVIDIA/nvidia-docker
-```console
-distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
-curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
-curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
+🔷 **Heterogeneous Model Integration**: Different model types coexist and interact within a single simulation
 
-sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit
-sudo systemctl restart docker
-```
+🔷 **Automatic Parallelization**: Framework handles distribution, communication, and synchronization
 
-## Step 3 
+🔷 **Interface-Based Composition**: Models couple through typed interfaces, ensuring composability and reusability
 
-### Step 3.a [build the image - only once]
-On x86-64 machine:
-```console
-docker build --target devel-base -t mgs_baseimage  -f Dockerfile.build .
-```
+## Architecture
 
-On ppc64le (e.g. Power8 or Power9 IBM) machine:
-```console
-docker build --target devel-base -t mgs_baseimage  -f Dockerfile.build_ppc64le .
-```
+MGS provides two complementary languages:
 
-### Step 3.b [launch the container]
-The option `--gpus all` is only available from Docker 19.03:
+### Model Definition Language (MDL)
+Defines computational model types with:
+- Encapsulated state variables
+- Communication interfaces (inputs/outputs)
+- Execution phases (initialization, update, etc.)
+- Connection predicates for selective coupling
 
-```console
-docker run --gpus all -it  --name=mgs_dev --mount src="$(pwd)",target=/home/mgs,type=bind -e LOCAL_USER_ID=`id -u $USER`  mgs_baseimage /bin/bash
+### Graph Specification Language (GSL)  
+Instantiates and organizes models into networks:
+- Spatial grids and layers
+- Connection patterns (functors)
+- Hierarchical composites
+- Phase scheduling
 
+Together, these languages enable you to specify **what** to compute (model behavior) and **where/when** to compute it (graph structure and execution).
 
-# with debug-support to run gdb
-docker run --privileged --gpus all -it  --name=mgs_dev --mount src="$(pwd)",target=/home/mgs,type=bind -e LOCAL_USER_ID=`id -u $USER`  mgs_baseimage /bin/bash
-```
+## Why MGS?
 
-## Step 4 [now you are inside the container]
-```console
-# The default folder is /home/mgs
-# You interact with the source as if you're on a regular machine
-./build_script -p LINUX --as-GPU
-# or
-./build_script -p LINUX --as-GPU --release
+### For Graph Theorists & Network Scientists
+- Native hypergraph representation
+- Flexible topology specification
+- Dynamic connection patterns
+- Scales to millions of nodes
 
-# NOTE: When build using --as-GPU, you implicitly activate --gpu flag and the system is built using
-# ./models/gpu.mdf file
+### For HPC Researchers
+- MPI-based distributed execution
+- GPU acceleration support (CUDA)
+- Optimized communication primitives
+- Proven on Blue Gene supercomputers
 
-# NOTE: Currently, the container does not have any editor (vi, emacs) as this would increase the size of the container
-# Code development can be done from the host-side (either opens a new shell, or we can switch to the host using Ctrl-p-q)
-# ... (do code development) and then switch to the container environment (for compiling/running gslparser) using 'docker attach'
-```
+### For Modelers
+- Separation of concerns: model logic vs. network structure
+- Composable, reusable components
+- Type-safe interfaces
+- Multiple execution modes (debug, profile, release)
 
-## Hints
-Some common commands to work with docker
-```console
-# list images
-docker image ls
+## Applications
 
-# list containers (i.e. each is an instance of a particular image) - container's ID is on first column and container's name is on NAMES column
-docker container ls
+MGS was designed as a **domain-agnostic framework** for heterogeneous network simulation, with particular strength in biological systems.
 
-# list stopped containers
-docker ps -a
+### Biological Networks & Circuits
 
-# remove a docker container (as shown in NAMES field)
-docker rm <container-name> 
+MGS is well-suited for modeling **biological networks** across multiple scales and domains:
 
-# within a container, switch to host with <Ctrl>-p-q 
+#### Systems Biology
+- **Gene regulatory networks**: Transcription factors, promoters, regulatory cascades
+- **Signaling pathways**: Receptor-ligand interactions, phosphorylation cascades, second messengers
+- **Metabolic networks**: Enzyme kinetics, substrate channeling, metabolic flux
+- **Protein interaction networks**: Binding dynamics, complex formation, allostery
 
-# return to a running container, using the container's ID  (minimal 3 digits can be used)
-docker attach <CONTAINER-ID>
-```
+#### Synthetic Biology  
+- **Genetic circuits**: Toggle switches, oscillators, logic gates
+- **Cell-free systems**: In vitro transcription-translation networks
+- **Engineered pathways**: Biosynthetic circuits, sensors, actuators
+
+#### Neuroscience
+- **Neural tissue models**: Multi-scale brain simulations (NTS)
+- **Network dynamics**: Oscillations, synchronization, information flow
+- **Synaptic plasticity**: Learning rules, homeostasis, development
+
+#### Ecology & Evolution
+- **Population dynamics**: Predator-prey, competition, mutualism
+- **Evolutionary dynamics**: Fitness landscapes, selection, drift
+- **Epidemiology**: Disease spread on contact networks
+
+### Why MGS for Biological Networks?
+
+Biological systems share key characteristics that MGS addresses:
+
+1. **Heterogeneity**: Different component types (genes, proteins, cells, neurons) with distinct dynamics
+2. **Multi-scale**: Processes spanning milliseconds to hours, nanometers to centimeters
+3. **Complex topology**: Non-uniform connectivity patterns, spatial structure
+4. **Large scale**: Thousands to millions of interacting components
+
+MGS's interface-based composition allows you to:
+- Mix deterministic and stochastic models
+- Couple continuous and discrete dynamics  
+- Integrate spatial and temporal scales
+- Compose models from different biological levels
+
+**Learn more**: See Justin Bois's [Biological Circuits](https://biocircuits.github.io/) for background on biological network modeling.
+
+### Machine Learning & Deep Neural Networks
+
+MGS can express modern deep learning architectures as explicit computation graphs. The [MNIST example](examples/ml/MNIST.gsl) implements a multi-layer perceptron with:
+- **Backpropagation** through the graph
+- **Adam optimization** (momentum + RMSprop)
+- **Automatic differentiation** via explicit gradient edges
+- **Mini-batch training** with supervisor nodes
+
+This demonstrates that contemporary ML architectures map naturally onto MGS's hypergraph abstraction.
+```gsl
+// Example: 3-layer network structure in GSL
+Composite DNN {
+  Grid L1 { Dimension(28,28); Layer(nodes, DNNode, UniformLayout(1)); }
+  Grid L2 { Dimension(16,16); Layer(nodes, DNNode, UniformLayout(1)); }  
+  Grid L3 { Dimension(10,1);  Layer(nodes, DNNode, UniformLayout(1)); }
   
-# Run flags
-  -t Number of threads  
-  -f gsl file to run  
-  -s random number generator seed  
+  // Forward connections + backward gradient flow
+  l1.nodes -> l2.nodes via DNEdgeSet;
+  l2.nodes -> l3.nodes via DNEdgeSet;
+  SupervisorNode -> l3.nodes.backward;
+}
+```
 
-## Commit tags
-When presenting work with MGS/NTS components to a client, a git tag should be created and recorded in the [Box note](https://ibm.ent.box.com/notes/231444066519). See instructions inside the Box note on how to create the tag including a naming convention.
+**Technical Note**: [Implementing Backpropagation as Hypergraphs](docs/papers/technical-notes/MNIST_backprop_hypergraph.pdf) describes the architecture in detail.
 
-## FAQ
+### Early Self-Supervised Learning
 
-1. Why it seems rebuilding from the beginning?
-The build will needs to be successfull. Then it will enables continuous building. 
-So, you should get the minimal systems to get built first, before adding many more models.
+Our 2007 work implemented **topographic infomax** for unsupervised feature learning - predating the modern self-supervised learning paradigm:
 
-# ZenHub
-The following is based on the reading of [ZenHub's documentation](https://www.zenhub.com/github-project-management.pdf), [IBM's ZenHub documentation](https://pages.github.ibm.com/the-playbook/zenhub/) and other tutorial and help guides.
+> Kozloski J., Cecchi G., Peck C., Rao A. (2007)  
+> "Topographic Infomax in a Neural Multigrid"  
+> *Advances in Neural Networks* [[PDF](docs/papers/framework/ISNN2007.pdf)]
 
-## ZenHub overview
-ZenHub extends GitHub's issues tool with extra features for Agile project management. 
+---
 
-Agile has different concepts and they link to ZenHub/GitHub as follows:
-* Sprint/Iteration - GitHub Milestone
-* User Stories - GitHub Issues
-* Epics - Epics
-* Product backlog - Open issues without a Milestone
-* Sprint backlong - Issues with a Milestone
-* Further, you can think of GitHub Issues as tasks, and can include sub-tasks as Markdown Checklistsinside an Issue, and think
-of Epics as projects.
+### Example Use Cases by Domain
 
-The core of ZenHub are GitHub issues, and they should be arranged by priority, with the most pressing issues at the top 
-(within Epics only).
+| Domain | Example System | MGS Components |
+|--------|---------------|----------------|
+| **Systems Biology** | Repressilator genetic circuit | Gene models, promoter models, mRNA/protein dynamics |
+| **Neuroscience** | Cortical column simulation | Neuron models, synapse models, gap junction models |
+| **Synthetic Biology** | CRISPR interference circuit | dCas9 models, guide RNA models, gene expression |
+| **Machine Learning** | Convolutional neural network | Neuron models, weight models, pooling operations |
+| **Epidemiology** | COVID spread on contact network | Individual models, contact models, infection dynamics |
 
-When you make a new Issue a template is available to keep consistency across Issues, see FAQ below.
+All specified in MDL (models) + GSL (topology) → compiled to optimized parallel C++ code.
 
-## Useful links
-* [Description of GitHub Markdown](https://guides.github.com/features/mastering-markdown/)
+## Quick Start
 
-## FAQ
+### Prerequisites
+```bash
+# Ubuntu/Debian
+sudo apt-get install build-essential bison flex libgmp-dev python3
 
-### How do I add a new Issue?
-1. Select the "Issues" tab
-2. Click "New issue"
-3. A template is provided for you. The first line after the comment can be used as the title and you can 
-replace `<user type>`, `<task>`, `<goal>` and `<this does not exist>` appropriately. For example: 
-"As a CHDI researcher, I want to understand how MSN firing patterns change during HD progression, 
-whereas currently only WT is characterized." or "As a MGS user, I want to store the current state 
-of the RNG to disk so that I can restart a simulation with this state, whereas currently this is not possible."
-4. Add sub-tasks with Mardown and/or more description about the issue.
-5. Assign a/some team member(s) (optional).
-6. Add labels.
-7. Add a milestone (optional).
-8. Estimate the time to complete in hours (see "How should I estimate complexity?" below).
-9. Place it inside an epic (optional).
-10. Click "Submit new issue"
+# macOS
+brew install bison flex gmp python3
+```
 
-### How do I add a new Epic?
-It is best to add an Epic after already adding some Issues that will be part of the Epic.
-1. Select the "Issues" tab
-2. Click "New issue"
-3. Give the issue a title and remove the description under "Write"
-4. Click "Create an epic"
-5. Select Issues that are part of the Epic.
-6. Click "Create Epic"
+### Build
+```bash
+git clone --recursive https://github.com/IBM/MGS.git
+cd MGS
 
-## How should I estimate complexity?
-When estimating, the units aren't time or effort etc. rather the number represents how complex the Issues are in
-*relation* to each other.
-See [this document](https://www.zenhub.com/github-project-management.pdf) for a more in depth discussion.
+# Build for Linux (default target)
+./build_mgs -p LINUX --as-MGS
 
-### What are the pipelines?
-* **New Issues**: New Issues land here automatically. They should be dragged to another pipeline as soon as possible.
-* **Icebox**: Issues that *are not* a current focus, but you will act on them at some point.
-* **Backlog**: Issues that *are* a current focus.  If they don’t have a GitHub milestone, consider them part of your *product backlog*. Once you add a Milestone, they’re part of your *sprint backlog*.
-* **In Progress**: What's being worked on right now.
-* **Review/QA**: For Issues that are on hold as need review or QA. [Optional]
-* **Done**: Finished! No further work required as part of this task. If it is `Target: Science` move it here when the client or community is made aware through a meeting, report, or white paper, and all code has been committed to a branch *and* pushed to the remote repository. If it is either `Target: MGS` or `Target: NTS` put it here whenall code has been committed to a branch, pushed to the remote repository, and a pull request is issued and code review is scheduled. (It is suggested that before submitting a pull request, work in the master is [*merged or rebased*](https://www.atlassian.com/git/tutorials/merging-vs-rebasing) in to the branch to verify that any changes made to the master are not broken).
-* **Closed**: View your completed work. Drag issues here to close them for all users; dragging them out will re-open them. If it is `Target: Science` move it here after the client or community is made aware through a peer reviewed publication, and all related code has been included and accepted in a pull request and *merged* into the master branch. If it is either `Target: MGS` or `Target: NTS` move it here after the pull request has been accepted.
+# Or build with GPU support
+./build_mgs -p LINUX --as-GPU
+```
 
-### What are the labels?
-The labels are split in to 5 groups, Client, Priority, Status, Target and Type. Descriptions of some labels follow.
+### Run Example
+```bash
+# MNIST example (coming soon)
+bin/gslparser examples/ml/MNIST.gsl
+```
 
-* **Status: Coding**: Coding of the task is underway.
-* **Status: Design**: Issue is still being designed.
-* **Status: Discussion**: The issue is being discussed.
-* **Status: Requirements**: Requirements analysis is underway.
-* **Status: Results Analysis**: Scientific results from some simulations are being analysed.
-* **Status: Simulating**: Simulations are being run to address the task.
-* **Target: MGS**: The task is targeted at MGS.
-* **Target: NTS**: The task is targeted at NTS.
-* **Target: Science**: The task is an aspect of scientific research of general interest to the client or community.
-* **Type: Bug**:A fix to code or a model/simulation result necessary for progress.
-* **Type: Enhancement**:An extension or modification to software that will facilitate progress.
-* **Type: Research**: Background work, including testing, and generation of preliminary results needed for task completion.
-* **Type: Maintenance**: Work intended to facilitate future reuse of code, model, or software.
+## Documentation
 
+- **[Getting Started Guide](docs/getting-started.md)** - Build, run your first simulation
+- **[Technical Documentation](docs/technical-guide.md)** - MDL/GSL language reference
+- **[Research Papers](docs/papers/BIBLIOGRAPHY.md)** - Publications describing the framework
+- **[API Reference](docs/api/)** - Generated code documentation
 
+## Research & Publications
 
+MGS has been described in multiple peer-reviewed publications. See our [annotated bibliography](docs/papers/BIBLIOGRAPHY.md) for:
+
+- **Framework papers**: Core architecture and design
+- **Performance studies**: Scaling on Blue Gene and modern HPC systems  
+- **Application papers**: Domain-specific uses
+
+### Key Papers
+
+> Kozloski J., Eleftheriou M., Fitch B., Peck C. (2009)  
+> "Interoperable Model Graph Simulator for High-Performance Computing"  
+> *IBM Research Report RC24811*  
+> [[PDF](docs/papers/framework/IBM_RC_24811.pdf)]
+
+> Kozloski J., Wagner J. (2011)  
+> "An Ultrascalable Solution to Large-Scale Neural Tissue Simulation"  
+> *Frontiers in Neuroinformatics*  
+> [[PDF](docs/papers/framework/fninf0500015.pdf)]
+
+## Project Status
+
+🟢 **Active Development** - MGS is being modernized for contemporary HPC systems:
+
+- ✅ macOS M-series support
+- ✅ Modern CUDA integration  
+- 🔄 GPU memory management improvements (in progress)
+- 🔄 Python bindings (planned)
+- 🔄 Cloud deployment examples (planned)
+
+## Contributing
+
+We welcome contributions! Whether you're interested in:
+- 🐛 Bug fixes and platform support
+- 📚 Documentation improvements  
+- 🧪 New example models
+- 🚀 Performance optimizations
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## Community & Support
+
+- **Issues**: [GitHub Issues](https://github.com/IBM/MGS/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/IBM/MGS/discussions)
+
+## License
+
+Apache 2.0 - See [LICENSE](LICENSE) for details.
+
+## Acknowledgments
+
+MGS was developed at IBM Research with contributions from James Kozloski, Maria Eleftheriou, Blake Fitch, Charles Peck, and others.
+
+---
+
+**Ready to build large-scale network simulations?** Start with our [Getting Started Guide](docs/getting-started.md) or explore [example models](examples/).
