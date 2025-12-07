@@ -64,10 +64,13 @@ Lecture Notes in Computer Science, Volume 4492
 ---
 
 **Neural Multigrid Methods** (2007)  
-*Technical presentation or workshop paper*  
+*10th Tamagawa-Riken Dynamic Brain Forum (DBF '07)*  
+March 5-6, 2007, Hakuba Village, Nagano Prefecture, Japan  
 📄 [[PDF](presentations/DBF2007.pdf)]
 
-> **Content**: Additional work on topographic infomax and neural multigrid architectures, building on the ISNN 2007 paper.
+> **Content**: Presentation on topographic infomax and neural multigrid architectures at the prestigious Tamagawa-Riken Dynamic Brain Forum. Builds on the information-theoretic learning methods described in the ISNN 2007 paper, focusing on multi-scale neural computation and phase-independent representation learning.
+>
+> **Conference Context**: The DBF '07 featured tutorial lectures from leading neuroscientists including Shun-ichi Amari (RIKEN), Walter Freeman (UC Berkeley), Mitsuo Kawato (ATR), and Ad Aertsen (University of Freiburg).
 
 ---
 
@@ -122,7 +125,7 @@ Start with:
 
 ### For Machine Learning Applications
 - ISNN 2007 - Topographic infomax (self-supervised learning before it was cool!)
-- DBF 2007 - Neural multigrid methods
+- DBF 2007 - Neural multigrid methods at Tamagawa-Riken Dynamic Brain Forum
 
 ### For Biological Applications
 - PLOS Comp Bio (2020) - Huntington's Disease modeling
