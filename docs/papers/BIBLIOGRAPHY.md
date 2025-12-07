@@ -36,46 +36,15 @@ Frontiers in Neuroinformatics 5:15
 
 ---
 
-**Applications of Massively Parallel Systems** (2008)  
-*IBM Journal of Research and Development, Volume 52, Issue 1/2*  
-📄 [[PDF](framework/IBMJRD_2008.pdf)]
-
-> **Context**: Special issue on Blue Gene applications including MGS/NTS work. Covers the broader ecosystem of massively parallel scientific computing.
-
----
-
-### Early Work
-
-**Parallel Computing Symposium 2003** (2003)  
+**Early Computational Foundations** (2003)  
 *International Conference on Computational Science (ICCS)*  
 📄 [[PDF](framework/ICCS_2003.pdf)]
 
-> **Historical Context**: Early computational foundations that influenced MGS design, predating the full framework development.
+> **Historical Context**: Early computational foundations that influenced MGS design, including specification languages and runtime solutions for large-scale simulation.
 
 ---
 
-## Machine Learning Applications
-
-### Supervised Deep Learning
-
-**MNIST Classification Network** (2024)  
-*James Kozloski*  
-Technical Note (Unpublished)  
-📄 [[PDF](technical-notes/MNIST_backprop_hypergraph.pdf)] | Code: [[MNIST.gsl](../../examples/ml/MNIST.gsl)]
-
-> **Description**: Complete implementation of a multi-layer perceptron for MNIST digit classification using MGS/GSL. Demonstrates that modern deep learning architectures (backprop, Adam optimization, mini-batch training) can be expressed as explicit hypergraphs in the MGS framework.
->
-> **Technical Highlights**:
-> - Forward pass: activation propagation through layers
-> - Backward pass: gradient computation and backpropagation
-> - Adam optimizer: momentum and RMSprop updates
-> - Supervisor node: manages training data and learning signals
->
-> **Significance**: Shows MGS is not limited to biologically-inspired models but can express contemporary ML architectures. The explicit graph representation makes the computation structure transparent.
-
----
-
-### Self-Supervised Learning
+## Machine Learning & Self-Supervised Learning
 
 **Topographic Infomax in a Neural Multigrid** (2007)  
 *James Kozloski, Guillermo Cecchi, Charles Peck, A. Ravishankar Rao*  
@@ -88,8 +57,17 @@ Lecture Notes in Computer Science, Volume 4492
 > - Information-theoretic learning objective
 > - Topographic organization emerges from learning
 > - Multi-scale processing (neural multigrid)
+> - Phase-independent representation learning
 >
 > **Historical Note**: This 2007 work on self-supervised representation learning anticipated techniques that became central to modern deep learning (2015+).
+
+---
+
+**Neural Multigrid Methods** (2007)  
+*Technical presentation or workshop paper*  
+📄 [[PDF](presentations/DBF2007.pdf)]
+
+> **Content**: Additional work on topographic infomax and neural multigrid architectures, building on the ISNN 2007 paper.
 
 ---
 
@@ -128,17 +106,10 @@ eNeuro 5(6): ENEURO.0210-18.2018
 
 ## Conference Presentations
 
-**Cosyne Poster** (Year TBD)  
+**Computational Neuroscience** (Year TBD)  
 📄 [[PDF](presentations/CosyneposterII70.pdf)]
 
-> Computational neuroscience conference presentation.
-
----
-
-**Database Research Conference** (2007)  
-📄 [[PDF](presentations/DBF2007.pdf)]
-
-> Database and data management aspects of large-scale simulations.
+> Computational neuroscience conference (Cosyne) poster presentation.
 
 ---
 
@@ -149,10 +120,13 @@ Start with:
 1. IBM RC 24811 (2009) - Core architecture
 2. Frontiers paper (2011) - NTS application & scalability
 
-### For Applications
-- **Machine Learning**: MNIST technical note (2024)
-- **Neuroscience**: PLOS Comp Bio (2020), eNeuro (2018)
-- **General modeling**: Start with framework papers, then domain-specific
+### For Machine Learning Applications
+- ISNN 2007 - Topographic infomax (self-supervised learning before it was cool!)
+- DBF 2007 - Neural multigrid methods
+
+### For Biological Applications
+- PLOS Comp Bio (2020) - Huntington's Disease modeling
+- eNeuro (2018) - Oscillatory dynamics
 
 ### For Implementation
 - Framework papers describe MDL/GSL syntax
