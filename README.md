@@ -178,7 +178,9 @@ cd MGS
 
 # Or build with GPU support
 ./build_mgs -p LINUX --as-GPU
+
 ```
+**For detailed build instructions, Docker setup, and troubleshooting, see [BUILD.md](BUILD.md)**
 
 ### Run Example
 ```bash
@@ -231,7 +233,7 @@ We welcome contributions! Whether you're interested in:
 - 🧪 New example models
 - 🚀 Performance optimizations
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow, Git practices, and ZenHub project management guidelines.
 
 ## Community & Support
 
