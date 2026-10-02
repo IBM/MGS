@@ -15,7 +15,7 @@ History::History(FILE* hfile, int fid, int elementLength) :
   _history(0), _historyIter(0), _iterations(0), _iterationsIter(0), _iterationsEnd(0), 
   _historyFile(hfile), _fid(fid), _elementLength(elementLength)
 {
-  _history = _historyIter = new double[HISTORY_BUFF_SIZE*_elementLength];
+  _history = _historyIter = new double[static_cast<size_t>(HISTORY_BUFF_SIZE)*_elementLength];
   _iterations = _iterationsIter = new int[HISTORY_BUFF_SIZE];
   _iterationsEnd = _iterations + HISTORY_BUFF_SIZE;
 }
@@ -26,7 +26,7 @@ void History::flush()
   int count = _iterationsIter-_iterations;
   fwrite(&count, sizeof(int), 1, _historyFile);
   fwrite(_iterations, sizeof(int), count, _historyFile);
-  fwrite(_history, sizeof(double), count*_elementLength, _historyFile);
+  fwrite(_history, sizeof(double), static_cast<size_t>(count)*_elementLength, _historyFile);
   _historyIter = _history;	
 	_iterationsIter = _iterations;
 }
@@ -44,6 +44,6 @@ void History::add(double* t, int iteration)
 History::~History()
 {
   if (_historyIter-_history>0) flush();
-  delete _history;
-	delete _iterations;
+  delete [] _history;
+  delete [] _iterations;
 }

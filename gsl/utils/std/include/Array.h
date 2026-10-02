@@ -218,8 +218,9 @@ void Array<T>::increase()
        T** tmp = new T*[_activeBlocksSize];
        for (unsigned i=0; i < (_activeBlocksSize - getBlockIncrementSize()); i++)
 	 tmp[i]=_blocksArray[i];
-       delete [] _blocksArray;
+       T** old = _blocksArray;
        _blocksArray = tmp;
+       delete [] old;
      }
      _activeBlocks++;
 #if defined(ARRAY_LAZY_ALLOCATION)
