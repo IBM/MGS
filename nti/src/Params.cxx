@@ -43,6 +43,8 @@
 // the maximum length of the name given to each FieldName as part of the key
 // helping to identify the 'component' in a branch
 #define LENGTH_TOKEN_MAX 256
+// scanf "%255s" conversions below assume LENGTH_TOKEN_MAX == 256
+static_assert(LENGTH_TOKEN_MAX == 256, "update %255s widths in scanf formats");
 // the maximum length of the name given to each "Type" in GSL
 #define LENGTH_IDNAME_MAX 256
 
@@ -1549,7 +1551,7 @@ bool Params::isGivenKeywordNext(FILE* fpF, std::string& keyword)
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   //assert(c != NULL);
   std::string line(bufS);
-  if (c != NULL and 2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (c != NULL and 2 == sscanf(bufS, "%255s %d ", tokS, &n))
   {
     std::string btype(tokS);
     if (btype == keyword)
@@ -1595,7 +1597,7 @@ std::string Params::findNextKeyword(FILE* fpF)
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   assert(c != NULL);
   std::string line(bufS);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (2 == sscanf(bufS, "%255s %d ", tokS, &n))
   {
     rval = std::string(tokS);
   }
@@ -1619,7 +1621,7 @@ bool Params::readBondParams(FILE* fpF)
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   assert(c != NULL);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (2 == sscanf(bufS, "%255s %d ", tokS, &n))
   {
     std::string btype = std::string(tokS);
     std::string expected_btype("NBONDTYPES");
@@ -1668,7 +1670,7 @@ bool Params::readAngleParams(FILE* fpF)
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   assert(c != NULL);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (2 == sscanf(bufS, "%255s %d ", tokS, &n))
   {
     std::string btype(tokS);
     std::string expected_btype("NANGLETYPES");
@@ -1727,7 +1729,7 @@ NREPULSETYPES 6
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   assert(c != NULL);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (2 == sscanf(bufS, "%255s %d ", tokS, &n))
   {
     std::string btype(tokS);
     std::string expected_btype1("NLJTYPES");
@@ -1787,7 +1789,7 @@ bool Params::readRadii(FILE* fpF)
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);  // read line: RADII 2
   assert(c != NULL);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (2 == sscanf(bufS, "%255s %d ", tokS, &n))
   {
     std::string btype(tokS);
     std::string expected_btype("RADII");
@@ -1887,7 +1889,7 @@ Params::ErrorCode Params::readRadii2(FILE* fpF)
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);  // read line: RADII 2
   assert(c != NULL);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (2 == sscanf(bufS, "%255s %d ", tokS, &n))
   {
     std::string btype(tokS);
     std::string expected_btype("RADII");
@@ -2071,7 +2073,7 @@ bool Params::readTouchTables(FILE* fpF)
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   assert(c != NULL);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (2 == sscanf(bufS, "%255s %d ", tokS, &n))
   {
     std::string btype(tokS);
     std::string expected_btype("TOUCH_TABLES");
@@ -2114,7 +2116,7 @@ bool Params::readSIParams(FILE* fpF)
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   assert(c != NULL);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (2 == sscanf(bufS, "%255s %d ", tokS, &n))
   {
     std::string btype(tokS);
     std::string expected_btype("NSITYPES");
@@ -2214,7 +2216,7 @@ bool Params::readCompartmentVariableTargets(FILE* fpF)
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   assert(c != NULL);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (2 == sscanf(bufS, "%255s %d ", tokS, &n))
   {
     std::string btype(tokS);
     std::string expected_btype("COMPARTMENT_VARIABLE_TARGETS");
@@ -2393,7 +2395,7 @@ bool Params::readCompartmentVariableTargets2(FILE* fpF)
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   assert(c != NULL);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (2 == sscanf(bufS, "%255s %d ", tokS, &n))
   {
     std::string btype(tokS);
     std::string expected_btype("COMPARTMENT_VARIABLE_TARGETS");
@@ -2572,7 +2574,7 @@ bool Params::readChannelTargets(FILE* fpF)
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   assert(c != NULL);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (2 == sscanf(bufS, "%255s %d ", tokS, &n))
   {  // read 'n'
     std::string btype(tokS);
     std::string expected_btype("CHANNEL_TARGETS");
@@ -2762,7 +2764,7 @@ bool Params::readChannelTargets2(FILE* fpF)
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   assert(c != NULL);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (2 == sscanf(bufS, "%255s %d ", tokS, &n))
   {  // read 'n'
     std::string btype(tokS);
     std::string expected_btype("CHANNEL_TARGETS");
@@ -2945,7 +2947,7 @@ Params::ErrorCode Params::readChannelTargets3(FILE* fpF)
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   assert(c != NULL);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (2 == sscanf(bufS, "%255s %d ", tokS, &n))
   {  // read 'n'
     std::string btype(tokS);
     std::string expected_btype("CHANNEL_TARGETS");
@@ -3285,7 +3287,7 @@ void Params::skipSection(FILE *fpF)
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   while (c != NULL)
   {
-    if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+    if (2 == sscanf(bufS, "%255s %d ", tokS, &n))
     {
       std::string btype(tokS);
       nextToken = btype;
@@ -4310,7 +4312,7 @@ BRANCHTYPE MTYPE
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   assert(c != NULL);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (2 == sscanf(bufS, "%255s %d ", tokS, &n))
   {
     std::string btype(tokS);
     assert(btype == "BIDIRECTIONAL_CONNECTION_TARGETS");
@@ -5070,7 +5072,7 @@ Params::ErrorCode Params::readExtraInfoSynParams(FILE* fpF)
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   assert(c != NULL);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (2 == sscanf(bufS, "%255s %d ", tokS, &n))
   {
     std::string btype(tokS);
     std::string expected_btype("USE_BIOLOGICAL_CONSTRAINT");
@@ -5103,7 +5105,7 @@ Params::ErrorCode Params::readPreSynapticPointTargets(FILE* fpF)
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   assert(c != NULL);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (2 == sscanf(bufS, "%255s %d ", tokS, &n))
   {
     std::string btype(tokS);
     std::string expected_btype("PRESYNAPTIC_POINT_TARGETS");
@@ -5123,7 +5125,7 @@ Params::ErrorCode Params::readPreSynapticPointTargets(FILE* fpF)
     {
       jumpOverCommentLine(fpF);
       c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-      if (2 == sscanf(bufS, "%s %s ", tokS, tokS2))
+      if (2 == sscanf(bufS, "%255s %255s ", tokS, tokS2))
       {
         std::string synID(tokS);         //e.g. AMPAmush
         std::string targetID(tokS2);     //e.g. Voltage
@@ -5170,7 +5172,7 @@ unsigned long long Params::readNamedParam(
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   assert(c != NULL);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (2 == sscanf(bufS, "%255s %d ", tokS, &n))
   {
     std::string btype(tokS);
     if (btype == name)
@@ -5215,7 +5217,13 @@ unsigned long long Params::readNamedParam(
     }
     assert(!feof(fpF));
     c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-    sscanf(bufS, "%lf", &p);
+    if (c == NULL || 1 != sscanf(bufS, "%lf", &p))
+    {
+      std::cerr << "ERROR in file " << _currentFName
+                << ": expected a parameter value" << std::endl;
+      rval = false;
+      continue;
+    }
     namedParamsMap[_segmentDescriptor.getSegmentKey(maskVector, &ids[0])] = p;
   }
   delete[] ids;
@@ -5232,7 +5240,7 @@ bool Params::readCompartmentVariableCosts(FILE* fpF)
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   assert(c != NULL);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (2 == sscanf(bufS, "%255s %d ", tokS, &n))
   {
     std::string btype(tokS);
     std::string expected_btype("COMPARTMENT_VARIABLE_COSTS");
@@ -5254,7 +5262,7 @@ bool Params::readCompartmentVariableCosts(FILE* fpF)
       jumpOverCommentLine(fpF);
       char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
       assert(c != NULL);
-      if (2 == sscanf(bufS, "%s %lf ", tokS, &cost))
+      if (2 == sscanf(bufS, "%255s %lf ", tokS, &cost))
       {
         std::string chanID(tokS);
         _compartmentVariableCostsMap[chanID] = cost;
@@ -5280,7 +5288,7 @@ bool Params::readChannelCosts(FILE* fpF)
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   assert(c != NULL);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (2 == sscanf(bufS, "%255s %d ", tokS, &n))
   {
     std::string btype(tokS);
     std::string expected_btype("CHANNEL_COSTS");
@@ -5301,7 +5309,7 @@ bool Params::readChannelCosts(FILE* fpF)
     {
       jumpOverCommentLine(fpF);
       c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-      if (2 == sscanf(bufS, "%s %lf ", tokS, &cost))
+      if (2 == sscanf(bufS, "%255s %lf ", tokS, &cost))
       {
         std::string chanID(tokS);
         _channelCostsMap[chanID] = cost;
@@ -5362,7 +5370,7 @@ BRANCHTYPE MTYPE
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   assert(c != NULL);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (2 == sscanf(bufS, "%255s %d ", tokS, &n))
   {  // find number of subgroups
     //read line:   COMPARTMENT_VARIABLE_PARAMS 2
     std::string btype(tokS);
@@ -5411,7 +5419,7 @@ BRANCHTYPE MTYPE
       jumpOverCommentLine(fpF);
       int p;
       c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-      if (2 == sscanf(bufS, "%s %d ", tokS, &p))  // e.g.: Calcium 3
+      if (2 == sscanf(bufS, "%255s %d ", tokS, &p))  // e.g.: Calcium 3
       {
         std::string modelID(tokS);
         std::vector<SegmentDescriptor::SegmentKeyData> maskVector;
@@ -5632,7 +5640,7 @@ BRANCHTYPE MTYPE
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   assert(c != NULL);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (2 == sscanf(bufS, "%255s %d ", tokS, &n))
   {  // find number of subgroups
     //read line:   COMPARTMENT_VARIABLE_PARAMS 2
     std::string btype(tokS);
@@ -5682,7 +5690,7 @@ BRANCHTYPE MTYPE
       jumpOverCommentLine(fpF);
       int p;
       c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-      if (2 == sscanf(bufS, "%s %d ", tokS, &p))  // e.g.: Calcium 3
+      if (2 == sscanf(bufS, "%255s %d ", tokS, &p))  // e.g.: Calcium 3
       {
         std::string modelID(tokS);
         std::vector<SegmentDescriptor::SegmentKeyData> maskVector;
@@ -5868,7 +5876,7 @@ Params::ErrorCode Params::readElectricalSynapseCosts(FILE* fpF)
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   assert(c != NULL);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (2 == sscanf(bufS, "%255s %d ", tokS, &n))
   {
     std::string btype(tokS);
     std::string expected_btype("ELECTRICAL_SYNAPSE_COSTS");
@@ -5889,7 +5897,7 @@ Params::ErrorCode Params::readElectricalSynapseCosts(FILE* fpF)
     {
       jumpOverCommentLine(fpF);
       c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-      if (2 == sscanf(bufS, "%s %lf ", tokS, &cost))
+      if (2 == sscanf(bufS, "%255s %lf ", tokS, &cost))
       {
         std::string synID(tokS);
         _electricalSynapseCostsMap[synID] = cost;
@@ -5920,7 +5928,7 @@ Params::ErrorCode Params::readBidirectionalConnectionCosts(FILE* fpF)
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   assert(c != NULL);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (2 == sscanf(bufS, "%255s %d ", tokS, &n))
   {
     std::string btype(tokS);
     std::string expected_btype("BIDIRECTIONAL_CONNECTION_COSTS");
@@ -5943,7 +5951,7 @@ Params::ErrorCode Params::readBidirectionalConnectionCosts(FILE* fpF)
     {
       jumpOverCommentLine(fpF);
       c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-      if (2 == sscanf(bufS, "%s %lf ", tokS, &cost))
+      if (2 == sscanf(bufS, "%255s %lf ", tokS, &cost))
       {
         std::string synID(tokS);
         _bidirectionalConnectionCostsMap[synID] = cost;
@@ -5972,7 +5980,7 @@ Params::ErrorCode Params::readChemicalSynapseCosts(FILE* fpF)
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   assert(c != NULL);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (2 == sscanf(bufS, "%255s %d ", tokS, &n))
   {
     std::string btype(tokS);
     std::string expected_btype("CHEMICAL_SYNAPSE_COSTS");
@@ -5993,7 +6001,7 @@ Params::ErrorCode Params::readChemicalSynapseCosts(FILE* fpF)
     {
       jumpOverCommentLine(fpF);
       c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-      if (2 == sscanf(bufS, "%s %lf ", tokS, &cost))
+      if (2 == sscanf(bufS, "%255s %lf ", tokS, &cost))
       {
         std::string synID(tokS);
         _chemicalSynapseCostsMap[synID] = cost;
@@ -7025,7 +7033,7 @@ void Params::readMarkovModel(const std::string& fname, dyn_var_t* &matChannelRat
 
 
   // read in transition rate matrix
-  matChannelRateConstant = new dyn_var_t[numChanStates* numChanStates]();
+  matChannelRateConstant = new dyn_var_t[static_cast<size_t>(numChanStates) * numChanStates]();
 
   bool isOK = true;
   jumpOverCommentLine(fpF);
@@ -7274,7 +7282,7 @@ bool Params::readCriteriaSpineHead(FILE* fpF)
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   assert(c != NULL);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (2 == sscanf(bufS, "%255s %d ", tokS, &n))
   {
     std::string btype(tokS);
     if (btype == expected_btype)
@@ -7449,7 +7457,7 @@ bool Params::readCriteriaSpineNeck(FILE* fpF)
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   assert(c != NULL);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (2 == sscanf(bufS, "%255s %d ", tokS, &n))
   {
     std::string btype(tokS);
     if (btype == expected_btype)
@@ -7719,7 +7727,7 @@ Params::ErrorCode Params::readMicrodomainData(
   char bufS[LENGTH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (2 == sscanf(bufS, "%255s %d ", tokS, &n))
   {  // find number of lines defined data for microdomain
     //read line:   MICRODOMAIN_PARAMS 1
     //and 'n' get value of '1' 
@@ -7753,7 +7761,14 @@ Params::ErrorCode Params::readMicrodomainData(
       jumpOverCommentLine(fpF);
       
       char oneword[LENGTH_TOKEN_MAX];
-      int errorCode = fscanf(fpF, " %s", oneword);
+      int errorCode = fscanf(fpF, " %255s", oneword);
+      if (errorCode != 1)
+      {
+        std::cerr << "ERROR in file " << _currentFName
+                  << ": expected a microdomain name" << std::endl;
+        rval = ErrorCode::SECTION_INVALID;
+        return rval;
+      }
       std::string domainName(oneword);
       std::string myBuf("");
       readMultiLine(myBuf, fpF);

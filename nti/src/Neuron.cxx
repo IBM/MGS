@@ -160,8 +160,9 @@ Segment* Neuron::loadText(FILE* inputDataFile, Segment* segmentPtr,
   float x, y, z, r;
   int pos = ftell(inputDataFile);
   std::list<int> branchTerminals;
-  while (fscanf(inputDataFile, "%d %d %f %f %f %f %d", &seg, &branchType, &x,
-                &y, &z, &r, &parent) != EOF)
+  int nread;
+  while ((nread = fscanf(inputDataFile, "%d %d %f %f %f %f %d", &seg,
+                         &branchType, &x, &y, &z, &r, &parent)) == 7)
   {
     if (parent == -1)
     {
@@ -177,7 +178,7 @@ Segment* Neuron::loadText(FILE* inputDataFile, Segment* segmentPtr,
         pos2 = ftell(inputDataFile);
         if (fscanf(inputDataFile, "%d %d %f %f %f %f %d", &tmpSeg,
                    &tmpBranchType, &tmpx, &tmpy, &tmpz, &tmpr,
-                   &tmpParent) == EOF)
+                   &tmpParent) != 7)
           break;
       } while (tmpBranchType == 1 && tmpParent == 1);
       fseek(inputDataFile, pos2, SEEK_SET);
@@ -215,14 +216,21 @@ Segment* Neuron::loadText(FILE* inputDataFile, Segment* segmentPtr,
     prevSeg = seg;
     prevBranchType = branchType;
   }
+  if (nread != EOF)
+  {
+    std::cerr << "Malformed SWC record (expected 7 numeric fields)"
+              << std::endl;
+    MPI_Abort(MPI_COMM_WORLD, 1);
+    exit(EXIT_FAILURE);  // not reached; makes no-return explicit
+  }
   branchTerminals.push_back(prevSeg);
   branchTerminals.sort();
   branchTerminals.unique();
   prevSeg = 0;
   prevBranchType = -1;
   fseek(inputDataFile, pos, SEEK_SET);
-  while (fscanf(inputDataFile, "%d %d %f %f %f %f %d", &seg, &branchType, &x,
-                &y, &z, &r, &parent) != EOF)
+  while ((nread = fscanf(inputDataFile, "%d %d %f %f %f %f %d", &seg,
+                         &branchType, &x, &y, &z, &r, &parent)) == 7)
   {
     if (parent == -1)
     {
@@ -233,7 +241,7 @@ Segment* Neuron::loadText(FILE* inputDataFile, Segment* segmentPtr,
         pos2 = ftell(inputDataFile);
         if (fscanf(inputDataFile, "%d %d %f %f %f %f %d", &tmpSeg,
                    &tmpBranchType, &tmpx, &tmpy, &tmpz, &tmpr,
-                   &tmpParent) == EOF)
+                   &tmpParent) != 7)
           break;
       } while (tmpBranchType == 1 && tmpParent == 1);
       fseek(inputDataFile, pos2, SEEK_SET);
