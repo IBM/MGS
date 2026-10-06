@@ -201,6 +201,7 @@ void Class::addAttributes(const MemberContainer<DataType>& members
       att_index->setMacroConditional(gpuConditional);
       addAttribute(att_index);
       //addAttribute(att_index, MachineType::GPU);
+      return;  // demarshaller members are fully handled above (as in dev/GPU-ready)
    }
    if (  (getClassInfoPrimeType() == PrimeType::Struct && 
             getName().compare("CoordsStruct") != 0) || 
