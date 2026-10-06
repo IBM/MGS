@@ -330,6 +330,12 @@ Segment* Branch::loadText(FILE* inputDataFile, Segment* segmentPtr,
   float x, y, z, r;
   int f = fscanf(inputDataFile, "%d %d %f %f %f %f %d", &seg, &_branchType, &x,
                  &y, &z, &r, &parent);
+  if (f != 7)
+  {
+    std::cerr << "Branch.cxx : malformed or missing SWC record" << std::endl;
+    MPI_Abort(MPI_COMM_WORLD, 1);
+    exit(EXIT_FAILURE);  // not reached; makes no-return explicit
+  }
   --_branchType;  // Necessary because Neuromorpho.org orders branchtypes from 1
   if (_branchType != 0)
   {
@@ -351,6 +357,7 @@ Segment* Branch::loadText(FILE* inputDataFile, Segment* segmentPtr,
       pos = ftell(inputDataFile);
       f = fscanf(inputDataFile, "%d %d %f %f %f %f %d", &tmpSeg, &tmpBranchType,
                  &tmpx, &tmpy, &tmpz, &tmpr, &tmpParent);
+      if (f != 7) break;
     } while (tmpBranchType == 1 && tmpParent == 1);
     fseek(inputDataFile, pos, SEEK_SET);
     x /= double(cellBodyCorrection + 1);
@@ -381,8 +388,15 @@ Segment* Branch::loadText(FILE* inputDataFile, Segment* segmentPtr,
     pos2 = ftell(inputDataFile);
     // upon break out, segmentPtr will point to the beginning of the next
     // position for writing segments
-    if (fscanf(inputDataFile, "%d %d %f %f %f %f %d", &seg, &nextBranchType, &x,
-               &y, &z, &r, &parent) == EOF ||
+    f = fscanf(inputDataFile, "%d %d %f %f %f %f %d", &seg, &nextBranchType,
+               &x, &y, &z, &r, &parent);
+    if (f != EOF && f != 7)
+    {
+      std::cerr << "Branch.cxx : malformed SWC record" << std::endl;
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      exit(EXIT_FAILURE);  // not reached; makes no-return explicit
+    }
+    if (f == EOF ||
         find(branchTerminals.begin(), branchTerminals.end(), prevSeg) !=
             branchTerminals.end())
     {

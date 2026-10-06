@@ -172,8 +172,8 @@ void Tissue::loadText(const std::string& inputFilenames,
     bufS[0] = '\n';
     do {
       c = fgets(bufS, 1024, filenameFile);
-    } while (bufS[0] == '#' || bufS[0] == '\n');
-    if (11 == sscanf(bufS, "%s %d %d %d %lf %lf %lf %c %s %s %s", filename,
+    } while (c != NULL && (bufS[0] == '#' || bufS[0] == '\n'));
+    if (11 == sscanf(bufS, "%255s %d %d %d %lf %lf %lf %c %255s %255s %255s", filename,
                      &layer, &morphtype, &electrotype, &x, &y, &z, &offsetType,
                      axonPar, basalPar, apicalPar)) {
       std::string fname(filename);
@@ -190,8 +190,8 @@ void Tissue::loadText(const std::string& inputFilenames,
     bufS[0] = '\n';
     do {
       c = fgets(bufS, 1024, filenameFile);
-    } while (bufS[0] == '#' || bufS[0] == '\n');
-    if (11 == sscanf(bufS, "%s %d %d %d %lf %lf %lf %c %s %s %s", filename,
+    } while (c != NULL && (bufS[0] == '#' || bufS[0] == '\n'));
+    if (11 == sscanf(bufS, "%255s %d %d %d %lf %lf %lf %c %255s %255s %255s", filename,
                      &layer, &morphtype, &electrotype, &x, &y, &z, &offsetType,
                      axonPar, basalPar, apicalPar)) {
       std::string fname(filename);

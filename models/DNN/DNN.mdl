@@ -136,6 +136,8 @@ Node SupervisorNode Implements BackwardProducer, ForwardArrayProducer {
     bool refreshErrors;
     unsigned trainingEpoch; //current epoch index
     unsigned trainingEpochs; //total epochs
+    unsigned outputInterval; //images between error reports
+    unsigned outputsPerEpoch; //0 = report once per epoch
     unsigned imageIndex; //current index in 0...numImages
       //However, the real image to be processed is 
       //the one with index _shuffledDeck(imageIndex);

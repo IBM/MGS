@@ -194,8 +194,9 @@ void Neurogenesis::readSoma(int threadID, int nid, int& count,
     MPI_Finalize();
     exit(0);
   }
-  while (fscanf(inputDataFile, "%d %d %lf %lf %lf %lf %d", &id, &type, &x, &y,
-                &z, &r, &parent) != EOF) {
+  int nread;
+  while ((nread = fscanf(inputDataFile, "%d %d %lf %lf %lf %lf %d", &id, &type,
+                         &x, &y, &z, &r, &parent)) == 7) {
     if (type == 1) {
       if (first) {
         first->setRadius(r);
@@ -210,6 +211,12 @@ void Neurogenesis::readSoma(int threadID, int nid, int& count,
       }
     }
     ++count;
+  }
+  if (nread != EOF) {
+    std::cerr << "Malformed SWC record (expected 7 numeric fields)"
+              << std::endl;
+    MPI_Abort(MPI_COMM_WORLD, 1);
+    exit(EXIT_FAILURE);  // not reached; makes no-return explicit
   }
   fclose(inputDataFile);
 }
@@ -888,7 +895,8 @@ void Neurogenesis::printStats(int threadID, int nid, NeurogenParams* params_p,
   struct tm* Simtimeinfo;
   char timeString[20];
   time(&Simrawtime);
-  Simtimeinfo = localtime(&Simrawtime);
+  struct tm SimtimeBuf;
+  Simtimeinfo = localtime_r(&Simrawtime, &SimtimeBuf);
   strftime(timeString, 20, "%m-%d-%Y %H:%M", Simtimeinfo);
 
   if (names) os << "STATS-" << _statsFileName << namesSeparator;

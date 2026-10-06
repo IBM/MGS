@@ -178,7 +178,7 @@ void NeuronPartitioner::countAllNeurons(const std::string& inputFilename,
     char* c = fgets(bufS, 1024, filenameFile);
     if (bufS[0] != '#' && bufS[0] != '\n')
     {
-      if (11 == sscanf(bufS, "%s %d %d %d %lf %lf %lf %c %s %s %s", filename,
+      if (11 == sscanf(bufS, "%255s %d %d %d %lf %lf %lf %c %255s %255s %255s", filename,
                        &layer, &morphtype, &electrotype, &x1, &y1, &z1,
                        &offsetType, axonPar, basalPar, apicalPar))
       {
@@ -200,7 +200,7 @@ void NeuronPartitioner::countAllNeurons(const std::string& inputFilename,
         assert(!feof(inputDataFile));
         nsegs = 0;
         while (fscanf(inputDataFile, "%d %d %lf %lf %lf %lf %d", &seg,
-                      &branchType, &x2, &y2, &z2, &r, &parent) != EOF)
+                      &branchType, &x2, &y2, &z2, &r, &parent) == 7)
         {
           if (branchType != 1 || parent != 1) ++nsegs;
         }
