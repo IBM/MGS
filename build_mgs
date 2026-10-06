@@ -240,7 +240,7 @@ TARGET_MAKE=""
 BUILD_TARGET=""
 MGS_TARGET_FILENAME="mgs.mdf"
 MDF_TARGET=${MGS_TARGET_FILENAME}
-optspec=":c:p:sr-:j:g:a"
+optspec=":c:p:sr-:j:ga"
 while getopts "$optspec" optchar; do
   case $optchar in
     p)
@@ -664,11 +664,10 @@ fi
 ### Check supporting files/settings ###
 #{{{pre-configure and testing
 FIRST_BUILD=0
-if [  -f ".built"  ]; then
-  line=$(head -n 1 ".built")
-  if [ "$line" == "" ]; then
-    FIRST_BUILD=1
-  fi
+if [ ! -f ".built" ]; then
+  FIRST_BUILD=1
+elif [ "$(head -n 1 ".built")" == "" ]; then
+  FIRST_BUILD=1
 fi
 if [ $FIRST_BUILD -eq 1 ] && [[ "$REBUILD" != "-rebuild" && "$CLEAN" != "-clean" ]]; then
 #  echoerr "First build. Auto run with --rebuild"
