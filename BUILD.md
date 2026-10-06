@@ -7,8 +7,8 @@ Detailed build instructions for the Model Graph Simulator framework.
 # Build for Linux (default target)
 ./build_mgs -p LINUX --as-MGS
 
-# Or build with GPU support
-./build_mgs -p LINUX --as-GPU
+# Or build with GPU support (see "Native GPU Build" below)
+./build_mgs -p LINUX --as-GPU -g
 ```
 
 ## Build Scripts
@@ -38,27 +38,62 @@ make              # Release build
 - **bison** v2.4.1 or above (built using m4 >= 1.4.17)
 - **flex** v2.5.4 or above
 - **libgmp** (GNU Multiple Precision library)
+- **gawk** (used by the GSL code-generation step; plain awk is not enough)
+- **MPI** (Open MPI or MPICH)
 - **python** with pybind11
-  - Set `PYTHON_INCLUDE_DIR` environment variable
+  - Set `PYTHON_INCLUDE_DIR` (e.g. `/usr/include/python3.12`)
+  - On Linux also set `PYTHON_LIB` to the directory holding `libpython3.x.so`
+    (e.g. `/usr/lib/x86_64-linux-gnu`)
 - **cxsparse** library
-  - Set `SUITESPARSE` environment variable
-- **MNIST headers** (for MNIST example)
-```bash
-  git clone --depth=1 https://github.com/wichtounet/mnist.git gsl/utils/mnist
-  rm -rf gsl/utils/mnist/.git
-```
+  - Set `SUITESPARSE` environment variable (`/usr` for distro packages)
+- **MNIST data and headers** are included in the repository under
+  `gsl/utils/mnist-master` (no separate download needed)
 
 ### Installing Dependencies
 
 **Ubuntu/Debian:**
 ```bash
-sudo apt-get install build-essential bison flex libgmp-dev python3 python3-dev
+sudo apt-get install build-essential bison flex gawk libgmp-dev \
+  libopenmpi-dev libsuitesparse-dev python3-dev pybind11-dev
 ```
 
 **macOS:**
 ```bash
 brew install bison flex gmp python3
 ```
+
+## Native GPU Build (CUDA 12)
+
+Tested with CUDA 12.0, g++-12 and Open MPI on Ubuntu 24.04:
+
+```bash
+source set_env
+export PYTHON_INCLUDE_DIR=/usr/include/python3.12 PYTHON_LIB=/usr/lib/x86_64-linux-gnu SUITESPARSE=/usr
+export NVCC_CCBIN=g++-12   # nvcc's host compiler; CUDA 12.0 needs gcc <= 12
+export SMS=80              # GPU architecture(s) to build for, e.g. 70 (V100), 80 (A100), 90 (H100)
+./build_mgs -p LINUX --as-GPU -g
+```
+
+- `SMS` defaults to `60 70 75 80 86 90`; building only for your GPU is much faster.
+- MPI include paths are taken from `mpicxx`; set `MPI_INC_FLAGS` to override.
+
+### Validating the GPU Build
+
+Run the MNIST example from the same seed on a CPU build and on the GPU build,
+then compare the error traces:
+
+```bash
+cd graphs/DNN
+sed 's/trainingEpochs=10,/trainingEpochs=1,\n\toutputsPerEpoch=20,/; s/"==", 610001/"==", 60001/' \
+    MNIST.gsl > MNIST_check.gsl
+mpiexec -n 1 /path/to/cpu/gslparser -t 1 -f MNIST_check.gsl -s 1 > cpu.out
+mpiexec -n 1 /path/to/gpu/gslparser -t 1 -f MNIST_check.gsl -s 1 > gpu.out
+python3 compare_mnist_traces.py cpu.out gpu.out
+```
+
+`compare_mnist_traces.py` reports the largest differences in error and wins
+ratio at each checkpoint. `reference/mnist_cpu_seed1.txt` holds a full
+10-epoch CPU trace (seed 1, 10 reports per epoch) for comparison.
 
 ## Container-Based Build (Docker)
 
