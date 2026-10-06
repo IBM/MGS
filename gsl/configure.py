@@ -1054,7 +1054,8 @@ MPI_INC = -I$(BGP_ROOT)/arch/include
 # CUDA 7.5 only work until gcc 4.10
 # CUDA 9.2. only work until gcc 6.x and ompi 1.10.6
 """
-            retStr += "NVCC := " + self.nvccCompiler + " -ccbin g++\n"
+            retStr += "NVCC_CCBIN ?= g++\n"
+            retStr += "NVCC := " + self.nvccCompiler + " -ccbin $(NVCC_CCBIN)\n"
         retStr += "CC := " + self.cppCompiler + "\n"
         retStr += "C_COMP := " + self.cCompiler + "\n"
         if self.options.withMpi is True:
@@ -1077,7 +1078,8 @@ MPI_INC = -I$(BGP_ROOT)/arch/include
         if self.options.withGpu is True:
             retStr += """
 # Gencode arguments
-SMS ?= 35 37 50 52 60 61 70 75
+# CUDA 12 dropped sm_35/sm_37; override with e.g. SMS="80" for one target
+SMS ?= 60 70 75 80 86 90
 # SMS ?= 70
 
 ifeq ($(SMS),)
@@ -1619,6 +1621,10 @@ endif
 SOURCE_AS_CPP := -x cu
 CUDA_NVCC_FLAGS := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generated,$(PARSER_PATH)) $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES))  -DLINUX -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI -DHAVE_GPU
 CUDA_NVCC_FLAGS += -I../common/include -std=c++17 -Wno-deprecated-declarations
+# nvcc is not the MPI wrapper, so pass MPI's include dirs explicitly
+# (works for OpenMPI --showme and MPICH -show; override if needed)
+MPI_INC_FLAGS ?= $(filter -I%,$(shell mpicxx --showme:compile 2>/dev/null || mpicxx -show 2>/dev/null))
+CUDA_NVCC_FLAGS += $(MPI_INC_FLAGS)
 CUDA_NVCC_FLAGS += --compiler-options -fPIC \
 """
         retStr += " -DLINUX -DDISABLE_DYNAMIC_LOADING -Xcompiler -DHAVE_MPI -Xcompiler -DHAVE_GPU"
@@ -2302,16 +2308,34 @@ $(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/
             retStr += " $(DX_DIR)/EdgeSetSubscriberSocket $(DX_DIR)/NodeSetSubscriberSocket "
         retStr += " | $(BIN_DIR)"
         
-        # FIXED: Proper newline and tab before command
-        retStr += "\n\t"  # Add newline and tab here
-        
+        retStr += "\n"
+
+        gpu_dlink = self.options.withGpu is True and self.separate_compile is True
+        if gpu_dlink:
+            # Objects built with 'nvcc -dc' (relocatable device code) need a
+            # device-link pass before the host link; it emits gpuCode.o, which
+            # holds the __cudaRegisterLinkedBinary_* symbols. (Restored from
+            # the GPU-ready branch; lost when this method was rewritten.)
+            retStr += "\t$(NVCC) $(CUDA_NVCC_LDFLAGS) "
+            if self.options.colab is True:
+                retStr += "$(NEEDED_OBJS) "
+            else:
+                retStr += "$(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) "
+                if (self.options.asNts is True) or (self.options.asNtsNVU is True):
+                    retStr += "$(NTI_OBJS) "
+            retStr += "$(COMMON_OBJS) -o $(OBJS_DIR)/gpuCode.o\n"
+
+        retStr += "\t"
         if self.options.colab is True:
             retStr += "$(CC) $(FINAL_TARGET_FLAG) $(NEEDED_OBJS) "
         else:
             retStr += "$(CC) $(FINAL_TARGET_FLAG) "
             if self.operatingSystem == "Darwin":
                 retStr += "-v "
-            retStr += "$(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) $(COMMON_OBJS) $(LDFLAGS) $(LIBS) "
+            retStr += "$(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) $(COMMON_OBJS) "
+            if gpu_dlink:
+                retStr += "$(OBJS_DIR)/gpuCode.o "
+            retStr += "$(LDFLAGS) $(LIBS) "
             
             if (self.options.asNts is True) or (self.options.asNtsNVU is True):
                 retStr += "$(NTI_OBJS) "
