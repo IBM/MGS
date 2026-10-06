@@ -30,7 +30,7 @@ class TransferFunction
      
      /* return (int): the index to the function from array of function pointer 
       * IMPORTANT: This has to be the same order of those declared in DNEdgeSetCompCategory.cu file */
-     int setType(String type) {
+     int setType(CustomString type) {
        int index=0;
        if (type == "tanh") {
         transfer = &tanh;

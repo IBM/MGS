@@ -245,7 +245,7 @@ void SupervisorNodeCompCategory::outputError(unsigned currentLabel)
 #else
       	outError += nodesIter->sumOfSquaredError;
 #endif
-#if defined(HAVE_GPU) {
+#if defined(HAVE_GPU)
         std::cerr<<getSimulation().getRank()<<" : "
           <<currentLabel<<" : "
           <<( (currentLabel==nodesIter->getGlobalIndex()) ? 1.0 : 0.0)
@@ -277,7 +277,7 @@ void SupervisorNodeCompCategory::outputError(unsigned currentLabel)
 #else
     std::cout<<" : wins ratio = "<<double(_nodes.begin()->wins)/double(SHD.numberOfInputs);
 #endif
-    std::cout << " time passed: " << getSimulation().getTimer().lapWallTime();
+    // Timer functionality handled by benchmark_timelapsed_diff below
     std::cout <<std::endl<<std::flush;
   }
   SHD.numberOfInputs = 0;

@@ -37,7 +37,7 @@ void SwitchInput::initialize(RNG& rng)
   for (; iter!=end; ++iter) (*iter) =  drandom(inplo,inphi,rng);
   drivinp = drivinps[0];
 
-  String temp(SHD.directory);
+  CustomString temp(SHD.directory);
   std::string output_dir(temp.c_str());
     if (output_dir.length() == 0)
       output_dir = "./";
