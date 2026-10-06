@@ -1,6 +1,7 @@
 #ifndef CG_DNNODECOMPCATEGORY_CU
 #define CG_DNNODECOMPCATEGORY_CU
 
+#include <cfloat>
 #include "EdgeSetInput.h"
 
 #define PRELIM_STATE DBL_MAX

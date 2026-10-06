@@ -71,8 +71,8 @@ void DNEdgeSet::initialize(RNG& rng)
   biasCorrectionW = SHD.alpha;
   biasCorrectionS = SHD.beta;
 
-  ShallowArray<CustomString>::const_iterator oiter, oend = SHD.optimization.end();
-  for (oiter=SHD.optimization.begin(); oiter!=oend; ++oiter) {
+  auto oend = SHD.optimization.end();  // ShallowArray on CPU, ShallowArray_Flat on GPU
+  for (auto oiter=SHD.optimization.begin(); oiter!=oend; ++oiter) {
     if (*oiter=="Momentum") momentum=true;
     else if (*oiter=="RMSprop") rmsprop=true;
     else if (*oiter=="Adam") momentum=rmsprop=true;

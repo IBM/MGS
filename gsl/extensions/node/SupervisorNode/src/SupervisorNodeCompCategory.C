@@ -251,7 +251,6 @@ void SupervisorNodeCompCategory::outputError(unsigned currentLabel)
           <<"   |   "<<*(nodesIter->_container->um_logits[nodesIter->__index__])[nodesIter->getGlobalIndex()]
           <<"   |   "<<(nodesIter->_container->um_predictions[nodesIter->__index__])[nodesIter->getGlobalIndex()]
           <<std::endl<<std::flush;
-        }
 #else
         std::cerr<<getSimulation().getRank()<<" : "
           <<currentLabel<<" : "

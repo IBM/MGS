@@ -447,6 +447,11 @@ class Simulation : public Publishable {
 #endif
 #endif
 
+  ///Track how many copies of a constantType object
+  //<"Bias" : 5 instance >
+  std::map<std::string, int> constantTypeCount;
+  std::map<std::string, int> constantTypeCurrentIndex;
+
 
 #if defined(REUSE_NODEACCESSORS)
   //track nodeaccessors from every model, e.g. CG_LifeNodeGridLayerData

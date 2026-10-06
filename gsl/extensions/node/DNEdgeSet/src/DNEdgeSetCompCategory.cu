@@ -1,6 +1,7 @@
 #ifndef CG_DNEDGESETCOMPCATEGORY_CU
 #define CG_DNEDGESETCOMPCATEGORY_CU
 
+#include <cfloat>
 #include <stdio.h>
 //#include "helper_cuda.h"
 #include "rndm.h"
@@ -203,11 +204,9 @@ void __global__ DNEdgeSet_kernel_initialize(
 
    , bool* readyForward
    , bool* readyBackward
-   , CustomString* transferFunctionName
    , bool* momentum
    , bool* rmsprop
    , unsigned size
-   , ShallowArray< CustomString > optimization
    , double beta
    , double alpha
    , double eta
@@ -316,11 +315,10 @@ void __global__ DNEdgeSet_kernel_update(
    #endif
    , bool* readyForward
    , bool* readyBackward
-   , CustomString* transferFunctionName
    , bool* momentum
    , bool* rmsprop
    , unsigned size
-   , ShallowArray< CustomString > optimization
+   , int* fncIndex
    , double beta
    , double alpha
    , double eta
