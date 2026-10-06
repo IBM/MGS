@@ -1147,7 +1147,7 @@ COLAB_FRAMEWORK_MODULES := \\
             """\
 \t\tstd \\
 \t\timg \\
-\t\tmnist\\
+\t\tmnist-master\\
 """
         if self.options.colab is False:
             retStr += \
@@ -2057,7 +2057,7 @@ CFLAGS += -fPIC \
             if self.options.withGpu is True:
                 pass
             else:
-                retStr += LINUX_FINAL_TARGET_FLAG
+                retStr += " " + LINUX_FINAL_TARGET_FLAG
         elif self.operatingSystem == "Darwin":
             retStr += " " + DARWIN_FINAL_TARGET_FLAG  # FIXED: Add space before flag
             retStr += " -v"
