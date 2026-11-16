@@ -17,6 +17,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <string>
+#include "SwcInput.h"
 
 class SegmentSpace;
 class TouchSpace;
@@ -69,7 +70,7 @@ class NeuronPartitioner : public Decomposition {
   int _size;  // number of cpus
   int _rank;  // current cpu
 
-  int _neuronsPerLayer[6];
+  int _neuronsPerLayer[SwcInput::MAX_LAYERS];
   int _totalNeurons;
   int _totalSegmentsRead;  // note: the number of segments changes after
                            // resampling

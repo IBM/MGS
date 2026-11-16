@@ -39,7 +39,8 @@ class Branch {
       void resample(std::vector<Segment>& segments, double pointSpacing);
       void resetBranchRoots(std::vector<Segment>& segments);
       Segment* loadBinary(FILE*, Segment*, Neuron*, const int branchIndex);
-      Segment* loadText(FILE*, Segment*, Neuron*, const int branchIndex, std::list<int>& branchTerminals,
+      // segmentsEnd: end of the Segment allocation; writes never pass it.
+      Segment* loadText(FILE*, Segment*, Segment* segmentsEnd, Neuron*, const int branchIndex, std::list<int>& branchTerminals,
 			double xOffset, double yOffset, double zOffset, int cellBodyCorrection);
       void writeCoordinates(FILE*);
       int getBranchType() const {return _branchType;}

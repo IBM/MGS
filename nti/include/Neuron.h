@@ -30,8 +30,9 @@ class Neuron {
 
   Segment* loadBinary(FILE*, Segment*, Tissue*, const int neuronIndex, FILE*,
                       FILE*);
-  Segment* loadText(FILE*, Segment*, Tissue*, const int neuronIndex, FILE*,
-                    FILE*, int layer, int morphologicalType,
+  // segmentsEnd: end of the Segment allocation; writes never pass it.
+  Segment* loadText(FILE*, Segment*, Segment* segmentsEnd, Tissue*,
+                    const int neuronIndex, FILE*, FILE*, int layer, int morphologicalType,
                     int electrophysiologicalType, double x, double y, double z,
                     char offsetType);
   void resample(std::vector<Segment>&, double pointSpacing);

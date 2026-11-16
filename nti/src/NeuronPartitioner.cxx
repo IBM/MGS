@@ -151,8 +151,7 @@ void NeuronPartitioner::countAllNeurons(const std::string& inputFilename,
                                         std::vector<int>& neuronSegments)
 {
   totalNeurons = totalSegmentsRead = 0;
-  // TUAN: TODO try to replace 6 with a descriptive name
-  for (int i = 0; i < 6; ++i) neuronsPerLayer[i] = 0;
+  for (int i = 0; i < SwcInput::MAX_LAYERS; ++i) neuronsPerLayer[i] = 0;
   neuronSegments.clear();
 
   // Opens the files if it exist
@@ -168,8 +167,7 @@ void NeuronPartitioner::countAllNeurons(const std::string& inputFilename,
   char bufS[1024], filename[256], offsetType, axonPar[256], basalPar[256],
       apicalPar[256];
   int layer, morphtype, electrotype, nsegs;
-  int seg, branchType, parent;
-  double x1, y1, z1, x2, y2, z2, r;
+  double x1, y1, z1;
   p.skipHeader(filenameFile);
   while (!feof(filenameFile))
   {
@@ -182,6 +180,7 @@ void NeuronPartitioner::countAllNeurons(const std::string& inputFilename,
                        &layer, &morphtype, &electrotype, &x1, &y1, &z1,
                        &offsetType, axonPar, basalPar, apicalPar))
       {
+        SwcInput::checkLayer(layer, inputFilename.c_str());
         if ((inputDataFile = fopen(filename, "rt")) == 0)
         {
           printf("Could not find the input file %s...\n", filename);
@@ -191,19 +190,16 @@ void NeuronPartitioner::countAllNeurons(const std::string& inputFilename,
         int pos = ftell(inputDataFile);
         while (getc(inputDataFile) == '#')
         {
-          while (getc(inputDataFile) != '\n')
-          {
-          }
+          int ch;
+          do ch = getc(inputDataFile);
+          while (ch != '\n' && ch != EOF);  // EOF: comment without newline
           pos = ftell(inputDataFile);
         }
         fseek(inputDataFile, pos, SEEK_SET);
         assert(!feof(inputDataFile));
-        nsegs = 0;
-        while (fscanf(inputDataFile, "%d %d %lf %lf %lf %lf %d", &seg,
-                      &branchType, &x2, &y2, &z2, &r, &parent) == 7)
-        {
-          if (branchType != 1 || parent != 1) ++nsegs;
-        }
+        // Validates the morphology and returns exactly the number of
+        // Segments the loader will write, which sizes Tissue::_segments.
+        nsegs = SwcInput::countSegments(inputDataFile, filename);
         fclose(inputDataFile);
 
         neuronSegments.push_back(nsegs);
@@ -222,7 +218,7 @@ void NeuronPartitioner::partitionTextNeurons(int& nSlicers,
 {
   _size = (nSlicers > nTouchDetectors) ? nSlicers : nTouchDetectors;
   _totalNeurons = _totalSegmentsRead = 0;
-  for (int i = 0; i < 6; ++i) _neuronsPerLayer[i] = 0;
+  for (int i = 0; i < SwcInput::MAX_LAYERS; ++i) _neuronsPerLayer[i] = 0;
   std::vector<int> neuronSegments;
 
   if (_rank == 0)

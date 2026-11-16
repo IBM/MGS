@@ -255,7 +255,14 @@ void Branch::resetBranchRoots(std::vector<Segment>& segments)
   }
   else
   {
-    assert(_rootSegment);
+    if (_rootSegment == 0 || _rootSegment < _neuron->getSegmentsBegin() ||
+        _rootSegment >= _neuron->getSegmentsEnd())
+    {
+      std::cerr << "Branch.cxx : branch root lies outside its neuron"
+                << std::endl;
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      exit(EXIT_FAILURE);  // not reached
+    }
     double* rootSegCoords = _rootSegment->getCoords();
     double* firstSegCoords = _segments[0].getCoords();
     bool newRoot = false;
@@ -318,7 +325,8 @@ Segment* Branch::loadBinary(FILE* inputDataFile, Segment* segmentPtr,
 }
 
 Segment* Branch::loadText(FILE* inputDataFile, Segment* segmentPtr,
-                          Neuron* neuron, const int branchIndex,
+                          Segment* segmentsEnd, Neuron* neuron,
+                          const int branchIndex,
                           std::list<int>& branchTerminals, double xOffset,
                           double yOffset, double zOffset,
                           int cellBodyCorrection)
@@ -341,6 +349,15 @@ Segment* Branch::loadText(FILE* inputDataFile, Segment* segmentPtr,
   {
     if (parent != 1) parent -= cellBodyCorrection;
     seg -= cellBodyCorrection;
+    // The parent must be a Segment of this neuron that is already loaded,
+    // i.e. inside [segmentsBegin, segmentPtr). SWC ids are untrusted.
+    if (parent < 1 || parent - 1 >= segmentPtr - neuron->getSegmentsBegin())
+    {
+      std::cerr << "Branch.cxx : SWC parent id " << parent
+                << " does not name an earlier segment" << std::endl;
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      exit(EXIT_FAILURE);  // not reached
+    }
     _rootSegment = &neuron->getSegmentsBegin()[parent - 1];
   }
   else
@@ -378,7 +395,20 @@ Segment* Branch::loadText(FILE* inputDataFile, Segment* segmentPtr,
                 << std::endl;
       exit(0);
     }
-    assert(parent < seg);
+    if (parent >= seg)  // was assert(): input checks must survive NDEBUG
+    {
+      std::cerr << "Branch.cxx : SWC parent id " << parent
+                << " must be smaller than id " << seg << std::endl;
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      exit(EXIT_FAILURE);  // not reached
+    }
+    if (segmentPtr >= segmentsEnd)
+    {
+      std::cerr << "Branch.cxx : Segment array overflow (morphology has more "
+                   "segments than were counted)" << std::endl;
+      MPI_Abort(MPI_COMM_WORLD, 1);
+      exit(EXIT_FAILURE);  // not reached
+    }
     if (r == 0) r = DEFAULT_RADIUS;
     segmentPtr->loadText(x + xOffset, y + yOffset, z + zOffset, r, this,
                          _numberOfSegments);

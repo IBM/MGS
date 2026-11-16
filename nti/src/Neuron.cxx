@@ -132,7 +132,8 @@ Segment* Neuron::loadBinary(FILE* inputDataFile, Segment* segmentPtr,
 }
 
 Segment* Neuron::loadText(FILE* inputDataFile, Segment* segmentPtr,
-                          Tissue* neuronGroup, const int neuronIndex,
+                          Segment* segmentsEnd, Tissue* neuronGroup,
+                          const int neuronIndex,
                           FILE* translationHistoryFile,
                           FILE* rotationYHistoryFile, int layer,
                           int morphologicalType, int electrophysiologicalType,
@@ -265,8 +266,8 @@ Segment* Neuron::loadText(FILE* inputDataFile, Segment* segmentPtr,
   fseek(inputDataFile, pos, SEEK_SET);
   for (int i = 0; i < _numberOfBranches; i++)  // Store the branches
     segmentPtr =
-        _branch[i].loadText(inputDataFile, segmentPtr, this, i, branchTerminals,
-                            xOffset, yOffset, zOffset, cb);
+        _branch[i].loadText(inputDataFile, segmentPtr, segmentsEnd, this, i,
+                            branchTerminals, xOffset, yOffset, zOffset, cb);
   _segmentsEnd = segmentPtr;
   return segmentPtr;
 }

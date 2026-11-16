@@ -6,6 +6,7 @@
 // (See accompanying file LICENSE or copy at http://www.apache.org/licenses/.)
 //
 // =============================================================================
+#include "SwcInput.h"
 #include "Tissue.h"
 #include "NeuronPartitioner.h"
 #include "Neuron.h"
@@ -194,6 +195,7 @@ void Tissue::loadText(const std::string& inputFilenames,
     if (11 == sscanf(bufS, "%255s %d %d %d %lf %lf %lf %c %255s %255s %255s", filename,
                      &layer, &morphtype, &electrotype, &x, &y, &z, &offsetType,
                      axonPar, basalPar, apicalPar)) {
+      SwcInput::checkLayer(layer, inputFilenames.c_str());
       std::string fname(filename);
       filenameMapIter = filenameMap.find(fname);
       if (filenameMapIter == filenameMap.end())
@@ -213,17 +215,27 @@ void Tissue::loadText(const std::string& inputFilenames,
       _neuronOutputFilenames.push_back(fname);
       p.skipHeader(inputDataFile);
       assert(!feof(inputDataFile));
-      segmentPtr = _neurons[i].loadText(inputDataFile, segmentPtr, this, i,
-                                        _neuronTranslationFile,
+      // Re-validate here: this rank reopens the file after rank 0 counted it,
+      // and the allocation must hold every Segment this neuron will write.
+      Segment* const segmentsEnd = _segments + _segmentArraySize;
+      const int neuronSegments =
+          SwcInput::countSegments(inputDataFile, filename);
+      if (neuronSegments > segmentsEnd - segmentPtr)
+        SwcInput::fail("morphology has more segments than were counted for "
+                       "it (file changed while loading?)",
+                       filename);
+      segmentPtr = _neurons[i].loadText(inputDataFile, segmentPtr, segmentsEnd,
+                                        this, i, _neuronTranslationFile,
                                         _neuronRotationFile, layer, morphtype,
                                         electrotype, x, y, z, offsetType);
       fclose(inputDataFile);
     }
   }
-  if (segmentPtr != _segments + _segmentArraySize) {
-    std::cerr << segmentPtr - (_segments + _segmentArraySize) << std::endl;
-    assert(0);
-  }
+  if (segmentPtr != _segments + _segmentArraySize)
+    SwcInput::fail("loaded " + std::to_string(segmentPtr - _segments) +
+                       " segments but " + std::to_string(_segmentArraySize) +
+                       " were counted",
+                   inputFilenames.c_str());
   fclose(filenameFile);
 
   // strcpy(_inFilename, inputFilenames);
